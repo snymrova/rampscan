@@ -1,7 +1,14 @@
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { CoverageRow, DriftEvent, Projection, RegisterRow } from "@rampscan/core";
+import type {
+  CadenceGap,
+  CoverageRow,
+  DriftEvent,
+  Projection,
+  RegisterRow,
+  RollupRow,
+} from "@rampscan/core";
 
 // SQLite persistence for the projection. The database is disposable by
 // design: every write drops and refills, because the ledger is the record and
@@ -17,7 +24,7 @@ export async function writeProjectionSqlite(
   const db = new DatabaseSync(dbPath);
   try {
     db.exec("BEGIN");
-    for (const table of ["coverage", "registers", "drift", "meta"]) {
+    for (const table of ["coverage", "registers", "drift", "controls", "ksis", "gaps", "meta"]) {
       db.exec(`DROP TABLE IF EXISTS ${table}`);
     }
     db.exec(`
@@ -63,6 +70,28 @@ export async function writeProjectionSqlite(
         from_verdict    TEXT,
         to_verdict      TEXT,
         bundle_digest   TEXT NOT NULL
+      )
+    `);
+    for (const table of ["controls", "ksis"]) {
+      db.exec(`
+        CREATE TABLE ${table} (
+          repo        TEXT NOT NULL,
+          id          TEXT NOT NULL,
+          state       TEXT NOT NULL, -- evidenced | violated | unevidenced | notApplicable
+          recipe_ids  TEXT NOT NULL, -- JSON array
+          counts      TEXT NOT NULL  -- JSON object
+        )
+      `);
+    }
+    db.exec(`
+      CREATE TABLE gaps (
+        repo           TEXT NOT NULL,
+        recipe_id      TEXT NOT NULL,
+        bundle_digest  TEXT NOT NULL,
+        gap_start      TEXT NOT NULL,
+        gap_end        TEXT NOT NULL,
+        duration_ms    INTEGER NOT NULL,
+        ongoing        INTEGER NOT NULL -- 0 | 1
       )
     `);
     db.exec(`
@@ -133,6 +162,40 @@ export async function writeProjectionSqlite(
         event.from ?? null,
         event.to ?? null,
         event.bundleDigest,
+      );
+    }
+
+    for (const [table, rollupRows] of [
+      ["controls", projection.controls],
+      ["ksis", projection.ksis],
+    ] as const) {
+      const insertRollup = db.prepare(
+        `INSERT INTO ${table} (repo, id, state, recipe_ids, counts) VALUES (?, ?, ?, ?, ?)`,
+      );
+      for (const row of rollupRows) {
+        insertRollup.run(
+          row.repo,
+          row.id,
+          row.state,
+          JSON.stringify(row.recipeIds),
+          JSON.stringify(row.counts),
+        );
+      }
+    }
+
+    const insertGap = db.prepare(
+      `INSERT INTO gaps (repo, recipe_id, bundle_digest, gap_start, gap_end, duration_ms, ongoing)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const gap of projection.gaps) {
+      insertGap.run(
+        gap.repo,
+        gap.recipeId,
+        gap.bundleDigest,
+        gap.start,
+        gap.end,
+        gap.durationMs,
+        gap.ongoing ? 1 : 0,
       );
     }
 
@@ -210,11 +273,31 @@ export function readProjectionSqlite(dbPath: string): Projection {
       if (r.to_verdict) event.to = r.to_verdict;
       return event;
     });
+    const readRollup = (table: string): RollupRow[] =>
+      (db.prepare(`SELECT * FROM ${table}`).all() as any[]).map((r) => ({
+        repo: r.repo,
+        id: r.id,
+        state: r.state,
+        recipeIds: JSON.parse(r.recipe_ids),
+        counts: JSON.parse(r.counts),
+      }));
+    const gaps: CadenceGap[] = (db.prepare("SELECT * FROM gaps").all() as any[]).map((r) => ({
+      repo: r.repo,
+      recipeId: r.recipe_id,
+      bundleDigest: r.bundle_digest,
+      start: r.gap_start,
+      end: r.gap_end,
+      durationMs: Number(r.duration_ms),
+      ongoing: r.ongoing === 1,
+    }));
     const meta = db.prepare("SELECT * FROM meta").get() as any;
     return {
       rows,
       registers,
       drift,
+      controls: readRollup("controls"),
+      ksis: readRollup("ksis"),
+      gaps,
       datasetVersion: meta?.dataset_version ?? "",
       projectedAt: meta?.projected_at ?? "",
     };

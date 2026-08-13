@@ -110,11 +110,11 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
   const eventsPath = join(outDir, "daemon-events.jsonl");
 
   const recipes = await loadRecipes(options.recipesDir);
-  const projector = createProjector({ recipes });
+  const windowMs = options.windowMs?.[options.certClass] ?? windowMsFor(options.certClass);
+  const projector = createProjector({ recipes, windowMs });
   const repoSource = createLocalRepoSource();
 
   const scanAtFraction = options.scanAtFraction ?? DEFAULT_SCAN_AT_FRACTION;
-  const windowMs = options.windowMs?.[options.certClass] ?? windowMsFor(options.certClass);
   const refreshOlderThanMs = windowMs * scanAtFraction;
 
   let scans = 0;

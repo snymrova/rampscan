@@ -186,6 +186,49 @@ export interface RegisterRow {
   scoping?: ScopingInfo;
 }
 
+export interface RollupCounts {
+  evidenced: number;
+  violated: number;
+  unevidenced: number;
+  notApplicable: number;
+  /** mapped recipes for this (repo, id) — the sum of the four states */
+  total: number;
+}
+
+/**
+ * One row of the control or KSI register (I1a): every mapped recipe for the
+ * id folded to a single verdict. Precedence: violated beats unevidenced beats
+ * evidenced; notApplicable rows never drag the rollup down, and the rollup is
+ * notApplicable only when every mapped recipe is — scoping honored exactly as
+ * the per-recipe registers honor it. Computed from the register rows, so an
+ * independent recount from those rows must always reproduce these counts.
+ */
+export interface RollupRow {
+  repo: string;
+  /** a control id ("si-7.1") or a KSI id ("KSI-SCR-MIT") */
+  id: string;
+  state: RegisterState;
+  /** the mapped recipes, sorted — every count is attributable */
+  recipeIds: string[];
+  counts: RollupCounts;
+}
+
+/**
+ * One interval where a (repo, recipe) sat past its MVX window without
+ * re-verification (I1d) — derived from the bundle chain × the class window,
+ * never from a wall clock. An ongoing gap ends at the fold's projectedAt.
+ */
+export interface CadenceGap {
+  repo: string;
+  recipeId: string;
+  /** the bundle whose window closed unrefreshed */
+  bundleDigest: Digest;
+  start: string; // ISO 8601 — when the window closed
+  end: string; // ISO 8601 — the refreshing bundle's timestamp, or projectedAt when ongoing
+  durationMs: number;
+  ongoing: boolean;
+}
+
 /** One movement the drift view explains: evidence born, died, or flipped. */
 export interface DriftEvent {
   at: string; // ISO 8601 — when the change was observed
@@ -207,6 +250,12 @@ export interface Projection {
   registers: RegisterRow[];
   /** movement, oldest first — the drift view reads this newest first */
   drift: DriftEvent[];
+  /** the control register: control id → mapped recipes rolled up (I1a) */
+  controls: RollupRow[];
+  /** the KSI register — same rollup keyed by KSI id */
+  ksis: RollupRow[];
+  /** cadence-adherence history: MVX-window lapses, empty when no window was given (I1d) */
+  gaps: CadenceGap[];
   datasetVersion: string;
   projectedAt: string;
 }

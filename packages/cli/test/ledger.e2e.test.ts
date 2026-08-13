@@ -8,7 +8,10 @@ import { repoFacts } from "@rampscan/collectors";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
-import { scan, verify } from "../src/index.js";
+import { windowMsFor } from "@rampscan/scheduler";
+import { canonicalJson } from "@rampscan/schema";
+import type { Projection } from "@rampscan/core";
+import { loadRecipes, scan, verify } from "../src/index.js";
 import type { ScanOutcome } from "../src/index.js";
 
 // The M2 exit test (plan §M2 "done when"): two successive scans of the same
@@ -33,6 +36,7 @@ let keysDir: string;
 let commit2: string;
 let scan1: ScanOutcome;
 let scan2: ScanOutcome;
+let projectionAfterScan1: Projection;
 
 function git(cwd: string, ...args: string[]): string {
   return execFileSync("git", args, { cwd, env: gitEnv, encoding: "utf8" }).trim();
@@ -88,6 +92,14 @@ beforeAll(async () => {
   git(appRoot, "commit", "-qm", "app");
 
   scan1 = await runScan(new Date("2026-08-13T10:00:00Z"));
+
+  // capture what the board looked like right after the first scan — the
+  // as-of exit test (I1b) must reproduce this byte-for-byte from the ledger
+  projectionAfterScan1 = await createProjector({
+    recipes: await loadRecipes(join(repoRoot, "recipes/pipeline")),
+    windowMs: windowMsFor("b"),
+    now: () => new Date("2026-08-13T10:30:00Z"),
+  }).fold(createLocalLedger(ledgerDir));
 
   // touch ONLY the workflow file — a comment changes the blob, not the checks
   await appendFile(join(appRoot, ".github", "workflows", "ci.yml"), "# touched\n");
@@ -154,5 +166,49 @@ describe("M2: ledger, signing, and honest death", () => {
     const report = await verify({ digest: "f".repeat(64), ledgerDir, keysDir });
     expect(report.ok).toBe(false);
     expect(report.lines.join("\n")).toContain("no ledger entry");
+  });
+});
+
+describe("Phase I1 exit: point-in-time truth over the append-only record", () => {
+  async function foldNow(asOf?: string): Promise<Projection> {
+    return createProjector({
+      recipes: await loadRecipes(join(repoRoot, "recipes/pipeline")),
+      windowMs: windowMsFor("b"),
+      now: () => new Date("2026-08-13T10:30:00Z"),
+      ...(asOf !== undefined ? { asOf } : {}),
+    }).fold(createLocalLedger(ledgerDir));
+  }
+
+  it("folding as-of an instant between the scans reproduces the first scan's projection byte-for-byte", async () => {
+    const asOf = await foldNow("2026-08-13T10:30:00.000Z");
+    expect(canonicalJson(asOf)).toBe(canonicalJson(projectionAfterScan1));
+  });
+
+  it("without as-of, the fold over both scans differs — the second scan really moved the board", async () => {
+    const current = await foldNow();
+    expect(canonicalJson(current)).not.toBe(canonicalJson(projectionAfterScan1));
+  });
+
+  it("control-register counts match an independent recount from the register rows", async () => {
+    const projection = await foldNow();
+    expect(projection.controls.length).toBeGreaterThan(0);
+    expect(projection.ksis.length).toBeGreaterThan(0);
+    for (const [rollups, ids] of [
+      [projection.controls, (r: (typeof projection.registers)[number]) => r.controlIds],
+      [projection.ksis, (r: (typeof projection.registers)[number]) => r.ksiIds],
+    ] as const) {
+      for (const rollup of rollups) {
+        const mapped = projection.registers.filter(
+          (row) => row.repo === rollup.repo && ids(row).includes(rollup.id),
+        );
+        expect(rollup.counts.total, `${rollup.id} total`).toBe(mapped.length);
+        expect(rollup.recipeIds).toEqual(mapped.map((r) => r.recipeId).sort());
+        for (const state of ["evidenced", "violated", "unevidenced", "notApplicable"] as const) {
+          expect(rollup.counts[state], `${rollup.id} ${state}`).toBe(
+            mapped.filter((r) => r.state === state).length,
+          );
+        }
+      }
+    }
   });
 });

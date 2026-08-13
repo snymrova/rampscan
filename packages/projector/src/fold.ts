@@ -1,4 +1,5 @@
 import type {
+  CadenceGap,
   CoverageRow,
   DriftEvent,
   EvidenceStatus,
@@ -7,6 +8,7 @@ import type {
   Projection,
   Projector,
   RegisterRow,
+  RollupRow,
   ScopingInfo,
 } from "@rampscan/core";
 import type { EvidenceBundle, PipelineRecipe, ScopingEvent } from "@rampscan/schema";
@@ -55,6 +57,19 @@ export interface FoldOptions {
    * scoping — projection × recipe set, the join the M2 board deferred.
    */
   recipes?: PipelineRecipe[];
+  /**
+   * Point-in-time fold (I1b): only statements whose predicate timestamp is at
+   * or before this instant participate. Because the ledger is append-only,
+   * the same asOf over the same ledger always folds to the same projection —
+   * the deterministic replay the auditor's as-of selector rides on.
+   */
+  asOf?: string; // ISO 8601
+  /**
+   * The MVX window in ms (from the target cert class — b=7d, c=3d). When
+   * present, the fold computes the cadence-adherence history (I1d): every
+   * interval where a cell's evidence sat past 1.0 of the window unrefreshed.
+   */
+  windowMs?: number;
 }
 
 export function foldEntries(
@@ -62,7 +77,10 @@ export function foldEntries(
   projectedAt: string,
   options: FoldOptions = {},
 ): Projection {
-  const sorted = [...entries].sort(byTime);
+  const inScope = options.asOf
+    ? entries.filter((e) => e.bundle.predicate.timestamp <= options.asOf!)
+    : entries;
+  const sorted = [...inScope].sort(byTime);
   const evidence = sorted.filter((e): e is EvidenceEntry => isEvidenceBundle(e.bundle));
   const scopings = sorted.filter((e): e is ScopingEntry => isScopingEvent(e.bundle));
 
@@ -233,14 +251,88 @@ export function foldEntries(
 
   drift.sort((a, b) => a.at.localeCompare(b.at) || a.bundleDigest.localeCompare(b.bundleDigest));
 
+  // Control + KSI registers (I1a): a fold OF the fold — rolled up from the
+  // register rows so an independent recount from those rows always agrees.
+  const controls = rollup(registers, (row) => row.controlIds);
+  const ksis = rollup(registers, (row) => row.ksiIds);
+
+  // Cadence-adherence history (I1d): bundle chains × the MVX window. Every
+  // consecutive pair whose refresh landed after the window closed is a gap;
+  // an unrefreshed tail whose window closed before projectedAt is an ongoing
+  // one. Time comes from bundle timestamps and the fold's projectedAt — never
+  // from a wall clock, so the same inputs always fold to the same gaps.
+  const gaps: CadenceGap[] = [];
+  if (options.windowMs !== undefined) {
+    for (const chain of groups.values()) {
+      chain.forEach((entry, i) => {
+        const p = entry.bundle.predicate;
+        const expiry = new Date(Date.parse(p.timestamp) + options.windowMs!).toISOString();
+        const end = chain[i + 1]?.bundle.predicate.timestamp ?? projectedAt;
+        if (end <= expiry) return;
+        gaps.push({
+          repo: p.repo,
+          recipeId: p.recipe_id,
+          bundleDigest: entry.digest,
+          start: expiry,
+          end,
+          durationMs: Date.parse(end) - Date.parse(expiry),
+          ongoing: chain[i + 1] === undefined,
+        });
+      });
+    }
+    gaps.sort(
+      (a, b) =>
+        a.repo.localeCompare(b.repo) ||
+        a.recipeId.localeCompare(b.recipeId) ||
+        a.start.localeCompare(b.start),
+    );
+  }
+
   const newest = sorted.at(-1);
   return {
     rows,
     registers,
     drift,
+    controls,
+    ksis,
+    gaps,
     datasetVersion: newest?.bundle.predicate.dataset_version ?? "",
     projectedAt,
   };
+}
+
+/**
+ * Roll register rows up by control or KSI id. Verdict precedence: violated
+ * beats unevidenced beats evidenced; notApplicable never drags the rollup
+ * down and wins only when every mapped recipe is scoped out.
+ */
+function rollup(registers: RegisterRow[], idsOf: (row: RegisterRow) => string[]): RollupRow[] {
+  const cells = new Map<string, { repo: string; id: string; rows: RegisterRow[] }>();
+  for (const row of registers) {
+    for (const id of idsOf(row)) {
+      const key = `${row.repo} ${id}`;
+      (cells.get(key) ?? cells.set(key, { repo: row.repo, id, rows: [] }).get(key)!).rows.push(row);
+    }
+  }
+  return [...cells.keys()].sort().map((key) => {
+    const { repo, id, rows } = cells.get(key)!;
+    const counts = {
+      evidenced: rows.filter((r) => r.state === "evidenced").length,
+      violated: rows.filter((r) => r.state === "violated").length,
+      unevidenced: rows.filter((r) => r.state === "unevidenced").length,
+      notApplicable: rows.filter((r) => r.state === "notApplicable").length,
+      total: rows.length,
+    };
+    const state =
+      counts.violated > 0
+        ? ("violated" as const)
+        : counts.unevidenced > 0
+          ? ("unevidenced" as const)
+          : counts.evidenced > 0
+            ? ("evidenced" as const)
+            : ("notApplicable" as const);
+    return { repo, id, state, recipeIds: rows.map((r) => r.recipeId).sort(), counts };
+  });
 }
 
 export interface ProjectorOptions extends FoldOptions {
@@ -253,6 +345,8 @@ export function createProjector(options: ProjectorOptions = {}): Projector {
     async fold(ledger: LedgerStore): Promise<Projection> {
       const foldOptions: FoldOptions = {};
       if (options.recipes) foldOptions.recipes = options.recipes;
+      if (options.asOf !== undefined) foldOptions.asOf = options.asOf;
+      if (options.windowMs !== undefined) foldOptions.windowMs = options.windowMs;
       return foldEntries(await ledger.list(), now().toISOString(), foldOptions);
     },
   };

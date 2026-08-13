@@ -1,9 +1,11 @@
 import type {
+  CadenceGap,
   CoverageRow,
   DriftEvent,
   LedgerEntry,
   Projection,
   RegisterRow,
+  RollupRow,
 } from "@rampscan/core";
 
 // PocketBase as projection store (SPEC §6, plan M3 E1). The rules that keep
@@ -175,6 +177,42 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
     updateRule: null,
     deleteRule: null,
   },
+  ...(["controls", "ksis"] as const).map(
+    (name): CollectionSpec => ({
+      name,
+      type: "base",
+      fields: [
+        text("repo", true),
+        text("rollup_id", true), // "id" collides with PocketBase's record id
+        text("state", true),
+        json("recipe_ids"),
+        json("counts"),
+      ],
+      listRule: AUTHED,
+      viewRule: AUTHED,
+      createRule: null,
+      updateRule: null,
+      deleteRule: null,
+    }),
+  ),
+  {
+    name: "gaps",
+    type: "base",
+    fields: [
+      text("repo", true),
+      text("recipe_id", true),
+      text("bundle_digest", true),
+      text("gap_start", true),
+      text("gap_end", true),
+      { name: "duration_ms", type: "number", required: false },
+      { name: "ongoing", type: "bool", required: false },
+    ],
+    listRule: AUTHED,
+    viewRule: AUTHED,
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
+  },
   {
     name: "bundles",
     type: "base",
@@ -290,6 +328,31 @@ export async function writeProjectionPocketBase(
       bundle_digest: event.bundleDigest,
     });
   }
+  for (const [collection, rollupRows] of [
+    ["controls", projection.controls],
+    ["ksis", projection.ksis],
+  ] as const) {
+    for (const row of rollupRows) {
+      await pb.create(collection, {
+        repo: row.repo,
+        rollup_id: row.id,
+        state: row.state,
+        recipe_ids: row.recipeIds,
+        counts: row.counts,
+      });
+    }
+  }
+  for (const gap of projection.gaps) {
+    await pb.create("gaps", {
+      repo: gap.repo,
+      recipe_id: gap.recipeId,
+      bundle_digest: gap.bundleDigest,
+      gap_start: gap.start,
+      gap_end: gap.end,
+      duration_ms: gap.durationMs,
+      ongoing: gap.ongoing,
+    });
+  }
   for (const entry of entries) {
     await pb.create("bundles", {
       digest: entry.digest,
@@ -307,12 +370,16 @@ export async function writeProjectionPocketBase(
 
 /** Read the stored projection back — `rampscan rebuild` compares this against a fresh fold. */
 export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Projection> {
-  const [registerRecords, coverageRecords, driftRecords, metaRecords] = await Promise.all([
-    pb.listAll("registers"),
-    pb.listAll("coverage"),
-    pb.listAll("drift"),
-    pb.listAll("meta"),
-  ]);
+  const [registerRecords, coverageRecords, driftRecords, controlRecords, ksiRecords, gapRecords, metaRecords] =
+    await Promise.all([
+      pb.listAll("registers"),
+      pb.listAll("coverage"),
+      pb.listAll("drift"),
+      pb.listAll("controls"),
+      pb.listAll("ksis"),
+      pb.listAll("gaps"),
+      pb.listAll("meta"),
+    ]);
 
   const registers: RegisterRow[] = registerRecords.map((r: any) => {
     const row: RegisterRow = {
@@ -359,11 +426,30 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     if (r.to_verdict) event.to = r.to_verdict;
     return event;
   });
+  const toRollup = (r: any): RollupRow => ({
+    repo: r.repo,
+    id: r.rollup_id,
+    state: r.state,
+    recipeIds: r.recipe_ids ?? [],
+    counts: r.counts,
+  });
+  const gaps: CadenceGap[] = gapRecords.map((r: any) => ({
+    repo: r.repo,
+    recipeId: r.recipe_id,
+    bundleDigest: r.bundle_digest,
+    start: r.gap_start,
+    end: r.gap_end,
+    durationMs: r.duration_ms,
+    ongoing: r.ongoing === true,
+  }));
   const meta = metaRecords[0] as any;
   return {
     rows,
     registers,
     drift,
+    controls: controlRecords.map(toRollup),
+    ksis: ksiRecords.map(toRollup),
+    gaps,
     datasetVersion: meta?.dataset_version ?? "",
     projectedAt: meta?.projected_at ?? "",
   };

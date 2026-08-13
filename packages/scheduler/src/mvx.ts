@@ -3,7 +3,8 @@ import type { CertClass } from "@rampscan/core";
 // The MVX re-verification clock (FedRAMP 20x): evidence must be re-verified
 // inside the class window — 7 days at class b, 3 at class c. This is the
 // server-side twin of console/web/lib/mvx.ts (the console keeps its own copy
-// because it ships in a client bundle); the thresholds agree by test.
+// because it ships in a client bundle); the thresholds agree by test —
+// test/mvx-twin.test.ts imports both copies and fails if they drift.
 
 export const MVX_WINDOW_DAYS: Record<CertClass, number> = { b: 7, c: 3 };
 

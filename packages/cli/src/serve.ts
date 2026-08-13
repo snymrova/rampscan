@@ -7,6 +7,7 @@ import { createProjector, writeProjectionPocketBase } from "@rampscan/projector"
 import type { ProjectionSettings } from "@rampscan/projector";
 import { createLocalLedger } from "@rampscan/ledger";
 import type { CertClass } from "@rampscan/core";
+import { windowMsFor } from "@rampscan/scheduler";
 import { loadRecipes } from "./recipes.js";
 import { DEMO_PASSWORD, DEMO_USERS, bootstrapConsole, startPocketBase } from "./pocketbase.js";
 
@@ -52,7 +53,7 @@ export async function serve(options: ServeOptions): Promise<void> {
   await bootstrapConsole(pb.admin, log);
 
   const recipes = await loadRecipes(options.recipesDir);
-  const projector = createProjector({ recipes });
+  const projector = createProjector({ recipes, windowMs: windowMsFor(options.certClass) });
   const settings: ProjectionSettings = {
     certClass: options.certClass,
     reproduceCommand: "pnpm rampscan scan <repo-path>",

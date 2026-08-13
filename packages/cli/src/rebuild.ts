@@ -22,6 +22,8 @@ export interface RebuildOptions {
   recipesDir: string;
   /** SQLite projection path; always written */
   dbPath: string;
+  /** MVX window in ms — when present, the fold carries the cadence-gap history (I1d) */
+  windowMs?: number;
   /** PocketBase target; rebuilt too when provided and healthy */
   pocketbase?: {
     url: string;
@@ -49,6 +51,7 @@ export async function rebuild(options: RebuildOptions): Promise<RebuildReport> {
   const recipes = await loadRecipes(options.recipesDir);
   const projectorOptions: Parameters<typeof createProjector>[0] = { recipes };
   if (options.now) projectorOptions.now = options.now;
+  if (options.windowMs !== undefined) projectorOptions.windowMs = options.windowMs;
   const projector = createProjector(projectorOptions);
 
   const entries = await ledger.list();

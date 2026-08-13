@@ -7,6 +7,7 @@ import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
+import { windowMsFor } from "@rampscan/scheduler";
 import { renderBoard } from "./board.js";
 import { startDaemon } from "./daemon.js";
 import { rebuild } from "./rebuild.js";
@@ -39,6 +40,7 @@ function usage(): never {
       "  scan <path>       scan a checkout; sign and record evidence",
       "  verify <digest>   verify one ledger bundle offline (content + signature)",
       "  board             show the projection: registers, live evidence, graveyard",
+      "  board --as-of <iso>  the same projection at a past instant, refolded from the ledger",
       "  rebuild           rebuild projection stores from the ledger and PROVE projection ≡ ledger",
       "  serve             start PocketBase + the Next.js console (the visual board)",
       "  daemon <path>     keep the target evidenced on cadence: incremental re-scans,",
@@ -54,6 +56,7 @@ function usage(): never {
       "  --pin <version>   dataset version pin (default: " + DEFAULT_DATASET_PIN + ")",
       "  --recipes <dir>   pipeline recipe dir (default: recipes/pipeline)",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b)",
+      "  --as-of <iso>     board: fold only statements at or before this instant (I1b)",
       "  --pb-port <n>     serve: PocketBase port (default: 8090)",
       "  --web-port <n>    serve: console port (default: 3000)",
       "  --no-web          serve: PocketBase + projector only, no Next.js",
@@ -81,6 +84,7 @@ async function main(): Promise<void> {
       pin: { type: "string" },
       recipes: { type: "string" },
       class: { type: "string" },
+      "as-of": { type: "string" },
       "pb-port": { type: "string" },
       "web-port": { type: "string" },
       "no-web": { type: "boolean" },
@@ -133,7 +137,22 @@ async function main(): Promise<void> {
 
     case "board": {
       const recipes = await loadRecipes(recipesDir);
-      const projection = await createProjector({ recipes }).fold(createLocalLedger(ledgerDir));
+      const asOf = values["as-of"];
+      if (asOf !== undefined && Number.isNaN(Date.parse(asOf))) {
+        console.error(`--as-of is not a parseable instant: ${asOf}`);
+        process.exit(2);
+      }
+      const projector = createProjector({
+        recipes,
+        windowMs: windowMsFor(certClass),
+        ...(asOf !== undefined ? { asOf: new Date(asOf).toISOString() } : {}),
+      });
+      const projection = await projector.fold(createLocalLedger(ledgerDir));
+      if (asOf !== undefined) {
+        console.log(
+          `AS OF ${new Date(asOf).toISOString()} — refolded from ledger statements at or before this instant\n`,
+        );
+      }
       console.log(renderBoard(projection, useColor));
       return;
     }
@@ -144,6 +163,7 @@ async function main(): Promise<void> {
         ledgerDir,
         recipesDir,
         dbPath: values.db ?? "./rampscan-projection.db",
+        windowMs: windowMsFor(certClass),
       });
       console.log(report.lines.join("\n"));
       if (!report.ok) process.exit(1);

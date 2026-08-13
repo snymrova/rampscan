@@ -1,7 +1,9 @@
 // The MVX re-verification clock (FedRAMP 20x): evidence must be re-verified
 // inside the class window — 7 days at class b, 3 at class c. The clock view
 // exists because the regulation demands the loop; these helpers keep the math
-// in one place, computed from bundle timestamps, never typed.
+// in one place, computed from bundle timestamps, never typed. This is the
+// client-bundle twin of packages/scheduler/src/mvx.ts — the scheduler's
+// test/mvx-twin.test.ts imports both copies and fails if the thresholds drift.
 
 export const MVX_WINDOW_DAYS: Record<"b" | "c", number> = { b: 7, c: 3 };
 
