@@ -8,10 +8,12 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --build",
-    "doctor": "node scripts/doctor.mjs"
+    "doctor": "node scripts/doctor.mjs",
+    "rampscan": "tsx packages/cli/src/main.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }

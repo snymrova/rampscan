@@ -1,0 +1,21 @@
+{
+  "id": "tests-in-ci",
+  "ksi_ids": ["KSI-SCR-MIT", "KSI-CMT-VTD"],
+  "control_ids": ["sa-11", "cm-3.2"],
+  "evidence": "The CI pipeline runs an automated test suite on changes before they merge or deploy",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row with workflow_count and test_step_count",
+  "assertions": [
+    {
+      "field": "test_step_count",
+      "op": "gte",
+      "value": 1,
+      "controls": ["sa-11", "cm-3.2"],
+      "description": "At least one workflow step runs a recognized test command — changes are tested, not just built."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "caveats": "Recognizes common test invocations by pattern; a bespoke test harness under an unrecognized name reads as absent.",
+  "anchor": "commit"
+}

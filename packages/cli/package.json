@@ -1,0 +1,19 @@
+{
+  "name": "@rampscan/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@rampscan/collectors": "workspace:*",
+    "@rampscan/core": "workspace:*",
+    "@rampscan/dataset": "workspace:*",
+    "@rampscan/schema": "workspace:*",
+    "zod": "^3.24.0"
+  }
+}

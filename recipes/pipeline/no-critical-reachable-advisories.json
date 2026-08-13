@@ -1,0 +1,26 @@
+{
+  "id": "no-critical-reachable-advisories",
+  "ksi_ids": ["KSI-SCR-MON", "KSI-CMT-VTD"],
+  "control_ids": ["ra-5", "si-2", "si-5"],
+  "evidence": "No known CRITICAL or HIGH advisory applies to any dependency in the SBOM at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "osv-scanner",
+    "inputs": ["sbom.cdx.json"]
+  },
+  "expected_output": "osv-results.json; one observation row per advisory group with advisory, package, version, ecosystem, severity",
+  "assertions": [
+    {
+      "field": "advisory",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "severity", "op": "in", "value": ["CRITICAL", "HIGH"] }],
+      "controls": ["ra-5", "si-2"],
+      "description": "Zero CRITICAL or HIGH advisories against the dependency tree."
+    }
+  ],
+  "cadence": "daily",
+  "automatable": "full",
+  "notes": "M1 posture is NOT reachability-gated: every advisory counts until the M4 code graph gates them — an unreachable HIGH then becomes a signed not-affected VEX instead of a violation.",
+  "anchor": "commit"
+}

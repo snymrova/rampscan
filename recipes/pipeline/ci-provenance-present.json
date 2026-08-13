@@ -1,0 +1,28 @@
+{
+  "id": "ci-provenance-present",
+  "ksi_ids": ["KSI-SCR-MIT"],
+  "control_ids": ["sa-15.3", "si-7.1"],
+  "evidence": "At least one CI workflow generates build provenance or signed attestations tying artifacts to the commit that produced them",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row with workflow_count and provenance_step_count",
+  "assertions": [
+    {
+      "field": "workflow_count",
+      "op": "gte",
+      "value": 1,
+      "controls": ["sa-15.3"],
+      "description": "CI exists — provenance without a pipeline is not possible."
+    },
+    {
+      "field": "provenance_step_count",
+      "op": "gte",
+      "value": 1,
+      "controls": ["sa-15.3", "si-7.1"],
+      "description": "Some workflow step generates provenance or attestations (slsa-github-generator, attest-build-provenance, cosign, --provenance)."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "caveats": "Detects the configuration, not the attestations themselves — verifying published attestations against a registry is appliance-phase work.",
+  "anchor": "commit"
+}

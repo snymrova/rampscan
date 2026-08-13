@@ -1,0 +1,21 @@
+{
+  "id": "lockfile-pinned-deps",
+  "ksi_ids": ["KSI-SCR-MIT"],
+  "control_ids": ["si-7.1", "sr-5"],
+  "evidence": "Every package manifest in the repository is accompanied by a lockfile pinning its full transitive dependency tree",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row per package manifest with manifest, lockfile, lockfile_present",
+  "assertions": [
+    {
+      "field": "lockfile_present",
+      "op": "eq",
+      "value": true,
+      "controls": ["si-7.1", "sr-5"],
+      "description": "Every package manifest has a lockfile — without one the installed tree is unreproducible and silently movable."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "M1 checks the npm-family manifests at the repo root; other ecosystems join as repo-facts grows.",
+  "anchor": "commit"
+}

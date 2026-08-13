@@ -53,17 +53,64 @@ export interface Workspace {
   commit: string; // full sha the workspace is pinned to
 }
 
+/**
+ * Rows a collector observed for one recipe — what the join evaluates recipe
+ * assertions against. Always an array: single-object observations are one row,
+ * per-item observations (leaks, advisories, actions) are one row each, so
+ * `where`-filtered and count assertions read the same way they do in
+ * aws-evidence.json.
+ */
+export type ObservationRows = Array<Record<string, unknown>>;
+
 export interface RunResult {
   findings: Finding[];
-  /** artifacts produced, repo-relative to an artifact dir, e.g. sbom.cdx.json */
+  /** artifacts produced, relative to the run's artifact dir, e.g. sbom.cdx.json */
   artifacts: Array<{ name: string; path: string; sha256: string }>;
+  /** recipeId → rows; a recipe the collector could not observe is absent */
+  observations: Record<string, ObservationRows>;
+  /** recipeId → repo paths (with content hash) this evidence is about — M2 anchor death reads these */
+  anchors: Record<string, Array<{ path: string; contentHash: string }>>;
   toolVersion: string;
   exitCode: number;
+  /** set when the collector could not run at all (tool missing, no Dockerfile, …) */
+  skipped?: { reason: string };
 }
 
 /** local: child process / Docker → later: Fargate task. */
 export interface Runner {
   run(manifest: CollectorManifest, workspace: Workspace): Promise<RunResult>;
+}
+
+/**
+ * The collector extension contract: adding a collector is adding a manifest
+ * plus this implementation — the pipeline itself is untouched (SPEC §7).
+ * Implementations live in @rampscan/collectors; the Runner adapter executes
+ * them. Everything a collector returns is Zod-enforced at the wrapper
+ * boundary by the runner.
+ */
+export interface CollectContext {
+  workspace: Workspace;
+  /** absolute, collector-specific dir; every artifact the collector writes goes here */
+  artifactDir: string;
+  /** artifacts produced by earlier collectors this run: name → absolute path */
+  inputs: ReadonlyMap<string, string>;
+  runId: string;
+}
+
+export interface CollectOutput {
+  findings: Finding[];
+  /** name → absolute path inside artifactDir; the runner hashes and relativizes */
+  artifacts: Array<{ name: string; path: string }>;
+  observations: Record<string, ObservationRows>;
+  anchors?: Record<string, Array<{ path: string; contentHash: string }>>;
+  toolVersion: string;
+  exitCode: number;
+  skipped?: { reason: string };
+}
+
+export interface Collector {
+  manifest: CollectorManifest;
+  collect(ctx: CollectContext): Promise<CollectOutput>;
 }
 
 export type CertClass = "b" | "c"; // class d has no MVX window — SPEC §11 q6

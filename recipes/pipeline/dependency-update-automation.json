@@ -1,0 +1,20 @@
+{
+  "id": "dependency-update-automation",
+  "ksi_ids": ["KSI-CMT-VTD", "KSI-SCR-MON"],
+  "control_ids": ["si-2", "si-5"],
+  "evidence": "Automated dependency-update tooling (Dependabot or Renovate) is configured, so vulnerable dependencies surface as pull requests instead of waiting for a human to notice",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row with dependabot, renovate, automated, config",
+  "assertions": [
+    {
+      "field": "automated",
+      "op": "eq",
+      "value": true,
+      "controls": ["si-2", "si-5"],
+      "description": "A dependency-update automation config exists (.github/dependabot.yml or a Renovate config)."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "anchor": "commit"
+}

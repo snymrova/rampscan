@@ -1,0 +1,12 @@
+{
+  "id": "route-auth-coverage",
+  "ksi_ids": ["KSI-IAM-ELP"],
+  "control_ids": ["ac-3", "ac-14"],
+  "evidence": "Every declared server route reaches an authentication or authorization check somewhere in its call path",
+  "collection": { "kind": "pipeline", "collector": "graph" },
+  "expected_output": "One observation row per route with route, auth_reached, path (the call chain as the artifact)",
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "The assertion arrives in M4 with the code graph (`reaches(route, authCheck)` by recursive CTE); until then this recipe is honestly unevidenced — listed, never hidden.",
+  "anchor": "commit"
+}

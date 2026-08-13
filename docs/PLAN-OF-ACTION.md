@@ -45,16 +45,16 @@ Build order inside the milestone — schema first, because everything else impor
 
 The thesis milestone — if the join doesn't produce honest verdicts here, stop and rethink before building storage.
 
-- [ ] C1. Collector manifest format + the `Runner` local adapter (spawn → parse JSON → Findings), Zod-enforced at the wrapper boundary.
-- [ ] C2. Collectors, in this order (cheapest first, each demoable alone):
-  - [ ] `repo-facts` (hand-rolled, no external tool — lockfile pinning, CI workflow presence/provenance) — proves the manifest shape without dependency risk
-  - [ ] `gitleaks` (secrets, full history)
-  - [ ] `syft` (SBOM/CycloneDX)
-  - [ ] `osv-scanner` (advisories against the SBOM)
-  - [ ] `grype` (container image from the repo's Dockerfile; graceful skip when absent)
-- [ ] C3. `recipes/pipeline/` starter set — ~12 hand-authored recipes covering what these collectors plus M4 can prove (SBOM-exists-and-fresh, no-secrets-in-history, lockfile-pinned-deps, CI-provenance-present, container-base-image-patched, no-critical-reachable-advisories, route-auth-coverage, …), each resolving to real KSI/control IDs (KSI-SVC/SCR/CNA clusters).
-- [ ] C4. The join: collector output × recipe assertions → per-recipe verdict (`evidenced | violated | unevidenced`) with artifacts + commit hash.
-- [ ] C5. CLI: `rampscan scan <path>` → three-register terminal summary + `scan-result.json`.
+- [x] C1. Collector manifest format + the `Runner` local adapter (spawn → parse JSON → Findings), Zod-enforced at the wrapper boundary.
+- [x] C2. Collectors, in this order (cheapest first, each demoable alone):
+  - [x] `repo-facts` (hand-rolled, no external tool — lockfile pinning, CI workflow presence/provenance) — proves the manifest shape without dependency risk
+  - [x] `gitleaks` (secrets, full history)
+  - [x] `syft` (SBOM/CycloneDX)
+  - [x] `osv-scanner` (advisories against the SBOM)
+  - [x] `grype` (container image from the repo's Dockerfile; graceful skip when absent)
+- [x] C3. `recipes/pipeline/` starter set — ~12 hand-authored recipes covering what these collectors plus M4 can prove (SBOM-exists-and-fresh, no-secrets-in-history, lockfile-pinned-deps, CI-provenance-present, container-base-image-patched, no-critical-reachable-advisories, route-auth-coverage, …), each resolving to real KSI/control IDs (KSI-SVC/SCR/CNA clusters).
+- [x] C4. The join: collector output × recipe assertions → per-recipe verdict (`evidenced | violated | unevidenced`) with artifacts + commit hash.
+- [x] C5. CLI: `rampscan scan <path>` → three-register terminal summary + `scan-result.json`. (No installable bin yet: `pnpm rampscan scan <path>` via tsx.)
 
 **Exit test (plan §M1):** scanning `~/Projects/ramprules.com/fedramp-rules-hub` yields real evidence rows *and* real unevidenced rows; scanning the fixture yields violations with artifacts; every verdict cites recipe/KSI/control IDs that resolve against the dataset.
 
@@ -119,5 +119,6 @@ Update this table as work lands — newest first. "Phase" refers to this documen
 
 | Date | Phase | What landed | Notes / deviations |
 |---|---|---|---|
+| 2026-08-13 | C (M1) | Full vertical slice: `packages/collectors` (repo-facts, gitleaks, syft, osv-scanner, grype — each a `Collector` with manifest + Zod-parsed tool output), real `Runner`/`RepoSource` local adapters in core (runner is the Zod boundary; hashes + relativizes artifacts; feeds an inputs map so osv-scanner consumes syft's SBOM), assertion evaluator + the join in `packages/core` (aws-evidence semantics: row-wise ops vacuous on empty filtered sets, count ops over `where`-filtered rows), 12 recipes in `recipes/pipeline/` (KSI/control IDs validated against the dataset at scan time and in tests), `packages/cli` (`pnpm rampscan scan <path>` → three-register summary + `scan-result.json`; per-recipe rows carry assertions/artifacts/anchor_paths so M2 bundles are a re-keying). `pnpm test`: 66/66 green; typecheck clean. | Tools installed to `~/.local/bin` (gitleaks 8.24.3, syft 1.51.0, grype 0.117.0, osv-scanner 2.5.0). Fixture's planted secret changed: gitleaks allowlists AWS's documented example key (`AKIAIOSFODNN7EXAMPLE`), so the fixture now plants a non-allowlisted fake key — fixture SHAs moved. Fixture is built once per test run by vitest globalSetup (parallel per-file rebuilds raced). syft excludes uncommitted trees (`node_modules`, `.next`, `.git`, …): they aren't commit-anchored, and unexcluded the hub scan blew the 600s timeout. grype scans the final FROM's base image, not a locally built app image. **M1 exit tests pass**: fixture → 2 evidenced / 9 violated / 1 unevidenced (all four planted faults caught: 2 history secrets, lodash HIGH advisories, 2 unpinned actions + no provenance, node:16-alpine CRITICALs via grype); fedramp-rules-hub → 4 evidenced / 5 violated / 3 unevidenced — real evidence rows, real unevidenced rows, every verdict citing dataset-resolvable IDs. Next action: D1 (ledger local adapter + the cheating test). |
 | 2026-08-13 | A + B (M0) | git history started; pnpm workspace (Node v22.22.2, pnpm 9.6.0, git 2.43.0); `packages/schema` (Finding / PipelineRecipe / EvidenceBundle / CollectorManifest, Zod, round-trip tests); `packages/dataset` (dev loader over `derived/`, pinned-mode stub, version pin hard-fails, `ksisFor("ac-2.1") → [KSI-IAM-JIT, KSI-IAM-SUS]` verified); `packages/core` (six ports + stubbed local adapters that reject loudly); `fixtures/build-vulnerable-app.mjs`; `scripts/doctor.mjs`. `pnpm test`: 17/17 green; `pnpm typecheck` clean. | Fixture is generated, not committed (nested `.git` can't be committed) — deterministic script committed instead, SHAs stable (HEAD `9352d78`). Doctor: syft/osv-scanner/grype/gitleaks/cosign absent on this machine, Docker present — install before C2. M0 exit tests pass. Next action: C1 (collector manifest + Runner local adapter). |
 | 2026-08-13 | — | Docs phase: spec, implementation plan, architecture reference, this plan | No code yet. Next action: A1 (`git init`). |

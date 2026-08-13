@@ -1,0 +1,21 @@
+{
+  "id": "container-runs-nonroot",
+  "ksi_ids": ["KSI-IAM-ELP"],
+  "control_ids": ["ac-6"],
+  "evidence": "The container image the repository builds drops root: its Dockerfile's final USER is a non-root account",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row per Dockerfile with dockerfile, final_user, nonroot",
+  "assertions": [
+    {
+      "field": "nonroot",
+      "op": "eq",
+      "value": true,
+      "controls": ["ac-6"],
+      "description": "The final USER directive names a non-root user; a Dockerfile without USER runs as root."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "Unevidenced when the repo has no Dockerfile — nothing container-shaped to prove.",
+  "anchor": "commit"
+}

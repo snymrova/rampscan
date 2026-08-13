@@ -5,5 +5,6 @@ dist/
 fixtures/vulnerable-app/
 # local run outputs
 scan-result.json
+rampscan-out/
 ledger/
 exports/

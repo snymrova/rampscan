@@ -1,0 +1,21 @@
+{
+  "id": "ci-actions-pinned",
+  "ksi_ids": ["KSI-SCR-MIT"],
+  "control_ids": ["sr-5", "si-7.1"],
+  "evidence": "Every third-party CI action reference resolves to an immutable commit SHA, not a movable tag",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row per `uses:` reference across all workflows, with workflow, action, pinned_to_sha",
+  "assertions": [
+    {
+      "field": "pinned_to_sha",
+      "op": "eq",
+      "value": true,
+      "controls": ["sr-5", "si-7.1"],
+      "description": "Every third-party action is pinned to a 40-hex commit SHA; a tag can be force-moved to attacker-controlled code."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "Repo-local actions (./…) move with the commit and count as pinned; unevidenced when the repo has no CI workflows at all.",
+  "anchor": "commit"
+}

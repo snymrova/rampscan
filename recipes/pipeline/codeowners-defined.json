@@ -1,0 +1,21 @@
+{
+  "id": "codeowners-defined",
+  "ksi_ids": ["KSI-CMT-RVP"],
+  "control_ids": ["cm-5", "cm-9"],
+  "evidence": "A CODEOWNERS file routes changes to designated reviewers, the repository-side half of enforced change review",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row with codeowners_present and path",
+  "assertions": [
+    {
+      "field": "codeowners_present",
+      "op": "eq",
+      "value": true,
+      "controls": ["cm-5", "cm-9"],
+      "description": "A CODEOWNERS file exists at a location GitHub honors (/, .github/, docs/)."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "caveats": "Proves ownership is declared, not that branch protection enforces it — enforcement lives server-side and needs the GitHub App (appliance phase).",
+  "anchor": "commit"
+}

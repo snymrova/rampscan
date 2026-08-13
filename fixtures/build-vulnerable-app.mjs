@@ -138,9 +138,11 @@ git("commit", "-q", "-m", "initial app");
 write(
   "config/.env",
   // Fake-but-well-formed AWS credentials: matches gitleaks' aws-access-key-id
-  // pattern (AKIA + 16 uppercase alphanumerics). Not a real key.
-  `AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  // pattern (AKIA + 16 uppercase alphanumerics). Not a real key. Deliberately
+  // NOT AWS's documented example key (AKIAIOSFODNN7EXAMPLE) — gitleaks
+  // allowlists that one, which would make the planted fault undetectable.
+  `AWS_ACCESS_KEY_ID=<aws-key-shape-assembled-at-build-time>
+AWS_SECRET_ACCESS_KEY=<aws-secret-shape-assembled-at-build-time>
 `,
 );
 git("add", "-A");

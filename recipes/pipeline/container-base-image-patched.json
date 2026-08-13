@@ -1,0 +1,22 @@
+{
+  "id": "container-base-image-patched",
+  "ksi_ids": ["KSI-SCR-MON", "KSI-CMT-VTD", "KSI-CNA-IBP"],
+  "control_ids": ["ra-5", "si-2", "cm-2"],
+  "evidence": "The base image named by the repository's Dockerfile carries no CRITICAL OS-level vulnerabilities — the packages the app manifest never declares",
+  "collection": { "kind": "pipeline", "collector": "grype" },
+  "expected_output": "grype-report.json; one observation row per match with vulnerability, severity, package, version, fix_state, image",
+  "assertions": [
+    {
+      "field": "vulnerability",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "severity", "op": "eq", "value": "CRITICAL" }],
+      "controls": ["ra-5", "si-2"],
+      "description": "Zero CRITICAL vulnerabilities in the final stage's base image."
+    }
+  ],
+  "cadence": "daily",
+  "automatable": "full",
+  "caveats": "M1 scans the base image the final FROM names, not a locally built app image; unevidenced when there is no Dockerfile or the image cannot be pulled.",
+  "anchor": "commit"
+}
