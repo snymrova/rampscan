@@ -6,5 +6,7 @@ fixtures/vulnerable-app/
 # local run outputs
 scan-result.json
 rampscan-out/
-ledger/
+rampscan-ledger/
 exports/
+# local signing keypair — the private key must never be committed
+rampscan-keys/

@@ -9,6 +9,9 @@
     { "path": "../schema" },
     { "path": "../core" },
     { "path": "../dataset" },
-    { "path": "../collectors" }
+    { "path": "../collectors" },
+    { "path": "../ledger" },
+    { "path": "../signer" },
+    { "path": "../projector" }
   ]
 }

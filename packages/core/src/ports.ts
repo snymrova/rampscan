@@ -23,12 +23,14 @@ export interface LedgerQuery {
 export interface LedgerEntry {
   digest: Digest;
   bundle: EvidenceBundle;
+  /** the DSSE envelope over the bundle, when the append was signed (M2 always signs) */
+  envelope?: SignedEnvelope;
   appendedAt: string; // ISO 8601
 }
 
 /** Append-only evidence ledger. local: content-addressed dir → later: S3 + Object Lock. */
 export interface LedgerStore {
-  append(bundle: EvidenceBundle): Promise<Digest>;
+  append(bundle: EvidenceBundle, envelope?: SignedEnvelope): Promise<Digest>;
   get(digest: Digest): Promise<LedgerEntry | undefined>;
   list(query?: LedgerQuery): Promise<LedgerEntry[]>;
 }
@@ -136,6 +138,7 @@ export type EvidenceStatus =
   | { state: "dead"; cause: "anchor-drift" | "superseded"; killingCommit?: string };
 
 export interface CoverageRow {
+  repo: string;
   recipeId: string;
   ksiIds: string[];
   controlIds: string[];

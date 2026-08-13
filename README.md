@@ -8,9 +8,9 @@ Out of scope, deliberately: executing ramprules' AWS evidence recipes (the clien
 
 ## Status
 
-Local prototype, M1 complete: `pnpm rampscan scan <path>` runs five collectors (repo-facts, gitleaks, syft, osv-scanner, grype) over a checkout, joins their output against the 12 starter recipes in [`recipes/pipeline/`](recipes/pipeline/), and prints the three registers — evidenced / violated / unevidenced — plus `scan-result.json`. Every verdict cites recipe/KSI/control IDs validated against the pinned ramprules dataset. Next: M2 (ledger, signing, anchor death), per the implementation plan.
+Local prototype, M2 complete: `pnpm rampscan scan <path>` runs five collectors (repo-facts, gitleaks, syft, osv-scanner, grype) over a checkout, joins their output against the 12 starter recipes in [`recipes/pipeline/`](recipes/pipeline/), prints the three registers — evidenced / violated / unevidenced — and records each evidenced/violated row as a signed, commit-anchored bundle in an append-only content-addressed ledger. Re-scans keep unchanged evidence alive under its original signature; when an anchoring file changes, the projector marks that evidence `dead(anchor-drift)` with the killing commit. `pnpm rampscan verify <digest>` checks any bundle offline (content hash + DSSE signature); `pnpm rampscan board` shows live and dead evidence. Next: M3 (the console: PocketBase + Next.js registers, clock and drift views), per the implementation plan.
 
-Setup: Node 22 + pnpm, then `pnpm install && pnpm test`. `pnpm doctor` lists the scan tools (syft, osv-scanner, grype, gitleaks, cosign) with install hints — collectors whose tool is missing skip gracefully and their recipes report unevidenced with the reason.
+Setup: Node 22 + pnpm, then `pnpm install && pnpm test`. `pnpm doctor` lists the scan tools (syft, osv-scanner, grype, gitleaks; cosign optional) with install hints — collectors whose tool is missing skip gracefully and their recipes report unevidenced with the reason.
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — consolidated architecture and data flow reference: components, the scan pipeline end to end, stores, trust boundaries, evidence lifecycle, invariants.
 - [`docs/IMPLEMENTATION-PLAN.md`](docs/IMPLEMENTATION-PLAN.md) — the local prototype plan: milestones M0–M5, ports-and-adapters, MVP scope.

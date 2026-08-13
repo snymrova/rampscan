@@ -32,8 +32,9 @@ const tools = [
   {
     name: "cosign",
     versionArgs: ["version"],
-    why: "bundle signing keypair — M2",
+    why: "optional independent verification of DSSE envelopes — the M2 signer itself is node:crypto, no binary needed",
     install: "brew install cosign | https://github.com/sigstore/cosign/releases",
+    optional: true,
   },
   {
     name: "docker",

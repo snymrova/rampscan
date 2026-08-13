@@ -1,0 +1,16 @@
+{
+  "name": "@rampscan/ledger",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@rampscan/core": "workspace:*",
+    "@rampscan/schema": "workspace:*"
+  }
+}

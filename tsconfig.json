@@ -4,6 +4,9 @@
     { "path": "packages/schema" },
     { "path": "packages/dataset" },
     { "path": "packages/core" },
+    { "path": "packages/ledger" },
+    { "path": "packages/signer" },
+    { "path": "packages/projector" },
     { "path": "packages/collectors" },
     { "path": "packages/cli" }
   ]

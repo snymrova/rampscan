@@ -62,11 +62,11 @@ The thesis milestone — if the join doesn't produce honest verdicts here, stop 
 
 ## Phase D — M2: ledger, signing, honest death (plan: 2–3 days)
 
-- [ ] D1. `packages/ledger` local adapter: `ledger/objects/<sha256>` + `index.jsonl`; the cheating test (rule 3) lands with it.
-- [ ] D2. `packages/signer` local adapter: in-toto statement per bundle, local cosign keypair; `rampscan verify <digest>` works offline.
-- [ ] D3. Anchor death in the projector: anchoring content hash changed at the scanned commit → edge marked `dead(anchor-drift)` with the killing commit.
-- [ ] D4. `packages/projector` v1: ledger → plain SQLite projection (coverage, verdict history, freshness per bundle). PocketBase waits for M3.
-- [ ] D5. The end-to-end test: full M1–M2 loop against the fixture, in CI.
+- [x] D1. `packages/ledger` local adapter: `ledger/objects/<sha256>` + `index.jsonl`; the cheating test (rule 3) lands with it.
+- [x] D2. `packages/signer` local adapter: in-toto statement per bundle, DSSE/ECDSA-P256 keypair (cosign envelope format, node:crypto implementation); `rampscan verify <digest>` works offline.
+- [x] D3. Anchor death in the projector: anchoring content hash changed at the scanned commit → edge marked `dead(anchor-drift)` with the killing commit.
+- [x] D4. `packages/projector` v1: ledger → plain SQLite projection (coverage, verdict history, freshness per bundle). PocketBase waits for M3.
+- [x] D5. The end-to-end test: full M1–M2 loop (two scans, touched file, anchor death, surviving signatures) in CI.
 
 **Exit test (plan §M2):** two scans with a touched file in between → touched-path evidence dies, untouched evidence survives with its original signature, `verify` passes on old and new bundles, and the append-only cheat test fails to cheat.
 
@@ -116,6 +116,8 @@ Terraform / Fargate / Step Functions · KMS + Object Lock · Bedrock / any model
 ## Session log
 
 Update this table as work lands — newest first. "Phase" refers to this document's phases.
+
+| 2026-08-13 | D (M2) | The output became a record: `packages/ledger` (content-addressed append-only dir — objects written `wx` + chmod 0444, `index.jsonl` append-only, `get()` re-hashes so out-of-band tampering throws; the cheat test chmods an object back and rewrites it, and is caught), `packages/signer` (DSSE envelope over the canonical in-toto statement, ECDSA P-256/SHA-256 via node:crypto — cosign's envelope format without the cosign binary; keys auto-generate at `--keys`, private key 0600), `packages/projector` (pure fold: per-recipe chains → predecessor dead as `superseded` or `anchor-drift` with killing commit; cross-recipe anchor death when another recipe's later bundle saw the same path change; SQLite writer via node:sqlite, drop-and-refill because the ledger is the record), `canonicalJson` in schema (one byte sequence per statement, shared by digest + signature). CLI: scan signs + appends each evidenced/violated row unless identical evidence already exists (**evidence identity = verdict + anchors + assertion outcomes + tool/dataset version, deliberately not artifact hashes** — collector artifacts aggregate every recipe, keying on them would kill everything on any change); `rampscan verify <digest>` (content + signature + payload-covers-this-bundle, offline); `rampscan board` (live/dead registers + `--db` SQLite). `pnpm test`: 90/90 green; typecheck clean. | Unevidenced rows never reach the ledger (no artifacts, nothing to attest) — the board's third register stays in scan output until M3 joins projection × recipe set. Live demo on the fixture: touching the Dockerfile killed exactly `container-runs-nonroot` + `container-base-image-patched` (anchor-drift, killing commit named), 9 bundles survived with original signatures, verify green on dead and live bundles. cosign now optional in doctor (independent envelope verification only). **M2 exit test passes** (`packages/cli/test/ledger.e2e.test.ts`). Next action: E1 (vendor PocketBase, projector as sole writer, `rampscan rebuild`). |
 
 | Date | Phase | What landed | Notes / deviations |
 |---|---|---|---|

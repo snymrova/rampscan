@@ -3,32 +3,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  createLocalLedger,
   createLocalRepoSource,
   createLocalRunner,
   createLocalScheduler,
-  createLocalSigner,
-  createProjector,
 } from "../src/index.js";
 import type { Collector } from "../src/index.js";
 
-// Runner and RepoSource are real as of M1; the still-stubbed ports must keep
-// failing loudly rather than silently succeeding — a stub that returns fake
-// data is worse than none.
+// Runner and RepoSource are real as of M1; ledger/signer/projector are real
+// as of M2 and live in their own packages. The still-stubbed Scheduler must
+// keep failing loudly rather than silently succeeding — a stub that returns
+// fake data is worse than none.
 
 describe("still-stubbed local adapters", () => {
-  it("every stubbed port rejects with its landing milestone", async () => {
-    const ledger = createLocalLedger("/tmp/nowhere");
-    await expect(ledger.list()).rejects.toThrow(/M2/);
-
-    const signer = createLocalSigner("/tmp/nokey");
-    await expect(signer.verify({ payload: "", payloadType: "", signatures: [] })).rejects.toThrow(/M2/);
-
+  it("the scheduler rejects with its landing milestone", async () => {
     await expect(
       createLocalScheduler().ensureCadence("b", { repo: "x" }),
     ).rejects.toThrow(/M5/);
-
-    await expect(createProjector().fold(ledger)).rejects.toThrow(/M2/);
   });
 });
 

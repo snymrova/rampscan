@@ -6,39 +6,22 @@ import { promisify } from "node:util";
 import { Finding } from "@rampscan/schema";
 import type {
   Collector,
-  LedgerStore,
-  Projector,
   RepoSource,
   RunResult,
   Runner,
   Scheduler,
-  Signer,
   Workspace,
 } from "./ports.js";
 
 const execFileAsync = promisify(execFile);
 
-// Local adapters. Runner and RepoSource are real as of M1; ledger/signer land
-// in M2, projector in M2, scheduler in M5 — those remain loud stubs so wiring
-// code can depend on constructors without getting fake data back.
+// Local adapters. Runner and RepoSource are real as of M1; the M2 adapters
+// live in their own packages (@rampscan/ledger, @rampscan/signer,
+// @rampscan/projector) per plan §M2. Scheduler lands in M5 and remains a loud
+// stub so wiring code can depend on the constructor without fake data back.
 
 function notImplemented(port: string, milestone: string): never {
   throw new Error(`${port} local adapter lands in ${milestone} — not implemented yet`);
-}
-
-export function createLocalLedger(_dir: string): LedgerStore {
-  return {
-    append: async () => notImplemented("LedgerStore", "M2"),
-    get: async () => notImplemented("LedgerStore", "M2"),
-    list: async () => notImplemented("LedgerStore", "M2"),
-  };
-}
-
-export function createLocalSigner(_keyPath: string): Signer {
-  return {
-    sign: async () => notImplemented("Signer", "M2"),
-    verify: async () => notImplemented("Signer", "M2"),
-  };
 }
 
 /**
@@ -132,11 +115,5 @@ export function createLocalRepoSource(): RepoSource {
       }
       return { root, repo: target.repo, commit };
     },
-  };
-}
-
-export function createProjector(): Projector {
-  return {
-    fold: async () => notImplemented("Projector", "M2"),
   };
 }

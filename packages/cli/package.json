@@ -13,7 +13,10 @@
     "@rampscan/collectors": "workspace:*",
     "@rampscan/core": "workspace:*",
     "@rampscan/dataset": "workspace:*",
+    "@rampscan/ledger": "workspace:*",
+    "@rampscan/projector": "workspace:*",
     "@rampscan/schema": "workspace:*",
+    "@rampscan/signer": "workspace:*",
     "zod": "^3.24.0"
   }
 }

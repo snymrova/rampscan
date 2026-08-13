@@ -32,9 +32,18 @@ importers:
       '@rampscan/dataset':
         specifier: workspace:*
         version: link:../dataset
+      '@rampscan/ledger':
+        specifier: workspace:*
+        version: link:../ledger
+      '@rampscan/projector':
+        specifier: workspace:*
+        version: link:../projector
       '@rampscan/schema':
         specifier: workspace:*
         version: link:../schema
+      '@rampscan/signer':
+        specifier: workspace:*
+        version: link:../signer
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -66,11 +75,38 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
 
+  packages/ledger:
+    dependencies:
+      '@rampscan/core':
+        specifier: workspace:*
+        version: link:../core
+      '@rampscan/schema':
+        specifier: workspace:*
+        version: link:../schema
+
+  packages/projector:
+    dependencies:
+      '@rampscan/core':
+        specifier: workspace:*
+        version: link:../core
+      '@rampscan/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/schema:
     dependencies:
       zod:
         specifier: ^3.24.0
         version: 3.25.76
+
+  packages/signer:
+    dependencies:
+      '@rampscan/core':
+        specifier: workspace:*
+        version: link:../core
+      '@rampscan/schema':
+        specifier: workspace:*
+        version: link:../schema
 
 packages:
 
