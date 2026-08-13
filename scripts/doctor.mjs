@@ -33,6 +33,9 @@ const tools = [
   { name: "osv-scanner", versionArgs: ["--version"], why: "advisories against the SBOM — M1 collector" },
   { name: "grype", versionArgs: ["--version"], why: "container base-image scan — M1 collector" },
   { name: "gitleaks", versionArgs: ["version"], why: "secrets, full history — M1 collector" },
+  { name: "semgrep", versionArgs: ["--version"], why: "SAST over committed sources, gated by the code graph" },
+  { name: "checkov", versionArgs: ["--version"], why: "IaC misconfiguration baseline (Dockerfile, workflows, Terraform)" },
+  { name: "spectral", versionArgs: ["--version"], why: "OpenAPI/Swagger document lint" },
 ];
 
 console.log(

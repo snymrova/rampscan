@@ -277,6 +277,70 @@ describe("graph.db provenance", () => {
   });
 
   it("tool version pins the extractor and the parser", () => {
-    expect(graphToolVersion()).toMatch(/^0\.1\.0\+ts\d/);
+    expect(graphToolVersion()).toMatch(/^0\.2\.0\+ts\d/);
+  });
+});
+
+describe("workspace-aware import resolution (0.2.0)", () => {
+  // the self-scan's lesson: a monorepo import must NOT dead-end on a
+  // dependency node — the walk has to cross into the package's own files,
+  // or "unreachable" claims about them are false
+  let wsRoot: string;
+  let wsGraph: ExtractedGraph;
+
+  beforeAll(async () => {
+    wsRoot = await mkdtemp(join(tmpdir(), "rampscan-graph-ws-"));
+    const w = async (rel: string, content: string): Promise<void> => {
+      const abs = join(wsRoot, rel);
+      await mkdir(dirname(abs), { recursive: true });
+      await writeFile(abs, content);
+    };
+    await w("package.json", JSON.stringify({ name: "acme-root", private: true }));
+    await w(
+      "packages/app/package.json",
+      JSON.stringify({ name: "@acme/app", main: "src/main.js", dependencies: { "@acme/lib": "workspace:*", "left-pad": "1.3.0" } }),
+    );
+    await w(
+      "packages/app/src/main.js",
+      'const { helper } = require("@acme/lib");\nconst leftPad = require("left-pad");\nhelper();\n',
+    );
+    await w(
+      "packages/lib/package.json",
+      JSON.stringify({ name: "@acme/lib", exports: { ".": { default: "./src/index.js" } } }),
+    );
+    await w("packages/lib/src/index.js", "function helper() {}\nmodule.exports = { helper };\n");
+    await w("packages/lib/src/dead.js", "function never() {}\nmodule.exports = { never };\n");
+    wsGraph = await extractGraph(wsRoot);
+  });
+
+  it("a workspace import lands on the package's entry file, not a dependency node", () => {
+    const imports = wsGraph.edges.filter(
+      (e) => e.src === fileId("packages/app/src/main.js") && e.kind === "imports",
+    );
+    expect(imports.some((e) => e.dst === fileId("packages/lib/src/index.js"))).toBe(true);
+    expect(wsGraph.nodes.some((n) => n.id === "dep:@acme/lib")).toBe(false);
+  });
+
+  it("the walk crosses the package boundary — but not into files nothing imports", () => {
+    const tmpDb = join(wsRoot, "ws-graph.db");
+    writeGraphDb(tmpDb, wsGraph, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "test-commit",
+      entrypoints: ["packages/app/src/main.js"],
+      entrypointSource: "test",
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+    });
+    const wsDb = openGraphDb(tmpDb);
+    try {
+      const reach = reachableSet(wsDb, [fileId("packages/app/src/main.js")]);
+      expect(reach.has(fileId("packages/lib/src/index.js"))).toBe(true);
+      expect(reach.has(fileId("packages/lib/src/dead.js"))).toBe(false);
+    } finally {
+      wsDb.close();
+    }
+  });
+
+  it("a package whose source is NOT in the repo still becomes a dependency node", () => {
+    expect(wsGraph.nodes.some((n) => n.id === "dep:left-pad")).toBe(true);
   });
 });

@@ -3,8 +3,19 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeFile } from "node:fs/promises";
 import { beforeAll, describe, expect, it } from "vitest";
-import { gitleaks, graphCollector, osvScanner, reachability, repoFacts, syft } from "@rampscan/collectors";
+import {
+  SEMGREP_RESULTS_ARTIFACT,
+  gitleaks,
+  graphCollector,
+  osvScanner,
+  reachability,
+  repoFacts,
+  sastGate,
+  syft,
+} from "@rampscan/collectors";
+import type { Collector } from "@rampscan/core";
 import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { ScanResult } from "@rampscan/schema";
 import { renderSummary, scan } from "../src/index.js";
@@ -30,6 +41,53 @@ function installed(tool: string): boolean {
 let result: ScanResult;
 let resultPath: string;
 
+// A deterministic stand-in for the semgrep PRODUCER only (spawning the real
+// tool needs a binary or Docker — not CI material, same call as grype): it
+// emits the normalized semgrep-results.json for the fixture's planted pair.
+// The gate itself is the REAL sast-reachability collector over the REAL
+// graph.db, so the recipe wiring (observation key, verdicts, findings) is
+// exercised end to end.
+const stubSemgrep: Collector = {
+  manifest: { name: "semgrep", toolVersion: "resolved-at-run", recipes: [], outputs: [SEMGREP_RESULTS_ARTIFACT] },
+  async collect(ctx) {
+    const path = join(ctx.artifactDir, SEMGREP_RESULTS_ARTIFACT);
+    await writeFile(
+      path,
+      JSON.stringify({
+        tool: "semgrep",
+        version: "1.173.0",
+        rules: "0".repeat(64),
+        results: [
+          {
+            check_id: "dangerous-eval",
+            path: "src/render.js",
+            start_line: 7,
+            end_line: 7,
+            severity: "ERROR",
+            message: "eval()/new Function() executes dynamically constructed code",
+          },
+          {
+            check_id: "dangerous-eval",
+            path: "src/legacy-tools.js",
+            start_line: 6,
+            end_line: 6,
+            severity: "ERROR",
+            message: "eval()/new Function() executes dynamically constructed code",
+          },
+        ],
+        error_count: 0,
+      }),
+    );
+    return {
+      findings: [],
+      artifacts: [{ name: SEMGREP_RESULTS_ARTIFACT, path }],
+      observations: {},
+      toolVersion: "1.173.0",
+      exitCode: 0,
+    };
+  },
+};
+
 // the fixture itself is built once for the whole run by vitest's globalSetup
 
 beforeAll(async () => {
@@ -39,7 +97,7 @@ beforeAll(async () => {
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
     recipesDir: join(repoRoot, "recipes/pipeline"),
-    collectors: [repoFacts, gitleaks, graphCollector, syft, osvScanner, reachability],
+    collectors: [repoFacts, gitleaks, graphCollector, stubSemgrep, syft, osvScanner, reachability, sastGate],
   });
   result = outcome.result;
   resultPath = outcome.resultPath;
@@ -79,6 +137,24 @@ describe("rampscan scan on the planted-fault fixture", () => {
 
   it("grype's recipe is unevidenced when grype does not run — absent, never hidden", () => {
     expect(verdictOf("container-base-image-patched")).toBe("unevidenced");
+  });
+
+  it("the config-plane recipes are unevidenced when their collectors do not run", () => {
+    expect(verdictOf("iac-baseline-clean")).toBe("unevidenced");
+    expect(verdictOf("api-spec-lint-clean")).toBe("unevidenced");
+  });
+
+  it("the SAST gate proves the difference: reachable eval violates with a call path, the dead file does not", () => {
+    const row = result.recipes.find((r) => r.recipe_id === "no-reachable-dangerous-code")!;
+    expect(row.verdict).toBe("violated");
+    // exactly ONE of the two planted evals counts — the reachable one
+    expect(row.assertions[0]!.detail).toContain("got 1");
+    expect(row.assertions[0]!.detail).toContain("src/render.js");
+    const sastFindings = result.findings.filter((f) => f.variable === "sast");
+    expect(sastFindings).toHaveLength(1);
+    expect(sastFindings[0]!.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
+    // the unreachable eval: NO finding — not_affected, proven by the graph
+    expect(sastFindings.some((f) => f.summary.includes("legacy-tools"))).toBe(false);
   });
 
   it.skipIf(!installed("gitleaks"))("the history-only secret violates no-secrets-in-history", () => {

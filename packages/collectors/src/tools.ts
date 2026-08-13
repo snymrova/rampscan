@@ -20,6 +20,14 @@ import type { ExecResult } from "./support.js";
 export interface ToolSpec {
   version: string;
   image: string;
+  /**
+   * Docker --entrypoint override. Two reasons to set it: an image that ships
+   * no entrypoint (semgrep — the CLI name must lead the args), and an image
+   * whose entrypoint does more than run the tool (spectral's launches a
+   * telemetry side-process; overriding to the bare binary keeps scans from
+   * phoning home).
+   */
+  entrypoint?: string;
 }
 export type ToolManifest = Record<string, ToolSpec>;
 
@@ -67,11 +75,13 @@ export function buildDockerRunArgs(
   args: string[],
   env: Record<string, string> = {},
   user?: string,
+  entrypoint?: string,
 ): string[] {
   return [
     "run",
     "--rm",
     ...(user ? ["-u", user] : []),
+    ...(entrypoint ? ["--entrypoint", entrypoint] : []),
     "-e",
     "HOME=/tmp",
     ...Object.entries(env).flatMap(([k, v]) => ["-e", `${k}=${v}`]),
@@ -103,9 +113,11 @@ export function createDockerTool(name: string, spec: ToolSpec): ResolvedTool {
     exec(args, opts = {}) {
       const uid = process.getuid?.();
       const user = uid === undefined ? undefined : `${uid}:${process.getgid!()}`;
-      return exec("docker", buildDockerRunArgs(spec.image, mounts, args, opts.env ?? {}, user), {
-        timeoutMs: opts.timeoutMs ?? 600_000,
-      });
+      return exec(
+        "docker",
+        buildDockerRunArgs(spec.image, mounts, args, opts.env ?? {}, user, spec.entrypoint),
+        { timeoutMs: opts.timeoutMs ?? 600_000 },
+      );
     },
   };
 }

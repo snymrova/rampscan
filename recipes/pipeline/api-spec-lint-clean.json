@@ -1,0 +1,25 @@
+{
+  "id": "api-spec-lint-clean",
+  "ksi_ids": ["KSI-SVC-ACM"],
+  "evidence": "Every OpenAPI/Swagger document in the committed tree is valid against the OpenAPI standard (spectral:oas ruleset, error severity) at the scanned commit",
+  "control_ids": ["sa-5"],
+  "collection": {
+    "kind": "pipeline",
+    "collector": "spectral"
+  },
+  "expected_output": "spectral-results.json (normalized: documents linted, results sorted) plus one observation row per lint result: code, file, line, severity (error|warning|info|hint), message, json_path",
+  "assertions": [
+    {
+      "field": "code",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "severity", "op": "eq", "value": "error" }],
+      "controls": ["sa-5"],
+      "description": "Zero error-severity lint results — the API contract parses and validates; warnings ride along as observations."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "Config-plane collector, no graph involvement by design. Documents are found by name (openapi*/swagger* yaml/json) in the committed tree; none found → honest skip, recipe stays unevidenced. The ruleset is always rampscan's own (extends spectral:oas, bundled in the pinned tool — offline), never the repo's .spectral.yaml, so the claim is against a fixed baseline rather than whatever the repo chose to silence.",
+  "anchor": "commit"
+}

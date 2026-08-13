@@ -4,6 +4,9 @@
     "syft": { "version": "1.51.0", "image": "anchore/syft:v1.51.0" },
     "grype": { "version": "0.117.0", "image": "anchore/grype:v0.117.0" },
     "gitleaks": { "version": "8.24.3", "image": "ghcr.io/gitleaks/gitleaks:v8.24.3" },
-    "osv-scanner": { "version": "2.5.0", "image": "ghcr.io/google/osv-scanner:v2.5.0" }
+    "osv-scanner": { "version": "2.5.0", "image": "ghcr.io/google/osv-scanner:v2.5.0" },
+    "semgrep": { "version": "1.173.0", "image": "semgrep/semgrep:1.173.0", "entrypoint": "semgrep" },
+    "checkov": { "version": "3.3.11", "image": "bridgecrew/checkov:3.3.11" },
+    "spectral": { "version": "6.16.3", "image": "stoplight/spectral:6.16.3", "entrypoint": "spectral" }
   }
 }

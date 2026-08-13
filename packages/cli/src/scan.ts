@@ -1,7 +1,7 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { OPENVEX_ARTIFACT, loadToolManifest } from "@rampscan/collectors";
+import { OPENVEX_ARTIFACT, cacheKeySalt } from "@rampscan/collectors";
 import {
   buildScanResult,
   createCachingRunner,
@@ -125,11 +125,10 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   const cacheOutcomes: Record<string, CacheOutcome> = {};
   let runner = localRunner;
   if (options.cache) {
-    // the pinned tools.json content salts every key: re-pinning a tool image
-    // invalidates the cache even though the manifest still says resolved-at-run
-    const keySalt = createHash("sha256")
-      .update(JSON.stringify(await loadToolManifest()))
-      .digest("hex");
+    // the pinned tools.json content and the vendored semgrep ruleset salt
+    // every key: re-pinning an image or editing a rule invalidates the cache
+    // even though the manifest still says resolved-at-run
+    const keySalt = await cacheKeySalt();
     runner = createCachingRunner(localRunner, {
       dir: options.cache.dir,
       mode: options.cache.mode,

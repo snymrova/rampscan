@@ -99,14 +99,17 @@ function inWalkableDir(rel: string): boolean {
 }
 
 /**
- * Repo-relative source files, sorted. The graph anchors to a commit, so the
- * file set is the COMMITTED tree (`git ls-tree`) — a generated or gitignored
- * file on disk must never leak routes or call edges into commit-anchored
- * evidence (the rampscan self-scan caught exactly that: its generated test
- * fixture's routes showed up on its own board). Non-git roots (unit tests)
- * fall back to a filesystem walk with the same skip rules.
+ * Repo-relative committed paths matching `keep`, sorted. The graph anchors to
+ * a commit, so the walk is over the COMMITTED tree (`git ls-tree`) — a
+ * generated or gitignored file on disk must never leak routes or call edges
+ * into commit-anchored evidence (the rampscan self-scan caught exactly that:
+ * its generated test fixture's routes showed up on its own board). Non-git
+ * roots (unit tests) fall back to a filesystem walk with the same skip rules.
  */
-export async function listSourceFiles(root: string): Promise<string[]> {
+async function listCommittedPaths(
+  root: string,
+  keep: (rel: string) => boolean,
+): Promise<string[]> {
   try {
     const { stdout } = await execFileAsync("git", ["ls-tree", "-r", "--name-only", "HEAD"], {
       cwd: root,
@@ -114,7 +117,7 @@ export async function listSourceFiles(root: string): Promise<string[]> {
     });
     return stdout
       .split("\n")
-      .filter((rel) => rel !== "" && isSourceFile(rel) && inWalkableDir(rel))
+      .filter((rel) => rel !== "" && keep(rel) && inWalkableDir(rel))
       .sort();
   } catch {
     // not a git checkout (or no commits yet) — walk the filesystem
@@ -130,13 +133,80 @@ export async function listSourceFiles(root: string): Promise<string[]> {
       if (entry.isDirectory()) {
         if (SKIP_DIRS.has(entry.name)) continue;
         await walk(rel);
-      } else if (isSourceFile(entry.name)) {
+      } else if (keep(rel)) {
         files.push(rel);
       }
     }
   }
   await walk("");
   return files.sort();
+}
+
+/** repo-relative source files, sorted — committed tree only (see above) */
+export function listSourceFiles(root: string): Promise<string[]> {
+  return listCommittedPaths(root, isSourceFile);
+}
+
+/**
+ * Workspace package map: package name → its entry SOURCE file, for packages
+ * whose source lives in this repo. Without it, a monorepo import like
+ * `@rampscan/collectors` resolves to a dependency node and the file-level
+ * walk dead-ends at the package boundary — which the self-scan exposed as a
+ * false `not_affected`: collector files that run on every scan counted as
+ * "unreachable" from the CLI entry point. Only entries that resolve to a
+ * walked source file map; anything else stays a dependency node.
+ */
+export async function workspacePackageMap(
+  root: string,
+  fileSet: ReadonlySet<string>,
+): Promise<Map<string, string>> {
+  const manifests = await listCommittedPaths(
+    root,
+    (rel) => rel === "package.json" || rel.endsWith("/package.json"),
+  );
+  const map = new Map<string, string>();
+  for (const rel of manifests) {
+    let parsed: {
+      name?: unknown;
+      exports?: unknown;
+      module?: unknown;
+      main?: unknown;
+    };
+    try {
+      parsed = JSON.parse(await readFile(join(root, rel), "utf8")) as typeof parsed;
+    } catch {
+      continue; // unparseable manifest — no mapping beats a wrong mapping
+    }
+    if (typeof parsed.name !== "string") continue;
+    const dir = posix.dirname(rel);
+    for (const candidate of entryCandidates(parsed)) {
+      const resolved = resolveRelative(posix.join(dir, "package.json"), candidate, fileSet);
+      if (resolved) {
+        map.set(parsed.name, resolved);
+        break;
+      }
+    }
+  }
+  return map;
+}
+
+/** entry-point specifiers out of a package.json, most specific first */
+function entryCandidates(pkg: { exports?: unknown; module?: unknown; main?: unknown }): string[] {
+  const out: string[] = [];
+  const fromExports = (value: unknown): void => {
+    if (typeof value === "string") {
+      out.push(value);
+    } else if (value !== null && typeof value === "object") {
+      const record = value as Record<string, unknown>;
+      for (const key of ["default", "import", "require", "types", "."]) {
+        if (key in record) fromExports(record[key]);
+      }
+    }
+  };
+  fromExports(pkg.exports);
+  if (typeof pkg.module === "string") out.push(pkg.module);
+  if (typeof pkg.main === "string") out.push(pkg.main);
+  return out;
 }
 
 /** "lodash/merge" → { pkg: "lodash", member: "merge" }; "@scope/pkg/x" keeps the scope */
@@ -230,6 +300,7 @@ function depTarget(b: GraphBuilder, pkg: string, member?: string): string {
 export async function extractGraph(root: string, files?: string[]): Promise<ExtractedGraph> {
   const rels = files ?? (await listSourceFiles(root));
   const fileSet = new Set(rels);
+  const workspace = await workspacePackageMap(root, fileSet);
   const b = new GraphBuilder();
   const infos = new Map<string, FileInfo>();
 
@@ -250,7 +321,7 @@ export async function extractGraph(root: string, files?: string[]): Promise<Extr
       pendingHandlers: [],
     };
     infos.set(rel, info);
-    walkSourceFile(sf, rel, info, b, fileSet);
+    walkSourceFile(sf, rel, info, b, fileSet, workspace);
   }
 
   // ---- pass 2: resolve exports, call sites, route handlers ------------------
@@ -375,6 +446,7 @@ function walkSourceFile(
   info: FileInfo,
   b: GraphBuilder,
   fileSet: ReadonlySet<string>,
+  workspace: ReadonlyMap<string, string> = new Map(),
 ): void {
   const lineOf = (node: ts.Node): number =>
     sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
@@ -390,7 +462,14 @@ function walkSourceFile(
       });
       return { kind: "phantom", id };
     }
-    return { kind: "dep", ...packageOf(spec) };
+    const { pkg, member } = packageOf(spec);
+    // a workspace package's source lives in THIS repo: the import edge lands
+    // on its entry file, so the walk crosses the package boundary instead of
+    // dead-ending on a dependency node (a subpath import maps to the same
+    // entry file — over-approximate, the safe direction for the gates)
+    const entry = workspace.get(pkg);
+    if (entry !== undefined) return { kind: "file", rel: entry };
+    return { kind: "dep", pkg, ...(member !== undefined ? { member } : {}) };
   };
 
   const importEdge = (target: AliasTarget): void => {

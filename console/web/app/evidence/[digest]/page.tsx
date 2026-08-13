@@ -26,11 +26,12 @@ interface AssertionResult {
   detail?: string;
 }
 
-// M4: advisory and route rows carry the call path as the artifact — surface
-// every `path` embedded in an assertion's example row as its own line.
+// M4: advisory and route rows carry the call path as the artifact; the SAST
+// gate's rows carry it as `call_path` — surface every one embedded in an
+// assertion's example row as its own line.
 function callPathsIn(detail: string | undefined): string[] {
   if (!detail) return [];
-  return [...detail.matchAll(/"path":"([^"]+)"/g)]
+  return [...detail.matchAll(/"(?:call_)?path":"([^"]+)"/g)]
     .map((m) => m[1]!)
     .filter((p) => p.includes("»"));
 }

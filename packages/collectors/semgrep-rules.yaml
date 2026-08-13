@@ -1,0 +1,50 @@
+# rampscan's vendored semgrep ruleset — the SAST collector runs THIS file,
+# never the semgrep registry: a registry config resolves over the network at
+# scan time, so two runs of the same commit could see different rules. Pinned
+# rules ride with the collector, offline and deterministic; their content is
+# folded into the scan-cache salt (see cacheKeySalt), so editing this file
+# invalidates cached semgrep runs the same way re-pinning a tool image does.
+#
+# Scope: JS/TS only — deliberately, so the code graph (TS/JS in the
+# prototype) can speak to the reachability of every finding the gate sees.
+# Keep it small and defensible: each rule is a pattern whose presence is
+# worth a register row, not a style opinion.
+rules:
+  - id: dangerous-eval
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: "eval()/new Function() executes dynamically constructed code — code injection when any input reaches it"
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+  - id: child-process-non-literal
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: "child_process exec/execSync with a non-literal command string — command injection when any input reaches it"
+    patterns:
+      # the receiver must actually be child_process — a generic `$X.exec(...)`
+      # matches RegExp.exec, sqlite's db.exec, and any wrapper named exec (the
+      # rampscan self-scan produced exactly those false positives). Bare
+      # execSync stays: the name is distinctive enough, and the destructured
+      # `const { execSync } = require("child_process")` form is the common one.
+      - pattern-either:
+          - pattern: child_process.exec($CMD, ...)
+          - pattern: child_process.execSync($CMD, ...)
+          - pattern: require("child_process").exec($CMD, ...)
+          - pattern: require("child_process").execSync($CMD, ...)
+          - pattern: require("node:child_process").exec($CMD, ...)
+          - pattern: require("node:child_process").execSync($CMD, ...)
+          - pattern: execSync($CMD, ...)
+      - metavariable-pattern:
+          metavariable: $CMD
+          patterns:
+            - pattern-not: '"..."'
+  - id: weak-hash-algorithm
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: "MD5/SHA-1 are cryptographically broken — use sha256 or stronger for any security purpose"
+    pattern-either:
+      - pattern: createHash("md5")
+      - pattern: createHash("sha1")
+      - pattern: $C.createHash("md5")
+      - pattern: $C.createHash("sha1")

@@ -1,0 +1,25 @@
+{
+  "id": "iac-baseline-clean",
+  "ksi_ids": ["KSI-SVC-ACM"],
+  "evidence": "Every infrastructure definition in the committed tree (Dockerfiles, GitHub workflows, Terraform) passes checkov's vendored policy baseline at the scanned commit",
+  "control_ids": ["cm-2", "cm-6"],
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "checkov-results.json (normalized: frameworks scanned, passed/failed counts, failed checks sorted) plus one observation row per failed check: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "controls": ["cm-2", "cm-6"],
+      "description": "Zero failed checks — the committed IaC matches the policy baseline, not approximately."
+    }
+  ],
+  "cadence": "daily",
+  "automatable": "full",
+  "notes": "Config-plane collector, no graph involvement by design — a Dockerfile has no call path. Frameworks are limited to what the committed tree contains (detected up front from git); a repo with nothing IaC-shaped skips honestly and the recipe stays unevidenced, never vacuously evidenced. --skip-download: the policy set inside the pinned image is the whole baseline, offline and deterministic.",
+  "caveats": "Open-source checkov emits no severity — the assertion is baseline-clean, not severity-thresholded. Kubernetes manifests deferred until a consuming repo demands them.",
+  "anchor": "commit"
+}

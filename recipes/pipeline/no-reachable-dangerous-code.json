@@ -1,0 +1,29 @@
+{
+  "id": "no-reachable-dangerous-code",
+  "ksi_ids": ["KSI-SCR-MIT", "KSI-PIY-RSD"],
+  "evidence": "No dangerous code construct (dynamic evaluation, non-literal command execution) sits in the execute path from the repo's entry points at the scanned commit",
+  "control_ids": ["sa-11", "si-10"],
+  "collection": {
+    "kind": "pipeline",
+    "collector": "sast-reachability",
+    "inputs": ["semgrep-results.json", "graph.db"]
+  },
+  "expected_output": "Gated SAST rows: check_id, path, line, severity (ERROR|WARNING|INFO), message, reachable (true|false|unknown), not_affected, call_path (the call path as the artifact when reachable)",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        { "field": "severity", "op": "eq", "value": "ERROR" },
+        { "field": "not_affected", "op": "eq", "value": false }
+      ],
+      "controls": ["sa-11", "si-10"],
+      "description": "Zero ERROR-severity SAST hits reachable — or of unknown reachability — from the repo's entry points."
+    }
+  ],
+  "cadence": "daily",
+  "automatable": "full",
+  "notes": "M4's flagship move generalized from advisories to code findings: semgrep runs rampscan's vendored ruleset (pinned, offline — never the registry), and the sast-reachability collector gates every hit through graph.db. A hit is not_affected only when the over-approximate walk (every edge kind) cannot reach the file from any entry point or declared route. No graph, no entry points, or a file the graph never saw → the hit counts, marked unknown. WARNING-severity hits ride along as observations but do not violate.",
+  "anchor": "commit"
+}

@@ -20,6 +20,20 @@
 //      must prove it unreachable and emit a signed not-affected OpenVEX
 //      instead of a violation
 //
+// The SAST edition of the same pair (the sast-reachability gate's demo):
+//   7. dangerous code (eval) in src/render.js, REACHABLE: required from
+//      src/index.js, the package.json main entry point — semgrep flags it,
+//      the gate must show the call path (plus an md5 WARNING that rides
+//      along as an observation without violating)
+//   8. the same construct in src/legacy-tools.js, imported by NOTHING —
+//      the graph must prove it unreachable, the gate marks it not_affected
+//
+// And the config plane:
+//   9. an invalid OpenAPI document (openapi.yaml missing the required
+//      `info` object) — spectral must reject it at error severity
+//   (the Dockerfile and CI workflow above double as checkov's targets:
+//    no USER, no HEALTHCHECK, unpinned action — failed baseline checks)
+//
 // The inner repo carries its own git history, which the outer repo cannot
 // commit (nested .git); this generator is the committed artifact instead.
 // It is deterministic — fixed timestamps and identity — so the fixture's
@@ -106,16 +120,49 @@ write(
 write(
   "src/index.js",
   `const merge = require("lodash/merge");
+const { renderTemplate } = require("./render");
 
 // Reachable use of the vulnerable symbol (lodash merge, GHSA-p6mc-m468-83gw):
 // user-controlled JSON flows straight into merge().
 function handleRequest(body) {
   const settings = {};
   merge(settings, JSON.parse(body)); // prototype pollution sink
-  return settings;
+  return renderTemplate("settings", settings);
 }
 
 module.exports = { handleRequest };
+`,
+);
+write(
+  "src/render.js",
+  `const { createHash } = require("node:crypto");
+
+// FAULT: dynamic evaluation of a template string — code injection the moment
+// any input reaches it. Planted REACHABLE: src/index.js (the package.json
+// main entry point) requires this file, so the SAST gate must show the path.
+function renderTemplate(template, context) {
+  return eval("context." + template); // rampscan.dangerous-eval
+}
+
+// weak hash — a WARNING-severity observation that rides along without violating
+function etagFor(content) {
+  return createHash("md5").update(content).digest("hex");
+}
+
+module.exports = { renderTemplate, etagFor };
+`,
+);
+write(
+  "src/legacy-tools.js",
+  `// FAULT PAIR (the not-affected demo, SAST edition): the same dangerous
+// construct as src/render.js — but this file is imported by NOTHING. The
+// code graph must prove it unreachable, and the sast-reachability gate must
+// mark the hit not_affected instead of violated.
+function runMigration(script) {
+  return eval(script);
+}
+
+module.exports = { runMigration };
 `,
 );
 write(
@@ -189,6 +236,19 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY src ./src
 CMD ["node", "src/index.js"]
+`,
+);
+write(
+  "openapi.yaml",
+  `# FAULT: invalid OpenAPI document — the standard requires an \`info\` object;
+# spectral (oas ruleset) must reject this at error severity.
+openapi: 3.0.3
+paths:
+  /health:
+    get:
+      responses:
+        "200":
+          description: ok
 `,
 );
 write("README.md", "# vulnerable-app\n\nPlanted-fault fixture for rampscan. Every fault here is deliberate.\n");
