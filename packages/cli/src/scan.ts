@@ -12,7 +12,7 @@ import type { Collector, Digest, LedgerEntry, RunResult } from "@rampscan/core";
 import { loadLocalDataset } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner } from "@rampscan/signer";
-import { ScanResult } from "@rampscan/schema";
+import { ScanResult, isEvidenceBundle } from "@rampscan/schema";
 import type { PipelineRecipe } from "@rampscan/schema";
 import { loadRecipes, validateRecipeIds } from "./recipes.js";
 
@@ -165,7 +165,7 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
     const prior = latestEntry(
       await ledger.list({ recipeId: row.recipe_id, repo: workspace.repo }),
     );
-    if (prior && sameEvidence(prior.bundle, bundle)) {
+    if (prior && isEvidenceBundle(prior.bundle) && sameEvidence(prior.bundle, bundle)) {
       survived.push({ recipeId: row.recipe_id, digest: prior.digest });
       continue;
     }

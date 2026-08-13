@@ -1,0 +1,10 @@
+{
+  "note": "PocketBase pin for the local console (plan M3 E1). The binary itself is fetched by scripts/fetch-pocketbase.mjs into console/pocketbase/bin/ (gitignored) and verified against these sha256 sums, which come from the release's official checksums.txt. Bump deliberately: the projector writes against the v0.23+ collections API.",
+  "version": "0.39.10",
+  "sha256": {
+    "darwin_amd64": "8c8fcaa6e9315d8453bdac0c55d6def22933e103ad2da3a5063de87d3210f49c",
+    "darwin_arm64": "6b58246406274f66bb1ada518f19f8067d31f5fd47781144c0c863e98699b149",
+    "linux_amd64": "67f68c8041dbb6a35fd7af5997ffc5063a7a7b96bf9df810360788f9e9975408",
+    "linux_arm64": "5bad497eaf2522418673eacfcc90e75106036f19b4aeeac6e59bc48503c01ddf"
+  }
+}

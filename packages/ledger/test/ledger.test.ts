@@ -37,6 +37,35 @@ async function tempLedgerDir(): Promise<string> {
 }
 
 describe("local ledger", () => {
+  it("stores scoping events beside evidence — one ledger, two statement kinds (M3)", async () => {
+    const ledger = createLocalLedger(await tempLedgerDir());
+    const scoping = {
+      _type: "https://in-toto.io/Statement/v1" as const,
+      subject: [{ name: "justification.txt", digest: { sha256: "b".repeat(64) } }],
+      predicateType: "https://rampscan.dev/scoping/v1" as const,
+      predicate: {
+        action: "notApplicable" as const,
+        recipe_id: "container-runs-nonroot",
+        ksi_ids: ["KSI-CNA-CIC"],
+        control_ids: ["cm-2.2"],
+        repo: "fixtures/app",
+        justification: "no container ships from this repo",
+        proposed_by: "viewer@rampscan.local (pb:u1)",
+        approved_by: "approver@rampscan.local (pb:u2)",
+        dataset_version: "2026.07.14.01",
+        timestamp: "2026-08-13T01:00:00.000Z",
+      },
+    };
+    await ledger.append(makeBundle());
+    const digest = await ledger.append(scoping);
+    const entry = await ledger.get(digest);
+    expect(entry!.bundle).toEqual(scoping);
+    // the index records the action as the verdict column, so filters stay uniform
+    const scoped = await ledger.list({ verdict: "notApplicable" as never });
+    expect(scoped.map((e) => e.digest)).toEqual([digest]);
+    expect(await ledger.list()).toHaveLength(2);
+  });
+
   it("append → get round-trips the bundle and its envelope, keyed by content digest", async () => {
     const ledger = createLocalLedger(await tempLedgerDir());
     const bundle = makeBundle();

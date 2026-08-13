@@ -9,7 +9,7 @@ import {
 } from "node:crypto";
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { EvidenceBundle, canonicalJson } from "@rampscan/schema";
+import { LedgerStatement, canonicalJson } from "@rampscan/schema";
 import type { SignedEnvelope, Signer } from "@rampscan/core";
 
 // Local Signer (plan M2): DSSE envelope over the canonical in-toto statement,
@@ -72,7 +72,7 @@ export function createLocalSigner(
   return {
     async sign(statement): Promise<SignedEnvelope> {
       const { privateKey, publicKey } = await getKeys();
-      const payload = Buffer.from(canonicalJson(EvidenceBundle.parse(statement)));
+      const payload = Buffer.from(canonicalJson(LedgerStatement.parse(statement)));
       const sig = cryptoSign("sha256", pae(DSSE_PAYLOAD_TYPE, payload), privateKey);
       return {
         payload: payload.toString("base64"),
@@ -94,8 +94,8 @@ export function createLocalSigner(
 }
 
 /** The statement inside an envelope — for showing what a signature covers. */
-export function statementFromEnvelope(envelope: SignedEnvelope): EvidenceBundle {
-  return EvidenceBundle.parse(
+export function statementFromEnvelope(envelope: SignedEnvelope): LedgerStatement {
+  return LedgerStatement.parse(
     JSON.parse(Buffer.from(envelope.payload, "base64").toString("utf8")),
   );
 }

@@ -1,4 +1,4 @@
-import { canonicalJson } from "@rampscan/schema";
+import { canonicalJson, isEvidenceBundle } from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
 
@@ -25,13 +25,23 @@ export async function verify(options: {
   if (!entry) {
     return { ok: false, lines: [`no ledger entry with digest ${options.digest}`] };
   }
-  const p = entry.bundle.predicate;
-  lines.push(
-    `bundle   ${options.digest.slice(0, 16)}…`,
-    `recipe   ${p.recipe_id} → ${p.verdict}`,
-    `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
-    `signed   ${p.timestamp} (run ${p.run_id})`,
-  );
+  if (isEvidenceBundle(entry.bundle)) {
+    const p = entry.bundle.predicate;
+    lines.push(
+      `bundle   ${options.digest.slice(0, 16)}…`,
+      `recipe   ${p.recipe_id} → ${p.verdict}`,
+      `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
+      `signed   ${p.timestamp} (run ${p.run_id})`,
+    );
+  } else {
+    const p = entry.bundle.predicate;
+    lines.push(
+      `scoping  ${options.digest.slice(0, 16)}…`,
+      `recipe   ${p.recipe_id} → ${p.action}`,
+      `repo     ${p.repo}`,
+      `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
+    );
+  }
 
   lines.push(`content  ok — object hashes to its address`); // get() would have thrown otherwise
 

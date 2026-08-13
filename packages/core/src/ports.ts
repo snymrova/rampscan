@@ -1,7 +1,8 @@
 import type {
+  Cadence,
   CollectorManifest,
-  EvidenceBundle,
   Finding,
+  LedgerStatement,
   Verdict,
 } from "@rampscan/schema";
 
@@ -22,7 +23,8 @@ export interface LedgerQuery {
 
 export interface LedgerEntry {
   digest: Digest;
-  bundle: EvidenceBundle;
+  /** the stored statement: an evidence bundle or (M3) a scoping event */
+  bundle: LedgerStatement;
   /** the DSSE envelope over the bundle, when the append was signed (M2 always signs) */
   envelope?: SignedEnvelope;
   appendedAt: string; // ISO 8601
@@ -30,7 +32,7 @@ export interface LedgerEntry {
 
 /** Append-only evidence ledger. local: content-addressed dir → later: S3 + Object Lock. */
 export interface LedgerStore {
-  append(bundle: EvidenceBundle, envelope?: SignedEnvelope): Promise<Digest>;
+  append(bundle: LedgerStatement, envelope?: SignedEnvelope): Promise<Digest>;
   get(digest: Digest): Promise<LedgerEntry | undefined>;
   list(query?: LedgerQuery): Promise<LedgerEntry[]>;
 }
@@ -44,7 +46,7 @@ export interface SignedEnvelope {
 
 /** local: cosign keypair on disk → later: cosign + KMS. */
 export interface Signer {
-  sign(statement: EvidenceBundle): Promise<SignedEnvelope>;
+  sign(statement: LedgerStatement): Promise<SignedEnvelope>;
   verify(envelope: SignedEnvelope): Promise<boolean>;
 }
 
@@ -148,8 +150,63 @@ export interface CoverageRow {
   freshAsOf?: string; // ISO 8601 — bundle timestamp, for the clock view
 }
 
+/**
+ * The console's register states (M3). Verdicts come from scans; the two extra
+ * states are computed by the projector: `unevidenced` from the recipe-catalog
+ * join (the honest default — a recipe nobody evidenced is visible, never
+ * hidden), `notApplicable` from a live scoping event in the ledger.
+ */
+export type RegisterState = Verdict | "notApplicable";
+
+export interface ScopingInfo {
+  digest: Digest;
+  justification: string;
+  proposedBy: string;
+  approvedBy: string;
+  timestamp: string; // ISO 8601
+}
+
+/**
+ * One (repo, recipe) cell of the coverage board: the *current* answer, joined
+ * from live evidence, live scoping, and the recipe catalog.
+ */
+export interface RegisterRow {
+  repo: string;
+  recipeId: string;
+  ksiIds: string[];
+  controlIds: string[];
+  state: RegisterState;
+  /** the recipe's declared cadence, when the catalog knows it */
+  cadence?: Cadence;
+  /** set when state is evidenced/violated */
+  bundleDigest?: Digest;
+  freshAsOf?: string; // ISO 8601 — bundle timestamp, for the clock view
+  commit?: string;
+  /** set when state is notApplicable */
+  scoping?: ScopingInfo;
+}
+
+/** One movement the drift view explains: evidence born, died, or flipped. */
+export interface DriftEvent {
+  at: string; // ISO 8601 — when the change was observed
+  repo: string;
+  recipeId: string;
+  kind: "born" | "died" | "verdict-flipped" | "scoped";
+  /** died only */
+  cause?: "anchor-drift" | "superseded";
+  killingCommit?: string;
+  from?: Verdict;
+  to?: Verdict;
+  bundleDigest: Digest;
+}
+
 export interface Projection {
+  /** every evidence bundle ever recorded, live or dead — the chain view */
   rows: CoverageRow[];
+  /** the current board: (repo, recipe) → state, incl. unevidenced + notApplicable */
+  registers: RegisterRow[];
+  /** movement, oldest first — the drift view reads this newest first */
+  drift: DriftEvent[];
   datasetVersion: string;
   projectedAt: string;
 }

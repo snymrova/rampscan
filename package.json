@@ -9,6 +9,7 @@
     "test": "vitest run",
     "typecheck": "tsc --build",
     "doctor": "node scripts/doctor.mjs",
+    "fetch-pocketbase": "node scripts/fetch-pocketbase.mjs",
     "rampscan": "tsx packages/cli/src/main.ts"
   },
   "devDependencies": {

@@ -7,7 +7,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { join } from "node:path";
-import { EvidenceBundle, canonicalJson } from "@rampscan/schema";
+import { LedgerStatement, canonicalJson } from "@rampscan/schema";
 import type {
   Digest,
   LedgerEntry,
@@ -30,7 +30,7 @@ import type {
 // only write to the index is an append, and get() re-hashes what it reads so
 // out-of-band tampering is detected, never served.
 
-export function bundleDigest(bundle: EvidenceBundle): Digest {
+export function bundleDigest(bundle: LedgerStatement): Digest {
   return createHash("sha256").update(canonicalJson(bundle)).digest("hex");
 }
 
@@ -61,7 +61,7 @@ export function createLocalLedger(dir: string): LedgerStore {
       .map((line) => JSON.parse(line) as IndexRow);
   }
 
-  async function loadBundle(digest: Digest): Promise<EvidenceBundle> {
+  async function loadBundle(digest: Digest): Promise<LedgerStatement> {
     const path = join(objectsDir, `${digest}.json`);
     const bytes = await readFile(path, "utf8");
     const actual = createHash("sha256").update(bytes).digest("hex");
@@ -70,7 +70,7 @@ export function createLocalLedger(dir: string): LedgerStore {
         `ledger integrity violation: object ${digest} hashes to ${actual} — the file was modified out of band`,
       );
     }
-    return EvidenceBundle.parse(JSON.parse(bytes));
+    return LedgerStatement.parse(JSON.parse(bytes));
   }
 
   async function loadEnvelope(digest: Digest): Promise<SignedEnvelope | undefined> {
@@ -85,7 +85,7 @@ export function createLocalLedger(dir: string): LedgerStore {
 
   return {
     async append(bundle, envelope): Promise<Digest> {
-      const parsed = EvidenceBundle.parse(bundle);
+      const parsed = LedgerStatement.parse(bundle);
       const bytes = canonicalJson(parsed);
       const digest = createHash("sha256").update(bytes).digest("hex");
       await mkdir(objectsDir, { recursive: true });
@@ -106,13 +106,16 @@ export function createLocalLedger(dir: string): LedgerStore {
         await chmod(envPath, 0o444);
       }
 
+      // scoping events carry no commit anchor and no verdict; the index
+      // records their action so list() filters keep working uniformly
+      const evidence = parsed.predicateType === "https://rampscan.dev/evidence/v1";
       const row: IndexRow = {
         digest,
         appended_at: new Date().toISOString(),
         recipe_id: parsed.predicate.recipe_id,
         repo: parsed.predicate.repo,
-        commit: parsed.predicate.commit,
-        verdict: parsed.predicate.verdict,
+        commit: evidence ? parsed.predicate.commit : "",
+        verdict: evidence ? parsed.predicate.verdict : parsed.predicate.action,
         timestamp: parsed.predicate.timestamp,
       };
       await appendFile(indexPath, JSON.stringify(row) + "\n");

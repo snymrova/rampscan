@@ -7,6 +7,13 @@ fixtures/vulnerable-app/
 scan-result.json
 rampscan-out/
 rampscan-ledger/
+rampscan-projection.db
 exports/
 # local signing keypair — the private key must never be committed
 rampscan-keys/
+# vendored PocketBase binary (fetched by scripts/fetch-pocketbase.mjs against the pin) + its data
+console/pocketbase/bin/
+console/pocketbase/data/
+# Next.js build output
+console/web/.next/
+.gstack/
