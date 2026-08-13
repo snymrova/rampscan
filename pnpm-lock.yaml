@@ -87,6 +87,9 @@ importers:
       '@rampscan/core':
         specifier: workspace:*
         version: link:../core
+      '@rampscan/graph':
+        specifier: workspace:*
+        version: link:../graph
       '@rampscan/schema':
         specifier: workspace:*
         version: link:../schema
@@ -105,6 +108,15 @@ importers:
 
   packages/dataset:
     dependencies:
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+
+  packages/graph:
+    dependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
       zod:
         specifier: ^3.24.0
         version: 3.25.76

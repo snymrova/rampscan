@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
-import { gitleaks, osvScanner, repoFacts, syft } from "@rampscan/collectors";
+import { gitleaks, graphCollector, osvScanner, reachability, repoFacts, syft } from "@rampscan/collectors";
 import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { ScanResult } from "@rampscan/schema";
 import { renderSummary, scan } from "../src/index.js";
@@ -39,7 +39,7 @@ beforeAll(async () => {
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
     recipesDir: join(repoRoot, "recipes/pipeline"),
-    collectors: [repoFacts, gitleaks, syft, osvScanner],
+    collectors: [repoFacts, gitleaks, graphCollector, syft, osvScanner, reachability],
   });
   result = outcome.result;
   resultPath = outcome.resultPath;
@@ -68,10 +68,13 @@ describe("rampscan scan on the planted-fault fixture", () => {
     expect(verdictOf("container-runs-nonroot")).toBe("violated");
   });
 
-  it("route-auth-coverage is honestly unevidenced until M4", () => {
+  it("route-auth-coverage is live as of M4: the bare /health route violates it", () => {
     const row = result.recipes.find((r) => r.recipe_id === "route-auth-coverage")!;
-    expect(row.verdict).toBe("unevidenced");
-    expect(row.reason).toContain("not registered");
+    expect(row.verdict).toBe("violated");
+    expect(row.assertions[0]!.detail).toContain("GET /health");
+    expect(result.findings.some((f) => f.variable === "route-auth" && f.summary.includes("GET /health"))).toBe(true);
+    // the authed route is NOT among the offenders
+    expect(row.assertions[0]!.detail ?? "").not.toContain("GET /settings");
   });
 
   it("grype's recipe is unevidenced when grype does not run — absent, never hidden", () => {
@@ -92,8 +95,8 @@ describe("rampscan scan on the planted-fault fixture", () => {
   });
 
   it.skipIf(!installed("syft") || !installed("osv-scanner"))(
-    "the vulnerable lodash violates the advisories recipe (unless offline)",
-    () => {
+    "M4 proves the difference: reachable lodash violates with a path, minimist becomes a not-affected VEX",
+    async () => {
       const row = result.recipes.find((r) => r.recipe_id === "no-critical-reachable-advisories")!;
       if (row.verdict === "unevidenced") {
         // offline is a legitimate skip — but it must say so
@@ -101,7 +104,25 @@ describe("rampscan scan on the planted-fault fixture", () => {
         return;
       }
       expect(row.verdict).toBe("violated");
-      expect(result.findings.some((f) => f.variable === "advisories")).toBe(true);
+      // the reachable dep: a finding with the call path as the artifact
+      const lodashFinding = result.findings.find(
+        (f) => f.variable === "advisories" && f.summary.includes("lodash"),
+      );
+      expect(lodashFinding).toBeDefined();
+      expect(lodashFinding!.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
+      // the unreachable dep: NO finding — it is not_affected, not violated
+      expect(
+        result.findings.some((f) => f.variable === "advisories" && f.summary.includes("minimist")),
+      ).toBe(false);
+      // the OpenVEX export lands in exports/ with the justification
+      const vexPath = join(dirname(resultPath), "exports", "openvex.json");
+      const vex = JSON.parse(await readFile(vexPath, "utf8")) as {
+        statements: Array<Record<string, unknown>>;
+      };
+      const notAffected = vex.statements.find((s) => s["status"] === "not_affected");
+      expect(notAffected).toBeDefined();
+      expect(notAffected!["justification"]).toBe("vulnerable_code_not_in_execute_path");
+      expect(JSON.stringify(notAffected!["products"])).toContain("minimist");
     },
   );
 

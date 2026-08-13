@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { OPENVEX_ARTIFACT } from "@rampscan/collectors";
 import {
   buildScanResult,
   createLocalRepoSource,
@@ -133,6 +134,16 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
 
   const resultPath = join(outDir, "scan-result.json");
   await writeFile(resultPath, JSON.stringify(result, null, 2) + "\n");
+
+  // the VEX export lands in exports/ (plan §M4): the signed bundle attests
+  // to the artifact by digest; this copy is the hand-to-an-assessor file
+  const vexSource = inputs.get(OPENVEX_ARTIFACT);
+  if (vexSource !== undefined) {
+    const exportsDir = join(outDir, "exports");
+    await mkdir(exportsDir, { recursive: true });
+    await copyFile(vexSource, join(exportsDir, OPENVEX_ARTIFACT));
+    log(`OpenVEX export → ${join(exportsDir, OPENVEX_ARTIFACT)}`);
+  }
 
   if (options.ledgerDir === undefined) return { result, resultPath };
   if (options.keysDir === undefined) {

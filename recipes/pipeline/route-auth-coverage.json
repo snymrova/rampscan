@@ -4,9 +4,19 @@
   "control_ids": ["ac-3", "ac-14"],
   "evidence": "Every declared server route reaches an authentication or authorization check somewhere in its call path",
   "collection": { "kind": "pipeline", "collector": "graph" },
-  "expected_output": "One observation row per route with route, auth_reached, path (the call chain as the artifact)",
+  "expected_output": "One observation row per route with route, file, line, auth_reached, auth_symbol, path (the call chain as the artifact), path_resolution (exact|inferred)",
+  "assertions": [
+    {
+      "field": "route",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "auth_reached", "op": "eq", "value": false }],
+      "controls": ["ac-3"],
+      "description": "Every declared route reaches an authentication check in its call path (recursive CTE over graph.db)."
+    }
+  ],
   "cadence": "weekly",
   "automatable": "full",
-  "notes": "The assertion arrives in M4 with the code graph (`reaches(route, authCheck)` by recursive CTE); until then this recipe is honestly unevidenced — listed, never hidden.",
+  "notes": "Live as of M4: route nodes are extracted from the code (express-style registrations), and reaches(route, authCheck) is answered by recursive CTE over calls/handles edges. Auth detection is a name heuristic (default: /auth/i) — override with graph.authPatterns in rampscan.config.json. A repo with no detected routes stays honestly unevidenced, never vacuously evidenced.",
   "anchor": "commit"
 }

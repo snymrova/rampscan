@@ -1,26 +1,29 @@
 {
   "id": "no-critical-reachable-advisories",
   "ksi_ids": ["KSI-SCR-MON", "KSI-CMT-VTD"],
+  "evidence": "No known CRITICAL or HIGH advisory applies to any dependency reachable from the repo's entry points at the scanned commit",
   "control_ids": ["ra-5", "si-2", "si-5"],
-  "evidence": "No known CRITICAL or HIGH advisory applies to any dependency in the SBOM at the scanned commit",
   "collection": {
     "kind": "pipeline",
-    "collector": "osv-scanner",
-    "inputs": ["sbom.cdx.json"]
+    "collector": "reachability",
+    "inputs": ["osv-results.json", "graph.db"]
   },
-  "expected_output": "osv-results.json; one observation row per advisory group with advisory, package, version, ecosystem, severity",
+  "expected_output": "Gated advisory rows: advisory, severity, package, version, ecosystem, reachable (true|false|unknown), not_affected, path (the call path as the artifact); openvex.json with a not_affected statement per proven-unreachable advisory",
   "assertions": [
     {
       "field": "advisory",
       "op": "count_eq",
       "value": 0,
-      "where": [{ "field": "severity", "op": "in", "value": ["CRITICAL", "HIGH"] }],
+      "where": [
+        { "field": "severity", "op": "in", "value": ["CRITICAL", "HIGH"] },
+        { "field": "not_affected", "op": "eq", "value": false }
+      ],
       "controls": ["ra-5", "si-2"],
-      "description": "Zero CRITICAL or HIGH advisories against the dependency tree."
+      "description": "Zero CRITICAL or HIGH advisories reachable — or of unknown reachability — from the repo's entry points."
     }
   ],
   "cadence": "daily",
   "automatable": "full",
-  "notes": "M1 posture is NOT reachability-gated: every advisory counts until the M4 code graph gates them — an unreachable HIGH then becomes a signed not-affected VEX instead of a violation.",
+  "notes": "M4 posture: reachability-gated. An advisory is not_affected only when the code graph PROVES the package is beyond every entry point and declared route — that claim is emitted as OpenVEX with justification vulnerable_code_not_in_execute_path. No graph, or no detectable entry points, degrades to the M1 posture: every advisory counts, marked unknown.",
   "anchor": "commit"
 }

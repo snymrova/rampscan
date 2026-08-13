@@ -46,13 +46,9 @@ describe("the starter recipe set", () => {
     const byCollector = new Map(allCollectors.map((c) => [c.manifest.name, c]));
     for (const recipe of recipes) {
       const collector = byCollector.get(recipe.collection.collector);
-      if (collector) {
-        // a collector that exists must claim the recipe in its manifest…
-        expect(collector.manifest.recipes, `${recipe.collection.collector} manifest`).toContain(recipe.id);
-      } else {
-        // …and only the M4 graph collector may not exist yet
-        expect(recipe.collection.collector).toBe("graph");
-      }
+      // as of M4 every recipe's collector exists, and it claims the recipe
+      expect(collector, `no collector named "${recipe.collection.collector}" (recipe ${recipe.id})`).toBeDefined();
+      expect(collector!.manifest.recipes, `${recipe.collection.collector} manifest`).toContain(recipe.id);
     }
     // and every recipe a manifest claims must exist as a recipe file
     for (const collector of allCollectors) {

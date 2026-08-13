@@ -26,6 +26,15 @@ interface AssertionResult {
   detail?: string;
 }
 
+// M4: advisory and route rows carry the call path as the artifact — surface
+// every `path` embedded in an assertion's example row as its own line.
+function callPathsIn(detail: string | undefined): string[] {
+  if (!detail) return [];
+  return [...detail.matchAll(/"path":"([^"]+)"/g)]
+    .map((m) => m[1]!)
+    .filter((p) => p.includes("»"));
+}
+
 function Evidence({ digest }: { digest: string }) {
   const [bundle, setBundle] = useState<BundleRecord | null>(null);
   const [coverage, setCoverage] = useState<CoverageRecord | null>(null);
@@ -145,7 +154,14 @@ function Evidence({ digest }: { digest: string }) {
                       {a.passed ? "PASS" : "FAIL"}
                     </td>
                     <td>{a.description}</td>
-                    <td className="faint">{a.detail ?? ""}</td>
+                    <td className="faint" style={{ overflowWrap: "anywhere" }}>
+                      {a.detail ?? ""}
+                      {callPathsIn(a.detail).map((p, j) => (
+                        <div key={j} className="mono" style={{ marginTop: 4 }}>
+                          call path: {p}
+                        </div>
+                      ))}
+                    </td>
                   </tr>
                 ))}
                 {assertions.length === 0 && (

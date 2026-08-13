@@ -1,5 +1,5 @@
 {
-  "name": "@rampscan/collectors",
+  "name": "@rampscan/graph",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -10,10 +10,7 @@
     }
   },
   "dependencies": {
-    "@rampscan/core": "workspace:*",
-    "@rampscan/graph": "workspace:*",
-    "@rampscan/schema": "workspace:*",
-    "yaml": "^2.6.0",
+    "typescript": "^5.7.0",
     "zod": "^3.24.0"
   }
 }

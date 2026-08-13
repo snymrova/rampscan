@@ -5,9 +5,20 @@
 //   1. a secret in git HISTORY but not at HEAD (added then removed — gitleaks
 //      must scan history, not the working tree, to find it)
 //   2. a known-vulnerable dependency (lodash 4.17.15 — GHSA-p6mc-m468-83gw,
-//      prototype pollution) declared in package.json + package-lock.json
+//      prototype pollution) declared in package.json + package-lock.json AND
+//      reachable: src/index.js requires lodash/merge from the package.json
+//      main entry point — M4 must show the call path
 //   3. an unpinned CI action (tag ref, not a commit SHA) and no provenance step
 //   4. an EOL base image in the Dockerfile (node:16-alpine)
+//   5. a route with no auth check in its call path (GET /health in
+//      src/server.js; GET /settings passes through requireAuth — the contrast)
+//
+// And one planted NON-fault, the M4 not-affected demo:
+//   6. a second known-vulnerable dependency (minimist 1.2.5 —
+//      GHSA-xvch-5gv4-984h, CRITICAL prototype pollution) declared in
+//      package.json + lockfile but never imported anywhere — the code graph
+//      must prove it unreachable and emit a signed not-affected OpenVEX
+//      instead of a violation
 //
 // The inner repo carries its own git history, which the outer repo cannot
 // commit (nested .git); this generator is the committed artifact instead.
@@ -54,7 +65,7 @@ write(
       version: "1.0.0",
       private: true,
       main: "src/index.js",
-      dependencies: { lodash: "4.17.15" },
+      dependencies: { lodash: "4.17.15", minimist: "1.2.5" },
     },
     null,
     2,
@@ -72,13 +83,19 @@ write(
         "": {
           name: "vulnerable-app",
           version: "1.0.0",
-          dependencies: { lodash: "4.17.15" },
+          dependencies: { lodash: "4.17.15", minimist: "1.2.5" },
         },
         "node_modules/lodash": {
           version: "4.17.15",
           resolved: "https://registry.npmjs.org/lodash/-/lodash-4.17.15.tgz",
           integrity:
             "sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==",
+        },
+        "node_modules/minimist": {
+          version: "1.2.5",
+          resolved: "https://registry.npmjs.org/minimist/-/minimist-1.2.5.tgz",
+          integrity:
+            "sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==",
         },
       },
     },
@@ -99,6 +116,50 @@ function handleRequest(body) {
 }
 
 module.exports = { handleRequest };
+`,
+);
+write(
+  "src/framework.js",
+  `// Tiny express-shaped router — hand-rolled so the fixture's lockfile carries
+// ONLY the two planted vulnerable dependencies, no framework noise.
+const routes = [];
+function register(method, path, handlers) {
+  routes.push({ method, path, handlers });
+}
+module.exports = {
+  get: (path, ...h) => register("GET", path, h),
+  post: (path, ...h) => register("POST", path, h),
+  routes,
+};
+`,
+);
+write(
+  "src/auth.js",
+  `function requireAuth(req) {
+  if (!req.headers || !req.headers.authorization) {
+    throw new Error("unauthenticated");
+  }
+}
+
+module.exports = { requireAuth };
+`,
+);
+write(
+  "src/server.js",
+  `const app = require("./framework");
+const { requireAuth } = require("./auth");
+const { handleRequest } = require("./index");
+
+// Authenticated: the auth check sits in the route's call path.
+app.get("/settings", (req, res) => {
+  requireAuth(req);
+  res.end(JSON.stringify(handleRequest(req.body)));
+});
+
+// FAULT: no auth check anywhere in this route's call path.
+app.get("/health", (req, res) => {
+  res.end("ok");
+});
 `,
 );
 write(

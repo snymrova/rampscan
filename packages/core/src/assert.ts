@@ -53,8 +53,9 @@ function clauseHolds(
 }
 
 function describeRow(row: Record<string, unknown>): string {
+  // 400, not 200: M4 rows carry call paths, and a truncated path is no artifact
   const s = JSON.stringify(row);
-  return s.length > 200 ? `${s.slice(0, 200)}…` : s;
+  return s.length > 400 ? `${s.slice(0, 400)}…` : s;
 }
 
 export function evaluateAssertion(
