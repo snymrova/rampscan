@@ -72,6 +72,9 @@ importers:
       '@rampscan/projector':
         specifier: workspace:*
         version: link:../projector
+      '@rampscan/scheduler':
+        specifier: workspace:*
+        version: link:../scheduler
       '@rampscan/schema':
         specifier: workspace:*
         version: link:../schema
@@ -131,6 +134,15 @@ importers:
         version: link:../schema
 
   packages/projector:
+    dependencies:
+      '@rampscan/core':
+        specifier: workspace:*
+        version: link:../core
+      '@rampscan/schema':
+        specifier: workspace:*
+        version: link:../schema
+
+  packages/scheduler:
     dependencies:
       '@rampscan/core':
         specifier: workspace:*

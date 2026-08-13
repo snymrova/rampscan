@@ -26,6 +26,19 @@ export const graphCollector: Collector = {
     toolVersion: "resolved-at-run",
     recipes: ["route-auth-coverage"],
     outputs: [GRAPH_DB_ARTIFACT],
+    cacheScope: [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "package.json",
+      "**/package.json",
+      "rampscan.config.json", // entrypoints/authPatterns overrides change the graph
+    ],
   },
 
   async collect(ctx): Promise<CollectOutput> {

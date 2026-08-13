@@ -9,7 +9,6 @@ import type {
   RepoSource,
   RunResult,
   Runner,
-  Scheduler,
   Workspace,
 } from "./ports.js";
 
@@ -17,12 +16,8 @@ const execFileAsync = promisify(execFile);
 
 // Local adapters. Runner and RepoSource are real as of M1; the M2 adapters
 // live in their own packages (@rampscan/ledger, @rampscan/signer,
-// @rampscan/projector) per plan §M2. Scheduler lands in M5 and remains a loud
-// stub so wiring code can depend on the constructor without fake data back.
-
-function notImplemented(port: string, milestone: string): never {
-  throw new Error(`${port} local adapter lands in ${milestone} — not implemented yet`);
-}
+// @rampscan/projector) per plan §M2, and the M5 Scheduler in
+// @rampscan/scheduler — every port now has a real local implementation.
 
 /**
  * Local Runner: executes registered collectors in-process (the collectors
@@ -83,12 +78,6 @@ export function createLocalRunner(options: {
       if (out.skipped) result.skipped = out.skipped;
       return result;
     },
-  };
-}
-
-export function createLocalScheduler(): Scheduler {
-  return {
-    ensureCadence: async () => notImplemented("Scheduler", "M5"),
   };
 }
 

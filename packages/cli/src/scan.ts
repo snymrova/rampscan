@@ -1,15 +1,23 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { OPENVEX_ARTIFACT } from "@rampscan/collectors";
+import { OPENVEX_ARTIFACT, loadToolManifest } from "@rampscan/collectors";
 import {
   buildScanResult,
+  createCachingRunner,
   createLocalRepoSource,
   createLocalRunner,
   sameEvidence,
   toEvidenceBundle,
 } from "@rampscan/core";
-import type { Collector, Digest, LedgerEntry, RunResult } from "@rampscan/core";
+import type {
+  CacheMode,
+  CacheOutcome,
+  Collector,
+  Digest,
+  LedgerEntry,
+  RunResult,
+} from "@rampscan/core";
 import { loadLocalDataset } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner } from "@rampscan/signer";
@@ -37,6 +45,21 @@ export interface ScanOptions {
   ledgerDir?: string;
   /** signing keypair dir; required when ledgerDir is set */
   keysDir?: string;
+  /**
+   * The scan cache (M5 G2). "incremental" reuses collector results whose
+   * cacheScope is clean by content hash; "full" bypasses reads but refreshes
+   * every entry. Omit for the uncached M1–M4 behavior.
+   */
+  cache?: { dir: string; mode: CacheMode };
+  /**
+   * Identical evidence normally survives with its original signature — but
+   * the MVX clock reads the bundle timestamp, so a daemon re-verifying on
+   * cadence must eventually mint a fresh attestation or watch true evidence
+   * "expire". When set, identical evidence older than this is re-signed and
+   * appended (the prior bundle dies `superseded` — an honest record of the
+   * re-verification). Unset → M2 behavior: identical evidence always survives.
+   */
+  refreshOlderThanMs?: number;
   /** the run's single clock — defaults to now */
   now?: Date;
   log?: (line: string) => void;
@@ -55,7 +78,11 @@ export interface ScanOutcome {
     appended: EvidenceRecord[];
     /** already in the ledger with identical evidence — original signature stands */
     survived: EvidenceRecord[];
+    /** identical evidence past refreshOlderThanMs — re-signed with a fresh timestamp */
+    refreshed: EvidenceRecord[];
   };
+  /** per-collector cache outcomes, when a cache was configured */
+  cache?: Record<string, CacheOutcome>;
 }
 
 function latestEntry(entries: LedgerEntry[]): LedgerEntry | undefined {
@@ -86,12 +113,34 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   await mkdir(artifactDir, { recursive: true });
 
   const inputs = new Map<string, string>();
-  const runner = createLocalRunner({
+  const localRunner = createLocalRunner({
     collectors: options.collectors,
     artifactDir,
     inputs,
     runId,
   });
+
+  const cacheOutcomes: Record<string, CacheOutcome> = {};
+  let runner = localRunner;
+  if (options.cache) {
+    // the pinned tools.json content salts every key: re-pinning a tool image
+    // invalidates the cache even though the manifest still says resolved-at-run
+    const keySalt = createHash("sha256")
+      .update(JSON.stringify(await loadToolManifest()))
+      .digest("hex");
+    runner = createCachingRunner(localRunner, {
+      dir: options.cache.dir,
+      mode: options.cache.mode,
+      artifactDir,
+      inputs,
+      keySalt,
+      onOutcome: (collector, outcome) => {
+        cacheOutcomes[collector] = outcome;
+      },
+      log,
+    });
+    log(`scan cache: ${options.cache.mode} mode at ${options.cache.dir}`);
+  }
 
   const runs = new Map<string, RunResult>();
   for (const collector of options.collectors) {
@@ -145,7 +194,10 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
     log(`OpenVEX export → ${join(exportsDir, OPENVEX_ARTIFACT)}`);
   }
 
-  if (options.ledgerDir === undefined) return { result, resultPath };
+  const outcome: ScanOutcome = { result, resultPath };
+  if (options.cache) outcome.cache = cacheOutcomes;
+
+  if (options.ledgerDir === undefined) return outcome;
   if (options.keysDir === undefined) {
     throw new Error("ledgerDir is set but keysDir is not — evidence is only recorded signed");
   }
@@ -155,6 +207,7 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   const recipeById = new Map<string, PipelineRecipe>(recipes.map((r) => [r.id, r]));
   const appended: EvidenceRecord[] = [];
   const survived: EvidenceRecord[] = [];
+  const refreshed: EvidenceRecord[] = [];
 
   for (const row of result.recipes) {
     const recipe = recipeById.get(row.recipe_id)!;
@@ -177,7 +230,16 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
       await ledger.list({ recipeId: row.recipe_id, repo: workspace.repo }),
     );
     if (prior && isEvidenceBundle(prior.bundle) && sameEvidence(prior.bundle, bundle)) {
-      survived.push({ recipeId: row.recipe_id, digest: prior.digest });
+      const priorAgeMs = now.getTime() - Date.parse(prior.bundle.predicate.timestamp);
+      if (options.refreshOlderThanMs === undefined || priorAgeMs < options.refreshOlderThanMs) {
+        survived.push({ recipeId: row.recipe_id, digest: prior.digest });
+        continue;
+      }
+      // identical but aging: mint a fresh attestation so the MVX clock
+      // records the re-verification (the prior bundle dies `superseded`)
+      const envelope = await signer.sign(bundle);
+      const digest = await ledger.append(bundle, envelope);
+      refreshed.push({ recipeId: row.recipe_id, digest });
       continue;
     }
     const envelope = await signer.sign(bundle);
@@ -186,8 +248,10 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   }
 
   log(
-    `ledger: ${appended.length} bundle(s) appended, ${survived.length} survived unchanged, ` +
+    `ledger: ${appended.length} bundle(s) appended, ${refreshed.length} refreshed (re-signed), ` +
+      `${survived.length} survived unchanged, ` +
       `${result.summary.unevidenced} recipe(s) unevidenced (never recorded)`,
   );
-  return { result, resultPath, evidence: { appended, survived } };
+  outcome.evidence = { appended, survived, refreshed };
+  return outcome;
 }

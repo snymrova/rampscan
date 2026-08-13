@@ -7,6 +7,7 @@
     { "path": "packages/ledger" },
     { "path": "packages/signer" },
     { "path": "packages/projector" },
+    { "path": "packages/scheduler" },
     { "path": "packages/graph" },
     { "path": "packages/collectors" },
     { "path": "packages/cli" }

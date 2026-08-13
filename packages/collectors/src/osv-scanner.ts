@@ -18,6 +18,9 @@ export const osvScanner: Collector = {
     recipes: [], // producer only — the advisories recipe is evidenced by `reachability`
     inputs: [SBOM_ARTIFACT],
     outputs: [OSV_RESULTS_ARTIFACT],
+    // keyed on the SBOM it consumes; a cached result can miss advisories
+    // published since — the daemon's scheduled full scan is the corrective
+    cacheScope: ["@inputs"],
   },
 
   async collect(ctx): Promise<CollectOutput> {

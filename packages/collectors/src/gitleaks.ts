@@ -23,6 +23,7 @@ export const gitleaks: Collector = {
     name: "gitleaks",
     toolVersion: "resolved-at-run",
     recipes: ["no-secrets-in-history"],
+    cacheScope: ["@commit"], // scans the full history — any new commit re-runs it
   },
 
   async collect(ctx): Promise<CollectOutput> {

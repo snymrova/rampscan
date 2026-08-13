@@ -48,6 +48,7 @@ export const reachability: Collector = {
     recipes: ["no-critical-reachable-advisories"],
     inputs: [OSV_RESULTS_ARTIFACT, GRAPH_DB_ARTIFACT],
     outputs: [OPENVEX_ARTIFACT],
+    cacheScope: ["@inputs"], // pure join of osv-results × graph.db
   },
 
   async collect(ctx): Promise<CollectOutput> {

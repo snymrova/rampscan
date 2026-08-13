@@ -12,6 +12,7 @@
     { "path": "../collectors" },
     { "path": "../ledger" },
     { "path": "../signer" },
-    { "path": "../projector" }
+    { "path": "../projector" },
+    { "path": "../scheduler" }
   ]
 }

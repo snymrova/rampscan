@@ -9,6 +9,8 @@ rampscan-out/
 rampscan-ledger/
 rampscan-projection.db
 exports/
+# incremental scan cache (content-addressed collector results; rebuildable)
+rampscan-cache/
 # local signing keypair — the private key must never be committed
 rampscan-keys/
 # vendored PocketBase binary (fetched by scripts/fetch-pocketbase.mjs against the pin) + its data

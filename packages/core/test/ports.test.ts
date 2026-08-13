@@ -2,25 +2,13 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  createLocalRepoSource,
-  createLocalRunner,
-  createLocalScheduler,
-} from "../src/index.js";
+import { createLocalRepoSource, createLocalRunner } from "../src/index.js";
 import type { Collector } from "../src/index.js";
 
 // Runner and RepoSource are real as of M1; ledger/signer/projector are real
-// as of M2 and live in their own packages. The still-stubbed Scheduler must
-// keep failing loudly rather than silently succeeding — a stub that returns
-// fake data is worse than none.
-
-describe("still-stubbed local adapters", () => {
-  it("the scheduler rejects with its landing milestone", async () => {
-    await expect(
-      createLocalScheduler().ensureCadence("b", { repo: "x" }),
-    ).rejects.toThrow(/M5/);
-  });
-});
+// as of M2, the Scheduler as of M5 — each in its own package. Every port now
+// has a real local adapter; the loud-stub test that guarded the Scheduler
+// gap retired with the gap.
 
 describe("local RepoSource (M1)", () => {
   it("pins a workspace to the checkout's HEAD commit", async () => {

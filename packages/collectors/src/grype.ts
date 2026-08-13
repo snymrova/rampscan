@@ -54,6 +54,10 @@ export const grype: Collector = {
     name: "grype",
     toolVersion: "resolved-at-run",
     recipes: ["container-base-image-patched"],
+    // keyed on the Dockerfile (the final FROM decides the scanned image); a
+    // cached result can miss newly published CVEs — the scheduled full scan
+    // is the corrective
+    cacheScope: ["Dockerfile", "**/Dockerfile"],
   },
 
   async collect(ctx): Promise<CollectOutput> {

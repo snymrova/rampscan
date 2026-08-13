@@ -111,6 +111,24 @@ export const repoFacts: Collector = {
       "codeowners-defined",
       "container-runs-nonroot",
     ],
+    // exactly the files the checks above read
+    cacheScope: [
+      "package.json",
+      ...LOCKFILES,
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml",
+      ".github/dependabot.yml",
+      ".github/dependabot.yaml",
+      "renovate.json",
+      "renovate.json5",
+      ".renovaterc",
+      ".renovaterc.json",
+      ".github/renovate.json",
+      "CODEOWNERS",
+      ".github/CODEOWNERS",
+      "docs/CODEOWNERS",
+      "Dockerfile",
+    ],
   },
 
   async collect(ctx): Promise<CollectOutput> {

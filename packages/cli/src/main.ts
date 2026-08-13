@@ -8,19 +8,24 @@ import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
 import { renderBoard } from "./board.js";
+import { startDaemon } from "./daemon.js";
 import { rebuild } from "./rebuild.js";
 import { loadRecipes } from "./recipes.js";
+import { report } from "./report.js";
 import { scan } from "./scan.js";
 import { serve } from "./serve.js";
 import { renderSummary } from "./summary.js";
 import { verify } from "./verify.js";
 
-// rampscan CLI — M3 surface:
+// rampscan CLI — M5 surface:
 //   rampscan scan <path>     scan, join, sign, append to the ledger
 //   rampscan verify <digest> offline check of one bundle
 //   rampscan board           the projection as text: registers + graveyard
 //   rampscan rebuild         projection stores from the ledger, with proof
 //   rampscan serve           PocketBase + the Next.js console, locally
+//   rampscan daemon <path>   the clock runs itself: cadence re-scans,
+//                            near-expiry warnings, cache self-verification
+//   rampscan report          FRONTIER-PIPELINE.md from a real run
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -36,6 +41,9 @@ function usage(): never {
       "  board             show the projection: registers, live evidence, graveyard",
       "  rebuild           rebuild projection stores from the ledger and PROVE projection ≡ ledger",
       "  serve             start PocketBase + the Next.js console (the visual board)",
+      "  daemon <path>     keep the target evidenced on cadence: incremental re-scans,",
+      "                    near-expiry warnings, scheduled full-scan cache verification",
+      "  report            generate docs/FRONTIER-PIPELINE.md from the last scan result",
       "",
       "options:",
       "  --out <dir>       scan output directory (default: ./rampscan-out)",
@@ -49,6 +57,11 @@ function usage(): never {
       "  --pb-port <n>     serve: PocketBase port (default: 8090)",
       "  --web-port <n>    serve: console port (default: 3000)",
       "  --no-web          serve: PocketBase + projector only, no Next.js",
+      "  --cache <dir>     daemon: scan cache dir (default: ./rampscan-cache)",
+      "  --check-interval <s>  daemon: clock check interval in seconds (default: 300)",
+      "  --full-every <n>  daemon: every Nth scan bypasses the cache and verifies it (default: 6)",
+      "  --result <path>   report: scan result to report from (default: ./rampscan-out/scan-result.json)",
+      "  --report-out <path>  report: output file (default: docs/FRONTIER-PIPELINE.md)",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -71,6 +84,11 @@ async function main(): Promise<void> {
       "pb-port": { type: "string" },
       "web-port": { type: "string" },
       "no-web": { type: "boolean" },
+      cache: { type: "string" },
+      "check-interval": { type: "string" },
+      "full-every": { type: "string" },
+      result: { type: "string" },
+      "report-out": { type: "string" },
       "no-color": { type: "boolean" },
     },
   });
@@ -129,6 +147,47 @@ async function main(): Promise<void> {
       });
       console.log(report.lines.join("\n"));
       if (!report.ok) process.exit(1);
+      return;
+    }
+
+    case "daemon": {
+      if (!target) usage();
+      const handle = await startDaemon({
+        path: target,
+        outDir: values.out ?? "./rampscan-out",
+        ledgerDir,
+        keysDir,
+        datasetDir,
+        datasetPin,
+        recipesDir,
+        collectors: allCollectors,
+        certClass,
+        cacheDir: values.cache ?? "./rampscan-cache",
+        checkIntervalMs: Number(values["check-interval"] ?? 300) * 1000,
+        fullEvery: Number(values["full-every"] ?? 6),
+        log: (line) => console.error(`· ${new Date().toISOString()} ${line}`),
+      });
+      console.error(
+        `· daemon watching ${target} (class ${certClass}) — ctrl-c to stop`,
+      );
+      await new Promise<void>((resolvePromise) => {
+        const shutdown = () => {
+          handle.stop();
+          console.error(`· daemon stopped after ${handle.scanCount()} scan(s)`);
+          resolvePromise();
+        };
+        process.once("SIGINT", shutdown);
+        process.once("SIGTERM", shutdown);
+      });
+      return;
+    }
+
+    case "report": {
+      const outcome = await report({
+        resultPath: values.result ?? join(values.out ?? "./rampscan-out", "scan-result.json"),
+        outPath: values["report-out"] ?? join(REPO_ROOT, "docs/FRONTIER-PIPELINE.md"),
+      });
+      console.log(outcome.lines.join("\n"));
       return;
     }
 

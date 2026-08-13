@@ -36,6 +36,7 @@ export const syft: Collector = {
     toolVersion: "resolved-at-run",
     recipes: ["sbom-exists-and-fresh"],
     outputs: [SBOM_ARTIFACT],
+    cacheScope: ["@tree"], // scans the committed tree — any content change re-runs it
   },
 
   async collect(ctx): Promise<CollectOutput> {

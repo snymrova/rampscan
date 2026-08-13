@@ -1,0 +1,5 @@
+{
+  "graph": {
+    "entrypoints": ["packages/cli/src/main.ts"]
+  }
+}
