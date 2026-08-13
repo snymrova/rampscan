@@ -1,9 +1,11 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join, posix } from "node:path";
 import { z } from "zod";
 import type { Collector, CollectOutput } from "@rampscan/core";
 import type { Finding } from "@rampscan/schema";
-import { exec, fileSha256, makeFinding, toolVersion } from "./support.js";
+import { fileSha256, makeFinding } from "./support.js";
+import { absentReason, resolveTool } from "./tools.js";
 
 // grype — OS-level packages in the container image the repo's Dockerfile
 // builds FROM: the vulnerabilities the repo manifest never declares (plan C2).
@@ -55,19 +57,21 @@ export const grype: Collector = {
   },
 
   async collect(ctx): Promise<CollectOutput> {
-    const version = await toolVersion("grype", ["--version"], (out) =>
-      out.replace(/^grype\s+/, "").trim(),
-    );
-    if (!version) {
+    const tool = await resolveTool("grype", {
+      args: ["--version"],
+      parse: (out) => out.replace(/^grype\s+/, "").trim(),
+    });
+    if (!tool) {
       return {
         findings: [],
         artifacts: [],
         observations: {},
         toolVersion: "absent",
         exitCode: -1,
-        skipped: { reason: "grype is not installed (run `pnpm doctor` for install hints)" },
+        skipped: { reason: absentReason("grype") },
       };
     }
+    const version = tool.version;
 
     let dockerfile: string;
     try {
@@ -95,9 +99,20 @@ export const grype: Collector = {
     }
 
     const reportPath = join(ctx.artifactDir, "grype-report.json");
+    const reportArg = posix.join(tool.mount(ctx.artifactDir, "rw"), "grype-report.json");
+    // Under Docker the container is ephemeral but grype's vulnerability DB
+    // (~700MB) must not be: mount a persistent host cache dir for it.
+    // A local binary manages its own ~/.cache/grype — leave that alone.
+    const env: Record<string, string> = {};
+    if (tool.kind === "docker") {
+      const dbCache = join(homedir(), ".cache", "rampscan", "grype-db");
+      await mkdir(dbCache, { recursive: true });
+      env["GRYPE_DB_CACHE_DIR"] = tool.mount(dbCache, "rw");
+    }
     // exit 0 regardless of matches unless --fail-on is set; network + DB required
-    const { exitCode, stderr } = await exec("grype", ["-o", "json", "--file", reportPath, image], {
+    const { exitCode, stderr } = await tool.exec(["-o", "json", "--file", reportArg, image], {
       timeoutMs: 900_000,
+      env,
     });
     if (exitCode !== 0) {
       return {
@@ -107,7 +122,7 @@ export const grype: Collector = {
         toolVersion: version,
         exitCode,
         skipped: {
-          reason: `grype failed on ${image} (exit ${exitCode}) — likely no network or image pull failure: ${stderr.slice(0, 300)}`,
+          reason: `grype failed on ${image} (exit ${exitCode}, via ${tool.runtime}) — likely no network or image pull failure: ${stderr.slice(0, 300)}`,
         },
       };
     }

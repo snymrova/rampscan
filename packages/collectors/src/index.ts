@@ -6,6 +6,7 @@ import { repoFacts } from "./repo-facts.js";
 import { syft } from "./syft.js";
 
 export * from "./support.js";
+export * from "./tools.js";
 export { repoFacts, REPO_FACTS_VERSION } from "./repo-facts.js";
 export { gitleaks } from "./gitleaks.js";
 export { syft, SBOM_ARTIFACT } from "./syft.js";

@@ -1,10 +1,11 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, dirname, join, posix } from "node:path";
 import { z } from "zod";
 import type { Collector, CollectOutput } from "@rampscan/core";
 import type { Finding } from "@rampscan/schema";
 import { SBOM_ARTIFACT } from "./syft.js";
-import { exec, fileSha256, makeFinding, sha256, toolVersion } from "./support.js";
+import { fileSha256, makeFinding, sha256 } from "./support.js";
+import { absentReason, resolveTool } from "./tools.js";
 
 // osv-scanner — known advisories against the SBOM syft produced (plan C2).
 // Until M4's reachability gate, every advisory counts (the recipe's notes say
@@ -74,20 +75,24 @@ export const osvScanner: Collector = {
   },
 
   async collect(ctx): Promise<CollectOutput> {
-    const version = await toolVersion("osv-scanner", ["--version"], (out) => {
-      const m = /osv-scanner version:\s*(\S+)/.exec(out);
-      return m ? m[1]! : out.split("\n")[0]!.trim();
+    const tool = await resolveTool("osv-scanner", {
+      args: ["--version"],
+      parse: (out) => {
+        const m = /osv-scanner version:\s*(\S+)/.exec(out);
+        return m ? m[1]! : out.split("\n")[0]!.trim();
+      },
     });
-    if (!version) {
+    if (!tool) {
       return {
         findings: [],
         artifacts: [],
         observations: {},
         toolVersion: "absent",
         exitCode: -1,
-        skipped: { reason: "osv-scanner is not installed (run `pnpm doctor` for install hints)" },
+        skipped: { reason: absentReason("osv-scanner") },
       };
     }
+    const version = tool.version;
     const sbomPath = ctx.inputs.get(SBOM_ARTIFACT);
     if (!sbomPath) {
       return {
@@ -101,16 +106,18 @@ export const osvScanner: Collector = {
     }
 
     const reportPath = join(ctx.artifactDir, "osv-results.json");
+    const reportArg = posix.join(tool.mount(ctx.artifactDir, "rw"), "osv-results.json");
+    const sbomArg = posix.join(tool.mount(dirname(sbomPath), "ro"), basename(sbomPath));
     // exit 0 = clean, 1 = vulnerabilities found; both are results
-    const { exitCode, stderr } = await exec("osv-scanner", [
+    const { exitCode, stderr } = await tool.exec([
       "scan",
       "source",
       "--sbom",
-      sbomPath,
+      sbomArg,
       "--format",
       "json",
       "--output-file",
-      reportPath,
+      reportArg,
     ]);
     if (exitCode !== 0 && exitCode !== 1) {
       return {
@@ -119,7 +126,7 @@ export const osvScanner: Collector = {
         observations: {},
         toolVersion: version,
         exitCode,
-        skipped: { reason: `osv-scanner failed (exit ${exitCode}): ${stderr.slice(0, 300)}` },
+        skipped: { reason: `osv-scanner failed (exit ${exitCode}, via ${tool.runtime}): ${stderr.slice(0, 300)}` },
       };
     }
 

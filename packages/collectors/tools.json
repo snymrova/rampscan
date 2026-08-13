@@ -1,0 +1,9 @@
+{
+  "comment": "Pinned scan-tool versions and their Docker images. Resolution order at run time: binary on PATH (whatever version is installed) → pinned image via Docker → skip with reason. Nothing is ever downloaded onto the host by rampscan; with Docker present there is nothing to install. Versions here also pin what doctor reports. Image digests (immutable pins) are appliance-level hardening — tags here match the pinned versions.",
+  "tools": {
+    "syft": { "version": "1.51.0", "image": "anchore/syft:v1.51.0" },
+    "grype": { "version": "0.117.0", "image": "anchore/grype:v0.117.0" },
+    "gitleaks": { "version": "8.24.3", "image": "ghcr.io/gitleaks/gitleaks:v8.24.3" },
+    "osv-scanner": { "version": "2.5.0", "image": "ghcr.io/google/osv-scanner:v2.5.0" }
+  }
+}

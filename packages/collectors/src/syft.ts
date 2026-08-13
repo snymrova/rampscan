@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { z } from "zod";
 import type { Collector, CollectOutput } from "@rampscan/core";
-import { exec, fileSha256, toolVersion } from "./support.js";
+import { fileSha256 } from "./support.js";
+import { absentReason, resolveTool } from "./tools.js";
 
 // syft — SBOM in CycloneDX JSON (plan C2). The SBOM is the inventory artifact
 // downstream collectors consume (osv-scanner reads it by name via the run's
@@ -38,32 +39,35 @@ export const syft: Collector = {
   },
 
   async collect(ctx): Promise<CollectOutput> {
-    const version = await toolVersion("syft", ["--version"], (out) =>
-      out.replace(/^syft\s+/, "").trim(),
-    );
-    if (!version) {
+    const tool = await resolveTool("syft", {
+      args: ["--version"],
+      parse: (out) => out.replace(/^syft\s+/, "").trim(),
+    });
+    if (!tool) {
       return {
         findings: [],
         artifacts: [],
         observations: {},
         toolVersion: "absent",
         exitCode: -1,
-        skipped: { reason: "syft is not installed (run `pnpm doctor` for install hints)" },
+        skipped: { reason: absentReason("syft") },
       };
     }
+    const version = tool.version;
 
     const sbomPath = join(ctx.artifactDir, SBOM_ARTIFACT);
+    const sbomArg = posix.join(tool.mount(ctx.artifactDir, "rw"), SBOM_ARTIFACT);
     // Exclude uncommitted trees (installs, build output, .git): they are not
     // commit-anchored, so an SBOM that catalogs them cannot honestly claim to
     // describe the scanned commit — the manifests and lockfiles can.
     const excludes = ["node_modules", ".git", ".next", "dist", "build", "vendor", ".venv"].flatMap(
       (d) => ["--exclude", `./**/${d}/**`, "--exclude", `./${d}/**`],
     );
-    const { exitCode, stderr } = await exec("syft", [
+    const { exitCode, stderr } = await tool.exec([
       "scan",
-      `dir:${ctx.workspace.root}`,
+      `dir:${tool.mount(ctx.workspace.root, "ro")}`,
       "-o",
-      `cyclonedx-json=${sbomPath}`,
+      `cyclonedx-json=${sbomArg}`,
       "-q",
       ...excludes,
     ]);
@@ -74,7 +78,7 @@ export const syft: Collector = {
         observations: {},
         toolVersion: version,
         exitCode,
-        skipped: { reason: `syft failed (exit ${exitCode}): ${stderr.slice(0, 300)}` },
+        skipped: { reason: `syft failed (exit ${exitCode}, via ${tool.runtime}): ${stderr.slice(0, 300)}` },
       };
     }
 

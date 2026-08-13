@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { z } from "zod";
 import type { Collector, CollectOutput } from "@rampscan/core";
-import { exec, makeFinding, sha256, toolVersion } from "./support.js";
+import { makeFinding, sha256 } from "./support.js";
+import { absentReason, resolveTool } from "./tools.js";
 
 // gitleaks — secrets over the FULL git history (plan C2): a secret added and
 // then removed is still burned, and still in the clone every developer holds.
@@ -25,24 +26,29 @@ export const gitleaks: Collector = {
   },
 
   async collect(ctx): Promise<CollectOutput> {
-    const version = await toolVersion("gitleaks", ["version"], (out) => out.split("\n")[0]!.trim());
-    if (!version) {
+    const tool = await resolveTool("gitleaks", {
+      args: ["version"],
+      parse: (out) => out.split("\n")[0]!.trim(),
+    });
+    if (!tool) {
       return {
         findings: [],
         artifacts: [],
         observations: {},
         toolVersion: "absent",
         exitCode: -1,
-        skipped: { reason: "gitleaks is not installed (run `pnpm doctor` for install hints)" },
+        skipped: { reason: absentReason("gitleaks") },
       };
     }
+    const version = tool.version;
 
     const reportPath = join(ctx.artifactDir, "gitleaks-report.json");
+    const reportArg = posix.join(tool.mount(ctx.artifactDir, "rw"), "gitleaks-report.json");
     // `gitleaks git` scans committed history, not just the working tree.
     // --redact keeps secret values out of the evidence artifact.
     // Exit 1 means "leaks found" — that is a result, not an error.
-    const cmd = ["git", "--no-banner", "--redact", "--report-format", "json", "--report-path", reportPath, ctx.workspace.root];
-    const { exitCode, stderr } = await exec("gitleaks", cmd);
+    const cmd = ["git", "--no-banner", "--redact", "--report-format", "json", "--report-path", reportArg, tool.mount(ctx.workspace.root, "ro")];
+    const { exitCode, stderr } = await tool.exec(cmd);
     if (exitCode !== 0 && exitCode !== 1) {
       return {
         findings: [],
@@ -50,7 +56,7 @@ export const gitleaks: Collector = {
         observations: {},
         toolVersion: version,
         exitCode,
-        skipped: { reason: `gitleaks failed (exit ${exitCode}): ${stderr.slice(0, 300)}` },
+        skipped: { reason: `gitleaks failed (exit ${exitCode}, via ${tool.runtime}): ${stderr.slice(0, 300)}` },
       };
     }
 
