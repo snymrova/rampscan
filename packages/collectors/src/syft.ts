@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
 import { z } from "zod";
 import type { Collector, CollectOutput } from "@rampscan/core";
-import { fileSha256 } from "./support.js";
+import { exec, fileSha256 } from "./support.js";
 import { absentReason, resolveTool } from "./tools.js";
 
 // syft — SBOM in CycloneDX JSON (plan C2). The SBOM is the inventory artifact
@@ -58,12 +58,33 @@ export const syft: Collector = {
 
     const sbomPath = join(ctx.artifactDir, SBOM_ARTIFACT);
     const sbomArg = posix.join(tool.mount(ctx.artifactDir, "rw"), SBOM_ARTIFACT);
-    // Exclude uncommitted trees (installs, build output, .git): they are not
-    // commit-anchored, so an SBOM that catalogs them cannot honestly claim to
-    // describe the scanned commit — the manifests and lockfiles can.
-    const excludes = ["node_modules", ".git", ".next", "dist", "build", "vendor", ".venv"].flatMap(
-      (d) => ["--exclude", `./**/${d}/**`, "--exclude", `./${d}/**`],
+    // Exclude uncommitted trees: they are not commit-anchored, so an SBOM
+    // that catalogs them cannot honestly claim to describe the scanned
+    // commit — the manifests and lockfiles can. The list is computed from
+    // git (untracked + ignored, collapsed to directories) — a static
+    // dir-name list missed generated content (the rampscan self-scan found
+    // its own gitignored test fixture's lockfile in its SBOM). The static
+    // names stay as the fallback for the exotic case of a committed install.
+    const excludes = [
+      "node_modules",
+      ".git",
+      ".next",
+      "dist",
+      "build",
+      "vendor",
+      ".venv",
+    ].flatMap((d) => ["--exclude", `./**/${d}/**`, "--exclude", `./${d}/**`]);
+    const untracked = await exec(
+      "git",
+      ["ls-files", "--others", "--directory"],
+      { cwd: ctx.workspace.root },
     );
+    if (untracked.exitCode === 0) {
+      for (const line of untracked.stdout.split("\n")) {
+        if (line === "") continue;
+        excludes.push("--exclude", line.endsWith("/") ? `./${line}**` : `./${line}`);
+      }
+    }
     const { exitCode, stderr } = await tool.exec([
       "scan",
       `dir:${tool.mount(ctx.workspace.root, "ro")}`,

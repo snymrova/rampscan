@@ -1,7 +1,11 @@
+import { execFile } from "node:child_process";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { posix } from "node:path";
+import { promisify } from "node:util";
 import ts from "typescript";
+
+const execFileAsync = promisify(execFile);
 
 // The M4 code graph — plan §M4, SPEC §3 (graph.db). TypeScript/JavaScript
 // only in the prototype, by design.
@@ -82,8 +86,39 @@ const SKIP_DIRS = new Set([
 ]);
 const ROUTE_METHODS = new Set(["get", "post", "put", "delete", "patch", "options", "head", "all"]);
 
-/** repo-relative source files, sorted, skipping build/dependency dirs */
+function isSourceFile(name: string): boolean {
+  return SOURCE_EXT.some((e) => name.endsWith(e)) && !name.endsWith(".d.ts");
+}
+
+/** every directory segment is neither hidden nor a build/dependency dir */
+function inWalkableDir(rel: string): boolean {
+  const segments = rel.split("/");
+  return segments
+    .slice(0, -1)
+    .every((s) => !s.startsWith(".") && !SKIP_DIRS.has(s));
+}
+
+/**
+ * Repo-relative source files, sorted. The graph anchors to a commit, so the
+ * file set is the COMMITTED tree (`git ls-tree`) — a generated or gitignored
+ * file on disk must never leak routes or call edges into commit-anchored
+ * evidence (the rampscan self-scan caught exactly that: its generated test
+ * fixture's routes showed up on its own board). Non-git roots (unit tests)
+ * fall back to a filesystem walk with the same skip rules.
+ */
 export async function listSourceFiles(root: string): Promise<string[]> {
+  try {
+    const { stdout } = await execFileAsync("git", ["ls-tree", "-r", "--name-only", "HEAD"], {
+      cwd: root,
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    return stdout
+      .split("\n")
+      .filter((rel) => rel !== "" && isSourceFile(rel) && inWalkableDir(rel))
+      .sort();
+  } catch {
+    // not a git checkout (or no commits yet) — walk the filesystem
+  }
   const files: string[] = [];
   async function walk(relDir: string): Promise<void> {
     const entries = await readdir(join(root, relDir), { withFileTypes: true });
@@ -95,7 +130,7 @@ export async function listSourceFiles(root: string): Promise<string[]> {
       if (entry.isDirectory()) {
         if (SKIP_DIRS.has(entry.name)) continue;
         await walk(rel);
-      } else if (SOURCE_EXT.some((e) => entry.name.endsWith(e)) && !entry.name.endsWith(".d.ts")) {
+      } else if (isSourceFile(entry.name)) {
         files.push(rel);
       }
     }
