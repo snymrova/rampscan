@@ -97,7 +97,9 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   const now = options.now ?? new Date();
   const runId = `run-${now.toISOString().replaceAll(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`;
 
-  const workspace = await createLocalRepoSource().fetch({ repo: options.path });
+  // the repo's ledger identity is the RESOLVED path — `scan .` and a daemon
+  // watching the absolute path must agree on which evidence is whose
+  const workspace = await createLocalRepoSource().fetch({ repo: resolve(options.path) });
   log(`workspace ${workspace.root} @ ${workspace.commit.slice(0, 12)}`);
 
   const dataset = await loadLocalDataset(options.datasetDir, options.datasetPin);
