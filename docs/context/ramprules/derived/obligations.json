@@ -1,0 +1,3378 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "obligations",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "deadlines": [
+      {
+        "requirementId": "VDR-TFR-PSD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Sample Detection",
+        "statement": "Providers with Class D Certifications SHOULD persistently perform vulnerability detection on representative samples of similar machine-based information resources, at least once per day.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "days",
+        "label": "1 day"
+      },
+      {
+        "requirementId": "REC-IAS-CFI",
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "name": "Changes in Foreign Interest",
+        "statement": "Assessors MUST report updated information relating to any foreign interest, foreign influence, or foreign control of the independent assessment service within 48 hours of any change in foreign ownership or control.",
+        "force": "MUST",
+        "affects": [
+          "Assessors"
+        ],
+        "class": null,
+        "num": 48,
+        "type": "hours",
+        "label": "48 hours"
+      },
+      {
+        "requirementId": "VER-TFR-EVU",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Evaluate Vulnerabilities Quickly",
+        "statement": "Providers with Class D Certifications SHOULD evaluate ALL vulnerabilities as required by VER-EVA (Evaluation) within 2 days of detection.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 2,
+        "type": "days",
+        "label": "2 days"
+      },
+      {
+        "requirementId": "VDR-TFR-MVX",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Machine Verification and Validation for 20x",
+        "statement": "Providers of FedRAMP 20x Class C offerings MUST verify and validate the status of machine-based information resources at least once every 3 days.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 3,
+        "type": "days",
+        "label": "3 days"
+      },
+      {
+        "requirementId": "VDR-TFR-PSD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Sample Detection",
+        "statement": "Providers with Class C Certifications SHOULD persistently perform vulnerability detection on representative samples of similar machine-based information resources, at least once every 3 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 3,
+        "type": "days",
+        "label": "3 days"
+      },
+      {
+        "requirementId": "VER-TFR-EVU",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Evaluate Vulnerabilities Quickly",
+        "statement": "Providers with Class C Certifications SHOULD evaluate ALL vulnerabilities as required by VER-EVA (Evaluation) within 5 days of detection.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 5,
+        "type": "days",
+        "label": "5 days"
+      },
+      {
+        "requirementId": "CDS-UTC-AAD",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Agency Access Denial",
+        "statement": "Providers MUST notify FedRAMP within 5 business days of denying an agency access request for FedRAMP Certification Data.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 5,
+        "type": "bizdays",
+        "label": "5 business days"
+      },
+      {
+        "requirementId": "CPO-CSX-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for 20x",
+        "statement": "Providers with 20x Class D Certifications MUST persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every week.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "weeks",
+        "label": "1 week"
+      },
+      {
+        "requirementId": "SCN-TRF-NAF",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification After Finishing",
+        "statement": "Providers MUST notify all necessary parties within 5 business days after finishing transformative changes, including updates to all previously sent information.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 5,
+        "type": "bizdays",
+        "label": "5 business days"
+      },
+      {
+        "requirementId": "SCN-TRF-NAV",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification After Verification",
+        "statement": "Providers MUST notify all necessary parties within 5 business days after completing the verification, assessment, and/or validation of transformative changes, also including the following information:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 5,
+        "type": "bizdays",
+        "label": "5 business days"
+      },
+      {
+        "requirementId": "VDR-TFR-MVX",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Machine Verification and Validation for 20x",
+        "statement": "Providers of FedRAMP 20x Class B offerings MUST verify and validate the status of machine-based information resources at least once every 7 days.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 7,
+        "type": "days",
+        "label": "7 days"
+      },
+      {
+        "requirementId": "VDR-TFR-PDD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Drift Detection",
+        "statement": "Providers with Class D Certifications SHOULD persistently perform vulnerability detection on all information resources that are likely to drift, at least once every 7 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 7,
+        "type": "days",
+        "label": "7 days"
+      },
+      {
+        "requirementId": "VDR-TFR-PSD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Sample Detection",
+        "statement": "Providers with Class B Certifications SHOULD persistently perform vulnerability detection on representative samples of similar machine-based information resources, at least once every 7 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 7,
+        "type": "days",
+        "label": "7 days"
+      },
+      {
+        "requirementId": "VER-TFR-EVU",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Evaluate Vulnerabilities Quickly",
+        "statement": "Providers with Class B Certifications SHOULD evaluate ALL vulnerabilities as required by VER-EVA (Evaluation) within 7 days of detection.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 7,
+        "type": "days",
+        "label": "7 days"
+      },
+      {
+        "requirementId": "VER-TFR-MRH",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Historical Activity",
+        "statement": "Providers with Class D Certifications SHOULD make all recent historical vulnerability detection and response activity available in JSON format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information SHOULD be updated persistently, at least once every 7 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 7,
+        "type": "days",
+        "label": "7 days"
+      },
+      {
+        "requirementId": "AFC-FRP-PNT",
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "name": "Public Notice of Emergency Tests",
+        "statement": "FedRAMP MUST post a public notice at least 10 business days in advance of sending an Emergency Test message; such notices MUST include explanation of the likely expected actions and timeframes for the Emergency Test message.",
+        "force": "MUST",
+        "affects": [
+          "FedRAMP"
+        ],
+        "class": null,
+        "num": 10,
+        "type": "bizdays",
+        "label": "10 business days"
+      },
+      {
+        "requirementId": "CDS-CSO-FRC",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "FedRAMP Certification Reports",
+        "statement": "Providers MUST include FedRAMP Certification Reports with their FedRAMP Certification Data without inappropriate modifications, and make such reports available within 2 weeks of receiving the materials from FedRAMP.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 2,
+        "type": "weeks",
+        "label": "2 weeks"
+      },
+      {
+        "requirementId": "CPO-CSX-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for 20x",
+        "statement": "Providers with 20x Class C Certifications MUST persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every 2 weeks.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 2,
+        "type": "weeks",
+        "label": "2 weeks"
+      },
+      {
+        "requirementId": "SCN-ADP-NTF",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification Requirements",
+        "statement": "Providers MUST notify all necessary parties within 10 business days after finishing adaptive changes, also including the following information:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 10,
+        "type": "bizdays",
+        "label": "10 business days"
+      },
+      {
+        "requirementId": "SCN-TRF-NFP",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification of Final Plans",
+        "statement": "Providers MUST notify all necessary parties of final plans for transformative changes at least 10 business days before starting transformative changes, including updates to all previously sent information.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 10,
+        "type": "bizdays",
+        "label": "10 business days"
+      },
+      {
+        "requirementId": "VDR-TFR-PDD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Drift Detection",
+        "statement": "Providers with Class C Certifications SHOULD persistently perform vulnerability detection on all information resources that are likely to drift, at least once every 14 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 14,
+        "type": "days",
+        "label": "14 days"
+      },
+      {
+        "requirementId": "VDR-TFR-PSD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Sample Detection",
+        "statement": "Providers with Class A Certifications SHOULD persistently perform vulnerability detection on representative samples of similar machine-based information resources, at least once every 14 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 14,
+        "type": "days",
+        "label": "14 days"
+      },
+      {
+        "requirementId": "VER-TFR-EVU",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Evaluate Vulnerabilities Quickly",
+        "statement": "Providers with Class A Certifications SHOULD evaluate ALL vulnerabilities as required by VER-EVA (Evaluation) within 14 days of detection.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 14,
+        "type": "days",
+        "label": "14 days"
+      },
+      {
+        "requirementId": "VER-TFR-MRH",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Historical Activity",
+        "statement": "Providers with Class C Certifications SHOULD make all recent historical vulnerability detection and response activity available in JSON format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information SHOULD be updated persistently, at least once every 14 days.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 14,
+        "type": "days",
+        "label": "14 days"
+      },
+      {
+        "requirementId": "CPO-CSX-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for 20x",
+        "statement": "Providers with 20x Class B Certifications MUST persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every month.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-MVF",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Machine Verification and Validation for Rev5",
+        "statement": "Providers of FedRAMP Rev5 Class B offerings SHOULD verify and validate the status of machine-based information resources at least once every month.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-MVF",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Machine Verification and Validation for Rev5",
+        "statement": "Providers of FedRAMP Rev5 Class C offerings MUST verify and validate the status of machine-based information resources at least once every month.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-MVF",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Machine Verification and Validation for Rev5",
+        "statement": "Providers of FedRAMP Rev5 Class D offerings MUST verify and validate the status of machine-based information resources at least once every month.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-MVX",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Machine Verification and Validation for 20x",
+        "statement": "Providers of FedRAMP 20x Class A offerings SHOULD verify and validate the status of machine-based information resources at least once every month.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-PCD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistently Complete Detection",
+        "statement": "Providers with Class C Certifications SHOULD persistently perform vulnerability detection on all information resources that are NOT likely to drift, at least once every month.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-PCD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistently Complete Detection",
+        "statement": "Providers with Class D Certifications SHOULD persistently perform vulnerability detection on all information resources that are NOT likely to drift, at least once every month.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VDR-TFR-PDD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Drift Detection",
+        "statement": "Providers with Class B Certifications SHOULD persistently perform vulnerability detection on all information resources that are likely to drift, at least once every month.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VER-TFR-MHR",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Monthly Activity Report",
+        "statement": "Providers MUST report vulnerability detection and response activity to all necessary parties in a consistent format that is human readable at least monthly.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VER-TFR-MRH",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Historical Activity",
+        "statement": "Providers with Class A Certifications MAY make all recent historical vulnerability detection and response activity available in JSON format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information MAY be updated persistently, at least once every month.",
+        "force": "MAY",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "VER-TFR-MRH",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Historical Activity",
+        "statement": "Providers with Class B Certifications SHOULD make all recent historical vulnerability detection and response activity available in JSON format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information SHOULD be updated persistently, at least once every month.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "months",
+        "label": "1 month"
+      },
+      {
+        "requirementId": "SCN-TRF-NIP",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification of Initial Plans",
+        "statement": "Providers MUST notify all necessary parties of initial plans for transformative changes at least 30 business days before starting transformative changes, including a summary of any likely security impacts or changes in risk.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 30,
+        "type": "bizdays",
+        "label": "30 business days"
+      },
+      {
+        "requirementId": "SCN-TRF-UPD",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Update Documentation",
+        "statement": "Providers MUST publish updated service documentation and other materials to reflect transformative changes within 30 business days after finishing transformative changes.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 30,
+        "type": "bizdays",
+        "label": "30 business days"
+      },
+      {
+        "requirementId": "CCM-QTR-MTG",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Quarterly Review Meeting",
+        "statement": "Providers with Class A Certifications MAY host a synchronous Quarterly Review every 3 months, open to all necessary parties, to review aspects of the most recent Ongoing Certification Reports that the provider determines are of the most relevance to agencies.",
+        "force": "MAY",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "CCM-QTR-MTG",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Quarterly Review Meeting",
+        "statement": "Providers with Class B Certifications SHOULD host a synchronous Quarterly Review every 3 months, open to all necessary parties, to review aspects of the most recent Ongoing Certification Reports that the provider determines are of the most relevance to agencies.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "CCM-QTR-MTG",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Quarterly Review Meeting",
+        "statement": "Providers with Class C Certifications MUST host a synchronous Quarterly Review every 3 months, open to all necessary parties, to review aspects of the most recent Ongoing Certification Reports that the provider determines are of the most relevance to agencies.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "CCM-QTR-MTG",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Quarterly Review Meeting",
+        "statement": "Providers with Class D Certifications MUST host a synchronous Quarterly Review every 3 months, open to all necessary parties, to review aspects of the most recent Ongoing Certification Reports that the provider determines are of the most relevance to agencies.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "CPO-CSX-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for 20x",
+        "statement": "Providers with 20x Class A Certifications SHOULD persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every 3 months.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "FRC-APP-FIA",
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "name": "Fresh Independent Assessment",
+        "statement": "Providers seeking Class A Certification MAY supply a fresh initial FedRAMP independent assessment that was completed by a FedRAMP Recognized independent assessment service within the previous 3 months.",
+        "force": "MAY",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "FRC-APP-FIA",
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "name": "Fresh Independent Assessment",
+        "statement": "Providers seeking Class B Certification MUST supply a fresh initial FedRAMP independent assessment that was completed by a FedRAMP Recognized independent assessment service within the previous 3 months.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "FRC-APP-FIA",
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "name": "Fresh Independent Assessment",
+        "statement": "Providers seeking Class C Certification MUST supply a fresh initial FedRAMP independent assessment that was completed by a FedRAMP Recognized independent assessment service within the previous 3 months.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "FRC-APP-FIA",
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "name": "Fresh Independent Assessment",
+        "statement": "Providers seeking Class D Certification MUST supply a fresh initial FedRAMP independent assessment that was completed by a FedRAMP Recognized independent assessment service within the previous 3 months.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "VDR-TFR-PDD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistent Drift Detection",
+        "statement": "Providers with Class A Certifications SHOULD persistently perform vulnerability detection on all information resources that are likely to drift, at least once every 3 months.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 3,
+        "type": "months",
+        "label": "3 months"
+      },
+      {
+        "requirementId": "CPO-CSF-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for Rev5",
+        "statement": "Providers with Rev5 Class D Certifications MUST persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every six months.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 6,
+        "type": "months",
+        "label": "6 months"
+      },
+      {
+        "requirementId": "VDR-TFR-PCD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistently Complete Detection",
+        "statement": "Providers with Class A Certifications SHOULD persistently perform vulnerability detection on all information resources that are NOT likely to drift, at least once every 6 months.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 6,
+        "type": "months",
+        "label": "6 months"
+      },
+      {
+        "requirementId": "VDR-TFR-PCD",
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "name": "Persistently Complete Detection",
+        "statement": "Providers with Class B Certifications SHOULD persistently perform vulnerability detection on all information resources that are NOT likely to drift, at least once every 6 months.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 6,
+        "type": "months",
+        "label": "6 months"
+      },
+      {
+        "requirementId": "VER-TFR-MAV",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Mark Accepted Vulnerabilities",
+        "statement": "Providers MUST categorize any vulnerability that is not or will not be fully mitigated or remediated within 192 days of evaluation as an accepted vulnerability.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": null,
+        "num": 192,
+        "type": "days",
+        "label": "192 days"
+      },
+      {
+        "requirementId": "CPO-CSF-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for Rev5",
+        "statement": "Providers with Rev5 Class B Certifications MUST persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every year.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "CPO-CSF-CPM",
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "name": "Certification Package Maintenance for Rev5",
+        "statement": "Providers with Rev5 Class C Certifications MUST persistently maintain their FedRAMP Certification Package to ensure it is up to date and complete at least once every year.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSF-AIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "Annual Independent Assessments for Rev5",
+        "statement": "Providers with Rev5 Class B Certifications MUST include the following Rev5 Controls in a FedRAMP independent assessment at least once per year:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSF-AIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "Annual Independent Assessments for Rev5",
+        "statement": "Providers with Rev5 Class C Certifications MUST include the following Rev5 Controls in a FedRAMP independent assessment at least once per year:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSF-AIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "Annual Independent Assessments for Rev5",
+        "statement": "Providers with Rev5 Class D Certifications MUST include the following Rev5 Controls in a FedRAMP independent assessment at least once per year:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSO-FIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "FedRAMP Independent Assessments",
+        "statement": "Providers with Class A Certifications MAY persistently complete an independent verification and validation assessment of all applicable FedRAMP rules with a FedRAMP Recognized independent assessment service OR FedRAMP at least once per year; this is a FedRAMP independent assessment.",
+        "force": "MAY",
+        "affects": [
+          "Providers"
+        ],
+        "class": "a",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSO-FIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "FedRAMP Independent Assessments",
+        "statement": "Providers with Class B Certifications MUST persistently complete an independent verification and validation assessment of all applicable FedRAMP rules with a FedRAMP Recognized independent assessment service OR FedRAMP at least once per year; this is a FedRAMP independent assessment.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSO-FIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "FedRAMP Independent Assessments",
+        "statement": "Providers with Class C Certifications MUST persistently complete an independent verification and validation assessment of all applicable FedRAMP rules with a FedRAMP Recognized independent assessment service OR FedRAMP at least once per year; this is a FedRAMP independent assessment.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSO-FIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "FedRAMP Independent Assessments",
+        "statement": "Providers with Class D Certifications MUST persistently complete an independent verification and validation assessment of all applicable FedRAMP rules with a FedRAMP Recognized independent assessment service OR FedRAMP at least once per year; this is a FedRAMP independent assessment.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSX-AIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "Annual Independent Assessments for 20x",
+        "statement": "Providers with 20x Class B Certifications MUST include all Key Security Indicators in a FedRAMP independent assessment at least once per year.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "b",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSX-AIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "Annual Independent Assessments for 20x",
+        "statement": "Providers with 20x Class C Certifications MUST include all Key Security Indicators in a FedRAMP independent assessment at least once per year.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "c",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "IVV-CSX-AIA",
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "name": "Annual Independent Assessments for 20x",
+        "statement": "Providers with 20x Class D Certifications MUST include all Key Security Indicators in a FedRAMP independent assessment at least once per year.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "class": "d",
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "REC-IAS-AFI",
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "name": "Annual Foreign Interest Reports",
+        "statement": "Assessors MUST report information relating to any foreign interest, foreign influence, or foreign control of the independent assessment service to FedRAMP annually.",
+        "force": "MUST",
+        "affects": [
+          "Assessors"
+        ],
+        "class": null,
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "REC-IAS-ANR",
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "name": "Annual Surveillance Assessment",
+        "statement": "Assessors MUST achieve a favorable annual surveillance assessment by the American Association for Laboratory Accreditation (A2LA) to maintain FedRAMP Recognition.",
+        "force": "MUST",
+        "affects": [
+          "Assessors"
+        ],
+        "class": null,
+        "num": 1,
+        "type": "years",
+        "label": "1 year"
+      },
+      {
+        "requirementId": "REC-IAS-ADA",
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "name": "Actually Do Assessments",
+        "statement": "Assessors MUST complete at least 2 initial or ongoing assessments for Class B, C, or D FedRAMP Certifications every 2 years to maintain FedRAMP Recognition.",
+        "force": "MUST",
+        "affects": [
+          "Assessors"
+        ],
+        "class": null,
+        "num": 2,
+        "type": "years",
+        "label": "2 years"
+      },
+      {
+        "requirementId": "REC-IAS-RAS",
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "name": "Full A2LA Reassessment",
+        "statement": "Assessors MUST achieve a favorable full reassessment by the American Association for Laboratory Accreditation (A2LA) at least once every 2 years to maintain FedRAMP Recognition.",
+        "force": "MUST",
+        "affects": [
+          "Assessors"
+        ],
+        "class": null,
+        "num": 2,
+        "type": "years",
+        "label": "2 years"
+      },
+      {
+        "requirementId": "REC-IAS-SEP",
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "name": "Advisory Separation",
+        "statement": "Assessors MUST NOT perform a FedRAMP independent assessment of the same cloud service offering within 2 years after supplying advisory or consulting services for that offering, unless FedRAMP publishes a specific exception for a limited pilot or other explicitly scoped process.",
+        "force": "MUST NOT",
+        "affects": [
+          "Assessors"
+        ],
+        "class": null,
+        "num": 2,
+        "type": "years",
+        "label": "2 years"
+      }
+    ],
+    "countsByUnit": {
+      "days": 15,
+      "hours": 1,
+      "bizdays": 8,
+      "weeks": 3,
+      "months": 24,
+      "years": 17
+    },
+    "affectsDistribution": {
+      "FedRAMP": 16,
+      "Providers": 180,
+      "Agencies": 24,
+      "Assessors": 23,
+      "Advisors": 3
+    },
+    "parties": [
+      "Providers",
+      "Agencies",
+      "Assessors",
+      "FedRAMP",
+      "Advisors"
+    ],
+    "painGrids": [
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "class": "a",
+        "columns": [
+          "iir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "iir": "Initial Incident Report"
+        },
+        "cells": {
+          "1": {
+            "iir": {
+              "level": "1",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "iir": {
+              "level": "2",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "iir": {
+              "level": "3",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "iir": {
+              "level": "4",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "iir": {
+              "level": "5",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "class": "b",
+        "columns": [
+          "iir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "iir": "Initial Incident Report"
+        },
+        "cells": {
+          "1": {
+            "iir": {
+              "level": "1",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "iir": {
+              "level": "2",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "iir": {
+              "level": "3",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "iir": {
+              "level": "4",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "iir": {
+              "level": "5",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "class": "c",
+        "columns": [
+          "iir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "iir": "Initial Incident Report"
+        },
+        "cells": {
+          "1": {
+            "iir": {
+              "level": "1",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "iir": {
+              "level": "2",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 24,
+              "type": "hours"
+            }
+          },
+          "3": {
+            "iir": {
+              "level": "3",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "iir": {
+              "level": "4",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "iir": {
+              "level": "5",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "class": "d",
+        "columns": [
+          "iir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "iir": "Initial Incident Report"
+        },
+        "cells": {
+          "1": {
+            "iir": {
+              "level": "1",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "hours"
+            }
+          },
+          "2": {
+            "iir": {
+              "level": "2",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 1,
+              "type": "hours"
+            }
+          },
+          "3": {
+            "iir": {
+              "level": "3",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 0.25,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "iir": {
+              "level": "4",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 0.25,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "iir": {
+              "level": "5",
+              "column": "iir",
+              "description": "Initial Incident Report",
+              "num": 0.25,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "class": "a",
+        "columns": [
+          "oir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "oir": "Ongoing Incident Report"
+        },
+        "cells": {
+          "1": {
+            "oir": {
+              "level": "1",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "oir": {
+              "level": "2",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "oir": {
+              "level": "3",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "4": {
+            "oir": {
+              "level": "4",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "5": {
+            "oir": {
+              "level": "5",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "class": "b",
+        "columns": [
+          "oir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "oir": "Ongoing Incident Report"
+        },
+        "cells": {
+          "1": {
+            "oir": {
+              "level": "1",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "oir": {
+              "level": "2",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "oir": {
+              "level": "3",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "4": {
+            "oir": {
+              "level": "4",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "5": {
+            "oir": {
+              "level": "5",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "class": "c",
+        "columns": [
+          "oir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "oir": "Ongoing Incident Report"
+        },
+        "cells": {
+          "1": {
+            "oir": {
+              "level": "1",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "oir": {
+              "level": "2",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 24,
+              "type": "hours"
+            }
+          },
+          "3": {
+            "oir": {
+              "level": "3",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "oir": {
+              "level": "4",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "oir": {
+              "level": "5",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "class": "d",
+        "columns": [
+          "oir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "oir": "Ongoing Incident Report"
+        },
+        "cells": {
+          "1": {
+            "oir": {
+              "level": "1",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 24,
+              "type": "hours"
+            }
+          },
+          "2": {
+            "oir": {
+              "level": "2",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "3": {
+            "oir": {
+              "level": "3",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 3,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "oir": {
+              "level": "4",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 3,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "oir": {
+              "level": "5",
+              "column": "oir",
+              "description": "Ongoing Incident Report",
+              "num": 3,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "class": "a",
+        "columns": [
+          "fir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "fir": "Final Incident Report"
+        },
+        "cells": {
+          "1": {
+            "fir": {
+              "level": "1",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "fir": {
+              "level": "2",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "fir": {
+              "level": "3",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "4": {
+            "fir": {
+              "level": "4",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "5": {
+            "fir": {
+              "level": "5",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "class": "b",
+        "columns": [
+          "fir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "fir": "Final Incident Report"
+        },
+        "cells": {
+          "1": {
+            "fir": {
+              "level": "1",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "fir": {
+              "level": "2",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "fir": {
+              "level": "3",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "4": {
+            "fir": {
+              "level": "4",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          },
+          "5": {
+            "fir": {
+              "level": "5",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "bizdays"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "class": "c",
+        "columns": [
+          "fir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "fir": "Final Incident Report"
+        },
+        "cells": {
+          "1": {
+            "fir": {
+              "level": "1",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "2": {
+            "fir": {
+              "level": "2",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 1,
+              "type": "bizdays"
+            }
+          },
+          "3": {
+            "fir": {
+              "level": "3",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "fir": {
+              "level": "4",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "fir": {
+              "level": "5",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "class": "d",
+        "columns": [
+          "fir"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "fir": "Final Incident Report"
+        },
+        "cells": {
+          "1": {
+            "fir": {
+              "level": "1",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 24,
+              "type": "hours"
+            }
+          },
+          "2": {
+            "fir": {
+              "level": "2",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 6,
+              "type": "hours"
+            }
+          },
+          "3": {
+            "fir": {
+              "level": "3",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "hours"
+            }
+          },
+          "4": {
+            "fir": {
+              "level": "4",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "hours"
+            }
+          },
+          "5": {
+            "fir": {
+              "level": "5",
+              "column": "fir",
+              "description": "Final Incident Report",
+              "num": 3,
+              "type": "hours"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "VDR-TFR-PVR",
+        "documentKey": "VDR",
+        "requirementName": "Mitigation and Remediation Expectations",
+        "class": "a",
+        "columns": [
+          "irv_lev",
+          "nirv_lev",
+          "nlev"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "irv_lev": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nirv_lev": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nlev": "Not Likely Exploitable Vulnerability"
+        },
+        "cells": {
+          "1": {},
+          "2": {
+            "irv_lev": {
+              "level": "2",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 96,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "2",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 160,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "2",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 192,
+              "type": "days"
+            }
+          },
+          "3": {
+            "irv_lev": {
+              "level": "3",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "3",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 64,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "3",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 192,
+              "type": "days"
+            }
+          },
+          "4": {
+            "irv_lev": {
+              "level": "4",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "4",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "4",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 64,
+              "type": "days"
+            }
+          },
+          "5": {
+            "irv_lev": {
+              "level": "5",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 4,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "5",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "5",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "VDR-TFR-PVR",
+        "documentKey": "VDR",
+        "requirementName": "Mitigation and Remediation Expectations",
+        "class": "b",
+        "columns": [
+          "irv_lev",
+          "nirv_lev",
+          "nlev"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "irv_lev": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nirv_lev": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nlev": "Not Likely Exploitable Vulnerability"
+        },
+        "cells": {
+          "1": {},
+          "2": {
+            "irv_lev": {
+              "level": "2",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 96,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "2",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 160,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "2",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 192,
+              "type": "days"
+            }
+          },
+          "3": {
+            "irv_lev": {
+              "level": "3",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "3",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 64,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "3",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 192,
+              "type": "days"
+            }
+          },
+          "4": {
+            "irv_lev": {
+              "level": "4",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "4",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "4",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 64,
+              "type": "days"
+            }
+          },
+          "5": {
+            "irv_lev": {
+              "level": "5",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 4,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "5",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "5",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "VDR-TFR-PVR",
+        "documentKey": "VDR",
+        "requirementName": "Mitigation and Remediation Expectations",
+        "class": "c",
+        "columns": [
+          "irv_lev",
+          "nirv_lev",
+          "nlev"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "irv_lev": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nirv_lev": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nlev": "Not Likely Exploitable Vulnerability"
+        },
+        "cells": {
+          "1": {},
+          "2": {
+            "irv_lev": {
+              "level": "2",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 48,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "2",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 128,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "2",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 192,
+              "type": "days"
+            }
+          },
+          "3": {
+            "irv_lev": {
+              "level": "3",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 16,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "3",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "3",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 128,
+              "type": "days"
+            }
+          },
+          "4": {
+            "irv_lev": {
+              "level": "4",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 4,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "4",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "4",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 64,
+              "type": "days"
+            }
+          },
+          "5": {
+            "irv_lev": {
+              "level": "5",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 2,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "5",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 4,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "5",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 16,
+              "type": "days"
+            }
+          }
+        }
+      },
+      {
+        "requirementId": "VDR-TFR-PVR",
+        "documentKey": "VDR",
+        "requirementName": "Mitigation and Remediation Expectations",
+        "class": "d",
+        "columns": [
+          "irv_lev",
+          "nirv_lev",
+          "nlev"
+        ],
+        "levels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "columnLabels": {
+          "irv_lev": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nirv_lev": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+          "nlev": "Not Likely Exploitable Vulnerability"
+        },
+        "cells": {
+          "1": {},
+          "2": {
+            "irv_lev": {
+              "level": "2",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 24,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "2",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 96,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "2",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 192,
+              "type": "days"
+            }
+          },
+          "3": {
+            "irv_lev": {
+              "level": "3",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "3",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 16,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "3",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 64,
+              "type": "days"
+            }
+          },
+          "4": {
+            "irv_lev": {
+              "level": "4",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 2,
+              "type": "days"
+            },
+            "nirv_lev": {
+              "level": "4",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "4",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 32,
+              "type": "days"
+            }
+          },
+          "5": {
+            "irv_lev": {
+              "level": "5",
+              "column": "irv_lev",
+              "description": "Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 12,
+              "type": "hours"
+            },
+            "nirv_lev": {
+              "level": "5",
+              "column": "nirv_lev",
+              "description": "Not Internet-Reachable Vulnerability + Likely Exploitable Vulnerability",
+              "num": 1,
+              "type": "days"
+            },
+            "nlev": {
+              "level": "5",
+              "column": "nlev",
+              "description": "Not Likely Exploitable Vulnerability",
+              "num": 8,
+              "type": "days"
+            }
+          }
+        }
+      }
+    ],
+    "notifications": [
+      {
+        "requirementId": "AFC-FRP-PNT",
+        "documentKey": "AFC",
+        "requirementName": "Public Notice of Emergency Tests",
+        "party": "Everyone",
+        "method": "web",
+        "target": "https://www.fedramp.gov/notices",
+        "name": "FedRAMP Public Notices"
+      },
+      {
+        "requirementId": "AFC-CSO-NOC",
+        "documentKey": "AFC",
+        "requirementName": "Notification of Changes",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=51829466938011",
+        "name": "[CSP] Notification of Changes"
+      },
+      {
+        "requirementId": "AGU-AGC-NAA",
+        "documentKey": "AGU",
+        "requirementName": "Notify FedRAMP After Authorization",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=51447926193691",
+        "name": "Submit an ATO Letter"
+      },
+      {
+        "requirementId": "AGU-AGC-NAI",
+        "documentKey": "AGU",
+        "requirementName": "Notify Additional Information Requests",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=51822364715035",
+        "name": "[For Agencies] Additional Information, Security Requirements, or Certification Change, or After Request Form"
+      },
+      {
+        "requirementId": "AGU-AGC-NAR",
+        "documentKey": "AGU",
+        "requirementName": "No Additional Security Requirements",
+        "party": "FedRAMP",
+        "method": "email",
+        "target": "info@fedramp.gov",
+        "name": "info@fedramp.gov"
+      },
+      {
+        "requirementId": "AGU-AGC-TPP",
+        "documentKey": "AGU",
+        "requirementName": "No Certification Type or Path Preferences",
+        "party": "FedRAMP",
+        "method": "email",
+        "target": "info@fedramp.gov",
+        "name": "info@fedramp.gov"
+      },
+      {
+        "requirementId": "AGU-USE-NFC",
+        "documentKey": "AGU",
+        "requirementName": "Notify FedRAMP of Monitoring Concerns",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=51821301979547",
+        "name": "Report Concerns on Ongoing Certifications"
+      },
+      {
+        "requirementId": "AGU-USE-NPC",
+        "documentKey": "AGU",
+        "requirementName": "Notify Provider of Concerns",
+        "party": "Provider",
+        "method": "varies",
+        "target": "varies by provider",
+        "name": "The provider's security contact email or form."
+      },
+      {
+        "requirementId": "CDS-UTC-AAD",
+        "documentKey": "CDS",
+        "requirementName": "Agency Access Denial",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=51829826617243",
+        "name": "[CSP] Agency Access Denial"
+      },
+      {
+        "requirementId": "CDS-CSF-TCM",
+        "documentKey": "CDS",
+        "requirementName": "Trust Center Migration",
+        "party": "FedRAMP",
+        "method": "email",
+        "target": "info@fedramp.gov",
+        "name": "info@fedramp.gov"
+      },
+      {
+        "requirementId": "CDS-CSF-TCM",
+        "documentKey": "CDS",
+        "requirementName": "Trust Center Migration",
+        "party": "Agency Customers",
+        "method": "varies",
+        "target": "varies by agency",
+        "name": "Agency Security Contact"
+      },
+      {
+        "requirementId": "FRC-APP-AFC",
+        "documentKey": "FRC",
+        "requirementName": "Applying for FedRAMP Certification",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=51137131584283",
+        "name": "[For CSPs] FedRAMP Certification Application Form"
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "party": "FedRAMP",
+        "method": "email",
+        "target": "fedramp_security@fedramp.gov",
+        "name": "fedramp_security@fedramp.gov"
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "party": "Agency Customers",
+        "method": "varies",
+        "target": "varies by agency",
+        "name": "Follow agency-specific incident reporting procedures"
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "requirementName": "Initial Incident Report",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "trust center",
+        "name": "Provider's Trust Center or USDA Connect"
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "party": "FedRAMP",
+        "method": "email",
+        "target": "fedramp_security@fedramp.gov",
+        "name": "fedramp_security@fedramp.gov"
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "party": "Agency Customers",
+        "method": "varies",
+        "target": "varies by agency",
+        "name": "Follow agency-specific incident reporting procedures"
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "requirementName": "Ongoing Incident Reports",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "trust center",
+        "name": "Provider's Trust Center or USDA Connect"
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "party": "FedRAMP",
+        "method": "email",
+        "target": "fedramp_security@fedramp.gov",
+        "name": "fedramp_security@fedramp.gov"
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "party": "Agency Customers",
+        "method": "varies",
+        "target": "varies by agency",
+        "name": "Follow agency-specific incident reporting procedures"
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "requirementName": "Final Incident Report",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "trust center",
+        "name": "Provider's Trust Center or USDA Connect"
+      },
+      {
+        "requirementId": "MKT-CSO-PML",
+        "documentKey": "MKT",
+        "requirementName": "Provider Marketplace Listing Requests",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=50939227168027",
+        "name": "FedRAMP Marketplace Provider Listing Request Form"
+      },
+      {
+        "requirementId": "MKT-IAS-LRQ",
+        "documentKey": "MKT",
+        "requirementName": "Listing Requests for Assessors",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52060327520795",
+        "name": "[For Assessors/Advisors] Marketplace Listing Form"
+      },
+      {
+        "requirementId": "MKT-CAS-LRQ",
+        "documentKey": "MKT",
+        "requirementName": "Listing Requests for Advisors",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52060327520795",
+        "name": "[For Assessors/Advisors] Marketplace Listing Form"
+      },
+      {
+        "requirementId": "REC-IAS-AFI",
+        "documentKey": "REC",
+        "requirementName": "Annual Foreign Interest Reports",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52006681154587",
+        "name": "FedRAMP Foreign Ownership, Control, or Influence Declaration Form"
+      },
+      {
+        "requirementId": "REC-IAS-CFI",
+        "documentKey": "REC",
+        "requirementName": "Changes in Foreign Interest",
+        "party": "FedRAMP",
+        "method": "form",
+        "target": "https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52006681154587",
+        "name": "FedRAMP Foreign Ownership, Control, or Influence Declaration Form"
+      },
+      {
+        "requirementId": "SCN-ADP-NTF",
+        "documentKey": "SCN",
+        "requirementName": "Notification Requirements",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "FedRAMP Certification Data",
+        "name": "FedRAMP Certification Data"
+      },
+      {
+        "requirementId": "SCN-TRF-NIP",
+        "documentKey": "SCN",
+        "requirementName": "Notification of Initial Plans",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "FedRAMP Certification Data",
+        "name": "FedRAMP Certification Data"
+      },
+      {
+        "requirementId": "SCN-TRF-NFP",
+        "documentKey": "SCN",
+        "requirementName": "Notification of Final Plans",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "FedRAMP Certification Data",
+        "name": "FedRAMP Certification Data"
+      },
+      {
+        "requirementId": "SCN-TRF-NAF",
+        "documentKey": "SCN",
+        "requirementName": "Notification After Finishing",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "FedRAMP Certification Data",
+        "name": "FedRAMP Certification Data"
+      },
+      {
+        "requirementId": "SCN-TRF-NAV",
+        "documentKey": "SCN",
+        "requirementName": "Notification After Verification",
+        "party": "All Necessary Parties",
+        "method": "update",
+        "target": "FedRAMP Certification Data",
+        "name": "FedRAMP Certification Data"
+      }
+    ],
+    "rolloutCalendar": [
+      {
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-01-05"
+      },
+      {
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-01-05"
+      },
+      {
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-03-01"
+      },
+      {
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-03-01"
+      },
+      {
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2026-07-01"
+      },
+      {
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2026-07-01"
+      },
+      {
+        "documentKey": "AGU",
+        "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "AGU",
+        "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "AGU",
+        "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+        "certificationType": null,
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "AGU",
+        "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MKT",
+        "documentName": "Marketplace Listing",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MKT",
+        "documentName": "Marketplace Listing",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MKT",
+        "documentName": "Marketplace Listing",
+        "certificationType": null,
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "MKT",
+        "documentName": "Marketplace Listing",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "certificationType": null,
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "REC",
+        "documentName": "FedRAMP Recognition of Independent Assessment Services",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "20x",
+        "rule": "obtain",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "20x",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "rev5",
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "certificationType": null,
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "certificationType": null,
+        "rule": "optional_adoption",
+        "date": "2026-07-04"
+      },
+      {
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-12-07"
+      },
+      {
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-12-07"
+      },
+      {
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "certificationType": null,
+        "rule": "obtain",
+        "date": "2026-12-07"
+      },
+      {
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "certificationType": null,
+        "rule": "maintain",
+        "date": "2026-12-07"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "FRC",
+        "documentName": "FedRAMP Certification",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "IVV",
+        "documentName": "Independent Verification and Validation",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "20x",
+        "rule": "maintain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "20x",
+        "rule": "grace",
+        "date": "2027-01-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "rev5",
+        "rule": "obtain",
+        "date": "2027-01-01"
+      },
+      {
+        "documentKey": "VDR",
+        "documentName": "Vulnerability Detection and Response",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2027-03-07"
+      },
+      {
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "certificationType": null,
+        "rule": "grace",
+        "date": "2027-03-07"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-04-02"
+      },
+      {
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-06-01"
+      },
+      {
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-06-01"
+      },
+      {
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-06-01"
+      },
+      {
+        "documentKey": "CPO",
+        "documentName": "Certification Package Overview",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-07-01"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-08-01"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "rev5",
+        "rule": "maintain",
+        "date": "2027-08-01"
+      },
+      {
+        "documentKey": "SDR",
+        "documentName": "Security Decision Record",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-08-01",
+        "comment": "until next assessment"
+      },
+      {
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2027-10-01"
+      },
+      {
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "certificationType": "rev5",
+        "rule": "grace",
+        "date": "2028-02-01"
+      }
+    ],
+    "forceDistribution": {
+      "requirement": {
+        "MUST": 136,
+        "MUST NOT": 11,
+        "SHOULD": 45,
+        "SHOULD NOT": 5,
+        "MAY": 20
+      },
+      "withClass": {
+        "MUST": 189,
+        "MUST NOT": 11,
+        "SHOULD": 84,
+        "SHOULD NOT": 5,
+        "MAY": 39
+      }
+    }
+  }
+}

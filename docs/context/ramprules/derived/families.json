@@ -1,0 +1,282 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "families",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "families": [
+      "AC",
+      "AT",
+      "AU",
+      "CA",
+      "CM",
+      "CP",
+      "IA",
+      "IR",
+      "MA",
+      "MP",
+      "PE",
+      "PL",
+      "PM",
+      "PS",
+      "RA",
+      "SA",
+      "SC",
+      "SI",
+      "SR"
+    ],
+    "familyTotals": {
+      "CP": 22,
+      "IR": 14,
+      "PS": 8,
+      "AT": 6,
+      "SR": 6,
+      "AU": 16,
+      "CM": 20,
+      "MA": 1,
+      "SI": 19,
+      "CA": 7,
+      "AC": 30,
+      "PL": 3,
+      "SC": 23,
+      "IA": 19,
+      "RA": 4,
+      "PM": 2,
+      "SA": 9
+    },
+    "rows": [
+      {
+        "themeId": "KSI-CED",
+        "themeKey": "CED",
+        "themeName": "Cybersecurity Education",
+        "cells": {
+          "CP": 1,
+          "IR": 2,
+          "PS": 1,
+          "AT": 6,
+          "SR": 1
+        },
+        "totalDistinctControls": 11
+      },
+      {
+        "themeId": "KSI-CMT",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "cells": {
+          "AU": 1,
+          "CM": 12,
+          "MA": 1,
+          "SI": 2
+        },
+        "totalDistinctControls": 16
+      },
+      {
+        "themeId": "KSI-CNA",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "cells": {
+          "CM": 2,
+          "SI": 6,
+          "CA": 3,
+          "AC": 5,
+          "PL": 1,
+          "SC": 10
+        },
+        "totalDistinctControls": 27
+      },
+      {
+        "themeId": "KSI-IAM",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "cells": {
+          "AC": 27,
+          "IA": 19,
+          "SC": 7,
+          "CM": 6,
+          "PS": 7,
+          "SI": 1,
+          "AU": 1,
+          "RA": 1
+        },
+        "totalDistinctControls": 69
+      },
+      {
+        "themeId": "KSI-INR",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "cells": {
+          "IR": 11,
+          "SI": 1
+        },
+        "totalDistinctControls": 12
+      },
+      {
+        "themeId": "KSI-MLA",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "cells": {
+          "SI": 6,
+          "CA": 1,
+          "CM": 2,
+          "AC": 4,
+          "AU": 14,
+          "IR": 1
+        },
+        "totalDistinctControls": 28
+      },
+      {
+        "themeId": "KSI-PIY",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "cells": {
+          "CM": 7,
+          "CP": 3,
+          "AC": 1,
+          "CA": 1,
+          "IR": 1,
+          "PM": 2,
+          "SA": 3,
+          "SR": 1,
+          "AU": 1,
+          "PL": 1,
+          "SC": 2,
+          "SI": 3,
+          "RA": 1
+        },
+        "totalDistinctControls": 27
+      },
+      {
+        "themeId": "KSI-RPL",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "cells": {
+          "CM": 1,
+          "CP": 19,
+          "SI": 1,
+          "IR": 2
+        },
+        "totalDistinctControls": 23
+      },
+      {
+        "themeId": "KSI-SCR",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "cells": {
+          "AC": 1,
+          "RA": 2,
+          "SA": 5,
+          "SI": 2,
+          "SR": 3,
+          "CA": 2,
+          "SC": 1,
+          "IR": 1,
+          "PS": 1
+        },
+        "totalDistinctControls": 18
+      },
+      {
+        "themeId": "KSI-SVC",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "cells": {
+          "AC": 3,
+          "CM": 7,
+          "PL": 3,
+          "SA": 1,
+          "SI": 7,
+          "SR": 1,
+          "IA": 2,
+          "SC": 14,
+          "MA": 1,
+          "CP": 1
+        },
+        "totalDistinctControls": 40
+      }
+    ],
+    "baselineRows": [
+      {
+        "class": "b",
+        "cells": {
+          "AC": 11,
+          "AT": 5,
+          "AU": 10,
+          "CA": 9,
+          "CM": 9,
+          "CP": 6,
+          "IA": 16,
+          "IR": 7,
+          "MA": 4,
+          "MP": 4,
+          "PE": 10,
+          "PL": 7,
+          "PS": 9,
+          "RA": 8,
+          "SA": 9,
+          "SC": 14,
+          "SI": 6,
+          "SR": 11
+        },
+        "total": 155
+      },
+      {
+        "class": "c",
+        "cells": {
+          "AC": 43,
+          "AT": 6,
+          "AU": 16,
+          "CA": 13,
+          "CM": 27,
+          "CP": 23,
+          "IA": 27,
+          "IR": 17,
+          "MA": 10,
+          "MP": 7,
+          "PE": 19,
+          "PL": 7,
+          "PS": 10,
+          "RA": 11,
+          "SA": 21,
+          "SC": 29,
+          "SI": 24,
+          "SR": 12
+        },
+        "total": 322
+      },
+      {
+        "class": "d",
+        "cells": {
+          "AC": 50,
+          "AT": 6,
+          "AU": 27,
+          "CA": 15,
+          "CM": 34,
+          "CP": 35,
+          "IA": 30,
+          "IR": 24,
+          "MA": 12,
+          "MP": 10,
+          "PE": 26,
+          "PL": 7,
+          "PS": 11,
+          "RA": 13,
+          "SA": 25,
+          "SC": 35,
+          "SI": 35,
+          "SR": 14
+        },
+        "total": 409
+      }
+    ],
+    "baselineOnlyFamilies": [
+      "MP",
+      "PE"
+    ],
+    "ksiOnlyFamilies": [
+      "PM"
+    ]
+  }
+}

@@ -1,0 +1,2981 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "readiness",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "classes": [
+      {
+        "class": "b",
+        "interpretedLevel": "Low",
+        "baselineCount": 155,
+        "coveredCount": 95,
+        "orphanCount": 60,
+        "coveragePercent": 61.29032258064516,
+        "families": [
+          {
+            "family": "AC",
+            "baselineCount": 11,
+            "coveredCount": 7,
+            "orphanCount": 4,
+            "coveragePercent": 63.63636363636363,
+            "absentFromKsi": false
+          },
+          {
+            "family": "AT",
+            "baselineCount": 5,
+            "coveredCount": 4,
+            "orphanCount": 1,
+            "coveragePercent": 80,
+            "absentFromKsi": false
+          },
+          {
+            "family": "AU",
+            "baselineCount": 10,
+            "coveredCount": 9,
+            "orphanCount": 1,
+            "coveragePercent": 90,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CA",
+            "baselineCount": 9,
+            "coveredCount": 6,
+            "orphanCount": 3,
+            "coveragePercent": 66.66666666666666,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CM",
+            "baselineCount": 9,
+            "coveredCount": 5,
+            "orphanCount": 4,
+            "coveragePercent": 55.55555555555556,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CP",
+            "baselineCount": 6,
+            "coveredCount": 5,
+            "orphanCount": 1,
+            "coveragePercent": 83.33333333333334,
+            "absentFromKsi": false
+          },
+          {
+            "family": "IA",
+            "baselineCount": 16,
+            "coveredCount": 11,
+            "orphanCount": 5,
+            "coveragePercent": 68.75,
+            "absentFromKsi": false
+          },
+          {
+            "family": "IR",
+            "baselineCount": 7,
+            "coveredCount": 6,
+            "orphanCount": 1,
+            "coveragePercent": 85.71428571428571,
+            "absentFromKsi": false
+          },
+          {
+            "family": "MA",
+            "baselineCount": 4,
+            "coveredCount": 1,
+            "orphanCount": 3,
+            "coveragePercent": 25,
+            "absentFromKsi": false
+          },
+          {
+            "family": "MP",
+            "baselineCount": 4,
+            "coveredCount": 0,
+            "orphanCount": 4,
+            "coveragePercent": 0,
+            "absentFromKsi": true
+          },
+          {
+            "family": "PE",
+            "baselineCount": 10,
+            "coveredCount": 0,
+            "orphanCount": 10,
+            "coveragePercent": 0,
+            "absentFromKsi": true
+          },
+          {
+            "family": "PL",
+            "baselineCount": 7,
+            "coveredCount": 2,
+            "orphanCount": 5,
+            "coveragePercent": 28.57142857142857,
+            "absentFromKsi": false
+          },
+          {
+            "family": "PS",
+            "baselineCount": 9,
+            "coveredCount": 8,
+            "orphanCount": 1,
+            "coveragePercent": 88.88888888888889,
+            "absentFromKsi": false
+          },
+          {
+            "family": "RA",
+            "baselineCount": 8,
+            "coveredCount": 3,
+            "orphanCount": 5,
+            "coveragePercent": 37.5,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SA",
+            "baselineCount": 9,
+            "coveredCount": 6,
+            "orphanCount": 3,
+            "coveragePercent": 66.66666666666666,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SC",
+            "baselineCount": 14,
+            "coveredCount": 12,
+            "orphanCount": 2,
+            "coveragePercent": 85.71428571428571,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SI",
+            "baselineCount": 6,
+            "coveredCount": 5,
+            "orphanCount": 1,
+            "coveragePercent": 83.33333333333334,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SR",
+            "baselineCount": 11,
+            "coveredCount": 5,
+            "orphanCount": 6,
+            "coveragePercent": 45.45454545454545,
+            "absentFromKsi": false
+          }
+        ],
+        "orphans": [
+          "ac-8",
+          "ac-18",
+          "ac-19",
+          "ac-22",
+          "at-1",
+          "au-1",
+          "ca-1",
+          "ca-6",
+          "ca-8",
+          "cm-1",
+          "cm-4",
+          "cm-10",
+          "cm-11",
+          "cp-1",
+          "ia-1",
+          "ia-2.12",
+          "ia-8.1",
+          "ia-8.2",
+          "ia-8.4",
+          "ir-1",
+          "ma-1",
+          "ma-4",
+          "ma-5",
+          "mp-1",
+          "mp-2",
+          "mp-6",
+          "mp-7",
+          "pe-1",
+          "pe-2",
+          "pe-3",
+          "pe-6",
+          "pe-8",
+          "pe-12",
+          "pe-13",
+          "pe-14",
+          "pe-15",
+          "pe-16",
+          "pl-1",
+          "pl-2",
+          "pl-4",
+          "pl-4.1",
+          "pl-11",
+          "ps-1",
+          "ra-1",
+          "ra-2",
+          "ra-3",
+          "ra-5.2",
+          "ra-7",
+          "sa-1",
+          "sa-4",
+          "sa-4.10",
+          "sc-1",
+          "sc-15",
+          "si-1",
+          "sr-1",
+          "sr-2",
+          "sr-3",
+          "sr-11",
+          "sr-11.2",
+          "sr-12"
+        ],
+        "annualAssessmentCount": 35,
+        "defaultArtifacts": [
+          "Explanation of how the rule is followed, or an explanation of the reason and resulting risk to customers for not following the rule.",
+          "Verification that the implementation is appropriate for the rule, or that the reason for not implementing is accepted by a senior official.",
+          "Validation that the implementation is in place and working as intended, or that the reason for not implementing is accepted by a senior official.",
+          "Independent verification.",
+          "Independent validation."
+        ],
+        "ksiDefaultArtifacts": [
+          "Explanation of measures (and their objectives) that demonstrate the Key Security Indicator, or an explanation of the reason and resulting risk to customers for not having measures available for that Key Security Indicator.",
+          "Explanation of the cycle for any measures that are implemented persistently (if applicable).",
+          "Verification that the measures demonstrate the Key Security Indicator, or that the reason for not having them is accepted.",
+          "Verification that the automation in place is accurate and sufficient to demonstrate appropriate measures for the Key Security Indicator, or that automation is not necessary for each measure.",
+          "Validation that the measures are accurately produced and are in place and working as intended, or that the reason for not having them is valid."
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "requirementIds": [
+              "SCG-CSO-PUB",
+              "SCG-CSO-SDF",
+              "SCG-ENH-API",
+              "SCG-ENH-CMP",
+              "SCG-ENH-EXP",
+              "SCG-ENH-MRG",
+              "SCG-ENH-VRH"
+            ],
+            "classes": []
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "requirementIds": [
+              "SCG-CSO-PUB",
+              "SCG-CSO-SDF",
+              "SCG-ENH-API",
+              "SCG-ENH-CMP",
+              "SCG-ENH-EXP",
+              "SCG-ENH-MRG",
+              "SCG-ENH-VRH"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the human-readable data.",
+            "requirementIds": [
+              "CDS-CSO-PUB",
+              "CDS-CSO-SVC",
+              "MKT-CAS-WEB",
+              "MKT-IAS-WEB",
+              "SCG-CSO-RSC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "requirementIds": [
+              "MAS-CSO-FLO",
+              "MAS-CSO-IIR",
+              "MAS-CSO-MDI",
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "requirementIds": [
+              "MAS-CSO-FLO",
+              "MAS-CSO-IIR",
+              "MAS-CSO-MDI",
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "requirementIds": [
+              "CDS-CSO-PUB",
+              "MKT-CAS-WEB",
+              "MKT-IAS-WEB",
+              "SCG-CSO-RSC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A recent vulnerability report or a sample vulnerability report",
+            "requirementIds": [
+              "VER-RPT-AVI",
+              "VER-RPT-VDT",
+              "VER-TFR-MHR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how FedRAMP can obtain this information.",
+            "requirementIds": [
+              "CDS-TRC-AAI",
+              "SCN-CSO-HIS",
+              "SCN-CSO-MAR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+            "requirementIds": [
+              "CDS-UTC-AGA",
+              "SCG-CSO-AUP",
+              "SCN-CSO-HRM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL or explanation of how to request these materials.",
+            "requirementIds": [
+              "CDS-UTC-AGA",
+              "SCG-CSO-AUP",
+              "SCN-CSO-HRM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "An incident log showing an example of one or more incidents being evaluated including the reason for the determination. The log can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-EFI",
+              "IEC-CSO-EFR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Automated validation to check FSI mailbox configuration",
+            "requirementIds": [
+              "AFC-CSO-EMR",
+              "AFC-CSO-TFG"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Configuration settings for FSI mailbox",
+            "requirementIds": [
+              "AFC-CSO-EMR",
+              "AFC-CSO-TFG"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how to access this information.",
+            "requirementIds": [
+              "CDS-CSO-HAD",
+              "CDS-CSO-IRP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "requirementIds": [
+              "CMU-CSO-CMD",
+              "CMU-CSO-UVM"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "A machine readable output containing all required data of the components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-IIR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the metadata collected or maintained by the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-MDI"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the permitted connections between components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-FLO"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the third-party information resources of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A recent Significant Change Notification or sample Significant Change Notification",
+            "requirementIds": [
+              "SCN-CSO-INF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-FIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-IIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-OIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "At least the most recent after verification SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NAV"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent final SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NFP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent initial SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NIP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent post deployment SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NAF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent SCN notification including the date it was sent and the date the change was applied. Additional examples may be provided. If no SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-ADP-NTF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Current list of available notification mechanisms",
+            "requirementIds": [
+              "SCN-CSO-NOM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Date of the most recent transformative change and the date of the corresponding documentation update. If no documentation updates were required as the result of this change, explain how this was determined.",
+            "requirementIds": [
+              "SCN-TRF-UPD"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Email address to receive messages from FedRAMP",
+            "requirementIds": [
+              "AFC-CSO-INB"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Evidence of significant change evaluation including a description fo the change, the determined type, and an explanation for the decision. At least one example must be provided for each type of change. Real examples are prefered but the provider may use fictitious examples as long as the example provides evidence of the decision making process.",
+            "requirementIds": [
+              "SCN-CSO-EVA"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how the appropriate parties can obtain this log information.",
+            "requirementIds": [
+              "CDS-TRC-ACL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of if and how this information is shared with other parties.",
+            "requirementIds": [
+              "CDS-CSO-RPS"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "requirementIds": [
+              "CDS-CSO-PSM"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "How the report will be delivered",
+            "requirementIds": [
+              "CCM-OCR-AVL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "How the summary will be delivered",
+            "requirementIds": [
+              "CCM-OCR-AFS"
+            ],
+            "classes": []
+          },
+          {
+            "text": "How to access the feedback mechanism.",
+            "requirementIds": [
+              "CCM-OCR-FBM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "List of cryptographic modules used by default including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "requirementIds": [
+              "CMU-CSO-CAT"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Most recent Ongoing Certification Report. If the report is not available, the provider MUST provide a sample report that includes all required information.",
+            "requirementIds": [
+              "CCM-OCR-AVL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "or an explanation of why machine readable content is not being provided",
+            "requirementIds": [
+              "VER-TFR-MRH"
+            ],
+            "classes": [
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "Process, manual or automated, to notify FedRAMP of changes in the FedRAMP Security Inbox",
+            "requirementIds": [
+              "AFC-CSO-NOC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "selected ordinal recurrence for the Ongoing Certification Report cycle if applicable OR explanation for why Ongoing Certification Reports are not being delivered.",
+            "requirementIds": [
+              "CCM-QTR-MTG"
+            ],
+            "classes": [
+              "b"
+            ]
+          },
+          {
+            "text": "Third Party assesment report OR explanation why a third party assessor was not engaged",
+            "requirementIds": [
+              "SCN-TRF-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "requirementIds": [
+              "VER-TFR-MRH"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "URL or explanation how to access documentation of these features and capabilities.",
+            "requirementIds": [
+              "CDS-TRC-SSM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the documentation for programmatic access.",
+            "requirementIds": [
+              "CDS-TRC-PAC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the machine-readable data (if applicable).",
+            "requirementIds": [
+              "CDS-CSO-SVC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the registration page or calendar file.",
+            "requirementIds": [
+              "CCM-QTR-REG"
+            ],
+            "classes": []
+          }
+        ],
+        "deadlines": [
+          {
+            "requirementId": "CDS-UTC-AAD",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Agency Access Denial",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NAF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Finishing",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NAV",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Verification",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "VDR-TFR-MVX",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "class": "b",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Sample Detection",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "CDS-CSO-FRC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "FedRAMP Certification Reports",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "weeks",
+            "label": "2 weeks"
+          },
+          {
+            "requirementId": "SCN-ADP-NTF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification Requirements",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NFP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Final Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Drift Detection",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MHR",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Monthly Activity Report",
+            "class": null,
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Historical Activity",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "SCN-TRF-NIP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Initial Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-UPD",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Update Documentation",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Quarterly Review Meeting",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Fresh Independent Assessment",
+            "class": "b",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistently Complete Detection",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 6,
+            "type": "months",
+            "label": "6 months"
+          },
+          {
+            "requirementId": "VER-TFR-MAV",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Mark Accepted Vulnerabilities",
+            "class": null,
+            "force": "MUST",
+            "num": 192,
+            "type": "days",
+            "label": "192 days"
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for Rev5",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for Rev5",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "FedRAMP Independent Assessments",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for 20x",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          }
+        ],
+        "deadlineCounts": {
+          "universal": 10,
+          "classScoped": 14
+        }
+      },
+      {
+        "class": "c",
+        "interpretedLevel": "Moderate",
+        "baselineCount": 322,
+        "coveredCount": 199,
+        "orphanCount": 123,
+        "coveragePercent": 61.80124223602485,
+        "families": [
+          {
+            "family": "AC",
+            "baselineCount": 43,
+            "coveredCount": 29,
+            "orphanCount": 14,
+            "coveragePercent": 67.44186046511628,
+            "absentFromKsi": false
+          },
+          {
+            "family": "AT",
+            "baselineCount": 6,
+            "coveredCount": 5,
+            "orphanCount": 1,
+            "coveragePercent": 83.33333333333334,
+            "absentFromKsi": false
+          },
+          {
+            "family": "AU",
+            "baselineCount": 16,
+            "coveredCount": 15,
+            "orphanCount": 1,
+            "coveragePercent": 93.75,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CA",
+            "baselineCount": 13,
+            "coveredCount": 7,
+            "orphanCount": 6,
+            "coveragePercent": 53.84615384615385,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CM",
+            "baselineCount": 27,
+            "coveredCount": 20,
+            "orphanCount": 7,
+            "coveragePercent": 74.07407407407408,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CP",
+            "baselineCount": 23,
+            "coveredCount": 22,
+            "orphanCount": 1,
+            "coveragePercent": 95.65217391304348,
+            "absentFromKsi": false
+          },
+          {
+            "family": "IA",
+            "baselineCount": 27,
+            "coveredCount": 19,
+            "orphanCount": 8,
+            "coveragePercent": 70.37037037037037,
+            "absentFromKsi": false
+          },
+          {
+            "family": "IR",
+            "baselineCount": 17,
+            "coveredCount": 12,
+            "orphanCount": 5,
+            "coveragePercent": 70.58823529411765,
+            "absentFromKsi": false
+          },
+          {
+            "family": "MA",
+            "baselineCount": 10,
+            "coveredCount": 1,
+            "orphanCount": 9,
+            "coveragePercent": 10,
+            "absentFromKsi": false
+          },
+          {
+            "family": "MP",
+            "baselineCount": 7,
+            "coveredCount": 0,
+            "orphanCount": 7,
+            "coveragePercent": 0,
+            "absentFromKsi": true
+          },
+          {
+            "family": "PE",
+            "baselineCount": 19,
+            "coveredCount": 0,
+            "orphanCount": 19,
+            "coveragePercent": 0,
+            "absentFromKsi": true
+          },
+          {
+            "family": "PL",
+            "baselineCount": 7,
+            "coveredCount": 2,
+            "orphanCount": 5,
+            "coveragePercent": 28.57142857142857,
+            "absentFromKsi": false
+          },
+          {
+            "family": "PS",
+            "baselineCount": 10,
+            "coveredCount": 8,
+            "orphanCount": 2,
+            "coveragePercent": 80,
+            "absentFromKsi": false
+          },
+          {
+            "family": "RA",
+            "baselineCount": 11,
+            "coveredCount": 4,
+            "orphanCount": 7,
+            "coveragePercent": 36.36363636363637,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SA",
+            "baselineCount": 21,
+            "coveredCount": 9,
+            "orphanCount": 12,
+            "coveragePercent": 42.857142857142854,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SC",
+            "baselineCount": 29,
+            "coveredCount": 23,
+            "orphanCount": 6,
+            "coveragePercent": 79.3103448275862,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SI",
+            "baselineCount": 24,
+            "coveredCount": 17,
+            "orphanCount": 7,
+            "coveragePercent": 70.83333333333334,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SR",
+            "baselineCount": 12,
+            "coveredCount": 6,
+            "orphanCount": 6,
+            "coveragePercent": 50,
+            "absentFromKsi": false
+          }
+        ],
+        "orphans": [
+          "ac-2.7",
+          "ac-2.9",
+          "ac-2.12",
+          "ac-4.21",
+          "ac-8",
+          "ac-11",
+          "ac-11.1",
+          "ac-17.4",
+          "ac-18",
+          "ac-19",
+          "ac-19.5",
+          "ac-20.2",
+          "ac-21",
+          "ac-22",
+          "at-1",
+          "au-1",
+          "ca-1",
+          "ca-2.3",
+          "ca-6",
+          "ca-8",
+          "ca-8.1",
+          "ca-8.2",
+          "cm-1",
+          "cm-4",
+          "cm-5.1",
+          "cm-5.5",
+          "cm-6.1",
+          "cm-10",
+          "cm-11",
+          "cp-1",
+          "ia-1",
+          "ia-2.5",
+          "ia-2.6",
+          "ia-2.12",
+          "ia-5.7",
+          "ia-8.1",
+          "ia-8.2",
+          "ia-8.4",
+          "ir-1",
+          "ir-9",
+          "ir-9.2",
+          "ir-9.3",
+          "ir-9.4",
+          "ma-1",
+          "ma-3",
+          "ma-3.1",
+          "ma-3.2",
+          "ma-3.3",
+          "ma-4",
+          "ma-5",
+          "ma-5.1",
+          "ma-6",
+          "mp-1",
+          "mp-2",
+          "mp-3",
+          "mp-4",
+          "mp-5",
+          "mp-6",
+          "mp-7",
+          "pe-1",
+          "pe-2",
+          "pe-3",
+          "pe-4",
+          "pe-5",
+          "pe-6",
+          "pe-6.1",
+          "pe-8",
+          "pe-9",
+          "pe-10",
+          "pe-11",
+          "pe-12",
+          "pe-13",
+          "pe-13.1",
+          "pe-13.2",
+          "pe-14",
+          "pe-15",
+          "pe-16",
+          "pe-17",
+          "pl-1",
+          "pl-2",
+          "pl-4",
+          "pl-4.1",
+          "pl-11",
+          "ps-1",
+          "ps-3.3",
+          "ra-1",
+          "ra-2",
+          "ra-3",
+          "ra-5.2",
+          "ra-5.3",
+          "ra-7",
+          "ra-9",
+          "sa-1",
+          "sa-4",
+          "sa-4.1",
+          "sa-4.2",
+          "sa-4.9",
+          "sa-4.10",
+          "sa-9.1",
+          "sa-9.2",
+          "sa-9.5",
+          "sa-11.1",
+          "sa-11.2",
+          "sa-15",
+          "sc-1",
+          "sc-7.12",
+          "sc-7.18",
+          "sc-15",
+          "sc-45",
+          "sc-45.1",
+          "si-1",
+          "si-2.3",
+          "si-4.1",
+          "si-4.16",
+          "si-4.18",
+          "si-4.23",
+          "si-6",
+          "sr-1",
+          "sr-2",
+          "sr-3",
+          "sr-11",
+          "sr-11.2",
+          "sr-12"
+        ],
+        "annualAssessmentCount": 80,
+        "defaultArtifacts": [
+          "Explanation of how the rule is followed, or an explanation of the reason and resulting risk to customers for not following the rule.",
+          "Verification that the implementation is appropriate for the rule, or that the reason for not implementing is accepted by a senior official.",
+          "Validation that the implementation is in place and working as intended, or that the reason for not implementing is accepted by a senior official.",
+          "Independent verification.",
+          "Independent validation."
+        ],
+        "ksiDefaultArtifacts": [
+          "Explanation of measures (and their objectives) that demonstrate the Key Security Indicator, or an explanation of the reason and resulting risk to customers for not having measures available for that Key Security Indicator.",
+          "Explanation of the cycle for any measures that are implemented persistently (if applicable).",
+          "Verification that the measures demonstrate the Key Security Indicator, or that the reason for not having them is accepted.",
+          "Verification that the automation in place is accurate and sufficient to demonstrate appropriate measures for the Key Security Indicator, or that automation is not necessary for each measure.",
+          "Validation that the measures are accurately produced and are in place and working as intended, or that the reason for not having them is valid."
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "requirementIds": [
+              "SCG-CSO-PUB",
+              "SCG-CSO-SDF",
+              "SCG-ENH-API",
+              "SCG-ENH-CMP",
+              "SCG-ENH-EXP",
+              "SCG-ENH-MRG",
+              "SCG-ENH-VRH"
+            ],
+            "classes": []
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "requirementIds": [
+              "SCG-CSO-PUB",
+              "SCG-CSO-SDF",
+              "SCG-ENH-API",
+              "SCG-ENH-CMP",
+              "SCG-ENH-EXP",
+              "SCG-ENH-MRG",
+              "SCG-ENH-VRH"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the human-readable data.",
+            "requirementIds": [
+              "CDS-CSO-PUB",
+              "CDS-CSO-SVC",
+              "MKT-CAS-WEB",
+              "MKT-IAS-WEB",
+              "SCG-CSO-RSC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "requirementIds": [
+              "MAS-CSO-FLO",
+              "MAS-CSO-IIR",
+              "MAS-CSO-MDI",
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "requirementIds": [
+              "MAS-CSO-FLO",
+              "MAS-CSO-IIR",
+              "MAS-CSO-MDI",
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "requirementIds": [
+              "CDS-CSO-PUB",
+              "MKT-CAS-WEB",
+              "MKT-IAS-WEB",
+              "SCG-CSO-RSC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A recent vulnerability report or a sample vulnerability report",
+            "requirementIds": [
+              "VER-RPT-AVI",
+              "VER-RPT-VDT",
+              "VER-TFR-MHR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how FedRAMP can obtain this information.",
+            "requirementIds": [
+              "CDS-TRC-AAI",
+              "SCN-CSO-HIS",
+              "SCN-CSO-MAR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+            "requirementIds": [
+              "CDS-UTC-AGA",
+              "SCG-CSO-AUP",
+              "SCN-CSO-HRM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL or explanation of how to request these materials.",
+            "requirementIds": [
+              "CDS-UTC-AGA",
+              "SCG-CSO-AUP",
+              "SCN-CSO-HRM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "An incident log showing an example of one or more incidents being evaluated including the reason for the determination. The log can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-EFI",
+              "IEC-CSO-EFR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Automated validation to check FSI mailbox configuration",
+            "requirementIds": [
+              "AFC-CSO-EMR",
+              "AFC-CSO-TFG"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Configuration settings for FSI mailbox",
+            "requirementIds": [
+              "AFC-CSO-EMR",
+              "AFC-CSO-TFG"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how to access this information.",
+            "requirementIds": [
+              "CDS-CSO-HAD",
+              "CDS-CSO-IRP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "requirementIds": [
+              "CMU-CSO-CMD",
+              "CMU-CSO-UVM"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "A machine readable output containing all required data of the components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-IIR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the metadata collected or maintained by the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-MDI"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the permitted connections between components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-FLO"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the third-party information resources of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A recent Significant Change Notification or sample Significant Change Notification",
+            "requirementIds": [
+              "SCN-CSO-INF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-FIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-IIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-OIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "At least the most recent after verification SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NAV"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent final SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NFP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent initial SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NIP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent post deployment SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NAF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent SCN notification including the date it was sent and the date the change was applied. Additional examples may be provided. If no SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-ADP-NTF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Current list of available notification mechanisms",
+            "requirementIds": [
+              "SCN-CSO-NOM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Date of the most recent transformative change and the date of the corresponding documentation update. If no documentation updates were required as the result of this change, explain how this was determined.",
+            "requirementIds": [
+              "SCN-TRF-UPD"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Email address to receive messages from FedRAMP",
+            "requirementIds": [
+              "AFC-CSO-INB"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Evidence of significant change evaluation including a description fo the change, the determined type, and an explanation for the decision. At least one example must be provided for each type of change. Real examples are prefered but the provider may use fictitious examples as long as the example provides evidence of the decision making process.",
+            "requirementIds": [
+              "SCN-CSO-EVA"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how the appropriate parties can obtain this log information.",
+            "requirementIds": [
+              "CDS-TRC-ACL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of if and how this information is shared with other parties.",
+            "requirementIds": [
+              "CDS-CSO-RPS"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "requirementIds": [
+              "CDS-CSO-PSM"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "How the report will be delivered",
+            "requirementIds": [
+              "CCM-OCR-AVL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "How the summary will be delivered",
+            "requirementIds": [
+              "CCM-OCR-AFS"
+            ],
+            "classes": []
+          },
+          {
+            "text": "How to access the feedback mechanism.",
+            "requirementIds": [
+              "CCM-OCR-FBM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "List of cryptographic modules used by default including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "requirementIds": [
+              "CMU-CSO-CAT"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Most recent Ongoing Certification Report. If the report is not available, the provider MUST provide a sample report that includes all required information.",
+            "requirementIds": [
+              "CCM-OCR-AVL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "or an explanation of why machine readable content is not being provided",
+            "requirementIds": [
+              "VER-TFR-MRH"
+            ],
+            "classes": [
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "Process, manual or automated, to notify FedRAMP of changes in the FedRAMP Security Inbox",
+            "requirementIds": [
+              "AFC-CSO-NOC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "selected ordinal recurrence for the Ongoing Certification Report cycle.",
+            "requirementIds": [
+              "CCM-QTR-MTG"
+            ],
+            "classes": [
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "Third Party assesment report OR explanation why a third party assessor was not engaged",
+            "requirementIds": [
+              "SCN-TRF-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "requirementIds": [
+              "VER-TFR-MRH"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "URL or explanation how to access documentation of these features and capabilities.",
+            "requirementIds": [
+              "CDS-TRC-SSM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the documentation for programmatic access.",
+            "requirementIds": [
+              "CDS-TRC-PAC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the machine-readable data (if applicable).",
+            "requirementIds": [
+              "CDS-CSO-SVC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the registration page or calendar file.",
+            "requirementIds": [
+              "CCM-QTR-REG"
+            ],
+            "classes": []
+          }
+        ],
+        "deadlines": [
+          {
+            "requirementId": "VDR-TFR-MVX",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Sample Detection",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 5,
+            "type": "days",
+            "label": "5 days"
+          },
+          {
+            "requirementId": "CDS-UTC-AAD",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Agency Access Denial",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NAF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Finishing",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NAV",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Verification",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "CDS-CSO-FRC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "FedRAMP Certification Reports",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "weeks",
+            "label": "2 weeks"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "c",
+            "force": "MUST",
+            "num": 2,
+            "type": "weeks",
+            "label": "2 weeks"
+          },
+          {
+            "requirementId": "SCN-ADP-NTF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification Requirements",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NFP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Final Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Drift Detection",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 14,
+            "type": "days",
+            "label": "14 days"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Historical Activity",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 14,
+            "type": "days",
+            "label": "14 days"
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistently Complete Detection",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MHR",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Monthly Activity Report",
+            "class": null,
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "SCN-TRF-NIP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Initial Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-UPD",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Update Documentation",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Quarterly Review Meeting",
+            "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Fresh Independent Assessment",
+            "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "VER-TFR-MAV",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Mark Accepted Vulnerabilities",
+            "class": null,
+            "force": "MUST",
+            "num": 192,
+            "type": "days",
+            "label": "192 days"
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for Rev5",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for Rev5",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "FedRAMP Independent Assessments",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for 20x",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          }
+        ],
+        "deadlineCounts": {
+          "universal": 10,
+          "classScoped": 14
+        }
+      },
+      {
+        "class": "d",
+        "interpretedLevel": "High",
+        "baselineCount": 409,
+        "coveredCount": 199,
+        "orphanCount": 210,
+        "coveragePercent": 48.655256723716384,
+        "families": [
+          {
+            "family": "AC",
+            "baselineCount": 50,
+            "coveredCount": 29,
+            "orphanCount": 21,
+            "coveragePercent": 57.99999999999999,
+            "absentFromKsi": false
+          },
+          {
+            "family": "AT",
+            "baselineCount": 6,
+            "coveredCount": 5,
+            "orphanCount": 1,
+            "coveragePercent": 83.33333333333334,
+            "absentFromKsi": false
+          },
+          {
+            "family": "AU",
+            "baselineCount": 27,
+            "coveredCount": 15,
+            "orphanCount": 12,
+            "coveragePercent": 55.55555555555556,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CA",
+            "baselineCount": 15,
+            "coveredCount": 7,
+            "orphanCount": 8,
+            "coveragePercent": 46.666666666666664,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CM",
+            "baselineCount": 34,
+            "coveredCount": 20,
+            "orphanCount": 14,
+            "coveragePercent": 58.82352941176471,
+            "absentFromKsi": false
+          },
+          {
+            "family": "CP",
+            "baselineCount": 35,
+            "coveredCount": 22,
+            "orphanCount": 13,
+            "coveragePercent": 62.857142857142854,
+            "absentFromKsi": false
+          },
+          {
+            "family": "IA",
+            "baselineCount": 30,
+            "coveredCount": 19,
+            "orphanCount": 11,
+            "coveragePercent": 63.33333333333333,
+            "absentFromKsi": false
+          },
+          {
+            "family": "IR",
+            "baselineCount": 24,
+            "coveredCount": 12,
+            "orphanCount": 12,
+            "coveragePercent": 50,
+            "absentFromKsi": false
+          },
+          {
+            "family": "MA",
+            "baselineCount": 12,
+            "coveredCount": 1,
+            "orphanCount": 11,
+            "coveragePercent": 8.333333333333332,
+            "absentFromKsi": false
+          },
+          {
+            "family": "MP",
+            "baselineCount": 10,
+            "coveredCount": 0,
+            "orphanCount": 10,
+            "coveragePercent": 0,
+            "absentFromKsi": true
+          },
+          {
+            "family": "PE",
+            "baselineCount": 26,
+            "coveredCount": 0,
+            "orphanCount": 26,
+            "coveragePercent": 0,
+            "absentFromKsi": true
+          },
+          {
+            "family": "PL",
+            "baselineCount": 7,
+            "coveredCount": 2,
+            "orphanCount": 5,
+            "coveragePercent": 28.57142857142857,
+            "absentFromKsi": false
+          },
+          {
+            "family": "PS",
+            "baselineCount": 11,
+            "coveredCount": 8,
+            "orphanCount": 3,
+            "coveragePercent": 72.72727272727273,
+            "absentFromKsi": false
+          },
+          {
+            "family": "RA",
+            "baselineCount": 13,
+            "coveredCount": 4,
+            "orphanCount": 9,
+            "coveragePercent": 30.76923076923077,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SA",
+            "baselineCount": 25,
+            "coveredCount": 9,
+            "orphanCount": 16,
+            "coveragePercent": 36,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SC",
+            "baselineCount": 35,
+            "coveredCount": 23,
+            "orphanCount": 12,
+            "coveragePercent": 65.71428571428571,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SI",
+            "baselineCount": 35,
+            "coveredCount": 17,
+            "orphanCount": 18,
+            "coveragePercent": 48.57142857142857,
+            "absentFromKsi": false
+          },
+          {
+            "family": "SR",
+            "baselineCount": 14,
+            "coveredCount": 6,
+            "orphanCount": 8,
+            "coveragePercent": 42.857142857142854,
+            "absentFromKsi": false
+          }
+        ],
+        "orphans": [
+          "ac-2.7",
+          "ac-2.9",
+          "ac-2.11",
+          "ac-2.12",
+          "ac-4.4",
+          "ac-4.21",
+          "ac-6.3",
+          "ac-6.8",
+          "ac-8",
+          "ac-10",
+          "ac-11",
+          "ac-11.1",
+          "ac-17.4",
+          "ac-18",
+          "ac-18.4",
+          "ac-18.5",
+          "ac-19",
+          "ac-19.5",
+          "ac-20.2",
+          "ac-21",
+          "ac-22",
+          "at-1",
+          "au-1",
+          "au-5.1",
+          "au-5.2",
+          "au-6.4",
+          "au-6.5",
+          "au-6.6",
+          "au-6.7",
+          "au-9.2",
+          "au-9.3",
+          "au-10",
+          "au-12.1",
+          "au-12.3",
+          "ca-1",
+          "ca-2.2",
+          "ca-2.3",
+          "ca-3.6",
+          "ca-6",
+          "ca-8",
+          "ca-8.1",
+          "ca-8.2",
+          "cm-1",
+          "cm-3.1",
+          "cm-3.6",
+          "cm-4",
+          "cm-4.1",
+          "cm-5.1",
+          "cm-5.5",
+          "cm-6.1",
+          "cm-6.2",
+          "cm-8.2",
+          "cm-8.4",
+          "cm-10",
+          "cm-11",
+          "cm-14",
+          "cp-1",
+          "cp-2.2",
+          "cp-2.5",
+          "cp-3.1",
+          "cp-4.2",
+          "cp-6.2",
+          "cp-7.4",
+          "cp-8.3",
+          "cp-8.4",
+          "cp-9.2",
+          "cp-9.3",
+          "cp-9.5",
+          "cp-10.4",
+          "ia-1",
+          "ia-2.5",
+          "ia-2.6",
+          "ia-2.12",
+          "ia-5.7",
+          "ia-5.8",
+          "ia-5.13",
+          "ia-8.1",
+          "ia-8.2",
+          "ia-8.4",
+          "ia-12.4",
+          "ir-1",
+          "ir-2.1",
+          "ir-2.2",
+          "ir-4.2",
+          "ir-4.4",
+          "ir-4.6",
+          "ir-4.11",
+          "ir-5.1",
+          "ir-9",
+          "ir-9.2",
+          "ir-9.3",
+          "ir-9.4",
+          "ma-1",
+          "ma-2.2",
+          "ma-3",
+          "ma-3.1",
+          "ma-3.2",
+          "ma-3.3",
+          "ma-4",
+          "ma-4.3",
+          "ma-5",
+          "ma-5.1",
+          "ma-6",
+          "mp-1",
+          "mp-2",
+          "mp-3",
+          "mp-4",
+          "mp-5",
+          "mp-6",
+          "mp-6.1",
+          "mp-6.2",
+          "mp-6.3",
+          "mp-7",
+          "pe-1",
+          "pe-2",
+          "pe-3",
+          "pe-3.1",
+          "pe-4",
+          "pe-5",
+          "pe-6",
+          "pe-6.1",
+          "pe-6.4",
+          "pe-8",
+          "pe-8.1",
+          "pe-9",
+          "pe-10",
+          "pe-11",
+          "pe-11.1",
+          "pe-12",
+          "pe-13",
+          "pe-13.1",
+          "pe-13.2",
+          "pe-14",
+          "pe-14.2",
+          "pe-15",
+          "pe-15.1",
+          "pe-16",
+          "pe-17",
+          "pe-18",
+          "pl-1",
+          "pl-2",
+          "pl-4",
+          "pl-4.1",
+          "pl-11",
+          "ps-1",
+          "ps-3.3",
+          "ps-4.2",
+          "ra-1",
+          "ra-2",
+          "ra-3",
+          "ra-5.2",
+          "ra-5.3",
+          "ra-5.4",
+          "ra-5.8",
+          "ra-7",
+          "ra-9",
+          "sa-1",
+          "sa-4",
+          "sa-4.1",
+          "sa-4.2",
+          "sa-4.5",
+          "sa-4.9",
+          "sa-4.10",
+          "sa-9.1",
+          "sa-9.2",
+          "sa-9.5",
+          "sa-11.1",
+          "sa-11.2",
+          "sa-15",
+          "sa-16",
+          "sa-17",
+          "sa-21",
+          "sc-1",
+          "sc-3",
+          "sc-7.10",
+          "sc-7.12",
+          "sc-7.18",
+          "sc-7.20",
+          "sc-7.21",
+          "sc-12.1",
+          "sc-15",
+          "sc-24",
+          "sc-45",
+          "sc-45.1",
+          "si-1",
+          "si-2.3",
+          "si-4.1",
+          "si-4.10",
+          "si-4.11",
+          "si-4.12",
+          "si-4.14",
+          "si-4.16",
+          "si-4.18",
+          "si-4.19",
+          "si-4.20",
+          "si-4.22",
+          "si-4.23",
+          "si-5.1",
+          "si-6",
+          "si-7.2",
+          "si-7.5",
+          "si-7.15",
+          "sr-1",
+          "sr-2",
+          "sr-3",
+          "sr-9",
+          "sr-9.1",
+          "sr-11",
+          "sr-11.2",
+          "sr-12"
+        ],
+        "annualAssessmentCount": 101,
+        "defaultArtifacts": [
+          "Explanation of how the rule is followed, or an explanation of the reason and resulting risk to customers for not following the rule.",
+          "Verification that the implementation is appropriate for the rule, or that the reason for not implementing is accepted by a senior official.",
+          "Validation that the implementation is in place and working as intended, or that the reason for not implementing is accepted by a senior official.",
+          "Independent verification.",
+          "Independent validation."
+        ],
+        "ksiDefaultArtifacts": [
+          "Explanation of measures (and their objectives) that demonstrate the Key Security Indicator, or an explanation of the reason and resulting risk to customers for not having measures available for that Key Security Indicator.",
+          "Explanation of the cycle for any measures that are implemented persistently (if applicable).",
+          "Verification that the measures demonstrate the Key Security Indicator, or that the reason for not having them is accepted.",
+          "Verification that the automation in place is accurate and sufficient to demonstrate appropriate measures for the Key Security Indicator, or that automation is not necessary for each measure.",
+          "Validation that the measures are accurately produced and are in place and working as intended, or that the reason for not having them is valid."
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "requirementIds": [
+              "SCG-CSO-PUB",
+              "SCG-CSO-SDF",
+              "SCG-ENH-API",
+              "SCG-ENH-CMP",
+              "SCG-ENH-EXP",
+              "SCG-ENH-MRG",
+              "SCG-ENH-VRH"
+            ],
+            "classes": []
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "requirementIds": [
+              "SCG-CSO-PUB",
+              "SCG-CSO-SDF",
+              "SCG-ENH-API",
+              "SCG-ENH-CMP",
+              "SCG-ENH-EXP",
+              "SCG-ENH-MRG",
+              "SCG-ENH-VRH"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the human-readable data.",
+            "requirementIds": [
+              "CDS-CSO-PUB",
+              "CDS-CSO-SVC",
+              "MKT-CAS-WEB",
+              "MKT-IAS-WEB",
+              "SCG-CSO-RSC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "requirementIds": [
+              "MAS-CSO-FLO",
+              "MAS-CSO-IIR",
+              "MAS-CSO-MDI",
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "requirementIds": [
+              "MAS-CSO-FLO",
+              "MAS-CSO-IIR",
+              "MAS-CSO-MDI",
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "requirementIds": [
+              "CDS-CSO-PUB",
+              "MKT-CAS-WEB",
+              "MKT-IAS-WEB",
+              "SCG-CSO-RSC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A recent vulnerability report or a sample vulnerability report",
+            "requirementIds": [
+              "VER-RPT-AVI",
+              "VER-RPT-VDT",
+              "VER-TFR-MHR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how FedRAMP can obtain this information.",
+            "requirementIds": [
+              "CDS-TRC-AAI",
+              "SCN-CSO-HIS",
+              "SCN-CSO-MAR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+            "requirementIds": [
+              "CDS-UTC-AGA",
+              "SCG-CSO-AUP",
+              "SCN-CSO-HRM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL or explanation of how to request these materials.",
+            "requirementIds": [
+              "CDS-UTC-AGA",
+              "SCG-CSO-AUP",
+              "SCN-CSO-HRM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "An incident log showing an example of one or more incidents being evaluated including the reason for the determination. The log can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-EFI",
+              "IEC-CSO-EFR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Automated validation to check FSI mailbox configuration",
+            "requirementIds": [
+              "AFC-CSO-EMR",
+              "AFC-CSO-TFG"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Configuration settings for FSI mailbox",
+            "requirementIds": [
+              "AFC-CSO-EMR",
+              "AFC-CSO-TFG"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how to access this information.",
+            "requirementIds": [
+              "CDS-CSO-HAD",
+              "CDS-CSO-IRP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "requirementIds": [
+              "CMU-CSO-CMD",
+              "CMU-CSO-UVM"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "A machine readable output containing all required data of the components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-IIR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the metadata collected or maintained by the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-MDI"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the permitted connections between components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-FLO"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A machine readable output containing all required data of the third-party information resources of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "requirementIds": [
+              "MAS-CSO-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "A recent Significant Change Notification or sample Significant Change Notification",
+            "requirementIds": [
+              "SCN-CSO-INF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-FIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-IIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "requirementIds": [
+              "IEC-CSO-OIR"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "At least the most recent after verification SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NAV"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent final SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NFP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent initial SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NIP"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent post deployment SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-TRF-NAF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "At least the most recent SCN notification including the date it was sent and the date the change was applied. Additional examples may be provided. If no SCN notifications have been sent then this artifact is not required.",
+            "requirementIds": [
+              "SCN-ADP-NTF"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Current list of available notification mechanisms",
+            "requirementIds": [
+              "SCN-CSO-NOM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Date of the most recent transformative change and the date of the corresponding documentation update. If no documentation updates were required as the result of this change, explain how this was determined.",
+            "requirementIds": [
+              "SCN-TRF-UPD"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Email address to receive messages from FedRAMP",
+            "requirementIds": [
+              "AFC-CSO-INB"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Evidence of significant change evaluation including a description fo the change, the determined type, and an explanation for the decision. At least one example must be provided for each type of change. Real examples are prefered but the provider may use fictitious examples as long as the example provides evidence of the decision making process.",
+            "requirementIds": [
+              "SCN-CSO-EVA"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of how the appropriate parties can obtain this log information.",
+            "requirementIds": [
+              "CDS-TRC-ACL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of if and how this information is shared with other parties.",
+            "requirementIds": [
+              "CDS-CSO-RPS"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "requirementIds": [
+              "CDS-CSO-PSM"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "How the report will be delivered",
+            "requirementIds": [
+              "CCM-OCR-AVL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "How the summary will be delivered",
+            "requirementIds": [
+              "CCM-OCR-AFS"
+            ],
+            "classes": []
+          },
+          {
+            "text": "How to access the feedback mechanism.",
+            "requirementIds": [
+              "CCM-OCR-FBM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "List of cryptographic modules used by default including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "requirementIds": [
+              "CMU-CSO-CAT"
+            ],
+            "classes": []
+          },
+          {
+            "text": "Most recent Ongoing Certification Report. If the report is not available, the provider MUST provide a sample report that includes all required information.",
+            "requirementIds": [
+              "CCM-OCR-AVL"
+            ],
+            "classes": []
+          },
+          {
+            "text": "or an explanation of why machine readable content is not being provided",
+            "requirementIds": [
+              "VER-TFR-MRH"
+            ],
+            "classes": [
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "Process, manual or automated, to notify FedRAMP of changes in the FedRAMP Security Inbox",
+            "requirementIds": [
+              "AFC-CSO-NOC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "selected ordinal recurrence for the Ongoing Certification Report cycle.",
+            "requirementIds": [
+              "CCM-QTR-MTG"
+            ],
+            "classes": [
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "Third Party assesment report OR explanation why a third party assessor was not engaged",
+            "requirementIds": [
+              "SCN-TRF-TPR"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "requirementIds": [
+              "VER-TFR-MRH"
+            ],
+            "classes": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "text": "URL or explanation how to access documentation of these features and capabilities.",
+            "requirementIds": [
+              "CDS-TRC-SSM"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the documentation for programmatic access.",
+            "requirementIds": [
+              "CDS-TRC-PAC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the machine-readable data (if applicable).",
+            "requirementIds": [
+              "CDS-CSO-SVC"
+            ],
+            "classes": []
+          },
+          {
+            "text": "URL to the registration page or calendar file.",
+            "requirementIds": [
+              "CCM-QTR-REG"
+            ],
+            "classes": []
+          }
+        ],
+        "deadlines": [
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Sample Detection",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 2,
+            "type": "days",
+            "label": "2 days"
+          },
+          {
+            "requirementId": "CDS-UTC-AAD",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Agency Access Denial",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "weeks",
+            "label": "1 week"
+          },
+          {
+            "requirementId": "SCN-TRF-NAF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Finishing",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NAV",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Verification",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Drift Detection",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Historical Activity",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "CDS-CSO-FRC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "FedRAMP Certification Reports",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "weeks",
+            "label": "2 weeks"
+          },
+          {
+            "requirementId": "SCN-ADP-NTF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification Requirements",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NFP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Final Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistently Complete Detection",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MHR",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Monthly Activity Report",
+            "class": null,
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "SCN-TRF-NIP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Initial Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-UPD",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Update Documentation",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Quarterly Review Meeting",
+            "class": "d",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Fresh Independent Assessment",
+            "class": "d",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for Rev5",
+            "class": "d",
+            "force": "MUST",
+            "num": 6,
+            "type": "months",
+            "label": "6 months"
+          },
+          {
+            "requirementId": "VER-TFR-MAV",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Mark Accepted Vulnerabilities",
+            "class": null,
+            "force": "MUST",
+            "num": 192,
+            "type": "days",
+            "label": "192 days"
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for Rev5",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "FedRAMP Independent Assessments",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for 20x",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          }
+        ],
+        "deadlineCounts": {
+          "universal": 10,
+          "classScoped": 13
+        }
+      }
+    ],
+    "classesWithoutBaseline": [
+      "a"
+    ]
+  }
+}

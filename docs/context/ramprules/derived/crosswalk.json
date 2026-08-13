@@ -1,0 +1,5394 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "crosswalk",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "families": [
+      "AC",
+      "AT",
+      "AU",
+      "CA",
+      "CM",
+      "CP",
+      "IA",
+      "IR",
+      "MA",
+      "PL",
+      "PM",
+      "PS",
+      "RA",
+      "SA",
+      "SC",
+      "SI",
+      "SR"
+    ],
+    "themes": [
+      {
+        "id": "KSI-CED",
+        "key": "CED",
+        "name": "Cybersecurity Education",
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      {
+        "id": "KSI-CMT",
+        "key": "CMT",
+        "name": "Change Management",
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-RMV",
+          "KSI-CMT-RVP",
+          "KSI-CMT-VTD"
+        ]
+      },
+      {
+        "id": "KSI-CNA",
+        "key": "CNA",
+        "name": "Cloud Native Architecture",
+        "indicatorIds": [
+          "KSI-CNA-DFP",
+          "KSI-CNA-EIS",
+          "KSI-CNA-IBP",
+          "KSI-CNA-MAT",
+          "KSI-CNA-OFA",
+          "KSI-CNA-RNT",
+          "KSI-CNA-RVP",
+          "KSI-CNA-ULN"
+        ]
+      },
+      {
+        "id": "KSI-IAM",
+        "key": "IAM",
+        "name": "Identity and Access Management",
+        "indicatorIds": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU",
+          "KSI-IAM-SUS"
+        ]
+      },
+      {
+        "id": "KSI-INR",
+        "key": "INR",
+        "name": "Incident Response",
+        "indicatorIds": [
+          "KSI-INR-AAR",
+          "KSI-INR-RIR",
+          "KSI-INR-RPI"
+        ]
+      },
+      {
+        "id": "KSI-MLA",
+        "key": "MLA",
+        "name": "Monitoring, Logging, and Auditing",
+        "indicatorIds": [
+          "KSI-MLA-ALA",
+          "KSI-MLA-EVC",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM",
+          "KSI-MLA-RVL"
+        ]
+      },
+      {
+        "id": "KSI-PIY",
+        "key": "PIY",
+        "name": "Policy and Inventory",
+        "indicatorIds": [
+          "KSI-PIY-GIV",
+          "KSI-PIY-RES",
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD",
+          "KSI-PIY-RVD"
+        ]
+      },
+      {
+        "id": "KSI-RPL",
+        "key": "RPL",
+        "name": "Recovery Planning",
+        "indicatorIds": [
+          "KSI-RPL-ABO",
+          "KSI-RPL-ARP",
+          "KSI-RPL-RRO",
+          "KSI-RPL-TRC"
+        ]
+      },
+      {
+        "id": "KSI-SCR",
+        "key": "SCR",
+        "name": "Supply Chain Risk",
+        "indicatorIds": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ]
+      },
+      {
+        "id": "KSI-SVC",
+        "key": "SVC",
+        "name": "Service Configuration",
+        "indicatorIds": [
+          "KSI-SVC-ACM",
+          "KSI-SVC-ASM",
+          "KSI-SVC-EIS",
+          "KSI-SVC-PRR",
+          "KSI-SVC-RUD",
+          "KSI-SVC-SIN",
+          "KSI-SVC-VCM",
+          "KSI-SVC-VRI"
+        ]
+      }
+    ],
+    "indicators": {
+      "KSI-CED-RAT": {
+        "id": "KSI-CED-RAT",
+        "themeKey": "CED",
+        "themeName": "Cybersecurity Education",
+        "name": "Reviewing All Training",
+        "statement": "The effectiveness of relevant cybersecurity education and training is persistently reviewed, including at least general training for all employees, role-specific training for employees in high risk roles, training for development and engineering staff on secure software delivery, and training for staff involved with incident response or disaster recovery.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Incident",
+          "Persistently",
+          "Vulnerability Response"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cp-3",
+            "displayId": "CP-03",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "ir-2",
+            "displayId": "IR-02",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ps-6",
+            "displayId": "PS-06",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "at-2",
+            "displayId": "AT-02",
+            "family": "AT"
+          },
+          {
+            "canonicalId": "at-2.2",
+            "displayId": "AT-02 (02)",
+            "family": "AT"
+          },
+          {
+            "canonicalId": "at-2.3",
+            "displayId": "AT-02 (03)",
+            "family": "AT"
+          },
+          {
+            "canonicalId": "at-3.5",
+            "displayId": "AT-03 (05)",
+            "family": "AT"
+          },
+          {
+            "canonicalId": "at-4",
+            "displayId": "AT-04",
+            "family": "AT"
+          },
+          {
+            "canonicalId": "ir-2.3",
+            "displayId": "IR-02 (03)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "at-3",
+            "displayId": "AT-03",
+            "family": "AT"
+          },
+          {
+            "canonicalId": "sr-11.1",
+            "displayId": "SR-11 (01)",
+            "family": "SR"
+          }
+        ],
+        "countsByFamily": {
+          "CP": 1,
+          "IR": 2,
+          "PS": 1,
+          "AT": 6,
+          "SR": 1
+        }
+      },
+      "KSI-CMT-LMC": {
+        "id": "KSI-CMT-LMC",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Logging Changes",
+        "statement": "Modifications to the cloud service offering are logged and monitored.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Cloud Service Offering"
+        ],
+        "controls": [
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "cm-3",
+            "displayId": "CM-03",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-3.2",
+            "displayId": "CM-03 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-4.2",
+            "displayId": "CM-04 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-8.3",
+            "displayId": "CM-08 (03)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "ma-2",
+            "displayId": "MA-02",
+            "family": "MA"
+          }
+        ],
+        "countsByFamily": {
+          "AU": 1,
+          "CM": 5,
+          "MA": 1
+        }
+      },
+      "KSI-CMT-RMV": {
+        "id": "KSI-CMT-RMV",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Redeploying vs Modifying",
+        "statement": "Changes to machine-based information resources are executed through the redeployment of version controlled resources rather than direct modification wherever reasonable.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-3",
+            "displayId": "CM-03",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-5",
+            "displayId": "CM-05",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7",
+            "displayId": "CM-07",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-8.1",
+            "displayId": "CM-08 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "si-3",
+            "displayId": "SI-03",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 6,
+          "SI": 1
+        }
+      },
+      "KSI-CMT-RVP": {
+        "id": "KSI-CMT-RVP",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Reviewing Change Procedures",
+        "statement": "The effectiveness of documented change management procedures is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-3",
+            "displayId": "CM-03",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-3.2",
+            "displayId": "CM-03 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-3.4",
+            "displayId": "CM-03 (04)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-5",
+            "displayId": "CM-05",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7.1",
+            "displayId": "CM-07 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-9",
+            "displayId": "CM-09",
+            "family": "CM"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 6
+        }
+      },
+      "KSI-CMT-VTD": {
+        "id": "KSI-CMT-VTD",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Validating Throughout Deployment",
+        "statement": "Persistent testing and validation of changes throughout deployment is automated.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently",
+          "Validation"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-3",
+            "displayId": "CM-03",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-3.2",
+            "displayId": "CM-03 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-4.2",
+            "displayId": "CM-04 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "si-2",
+            "displayId": "SI-02",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 3,
+          "SI": 1
+        }
+      },
+      "KSI-CNA-DFP": {
+        "id": "KSI-CNA-DFP",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Defining Functionality and Privileges",
+        "statement": "The functionality and privileges for infrastructure and services are strictly defined.",
+        "hasVariesByClass": false,
+        "terms": [],
+        "controls": [
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "si-3",
+            "displayId": "SI-03",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 1,
+          "SI": 1
+        }
+      },
+      "KSI-CNA-EIS": {
+        "id": "KSI-CNA-EIS",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Enforcing Intended State",
+        "statement": null,
+        "hasVariesByClass": true,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ca-2.1",
+            "displayId": "CA-02 (01)",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "ca-7.1",
+            "displayId": "CA-07 (01)",
+            "family": "CA"
+          }
+        ],
+        "countsByFamily": {
+          "CA": 2
+        }
+      },
+      "KSI-CNA-IBP": {
+        "id": "KSI-CNA-IBP",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Implementing Best Practices",
+        "statement": "The use and configuration of third-party machine-based information resources is persistently compared against the original provider's best practices and guidance.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "pl-10",
+            "displayId": "PL-10",
+            "family": "PL"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "CM": 1,
+          "PL": 1
+        }
+      },
+      "KSI-CNA-MAT": {
+        "id": "KSI-CNA-MAT",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Minimizing Attack Surface",
+        "statement": "Machine-based information resources are persistently reviewed to ensure they have a minimal attack surface and that lateral movement is minimized if compromised.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-18.1",
+            "displayId": "AC-18 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-18.3",
+            "displayId": "AC-18 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ca-9",
+            "displayId": "CA-09",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "sc-7.3",
+            "displayId": "SC-07 (03)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-7.4",
+            "displayId": "SC-07 (04)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-7.5",
+            "displayId": "SC-07 (05)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-7.8",
+            "displayId": "SC-07 (08)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-8",
+            "displayId": "SC-08",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-10",
+            "displayId": "SC-10",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-10",
+            "displayId": "SI-10",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-11",
+            "displayId": "SI-11",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-16",
+            "displayId": "SI-16",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 4,
+          "CA": 1,
+          "SC": 6,
+          "SI": 3
+        }
+      },
+      "KSI-CNA-OFA": {
+        "id": "KSI-CNA-OFA",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Optimizing for Availability",
+        "statement": "Machine-based information resources are persistently reviewed to ensure they are appropriately optimized for high availability and rapid recovery.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [],
+        "countsByFamily": {}
+      },
+      "KSI-CNA-RNT": {
+        "id": "KSI-CNA-RNT",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Restricting Network Traffic",
+        "statement": "Machine-based information resources are persistently reviewed to ensure they are appropriately configured to limit inbound and outbound network traffic.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ca-9",
+            "displayId": "CA-09",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "cm-7.1",
+            "displayId": "CM-07 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "sc-7.5",
+            "displayId": "SC-07 (05)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-8",
+            "displayId": "SI-08",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "CA": 1,
+          "CM": 1,
+          "SC": 1,
+          "SI": 1
+        }
+      },
+      "KSI-CNA-RVP": {
+        "id": "KSI-CNA-RVP",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Reviewing Protections",
+        "statement": "The effectiveness of protection against denial of service attacks and other unwanted activity for machine-based information resources is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "sc-5",
+            "displayId": "SC-05",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-8",
+            "displayId": "SI-08",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-8.2",
+            "displayId": "SI-08 (02)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "SC": 1,
+          "SI": 2
+        }
+      },
+      "KSI-CNA-ULN": {
+        "id": "KSI-CNA-ULN",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Using Logical Networking",
+        "statement": "Logical networking and related capabilities are used and persistently reviewed to enforce traffic flow controls.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-12",
+            "displayId": "AC-12",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ca-9",
+            "displayId": "CA-09",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "sc-4",
+            "displayId": "SC-04",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-7",
+            "displayId": "SC-07",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-7.7",
+            "displayId": "SC-07 (07)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-8",
+            "displayId": "SC-08",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-10",
+            "displayId": "SC-10",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 2,
+          "CA": 1,
+          "SC": 5
+        }
+      },
+      "KSI-IAM-AAM": {
+        "id": "KSI-IAM-AAM",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Automating Account Management",
+        "statement": "The lifecycle and privileges of all accounts, roles, and groups are securely managed using automation.",
+        "hasVariesByClass": false,
+        "terms": [],
+        "controls": [
+          {
+            "canonicalId": "ac-2.2",
+            "displayId": "AC-02 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.3",
+            "displayId": "AC-02 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.13",
+            "displayId": "AC-02 (13)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.7",
+            "displayId": "AC-06 (07)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ia-4.4",
+            "displayId": "IA-04 (04)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-12",
+            "displayId": "IA-12",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-12.2",
+            "displayId": "IA-12 (02)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-12.3",
+            "displayId": "IA-12 (03)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-12.5",
+            "displayId": "IA-12 (05)",
+            "family": "IA"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 4,
+          "IA": 5
+        }
+      },
+      "KSI-IAM-APM": {
+        "id": "KSI-IAM-APM",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Adopting Passwordless Methods",
+        "statement": "Secure passwordless methods are used for user authentication and authorization when feasible, otherwise strong passwords with phishing-resistant MFA is used.",
+        "hasVariesByClass": false,
+        "terms": [],
+        "controls": [
+          {
+            "canonicalId": "ac-3",
+            "displayId": "AC-03",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ia-5.1",
+            "displayId": "IA-05 (01)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5.2",
+            "displayId": "IA-05 (02)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5.6",
+            "displayId": "IA-05 (06)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-6",
+            "displayId": "IA-06",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ia-2",
+            "displayId": "IA-02",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-2.1",
+            "displayId": "IA-02 (01)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-2.2",
+            "displayId": "IA-02 (02)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-2.8",
+            "displayId": "IA-02 (08)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5",
+            "displayId": "IA-05",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-8",
+            "displayId": "IA-08",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 2,
+          "IA": 10,
+          "SC": 1
+        }
+      },
+      "KSI-IAM-ELP": {
+        "id": "KSI-IAM-ELP",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Ensuring Least Privilege",
+        "statement": "Identity and access management measures are used and persistently reviewed to ensure each user or device can only access the resources they need.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2.5",
+            "displayId": "AC-02 (05)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.6",
+            "displayId": "AC-02 (06)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-3",
+            "displayId": "AC-03",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-4",
+            "displayId": "AC-04",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6",
+            "displayId": "AC-06",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-12",
+            "displayId": "AC-12",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-14",
+            "displayId": "AC-14",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17",
+            "displayId": "AC-17",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17.1",
+            "displayId": "AC-17 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17.2",
+            "displayId": "AC-17 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-20",
+            "displayId": "AC-20",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "cm-2.7",
+            "displayId": "CM-02 (07)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-9",
+            "displayId": "CM-09",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "ia-2",
+            "displayId": "IA-02",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-3",
+            "displayId": "IA-03",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-4",
+            "displayId": "IA-04",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-4.4",
+            "displayId": "IA-04 (04)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5.2",
+            "displayId": "IA-05 (02)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5.6",
+            "displayId": "IA-05 (06)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-11",
+            "displayId": "IA-11",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ps-2",
+            "displayId": "PS-02",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-3",
+            "displayId": "PS-03",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-4",
+            "displayId": "PS-04",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-5",
+            "displayId": "PS-05",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-6",
+            "displayId": "PS-06",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "sc-4",
+            "displayId": "SC-04",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-20",
+            "displayId": "SC-20",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-21",
+            "displayId": "SC-21",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-22",
+            "displayId": "SC-22",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-39",
+            "displayId": "SC-39",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-3",
+            "displayId": "SI-03",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 13,
+          "CM": 2,
+          "IA": 7,
+          "PS": 5,
+          "SC": 6,
+          "SI": 1
+        }
+      },
+      "KSI-IAM-JIT": {
+        "id": "KSI-IAM-JIT",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Authorizing Just-in-Time",
+        "statement": "A least-privileged, role and attribute-based, and just-in-time security authorization model is used and persistently reviewed for all user and non-user accounts and services.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.1",
+            "displayId": "AC-02 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.2",
+            "displayId": "AC-02 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.3",
+            "displayId": "AC-02 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.4",
+            "displayId": "AC-02 (04)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.6",
+            "displayId": "AC-02 (06)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-3",
+            "displayId": "AC-03",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-4",
+            "displayId": "AC-04",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-5",
+            "displayId": "AC-05",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6",
+            "displayId": "AC-06",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.1",
+            "displayId": "AC-06 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.2",
+            "displayId": "AC-06 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.5",
+            "displayId": "AC-06 (05)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.7",
+            "displayId": "AC-06 (07)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.9",
+            "displayId": "AC-06 (09)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.10",
+            "displayId": "AC-06 (10)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-7",
+            "displayId": "AC-07",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17",
+            "displayId": "AC-17",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "au-9.4",
+            "displayId": "AU-09 (04)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "cm-5",
+            "displayId": "CM-05",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7",
+            "displayId": "CM-07",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7.2",
+            "displayId": "CM-07 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7.5",
+            "displayId": "CM-07 (05)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-9",
+            "displayId": "CM-09",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "ia-4",
+            "displayId": "IA-04",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-4.4",
+            "displayId": "IA-04 (04)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-7",
+            "displayId": "IA-07",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ps-2",
+            "displayId": "PS-02",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-3",
+            "displayId": "PS-03",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-4",
+            "displayId": "PS-04",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-5",
+            "displayId": "PS-05",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-6",
+            "displayId": "PS-06",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-9",
+            "displayId": "PS-09",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ra-5.5",
+            "displayId": "RA-05 (05)",
+            "family": "RA"
+          },
+          {
+            "canonicalId": "sc-2",
+            "displayId": "SC-02",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-39",
+            "displayId": "SC-39",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 19,
+          "AU": 1,
+          "CM": 5,
+          "IA": 3,
+          "PS": 6,
+          "RA": 1,
+          "SC": 3
+        }
+      },
+      "KSI-IAM-SNU": {
+        "id": "KSI-IAM-SNU",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Securing Non-User Authentication",
+        "statement": "Appropriately secure authentication methods are used and persistently reviewed for non-user accounts and services.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.2",
+            "displayId": "AC-02 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-4",
+            "displayId": "AC-04",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.5",
+            "displayId": "AC-06 (05)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ia-3",
+            "displayId": "IA-03",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5.2",
+            "displayId": "IA-05 (02)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ra-5.5",
+            "displayId": "RA-05 (05)",
+            "family": "RA"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 4,
+          "IA": 2,
+          "RA": 1
+        }
+      },
+      "KSI-IAM-SUS": {
+        "id": "KSI-IAM-SUS",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Responding to Suspicious Activity",
+        "statement": "Accounts with privileged access are disabled or otherwise secured in response to suspicious activity.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Vulnerability Response"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.1",
+            "displayId": "AC-02 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.3",
+            "displayId": "AC-02 (03)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-2.13",
+            "displayId": "AC-02 (13)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-7",
+            "displayId": "AC-07",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ps-4",
+            "displayId": "PS-04",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ps-8",
+            "displayId": "PS-08",
+            "family": "PS"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 5,
+          "PS": 2
+        }
+      },
+      "KSI-INR-AAR": {
+        "id": "KSI-INR-AAR",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "name": "Generating After Action Reports",
+        "statement": "Incident after action reports are generated and lessons learned are persistently incorporated.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Incident",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ir-3",
+            "displayId": "IR-03",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-4",
+            "displayId": "IR-04",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-4.1",
+            "displayId": "IR-04 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-8",
+            "displayId": "IR-08",
+            "family": "IR"
+          }
+        ],
+        "countsByFamily": {
+          "IR": 4
+        }
+      },
+      "KSI-INR-RIR": {
+        "id": "KSI-INR-RIR",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "name": "Reviewing Incident Response Procedures",
+        "statement": "The effectiveness of documented incident response procedures is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Incident",
+          "Persistently",
+          "Vulnerability Response"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ir-4",
+            "displayId": "IR-04",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-4.1",
+            "displayId": "IR-04 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-6",
+            "displayId": "IR-06",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-6.1",
+            "displayId": "IR-06 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-6.3",
+            "displayId": "IR-06 (03)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-7",
+            "displayId": "IR-07",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-7.1",
+            "displayId": "IR-07 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-8",
+            "displayId": "IR-08",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-8.1",
+            "displayId": "IR-08 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "si-4.5",
+            "displayId": "SI-04 (05)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "IR": 9,
+          "SI": 1
+        }
+      },
+      "KSI-INR-RPI": {
+        "id": "KSI-INR-RPI",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "name": "Reviewing Past Incidents",
+        "statement": "Past incidents are persistently reviewed for patterns or vulnerabilities that were not previously apparent or identified.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Incident",
+          "Persistently",
+          "Vulnerability"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ir-3",
+            "displayId": "IR-03",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-4",
+            "displayId": "IR-04",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-4.1",
+            "displayId": "IR-04 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-5",
+            "displayId": "IR-05",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-8",
+            "displayId": "IR-08",
+            "family": "IR"
+          }
+        ],
+        "countsByFamily": {
+          "IR": 5
+        }
+      },
+      "KSI-MLA-ALA": {
+        "id": "KSI-MLA-ALA",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Authorizing Log Access",
+        "statement": null,
+        "hasVariesByClass": true,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "si-11",
+            "displayId": "SI-11",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "SI": 1
+        }
+      },
+      "KSI-MLA-EVC": {
+        "id": "KSI-MLA-EVC",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Evaluating Configurations",
+        "statement": "The configuration of machine-based information resources, especially infrastructure as code, is persistently evaluated and tested.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ca-7",
+            "displayId": "CA-07",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "si-7.7",
+            "displayId": "SI-07 (07)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "CA": 1,
+          "CM": 2,
+          "SI": 1
+        }
+      },
+      "KSI-MLA-LET": {
+        "id": "KSI-MLA-LET",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Logging Event Types",
+        "statement": "A list of information resources and event types that will be logged, monitored, and audited is maintained and persistently reviewed to ensure these activities occur.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2.4",
+            "displayId": "AC-02 (04)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.9",
+            "displayId": "AC-06 (09)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17.1",
+            "displayId": "AC-17 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-7.1",
+            "displayId": "AU-07 (01)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-12",
+            "displayId": "AU-12",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "si-4.4",
+            "displayId": "SI-04 (04)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-4.5",
+            "displayId": "SI-04 (05)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-7.7",
+            "displayId": "SI-07 (07)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 4,
+          "AU": 3,
+          "SI": 3
+        }
+      },
+      "KSI-MLA-OSM": {
+        "id": "KSI-MLA-OSM",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Operating SIEM Capability",
+        "statement": "A Security Information and Event Management (SIEM) or similar system(s) is used and persistently reviewed for centralized, tamper-resistant logging of events, activities, and changes.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-17.1",
+            "displayId": "AC-17 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-3",
+            "displayId": "AU-03",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-3.1",
+            "displayId": "AU-03 (01)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-4",
+            "displayId": "AU-04",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-5",
+            "displayId": "AU-05",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-6.1",
+            "displayId": "AU-06 (01)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-6.3",
+            "displayId": "AU-06 (03)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-7",
+            "displayId": "AU-07",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-7.1",
+            "displayId": "AU-07 (01)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-8",
+            "displayId": "AU-08",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-9",
+            "displayId": "AU-09",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-11",
+            "displayId": "AU-11",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "ir-4.1",
+            "displayId": "IR-04 (01)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "si-4.2",
+            "displayId": "SI-04 (02)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-4.4",
+            "displayId": "SI-04 (04)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-7.7",
+            "displayId": "SI-07 (07)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 2,
+          "AU": 12,
+          "IR": 1,
+          "SI": 3
+        }
+      },
+      "KSI-MLA-RVL": {
+        "id": "KSI-MLA-RVL",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Reviewing Logs",
+        "statement": "Logs are persistently reviewed and audited.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2.4",
+            "displayId": "AC-02 (04)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-6.9",
+            "displayId": "AC-06 (09)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-6",
+            "displayId": "AU-06",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "au-6.1",
+            "displayId": "AU-06 (01)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "si-4",
+            "displayId": "SI-04",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-4.4",
+            "displayId": "SI-04 (04)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 2,
+          "AU": 3,
+          "SI": 2
+        }
+      },
+      "KSI-PIY-GIV": {
+        "id": "KSI-PIY-GIV",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Generating Inventories",
+        "statement": "Authoritative sources are used to automatically generate real-time inventories of all information resources when needed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-2.2",
+            "displayId": "CM-02 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7.5",
+            "displayId": "CM-07 (05)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-8",
+            "displayId": "CM-08",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-8.1",
+            "displayId": "CM-08 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-12",
+            "displayId": "CM-12",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-12.1",
+            "displayId": "CM-12 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cp-2.8",
+            "displayId": "CP-02 (08)",
+            "family": "CP"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 6,
+          "CP": 1
+        }
+      },
+      "KSI-PIY-RES": {
+        "id": "KSI-PIY-RES",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Executive Support",
+        "statement": "Executive support for achieving the provider's security goals is persistently reviewed and demonstrated.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [],
+        "countsByFamily": {}
+      },
+      "KSI-PIY-RIS": {
+        "id": "KSI-PIY-RIS",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Investments in Security",
+        "statement": "The effectiveness of the provider's investments in achieving security goals is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-5",
+            "displayId": "AC-05",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ca-2",
+            "displayId": "CA-02",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "cp-2.1",
+            "displayId": "CP-02 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-4.1",
+            "displayId": "CP-04 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "ir-3.2",
+            "displayId": "IR-03 (02)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "pm-3",
+            "displayId": "PM-03",
+            "family": "PM"
+          },
+          {
+            "canonicalId": "sa-2",
+            "displayId": "SA-02",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sa-3",
+            "displayId": "SA-03",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sr-2.1",
+            "displayId": "SR-02 (01)",
+            "family": "SR"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "CA": 1,
+          "CP": 2,
+          "IR": 1,
+          "PM": 1,
+          "SA": 2,
+          "SR": 1
+        }
+      },
+      "KSI-PIY-RSD": {
+        "id": "KSI-PIY-RSD",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Security in the SDLC",
+        "statement": "The effectiveness of building security and privacy considerations into the Software Development Lifecycle and aligning with CISA Secure By Design principles is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-5",
+            "displayId": "AC-05",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "au-3.3",
+            "displayId": "AU-03 (03)",
+            "family": "AU"
+          },
+          {
+            "canonicalId": "cm-3.4",
+            "displayId": "CM-03 (04)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "pl-8",
+            "displayId": "PL-08",
+            "family": "PL"
+          },
+          {
+            "canonicalId": "pm-7",
+            "displayId": "PM-07",
+            "family": "PM"
+          },
+          {
+            "canonicalId": "sa-3",
+            "displayId": "SA-03",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sa-8",
+            "displayId": "SA-08",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sc-4",
+            "displayId": "SC-04",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-18",
+            "displayId": "SC-18",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-10",
+            "displayId": "SI-10",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-11",
+            "displayId": "SI-11",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-16",
+            "displayId": "SI-16",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "AU": 1,
+          "CM": 1,
+          "PL": 1,
+          "PM": 1,
+          "SA": 2,
+          "SC": 2,
+          "SI": 3
+        }
+      },
+      "KSI-PIY-RVD": {
+        "id": "KSI-PIY-RVD",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Vulnerability Disclosures",
+        "statement": "The effectiveness of the provider's vulnerability disclosure program is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently",
+          "Provider",
+          "Vulnerability"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ra-5.11",
+            "displayId": "RA-05 (11)",
+            "family": "RA"
+          }
+        ],
+        "countsByFamily": {
+          "RA": 1
+        }
+      },
+      "KSI-RPL-ABO": {
+        "id": "KSI-RPL-ABO",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Aligning Backups with Objectives",
+        "statement": "The alignment of machine-based information resource backups with defined recovery objectives is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-2.3",
+            "displayId": "CM-02 (03)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cp-6",
+            "displayId": "CP-06",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-9",
+            "displayId": "CP-09",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-10.2",
+            "displayId": "CP-10 (02)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "si-12",
+            "displayId": "SI-12",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 1,
+          "CP": 4,
+          "SI": 1
+        }
+      },
+      "KSI-RPL-ARP": {
+        "id": "KSI-RPL-ARP",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Aligning Recovery Plan",
+        "statement": "The alignment of recovery plans with defined recovery objectives is persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cp-2",
+            "displayId": "CP-02",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-2.1",
+            "displayId": "CP-02 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-2.3",
+            "displayId": "CP-02 (03)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-4.1",
+            "displayId": "CP-04 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-6",
+            "displayId": "CP-06",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-6.1",
+            "displayId": "CP-06 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-6.3",
+            "displayId": "CP-06 (03)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-7",
+            "displayId": "CP-07",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-7.1",
+            "displayId": "CP-07 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-7.2",
+            "displayId": "CP-07 (02)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-7.3",
+            "displayId": "CP-07 (03)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-8",
+            "displayId": "CP-08",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-8.1",
+            "displayId": "CP-08 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-8.2",
+            "displayId": "CP-08 (02)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-10.2",
+            "displayId": "CP-10 (02)",
+            "family": "CP"
+          }
+        ],
+        "countsByFamily": {
+          "CP": 16
+        }
+      },
+      "KSI-RPL-RRO": {
+        "id": "KSI-RPL-RRO",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Reviewing Recovery Objectives",
+        "statement": "The desired Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO) are defined and persistently reviewed for alignment with the provider's business needs and capabilities.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cp-2.3",
+            "displayId": "CP-02 (03)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP"
+          }
+        ],
+        "countsByFamily": {
+          "CP": 2
+        }
+      },
+      "KSI-RPL-TRC": {
+        "id": "KSI-RPL-TRC",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Testing Recovery Capabilities",
+        "statement": "The capability to recover from incidents and contingencies aligned with defined recovery objectives is persistently tested.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Incident",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cp-2.1",
+            "displayId": "CP-02 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-2.3",
+            "displayId": "CP-02 (03)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-4",
+            "displayId": "CP-04",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-4.1",
+            "displayId": "CP-04 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-6",
+            "displayId": "CP-06",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-6.1",
+            "displayId": "CP-06 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-9.1",
+            "displayId": "CP-09 (01)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "ir-3",
+            "displayId": "IR-03",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ir-3.2",
+            "displayId": "IR-03 (02)",
+            "family": "IR"
+          }
+        ],
+        "countsByFamily": {
+          "CP": 8,
+          "IR": 2
+        }
+      },
+      "KSI-SCR-MIT": {
+        "id": "KSI-SCR-MIT",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "name": "Mitigating Supply Chain Risk",
+        "statement": "Persistently identify, review, and mitigate potential supply chain risks.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-20",
+            "displayId": "AC-20",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ra-3.1",
+            "displayId": "RA-03 (01)",
+            "family": "RA"
+          },
+          {
+            "canonicalId": "sa-9",
+            "displayId": "SA-09",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sa-10",
+            "displayId": "SA-10",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sa-11",
+            "displayId": "SA-11",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sa-15.3",
+            "displayId": "SA-15 (03)",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "sa-22",
+            "displayId": "SA-22",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "si-7.1",
+            "displayId": "SI-07 (01)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "sr-5",
+            "displayId": "SR-05",
+            "family": "SR"
+          },
+          {
+            "canonicalId": "sr-6",
+            "displayId": "SR-06",
+            "family": "SR"
+          },
+          {
+            "canonicalId": "ca-7.4",
+            "displayId": "CA-07 (04)",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "sc-18",
+            "displayId": "SC-18",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "RA": 1,
+          "SA": 5,
+          "SI": 1,
+          "SR": 2,
+          "CA": 1,
+          "SC": 1
+        }
+      },
+      "KSI-SCR-MON": {
+        "id": "KSI-SCR-MON",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "name": "Monitoring Supply Chain Risk",
+        "statement": "Third party software information resources are automatically monitored for upstream vulnerabilities using mechanisms that may include contractual notification requirements or active monitoring services.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Vulnerability"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-20",
+            "displayId": "AC-20",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ca-3",
+            "displayId": "CA-03",
+            "family": "CA"
+          },
+          {
+            "canonicalId": "ir-6.3",
+            "displayId": "IR-06 (03)",
+            "family": "IR"
+          },
+          {
+            "canonicalId": "ps-7",
+            "displayId": "PS-07",
+            "family": "PS"
+          },
+          {
+            "canonicalId": "ra-5",
+            "displayId": "RA-05",
+            "family": "RA"
+          },
+          {
+            "canonicalId": "sa-9",
+            "displayId": "SA-09",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "si-5",
+            "displayId": "SI-05",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "sr-5",
+            "displayId": "SR-05",
+            "family": "SR"
+          },
+          {
+            "canonicalId": "sr-6",
+            "displayId": "SR-06",
+            "family": "SR"
+          },
+          {
+            "canonicalId": "sr-8",
+            "displayId": "SR-08",
+            "family": "SR"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "CA": 1,
+          "IR": 1,
+          "PS": 1,
+          "RA": 1,
+          "SA": 1,
+          "SI": 1,
+          "SR": 3
+        }
+      },
+      "KSI-SVC-ACM": {
+        "id": "KSI-SVC-ACM",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Automating Configuration Management",
+        "statement": "The configuration of machine-based information resources is managed using automation and persistently reviewed for drift.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Drift",
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-2.4",
+            "displayId": "AC-02 (04)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-2.2",
+            "displayId": "CM-02 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-2.3",
+            "displayId": "CM-02 (03)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-7.1",
+            "displayId": "CM-07 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "pl-9",
+            "displayId": "PL-09",
+            "family": "PL"
+          },
+          {
+            "canonicalId": "pl-10",
+            "displayId": "PL-10",
+            "family": "PL"
+          },
+          {
+            "canonicalId": "sa-5",
+            "displayId": "SA-05",
+            "family": "SA"
+          },
+          {
+            "canonicalId": "si-5",
+            "displayId": "SI-05",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "sr-10",
+            "displayId": "SR-10",
+            "family": "SR"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "CM": 5,
+          "PL": 2,
+          "SA": 1,
+          "SI": 1,
+          "SR": 1
+        }
+      },
+      "KSI-SVC-ASM": {
+        "id": "KSI-SVC-ASM",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Automating Secret Management",
+        "statement": "Management, protection, and regular rotation of digital keys, certificates, and other secrets is automated and persistently reviewed.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Persistently",
+          "Regularly"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-17.2",
+            "displayId": "AC-17 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ia-5.2",
+            "displayId": "IA-05 (02)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "ia-5.6",
+            "displayId": "IA-05 (06)",
+            "family": "IA"
+          },
+          {
+            "canonicalId": "sc-12",
+            "displayId": "SC-12",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-17",
+            "displayId": "SC-17",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 1,
+          "IA": 2,
+          "SC": 2
+        }
+      },
+      "KSI-SVC-EIS": {
+        "id": "KSI-SVC-EIS",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Evaluating and Improving Security",
+        "statement": "Information resources are persistently evaluated for opportunities to improve security and those improvements are persistently made.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-7.1",
+            "displayId": "CM-07 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-12.1",
+            "displayId": "CM-12 (01)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "ma-2",
+            "displayId": "MA-02",
+            "family": "MA"
+          },
+          {
+            "canonicalId": "pl-8",
+            "displayId": "PL-08",
+            "family": "PL"
+          },
+          {
+            "canonicalId": "sc-7",
+            "displayId": "SC-07",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-39",
+            "displayId": "SC-39",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-2.2",
+            "displayId": "SI-02 (02)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-4",
+            "displayId": "SI-04",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "sr-10",
+            "displayId": "SR-10",
+            "family": "SR"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 2,
+          "MA": 1,
+          "PL": 1,
+          "SC": 2,
+          "SI": 2,
+          "SR": 1
+        }
+      },
+      "KSI-SVC-PRR": {
+        "id": "KSI-SVC-PRR",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Preventing Residual Risk",
+        "statement": null,
+        "hasVariesByClass": true,
+        "terms": [
+          "Federal Customer Data",
+          "Information Resource",
+          "Likely",
+          "Persistently"
+        ],
+        "controls": [
+          {
+            "canonicalId": "sc-4",
+            "displayId": "SC-04",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "SC": 1
+        }
+      },
+      "KSI-SVC-RUD": {
+        "id": "KSI-SVC-RUD",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Removing Unwanted Data",
+        "statement": null,
+        "hasVariesByClass": true,
+        "terms": [
+          "Agency",
+          "Federal Customer Data",
+          "Promptly"
+        ],
+        "controls": [
+          {
+            "canonicalId": "si-12.3",
+            "displayId": "SI-12 (03)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-18.4",
+            "displayId": "SI-18 (04)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "SI": 2
+        }
+      },
+      "KSI-SVC-SIN": {
+        "id": "KSI-SVC-SIN",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Securing Information",
+        "statement": "Information is encrypted or otherwise secured from unwanted access or modification.",
+        "hasVariesByClass": false,
+        "terms": [],
+        "controls": [
+          {
+            "canonicalId": "ac-1",
+            "displayId": "AC-01",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "ac-17.2",
+            "displayId": "AC-17 (02)",
+            "family": "AC"
+          },
+          {
+            "canonicalId": "cp-9.8",
+            "displayId": "CP-09 (08)",
+            "family": "CP"
+          },
+          {
+            "canonicalId": "sc-8",
+            "displayId": "SC-08",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-8.1",
+            "displayId": "SC-08 (01)",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-13",
+            "displayId": "SC-13",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-20",
+            "displayId": "SC-20",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-21",
+            "displayId": "SC-21",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-22",
+            "displayId": "SC-22",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-28",
+            "displayId": "SC-28",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-28.1",
+            "displayId": "SC-28 (01)",
+            "family": "SC"
+          }
+        ],
+        "countsByFamily": {
+          "AC": 2,
+          "CP": 1,
+          "SC": 9
+        }
+      },
+      "KSI-SVC-VCM": {
+        "id": "KSI-SVC-VCM",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Validating Communications",
+        "statement": null,
+        "hasVariesByClass": true,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently",
+          "Validation"
+        ],
+        "controls": [
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-7.1",
+            "displayId": "SI-07 (01)",
+            "family": "SI"
+          }
+        ],
+        "countsByFamily": {
+          "SC": 1,
+          "SI": 1
+        }
+      },
+      "KSI-SVC-VRI": {
+        "id": "KSI-SVC-VRI",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Validating Resource Integrity",
+        "statement": "Use cryptographic methods to validate the integrity of machine-based information resources.",
+        "hasVariesByClass": false,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Validation"
+        ],
+        "controls": [
+          {
+            "canonicalId": "cm-2.2",
+            "displayId": "CM-02 (02)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "cm-8.3",
+            "displayId": "CM-08 (03)",
+            "family": "CM"
+          },
+          {
+            "canonicalId": "sc-13",
+            "displayId": "SC-13",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC"
+          },
+          {
+            "canonicalId": "si-7",
+            "displayId": "SI-07",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "si-7.1",
+            "displayId": "SI-07 (01)",
+            "family": "SI"
+          },
+          {
+            "canonicalId": "sr-10",
+            "displayId": "SR-10",
+            "family": "SR"
+          }
+        ],
+        "countsByFamily": {
+          "CM": 2,
+          "SC": 2,
+          "SI": 2,
+          "SR": 1
+        }
+      }
+    },
+    "controls": {
+      "cp-3": {
+        "canonicalId": "cp-3",
+        "displayId": "CP-03",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "ir-2": {
+        "canonicalId": "ir-2",
+        "displayId": "IR-02",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "ps-6": {
+        "canonicalId": "ps-6",
+        "displayId": "PS-06",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "at-2": {
+        "canonicalId": "at-2",
+        "displayId": "AT-02",
+        "family": "AT",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "at-2.2": {
+        "canonicalId": "at-2.2",
+        "displayId": "AT-02 (02)",
+        "family": "AT",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "at-2.3": {
+        "canonicalId": "at-2.3",
+        "displayId": "AT-02 (03)",
+        "family": "AT",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "at-3.5": {
+        "canonicalId": "at-3.5",
+        "displayId": "AT-03 (05)",
+        "family": "AT",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "at-4": {
+        "canonicalId": "at-4",
+        "displayId": "AT-04",
+        "family": "AT",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "ir-2.3": {
+        "canonicalId": "ir-2.3",
+        "displayId": "IR-02 (03)",
+        "family": "IR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "at-3": {
+        "canonicalId": "at-3",
+        "displayId": "AT-03",
+        "family": "AT",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "sr-11.1": {
+        "canonicalId": "sr-11.1",
+        "displayId": "SR-11 (01)",
+        "family": "SR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CED-RAT"
+        ]
+      },
+      "au-2": {
+        "canonicalId": "au-2",
+        "displayId": "AU-02",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM",
+          "KSI-MLA-RVL"
+        ]
+      },
+      "cm-3": {
+        "canonicalId": "cm-3",
+        "displayId": "CM-03",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-RMV",
+          "KSI-CMT-RVP",
+          "KSI-CMT-VTD"
+        ]
+      },
+      "cm-3.2": {
+        "canonicalId": "cm-3.2",
+        "displayId": "CM-03 (02)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-RVP",
+          "KSI-CMT-VTD"
+        ]
+      },
+      "cm-4.2": {
+        "canonicalId": "cm-4.2",
+        "displayId": "CM-04 (02)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-VTD"
+        ]
+      },
+      "cm-6": {
+        "canonicalId": "cm-6",
+        "displayId": "CM-06",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-RMV",
+          "KSI-MLA-EVC",
+          "KSI-SVC-ACM"
+        ]
+      },
+      "cm-8.3": {
+        "canonicalId": "cm-8.3",
+        "displayId": "CM-08 (03)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-SVC-VRI"
+        ]
+      },
+      "ma-2": {
+        "canonicalId": "ma-2",
+        "displayId": "MA-02",
+        "family": "MA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-LMC",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "cm-2": {
+        "canonicalId": "cm-2",
+        "displayId": "CM-02",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RMV",
+          "KSI-CNA-DFP",
+          "KSI-CNA-IBP",
+          "KSI-MLA-EVC",
+          "KSI-SVC-ACM"
+        ]
+      },
+      "cm-5": {
+        "canonicalId": "cm-5",
+        "displayId": "CM-05",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RMV",
+          "KSI-CMT-RVP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "cm-7": {
+        "canonicalId": "cm-7",
+        "displayId": "CM-07",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RMV",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "cm-8.1": {
+        "canonicalId": "cm-8.1",
+        "displayId": "CM-08 (01)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RMV",
+          "KSI-PIY-GIV"
+        ]
+      },
+      "si-3": {
+        "canonicalId": "si-3",
+        "displayId": "SI-03",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RMV",
+          "KSI-CNA-DFP",
+          "KSI-IAM-ELP"
+        ]
+      },
+      "cm-3.4": {
+        "canonicalId": "cm-3.4",
+        "displayId": "CM-03 (04)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RVP",
+          "KSI-PIY-RSD"
+        ]
+      },
+      "cm-7.1": {
+        "canonicalId": "cm-7.1",
+        "displayId": "CM-07 (01)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RVP",
+          "KSI-CNA-RNT",
+          "KSI-SVC-ACM",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "cm-9": {
+        "canonicalId": "cm-9",
+        "displayId": "CM-09",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CMT-RVP",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "si-2": {
+        "canonicalId": "si-2",
+        "displayId": "SI-02",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-CMT-VTD"
+        ]
+      },
+      "ca-2.1": {
+        "canonicalId": "ca-2.1",
+        "displayId": "CA-02 (01)",
+        "family": "CA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-EIS"
+        ]
+      },
+      "ca-7.1": {
+        "canonicalId": "ca-7.1",
+        "displayId": "CA-07 (01)",
+        "family": "CA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-EIS"
+        ]
+      },
+      "ac-17.3": {
+        "canonicalId": "ac-17.3",
+        "displayId": "AC-17 (03)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-IBP",
+          "KSI-CNA-MAT",
+          "KSI-CNA-RNT",
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP"
+        ]
+      },
+      "pl-10": {
+        "canonicalId": "pl-10",
+        "displayId": "PL-10",
+        "family": "PL",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-IBP",
+          "KSI-SVC-ACM"
+        ]
+      },
+      "ac-18.1": {
+        "canonicalId": "ac-18.1",
+        "displayId": "AC-18 (01)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT"
+        ]
+      },
+      "ac-18.3": {
+        "canonicalId": "ac-18.3",
+        "displayId": "AC-18 (03)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT"
+        ]
+      },
+      "ac-20.1": {
+        "canonicalId": "ac-20.1",
+        "displayId": "AC-20 (01)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ]
+      },
+      "ca-9": {
+        "canonicalId": "ca-9",
+        "displayId": "CA-09",
+        "family": "CA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-CNA-RNT",
+          "KSI-CNA-ULN"
+        ]
+      },
+      "sc-7.3": {
+        "canonicalId": "sc-7.3",
+        "displayId": "SC-07 (03)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT"
+        ]
+      },
+      "sc-7.4": {
+        "canonicalId": "sc-7.4",
+        "displayId": "SC-07 (04)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT"
+        ]
+      },
+      "sc-7.5": {
+        "canonicalId": "sc-7.5",
+        "displayId": "SC-07 (05)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-CNA-RNT"
+        ]
+      },
+      "sc-7.8": {
+        "canonicalId": "sc-7.8",
+        "displayId": "SC-07 (08)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT"
+        ]
+      },
+      "sc-8": {
+        "canonicalId": "sc-8",
+        "displayId": "SC-08",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-CNA-ULN",
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-10": {
+        "canonicalId": "sc-10",
+        "displayId": "SC-10",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-CNA-ULN"
+        ]
+      },
+      "si-10": {
+        "canonicalId": "si-10",
+        "displayId": "SI-10",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-PIY-RSD"
+        ]
+      },
+      "si-11": {
+        "canonicalId": "si-11",
+        "displayId": "SI-11",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-MLA-ALA",
+          "KSI-PIY-RSD"
+        ]
+      },
+      "si-16": {
+        "canonicalId": "si-16",
+        "displayId": "SI-16",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-MAT",
+          "KSI-PIY-RSD"
+        ]
+      },
+      "si-8": {
+        "canonicalId": "si-8",
+        "displayId": "SI-08",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "When CSO sends email on behalf of the government as part of the business offering, Control Description should include implementation of Domain-based Message Authentication, Reporting & Conformance (DMARC) on the sending domain for outgoing messages as described in DHS Binding Operational Directive (BOD) 18-01. https://www.cisa.gov/news-events/directives",
+            "SI-8 Guidance: CSPs should confirm DMARC configuration (where appropriate) to ensure that policy=reject and the rua parameter includes reports@dmarc.cyber.dhs.gov.  DMARC compliance should be documented in the SI-08 control implementation solution description, and list the FROM: domain(s) when emails are sent on behalf of the government."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-CNA-RNT",
+          "KSI-CNA-RVP"
+        ]
+      },
+      "sc-5": {
+        "canonicalId": "sc-5",
+        "displayId": "SC-05",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-RVP"
+        ]
+      },
+      "si-8.2": {
+        "canonicalId": "si-8.2",
+        "displayId": "SI-08 (02)",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-RVP"
+        ]
+      },
+      "ac-12": {
+        "canonicalId": "ac-12",
+        "displayId": "AC-12",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP"
+        ]
+      },
+      "sc-4": {
+        "canonicalId": "sc-4",
+        "displayId": "SC-04",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP",
+          "KSI-PIY-RSD",
+          "KSI-SVC-PRR"
+        ]
+      },
+      "sc-7": {
+        "canonicalId": "sc-7",
+        "displayId": "SC-07",
+        "family": "SC",
+        "guidance": {
+          "guidance": [
+            "SC-7 (b) may be met by using any technical capability or complement of capabilities that ensures logical separation between publicly accessible components and internal networks by preventing traversal without inspection and authorization; traffic may not flow unrestricted from publicly accessible components to internal networks."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-CNA-ULN",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "sc-7.7": {
+        "canonicalId": "sc-7.7",
+        "displayId": "SC-07 (07)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-CNA-ULN"
+        ]
+      },
+      "ac-2.2": {
+        "canonicalId": "ac-2.2",
+        "displayId": "AC-02 (02)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ]
+      },
+      "ac-2.3": {
+        "canonicalId": "ac-2.3",
+        "displayId": "AC-02 (03)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SUS"
+        ]
+      },
+      "ac-2.13": {
+        "canonicalId": "ac-2.13",
+        "displayId": "AC-02 (13)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-SUS"
+        ]
+      },
+      "ac-6.7": {
+        "canonicalId": "ac-6.7",
+        "displayId": "AC-06 (07)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ia-4.4": {
+        "canonicalId": "ia-4.4",
+        "displayId": "IA-04 (04)",
+        "family": "IA",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "ia-04.04_odp",
+              "value": "contractors; foreign nationals"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ia-12": {
+        "canonicalId": "ia-12",
+        "displayId": "IA-12",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM"
+        ]
+      },
+      "ia-12.2": {
+        "canonicalId": "ia-12.2",
+        "displayId": "IA-12 (02)",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM"
+        ]
+      },
+      "ia-12.3": {
+        "canonicalId": "ia-12.3",
+        "displayId": "IA-12 (03)",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM"
+        ]
+      },
+      "ia-12.5": {
+        "canonicalId": "ia-12.5",
+        "displayId": "IA-12 (05)",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-AAM"
+        ]
+      },
+      "ac-3": {
+        "canonicalId": "ac-3",
+        "displayId": "AC-03",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ia-5.1": {
+        "canonicalId": "ia-5.1",
+        "displayId": "IA-05 (01)",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "ia-5.2": {
+        "canonicalId": "ia-5.2",
+        "displayId": "IA-05 (02)",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-SNU",
+          "KSI-SVC-ASM"
+        ]
+      },
+      "ia-5.6": {
+        "canonicalId": "ia-5.6",
+        "displayId": "IA-05 (06)",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-SVC-ASM"
+        ]
+      },
+      "ia-6": {
+        "canonicalId": "ia-6",
+        "displayId": "IA-06",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "ac-2": {
+        "canonicalId": "ac-2",
+        "displayId": "AC-02",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU",
+          "KSI-IAM-SUS"
+        ]
+      },
+      "ia-2": {
+        "canonicalId": "ia-2",
+        "displayId": "IA-02",
+        "family": "IA",
+        "guidance": {
+          "guidance": [
+            "Multi-factor authentication must be phishing-resistant. In accordance with current CISA Guidance. Current CISA guidance can be found here: https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf"
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP"
+        ]
+      },
+      "ia-2.1": {
+        "canonicalId": "ia-2.1",
+        "displayId": "IA-02 (01)",
+        "family": "IA",
+        "guidance": {
+          "guidance": [
+            "Multi-factor authentication must be phishing-resistant. In accordance with current CISA Guidance. Current CISA guidance can be found here: https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf"
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "ia-2.2": {
+        "canonicalId": "ia-2.2",
+        "displayId": "IA-02 (02)",
+        "family": "IA",
+        "guidance": {
+          "guidance": [
+            "Multi-factor authentication must be phishing-resistant. In accordance with current CISA Guidance. Current CISA guidance can be found here: https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf"
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "ia-2.8": {
+        "canonicalId": "ia-2.8",
+        "displayId": "IA-02 (08)",
+        "family": "IA",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "ia-02.08_odp",
+              "value": "privileged accounts; non-privileged accounts"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "ia-5": {
+        "canonicalId": "ia-5",
+        "displayId": "IA-05",
+        "family": "IA",
+        "guidance": {
+          "varies_by_class": {
+            "b": {
+              "guidance": [
+                "Authenticators must be compliant with the most recent NIST Digital Identity Guidelines IAL, AAL, FAL level 1.",
+                "IA-5 Guidance: FedRAMP requires that authentication assertions be encrypted when passed through third parties, such as a browser. For example, a SAML assertion can be encrypted using XML-Encryption, or an OpenID Connect ID Token can be encrypted using JSON Web Encryption (JWE)."
+              ]
+            },
+            "c": {
+              "guidance": [
+                "Authenticators must be compliant with the most recent NIST Digital Identity Guidelines IAL, AAL, FAL level 2.",
+                "IA-5 Guidance: FedRAMP requires that authentication assertions be encrypted when passed through third parties, such as a browser. For example, a SAML assertion can be encrypted using XML-Encryption, or an OpenID Connect ID Token can be encrypted using JSON Web Encryption (JWE)."
+              ]
+            },
+            "d": {
+              "guidance": [
+                "Authenticators must be compliant with the most recent NIST Digital Identity Guidelines IAL, AAL, FAL level 3.",
+                "IA-5 Guidance: FedRAMP requires that authentication assertions be encrypted when passed through third parties, such as a browser. For example, a SAML assertion can be encrypted using XML-Encryption, or an OpenID Connect ID Token can be encrypted using JSON Web Encryption (JWE)."
+              ]
+            }
+          },
+          "updated": [
+            {
+              "date": "2026-07-14",
+              "comment": "Update guidance to direct users to the latest NIST Digital Identity Guidelines and remove references to specific instances of SP 800-63."
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "ia-8": {
+        "canonicalId": "ia-8",
+        "displayId": "IA-08",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM"
+        ]
+      },
+      "sc-23": {
+        "canonicalId": "sc-23",
+        "displayId": "SC-23",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-SVC-SIN",
+          "KSI-SVC-VCM",
+          "KSI-SVC-VRI"
+        ]
+      },
+      "ac-2.5": {
+        "canonicalId": "ac-2.5",
+        "displayId": "AC-02 (05)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP"
+        ]
+      },
+      "ac-2.6": {
+        "canonicalId": "ac-2.6",
+        "displayId": "AC-02 (06)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ac-4": {
+        "canonicalId": "ac-4",
+        "displayId": "AC-04",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ]
+      },
+      "ac-6": {
+        "canonicalId": "ac-6",
+        "displayId": "AC-06",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ac-14": {
+        "canonicalId": "ac-14",
+        "displayId": "AC-14",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP"
+        ]
+      },
+      "ac-17": {
+        "canonicalId": "ac-17",
+        "displayId": "AC-17",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ac-17.1": {
+        "canonicalId": "ac-17.1",
+        "displayId": "AC-17 (01)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ]
+      },
+      "ac-17.2": {
+        "canonicalId": "ac-17.2",
+        "displayId": "AC-17 (02)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-SVC-ASM",
+          "KSI-SVC-SIN"
+        ]
+      },
+      "ac-20": {
+        "canonicalId": "ac-20",
+        "displayId": "AC-20",
+        "family": "AC",
+        "guidance": {
+          "guidance": [
+            "The interrelated controls of AC-20, CA-3, and SA-9 should be differentiated as follows:",
+            "AC-20 describes system access to and from external systems.",
+            "CA-3 describes documentation of an agreement between the respective system owners when data is exchanged between the CSO and an external system.",
+            "SA-9 describes the responsibilities of external system owners. These responsibilities would typically be captured in the agreement required by CA-3."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ]
+      },
+      "cm-2.7": {
+        "canonicalId": "cm-2.7",
+        "displayId": "CM-02 (07)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP"
+        ]
+      },
+      "ia-3": {
+        "canonicalId": "ia-3",
+        "displayId": "IA-03",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-SNU"
+        ]
+      },
+      "ia-4": {
+        "canonicalId": "ia-4",
+        "displayId": "IA-04",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ia-11": {
+        "canonicalId": "ia-11",
+        "displayId": "IA-11",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP"
+        ]
+      },
+      "ps-2": {
+        "canonicalId": "ps-2",
+        "displayId": "PS-02",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ps-3": {
+        "canonicalId": "ps-3",
+        "displayId": "PS-03",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ps-4": {
+        "canonicalId": "ps-4",
+        "displayId": "PS-04",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SUS"
+        ]
+      },
+      "ps-5": {
+        "canonicalId": "ps-5",
+        "displayId": "PS-05",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ]
+      },
+      "sc-20": {
+        "canonicalId": "sc-20",
+        "displayId": "SC-20",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-21": {
+        "canonicalId": "sc-21",
+        "displayId": "SC-21",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-22": {
+        "canonicalId": "sc-22",
+        "displayId": "SC-22",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-39": {
+        "canonicalId": "sc-39",
+        "displayId": "SC-39",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "ac-2.1": {
+        "canonicalId": "ac-2.1",
+        "displayId": "AC-02 (01)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-IAM-SUS"
+        ]
+      },
+      "ac-2.4": {
+        "canonicalId": "ac-2.4",
+        "displayId": "AC-02 (04)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-RVL",
+          "KSI-SVC-ACM"
+        ]
+      },
+      "ac-5": {
+        "canonicalId": "ac-5",
+        "displayId": "AC-05",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ]
+      },
+      "ac-6.1": {
+        "canonicalId": "ac-6.1",
+        "displayId": "AC-06 (01)",
+        "family": "AC",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "ac-06.01_odp.02",
+              "value": "all functions not publicly accessible"
+            },
+            {
+              "parameterId": "ac-06.01_odp.05",
+              "value": "all security-relevant information not publicly available"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ac-6.2": {
+        "canonicalId": "ac-6.2",
+        "displayId": "AC-06 (02)",
+        "family": "AC",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "ac-06.02_odp",
+              "value": "all security functions"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ac-6.5": {
+        "canonicalId": "ac-6.5",
+        "displayId": "AC-06 (05)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ]
+      },
+      "ac-6.9": {
+        "canonicalId": "ac-6.9",
+        "displayId": "AC-06 (09)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-RVL"
+        ]
+      },
+      "ac-6.10": {
+        "canonicalId": "ac-6.10",
+        "displayId": "AC-06 (10)",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ac-7": {
+        "canonicalId": "ac-7",
+        "displayId": "AC-07",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-IAM-SUS"
+        ]
+      },
+      "au-9.4": {
+        "canonicalId": "au-9.4",
+        "displayId": "AU-09 (04)",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "cm-7.2": {
+        "canonicalId": "cm-7.2",
+        "displayId": "CM-07 (02)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "cm-7.5": {
+        "canonicalId": "cm-7.5",
+        "displayId": "CM-07 (05)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-PIY-GIV"
+        ]
+      },
+      "ia-7": {
+        "canonicalId": "ia-7",
+        "displayId": "IA-07",
+        "family": "IA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ps-9": {
+        "canonicalId": "ps-9",
+        "displayId": "PS-09",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ra-5.5": {
+        "canonicalId": "ra-5.5",
+        "displayId": "RA-05 (05)",
+        "family": "RA",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ]
+      },
+      "sc-2": {
+        "canonicalId": "sc-2",
+        "displayId": "SC-02",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-JIT"
+        ]
+      },
+      "ps-8": {
+        "canonicalId": "ps-8",
+        "displayId": "PS-08",
+        "family": "PS",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-IAM-SUS"
+        ]
+      },
+      "ir-3": {
+        "canonicalId": "ir-3",
+        "displayId": "IR-03",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-AAR",
+          "KSI-INR-RPI",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "ir-4": {
+        "canonicalId": "ir-4",
+        "displayId": "IR-04",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-AAR",
+          "KSI-INR-RIR",
+          "KSI-INR-RPI"
+        ]
+      },
+      "ir-4.1": {
+        "canonicalId": "ir-4.1",
+        "displayId": "IR-04 (01)",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-AAR",
+          "KSI-INR-RIR",
+          "KSI-INR-RPI",
+          "KSI-MLA-OSM"
+        ]
+      },
+      "ir-8": {
+        "canonicalId": "ir-8",
+        "displayId": "IR-08",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-AAR",
+          "KSI-INR-RIR",
+          "KSI-INR-RPI"
+        ]
+      },
+      "ir-6": {
+        "canonicalId": "ir-6",
+        "displayId": "IR-06",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RIR"
+        ]
+      },
+      "ir-6.1": {
+        "canonicalId": "ir-6.1",
+        "displayId": "IR-06 (01)",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RIR"
+        ]
+      },
+      "ir-6.3": {
+        "canonicalId": "ir-6.3",
+        "displayId": "IR-06 (03)",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RIR",
+          "KSI-SCR-MON"
+        ]
+      },
+      "ir-7": {
+        "canonicalId": "ir-7",
+        "displayId": "IR-07",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RIR"
+        ]
+      },
+      "ir-7.1": {
+        "canonicalId": "ir-7.1",
+        "displayId": "IR-07 (01)",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RIR"
+        ]
+      },
+      "ir-8.1": {
+        "canonicalId": "ir-8.1",
+        "displayId": "IR-08 (01)",
+        "family": "IR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-INR-RIR"
+        ]
+      },
+      "si-4.5": {
+        "canonicalId": "si-4.5",
+        "displayId": "SI-04 (05)",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RIR",
+          "KSI-MLA-LET"
+        ]
+      },
+      "ir-5": {
+        "canonicalId": "ir-5",
+        "displayId": "IR-05",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-INR-RPI"
+        ]
+      },
+      "ca-7": {
+        "canonicalId": "ca-7",
+        "displayId": "CA-07",
+        "family": "CA",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Continuous Collaborative Monitoring, Significant Change Notification, Vulnerability Detection and Response, and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-MLA-EVC"
+        ]
+      },
+      "si-7.7": {
+        "canonicalId": "si-7.7",
+        "displayId": "SI-07 (07)",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-EVC",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-7.1": {
+        "canonicalId": "au-7.1",
+        "displayId": "AU-07 (01)",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-12": {
+        "canonicalId": "au-12",
+        "displayId": "AU-12",
+        "family": "AU",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "au-12_odp.01",
+              "value": "at least all information system and network components where audit capability is deployed/available"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-MLA-LET"
+        ]
+      },
+      "si-4.4": {
+        "canonicalId": "si-4.4",
+        "displayId": "SI-04 (04)",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM",
+          "KSI-MLA-RVL"
+        ]
+      },
+      "au-3": {
+        "canonicalId": "au-3",
+        "displayId": "AU-03",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-3.1": {
+        "canonicalId": "au-3.1",
+        "displayId": "AU-03 (01)",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-4": {
+        "canonicalId": "au-4",
+        "displayId": "AU-04",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-5": {
+        "canonicalId": "au-5",
+        "displayId": "AU-05",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-6.1": {
+        "canonicalId": "au-6.1",
+        "displayId": "AU-06 (01)",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM",
+          "KSI-MLA-RVL"
+        ]
+      },
+      "au-6.3": {
+        "canonicalId": "au-6.3",
+        "displayId": "AU-06 (03)",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-7": {
+        "canonicalId": "au-7",
+        "displayId": "AU-07",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-8": {
+        "canonicalId": "au-8",
+        "displayId": "AU-08",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-9": {
+        "canonicalId": "au-9",
+        "displayId": "AU-09",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-11": {
+        "canonicalId": "au-11",
+        "displayId": "AU-11",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "si-4.2": {
+        "canonicalId": "si-4.2",
+        "displayId": "SI-04 (02)",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-MLA-OSM"
+        ]
+      },
+      "au-6": {
+        "canonicalId": "au-6",
+        "displayId": "AU-06",
+        "family": "AU",
+        "guidance": {
+          "guidance": [
+            "This activity is considered vulnerability detection and is subject to the Vulnerability Detection and Response rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-MLA-RVL"
+        ]
+      },
+      "si-4": {
+        "canonicalId": "si-4",
+        "displayId": "SI-04",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow all applicable rules within the Vulnerability and Detection Response and Incident Communication Procedure guidance."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-MLA-RVL",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "cm-2.2": {
+        "canonicalId": "cm-2.2",
+        "displayId": "CM-02 (02)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-GIV",
+          "KSI-SVC-ACM",
+          "KSI-SVC-VRI"
+        ]
+      },
+      "cm-8": {
+        "canonicalId": "cm-8",
+        "displayId": "CM-08",
+        "family": "CM",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Continuous Collaborative Monitoring, Significant Change Notification, Vulnerability Detection and Response, and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-PIY-GIV"
+        ]
+      },
+      "cm-12": {
+        "canonicalId": "cm-12",
+        "displayId": "CM-12",
+        "family": "CM",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Minimum Assessment Scope rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-PIY-GIV"
+        ]
+      },
+      "cm-12.1": {
+        "canonicalId": "cm-12.1",
+        "displayId": "CM-12 (01)",
+        "family": "CM",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Minimum Assessment Scope rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-PIY-GIV",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "cp-2.8": {
+        "canonicalId": "cp-2.8",
+        "displayId": "CP-02 (08)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-GIV"
+        ]
+      },
+      "ca-2": {
+        "canonicalId": "ca-2",
+        "displayId": "CA-02",
+        "family": "CA",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "ca-02_odp.02",
+              "value": "individuals or roles to include FedRAMP and agency customers"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-PIY-RIS"
+        ]
+      },
+      "cp-2.1": {
+        "canonicalId": "cp-2.1",
+        "displayId": "CP-02 (01)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "cp-4.1": {
+        "canonicalId": "cp-4.1",
+        "displayId": "CP-04 (01)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "ir-3.2": {
+        "canonicalId": "ir-3.2",
+        "displayId": "IR-03 (02)",
+        "family": "IR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "pm-3": {
+        "canonicalId": "pm-3",
+        "displayId": "PM-03",
+        "family": "PM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RIS"
+        ]
+      },
+      "sa-2": {
+        "canonicalId": "sa-2",
+        "displayId": "SA-02",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RIS"
+        ]
+      },
+      "sa-3": {
+        "canonicalId": "sa-3",
+        "displayId": "SA-03",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ]
+      },
+      "sr-2.1": {
+        "canonicalId": "sr-2.1",
+        "displayId": "SR-02 (01)",
+        "family": "SR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RIS"
+        ]
+      },
+      "au-3.3": {
+        "canonicalId": "au-3.3",
+        "displayId": "AU-03 (03)",
+        "family": "AU",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RSD"
+        ]
+      },
+      "pl-8": {
+        "canonicalId": "pl-8",
+        "displayId": "PL-08",
+        "family": "PL",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RSD",
+          "KSI-SVC-EIS"
+        ]
+      },
+      "pm-7": {
+        "canonicalId": "pm-7",
+        "displayId": "PM-07",
+        "family": "PM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RSD"
+        ]
+      },
+      "sa-8": {
+        "canonicalId": "sa-8",
+        "displayId": "SA-08",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RSD"
+        ]
+      },
+      "sc-18": {
+        "canonicalId": "sc-18",
+        "displayId": "SC-18",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-PIY-RSD",
+          "KSI-SCR-MIT"
+        ]
+      },
+      "ra-5.11": {
+        "canonicalId": "ra-5.11",
+        "displayId": "RA-05 (11)",
+        "family": "RA",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-PIY-RVD"
+        ]
+      },
+      "cm-2.3": {
+        "canonicalId": "cm-2.3",
+        "displayId": "CM-02 (03)",
+        "family": "CM",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ABO",
+          "KSI-SVC-ACM"
+        ]
+      },
+      "cp-6": {
+        "canonicalId": "cp-6",
+        "displayId": "CP-06",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ABO",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "cp-9": {
+        "canonicalId": "cp-9",
+        "displayId": "CP-09",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ABO"
+        ]
+      },
+      "cp-10": {
+        "canonicalId": "cp-10",
+        "displayId": "CP-10",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ABO",
+          "KSI-RPL-ARP",
+          "KSI-RPL-RRO",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "cp-10.2": {
+        "canonicalId": "cp-10.2",
+        "displayId": "CP-10 (02)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ABO",
+          "KSI-RPL-ARP"
+        ]
+      },
+      "si-12": {
+        "canonicalId": "si-12",
+        "displayId": "SI-12",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ABO"
+        ]
+      },
+      "cp-2": {
+        "canonicalId": "cp-2",
+        "displayId": "CP-02",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-2.3": {
+        "canonicalId": "cp-2.3",
+        "displayId": "CP-02 (03)",
+        "family": "CP",
+        "guidance": {
+          "parameters": [
+            {
+              "parameterId": "cp-02.03_odp.02",
+              "value": "time period defined in service provider and organization Service Level Agreements"
+            }
+          ]
+        },
+        "indicatorIds": [
+          "KSI-RPL-ARP",
+          "KSI-RPL-RRO",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "cp-6.1": {
+        "canonicalId": "cp-6.1",
+        "displayId": "CP-06 (01)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ]
+      },
+      "cp-6.3": {
+        "canonicalId": "cp-6.3",
+        "displayId": "CP-06 (03)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-7": {
+        "canonicalId": "cp-7",
+        "displayId": "CP-07",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-7.1": {
+        "canonicalId": "cp-7.1",
+        "displayId": "CP-07 (01)",
+        "family": "CP",
+        "guidance": {
+          "guidance": [
+            "The service provider may determine what is considered a sufficient degree of separation between the primary and alternate processing sites, based on the types of threats that are of concern. For one particular type of threat (i.e., hostile cyber attack), the degree of separation between sites will be less relevant."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-7.2": {
+        "canonicalId": "cp-7.2",
+        "displayId": "CP-07 (02)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-7.3": {
+        "canonicalId": "cp-7.3",
+        "displayId": "CP-07 (03)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-8": {
+        "canonicalId": "cp-8",
+        "displayId": "CP-08",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-8.1": {
+        "canonicalId": "cp-8.1",
+        "displayId": "CP-08 (01)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-8.2": {
+        "canonicalId": "cp-8.2",
+        "displayId": "CP-08 (02)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-ARP"
+        ]
+      },
+      "cp-4": {
+        "canonicalId": "cp-4",
+        "displayId": "CP-04",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-TRC"
+        ]
+      },
+      "cp-9.1": {
+        "canonicalId": "cp-9.1",
+        "displayId": "CP-09 (01)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-RPL-TRC"
+        ]
+      },
+      "ra-3.1": {
+        "canonicalId": "ra-3.1",
+        "displayId": "RA-03 (01)",
+        "family": "RA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT"
+        ]
+      },
+      "sa-9": {
+        "canonicalId": "sa-9",
+        "displayId": "SA-09",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ]
+      },
+      "sa-10": {
+        "canonicalId": "sa-10",
+        "displayId": "SA-10",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT"
+        ]
+      },
+      "sa-11": {
+        "canonicalId": "sa-11",
+        "displayId": "SA-11",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT"
+        ]
+      },
+      "sa-15.3": {
+        "canonicalId": "sa-15.3",
+        "displayId": "SA-15 (03)",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT"
+        ]
+      },
+      "sa-22": {
+        "canonicalId": "sa-22",
+        "displayId": "SA-22",
+        "family": "SA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT"
+        ]
+      },
+      "si-7.1": {
+        "canonicalId": "si-7.1",
+        "displayId": "SI-07 (01)",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT",
+          "KSI-SVC-VCM",
+          "KSI-SVC-VRI"
+        ]
+      },
+      "sr-5": {
+        "canonicalId": "sr-5",
+        "displayId": "SR-05",
+        "family": "SR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ]
+      },
+      "sr-6": {
+        "canonicalId": "sr-6",
+        "displayId": "SR-06",
+        "family": "SR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ]
+      },
+      "ca-7.4": {
+        "canonicalId": "ca-7.4",
+        "displayId": "CA-07 (04)",
+        "family": "CA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MIT"
+        ]
+      },
+      "ca-3": {
+        "canonicalId": "ca-3",
+        "displayId": "CA-03",
+        "family": "CA",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SCR-MON"
+        ]
+      },
+      "ps-7": {
+        "canonicalId": "ps-7",
+        "displayId": "PS-07",
+        "family": "PS",
+        "guidance": {
+          "guidance": [
+            "CSPs MUST clearly document any nationality requirements for any account type within its platform. If none exists, this must also be explicitly stated."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SCR-MON"
+        ]
+      },
+      "ra-5": {
+        "canonicalId": "ra-5",
+        "displayId": "RA-05",
+        "family": "RA",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SCR-MON"
+        ]
+      },
+      "si-5": {
+        "canonicalId": "si-5",
+        "displayId": "SI-05",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Addressing FedRAMP Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SCR-MON",
+          "KSI-SVC-ACM"
+        ]
+      },
+      "sr-8": {
+        "canonicalId": "sr-8",
+        "displayId": "SR-08",
+        "family": "SR",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Incident Evaluation and Communication rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SCR-MON"
+        ]
+      },
+      "pl-9": {
+        "canonicalId": "pl-9",
+        "displayId": "PL-09",
+        "family": "PL",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-ACM"
+        ]
+      },
+      "sa-5": {
+        "canonicalId": "sa-5",
+        "displayId": "SA-05",
+        "family": "SA",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Secure Configuration Guide rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SVC-ACM"
+        ]
+      },
+      "sr-10": {
+        "canonicalId": "sr-10",
+        "displayId": "SR-10",
+        "family": "SR",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-ACM",
+          "KSI-SVC-EIS",
+          "KSI-SVC-VRI"
+        ]
+      },
+      "sc-12": {
+        "canonicalId": "sc-12",
+        "displayId": "SC-12",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-ASM"
+        ]
+      },
+      "sc-17": {
+        "canonicalId": "sc-17",
+        "displayId": "SC-17",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-ASM"
+        ]
+      },
+      "si-2.2": {
+        "canonicalId": "si-2.2",
+        "displayId": "SI-02 (02)",
+        "family": "SI",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SVC-EIS"
+        ]
+      },
+      "si-12.3": {
+        "canonicalId": "si-12.3",
+        "displayId": "SI-12 (03)",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-RUD"
+        ]
+      },
+      "si-18.4": {
+        "canonicalId": "si-18.4",
+        "displayId": "SI-18 (04)",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-RUD"
+        ]
+      },
+      "ac-1": {
+        "canonicalId": "ac-1",
+        "displayId": "AC-01",
+        "family": "AC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-SIN"
+        ]
+      },
+      "cp-9.8": {
+        "canonicalId": "cp-9.8",
+        "displayId": "CP-09 (08)",
+        "family": "CP",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-8.1": {
+        "canonicalId": "sc-8.1",
+        "displayId": "SC-08 (01)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-13": {
+        "canonicalId": "sc-13",
+        "displayId": "SC-13",
+        "family": "SC",
+        "guidance": {
+          "guidance": [
+            "Follow the FedRAMP Cryptographic Module Use rules."
+          ]
+        },
+        "indicatorIds": [
+          "KSI-SVC-SIN",
+          "KSI-SVC-VRI"
+        ]
+      },
+      "sc-28": {
+        "canonicalId": "sc-28",
+        "displayId": "SC-28",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-SIN"
+        ]
+      },
+      "sc-28.1": {
+        "canonicalId": "sc-28.1",
+        "displayId": "SC-28 (01)",
+        "family": "SC",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-SIN"
+        ]
+      },
+      "si-7": {
+        "canonicalId": "si-7",
+        "displayId": "SI-07",
+        "family": "SI",
+        "guidance": null,
+        "indicatorIds": [
+          "KSI-SVC-VRI"
+        ]
+      }
+    },
+    "controlOrder": [
+      "ac-1",
+      "ac-2",
+      "ac-2.1",
+      "ac-2.2",
+      "ac-2.3",
+      "ac-2.4",
+      "ac-2.5",
+      "ac-2.6",
+      "ac-2.13",
+      "ac-3",
+      "ac-4",
+      "ac-5",
+      "ac-6",
+      "ac-6.1",
+      "ac-6.2",
+      "ac-6.5",
+      "ac-6.7",
+      "ac-6.9",
+      "ac-6.10",
+      "ac-7",
+      "ac-12",
+      "ac-14",
+      "ac-17",
+      "ac-17.1",
+      "ac-17.2",
+      "ac-17.3",
+      "ac-18.1",
+      "ac-18.3",
+      "ac-20",
+      "ac-20.1",
+      "at-2",
+      "at-2.2",
+      "at-2.3",
+      "at-3",
+      "at-3.5",
+      "at-4",
+      "au-2",
+      "au-3",
+      "au-3.1",
+      "au-3.3",
+      "au-4",
+      "au-5",
+      "au-6",
+      "au-6.1",
+      "au-6.3",
+      "au-7",
+      "au-7.1",
+      "au-8",
+      "au-9",
+      "au-9.4",
+      "au-11",
+      "au-12",
+      "ca-2",
+      "ca-2.1",
+      "ca-3",
+      "ca-7",
+      "ca-7.1",
+      "ca-7.4",
+      "ca-9",
+      "cm-2",
+      "cm-2.2",
+      "cm-2.3",
+      "cm-2.7",
+      "cm-3",
+      "cm-3.2",
+      "cm-3.4",
+      "cm-4.2",
+      "cm-5",
+      "cm-6",
+      "cm-7",
+      "cm-7.1",
+      "cm-7.2",
+      "cm-7.5",
+      "cm-8",
+      "cm-8.1",
+      "cm-8.3",
+      "cm-9",
+      "cm-12",
+      "cm-12.1",
+      "cp-2",
+      "cp-2.1",
+      "cp-2.3",
+      "cp-2.8",
+      "cp-3",
+      "cp-4",
+      "cp-4.1",
+      "cp-6",
+      "cp-6.1",
+      "cp-6.3",
+      "cp-7",
+      "cp-7.1",
+      "cp-7.2",
+      "cp-7.3",
+      "cp-8",
+      "cp-8.1",
+      "cp-8.2",
+      "cp-9",
+      "cp-9.1",
+      "cp-9.8",
+      "cp-10",
+      "cp-10.2",
+      "ia-2",
+      "ia-2.1",
+      "ia-2.2",
+      "ia-2.8",
+      "ia-3",
+      "ia-4",
+      "ia-4.4",
+      "ia-5",
+      "ia-5.1",
+      "ia-5.2",
+      "ia-5.6",
+      "ia-6",
+      "ia-7",
+      "ia-8",
+      "ia-11",
+      "ia-12",
+      "ia-12.2",
+      "ia-12.3",
+      "ia-12.5",
+      "ir-2",
+      "ir-2.3",
+      "ir-3",
+      "ir-3.2",
+      "ir-4",
+      "ir-4.1",
+      "ir-5",
+      "ir-6",
+      "ir-6.1",
+      "ir-6.3",
+      "ir-7",
+      "ir-7.1",
+      "ir-8",
+      "ir-8.1",
+      "ma-2",
+      "pl-8",
+      "pl-9",
+      "pl-10",
+      "pm-3",
+      "pm-7",
+      "ps-2",
+      "ps-3",
+      "ps-4",
+      "ps-5",
+      "ps-6",
+      "ps-7",
+      "ps-8",
+      "ps-9",
+      "ra-3.1",
+      "ra-5",
+      "ra-5.5",
+      "ra-5.11",
+      "sa-2",
+      "sa-3",
+      "sa-5",
+      "sa-8",
+      "sa-9",
+      "sa-10",
+      "sa-11",
+      "sa-15.3",
+      "sa-22",
+      "sc-2",
+      "sc-4",
+      "sc-5",
+      "sc-7",
+      "sc-7.3",
+      "sc-7.4",
+      "sc-7.5",
+      "sc-7.7",
+      "sc-7.8",
+      "sc-8",
+      "sc-8.1",
+      "sc-10",
+      "sc-12",
+      "sc-13",
+      "sc-17",
+      "sc-18",
+      "sc-20",
+      "sc-21",
+      "sc-22",
+      "sc-23",
+      "sc-28",
+      "sc-28.1",
+      "sc-39",
+      "si-2",
+      "si-2.2",
+      "si-3",
+      "si-4",
+      "si-4.2",
+      "si-4.4",
+      "si-4.5",
+      "si-5",
+      "si-7",
+      "si-7.1",
+      "si-7.7",
+      "si-8",
+      "si-8.2",
+      "si-10",
+      "si-11",
+      "si-12",
+      "si-12.3",
+      "si-16",
+      "si-18.4",
+      "sr-2.1",
+      "sr-5",
+      "sr-6",
+      "sr-8",
+      "sr-10",
+      "sr-11.1"
+    ],
+    "termsByName": {
+      "Incident": "Has the meaning given in 44 USC § 3552 (b)(2) which is \"an occurrence that (A) actually or imminently jeopardizes, without lawful authority, the integrity, confidentiality, or availability of information or an information system; or (B) constitutes a violation or imminent threat of violation of law, security policies, security procedures, or acceptable use policies.\"",
+      "Persistently": "Occurring in a firm, steady way that is repeated over a long period of time in spite of obstacles or difficulties. Persistent activities may vary between actors, may occur irregularly, and may include interruptions or waiting periods between cycles. These attributes of persistent activities should be intentional, understood, and documented; the status of persistent activities will always be known.",
+      "Vulnerability Response": "The systematic process of tracking, evaluating, mitigating, monitoring, remediating, assessing exploitation, reporting, and otherwise managing detected vulnerabilities.",
+      "Cloud Service Offering": "A specific, packaged cloud computing product or service supplied by a cloud service provider for use by customers, that is the subject of a FedRAMP Certification.",
+      "Information Resource": "Has the meaning from 44 USC § 3502 (6): \"information and related resources, such as personnel, equipment, funds, and information technology.\" This includes any aspect of the cloud service offering, both technical and managerial, including everything that makes up the business of the offering from non-machine-based information resources like organizational policies, procedures, employees, etc. to machine-based information resources like hardware, software, cloud services, code, etc.",
+      "Machine-Based (Information Resources)": "Any information technology information resource—including systems, processes, software, hardware, services, cloud-native capabilities, and any other such capability, component, or resource—that relies primarily on mechanical or electronic devices (i.e. computers) for operation.",
+      "Validation": "Confirmation through objective evidence that implemented security capabilities and related certification data are suitable for their intended FedRAMP Certification use and support the expected security outcomes for a cloud service offering.",
+      "Provider": "The cloud service provider responsible for a cloud service offering in the context of FedRAMP Certification.",
+      "Vulnerability": "Has the meaning given to \"security vulnerability\" in 6 USC § 650 (25), which is \"any attribute of hardware, software, process, or procedure that could enable or facilitate the defeat of [...] management, operational, and technical controls used to protect against an unauthorized effort to adversely affect the confidentiality, integrity, and availability of an information system or its information.\" This includes gaps in Rev5 Controls and 20x Key Security Indicators, software vulnerabilities, misconfigurations, exposures, weak credentials, insecure services, and all other such potential weaknesses in protection (intentional or unintentional).",
+      "Drift": "Changes to information resources that cause deviations from the intended and assessed state; common forms of drift include changes to configurations, deployed software, privileges, running processes, and availability.",
+      "Regularly": "Performing the activity on a consistent, predictable, and repeated basis, at set intervals, automatically if possible, following a documented plan. These intervals may vary as appropriate between different activities.",
+      "Federal Customer Data": "All electronic information, content, and materials that an agency or its authorized users upload, store, or otherwise supply to a cloud service for processing or storage. This does NOT include account information, service metadata, analytics, telemetry, or other similar metadata generated by the cloud service provider.",
+      "Likely": "A reasonable degree of probability based on context.",
+      "Agency": "Has the meaning given in 44 U.S. Code § 3502 (1), which is \"any executive department, military department, Government corporation, Government controlled corporation, or other establishment in the executive branch of the Government (including the Executive Office of the President), or any independent regulatory agency, but does not include—(A) the Government Accountability Office; (B) Federal Election Commission; (C) the governments of the District of Columbia and of the territories and possessions of the United States, and their various subdivisions; or (D) Government-owned contractor-operated facilities, including laboratories engaged in national defense research and production activities.\"",
+      "Promptly": "Without unnecessary delay."
+    }
+  }
+}

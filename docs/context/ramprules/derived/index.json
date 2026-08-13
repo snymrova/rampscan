@@ -1,0 +1,126 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slices": [
+    {
+      "name": "coverage",
+      "description": "Rev5 baseline coverage per certification class, with orphan controls.",
+      "ordering": "`classes` ascending by class letter; `orphanControls` and family rows ascending by canonical id / family code.",
+      "file": "data/derived/coverage.json",
+      "url": "/api/coverage",
+      "bytes": 25281
+    },
+    {
+      "name": "baseline",
+      "description": "Full Rev5 baseline enumeration per class: every control id with family, annual-assessment and KSI-coverage flags.",
+      "ordering": "`classes` ascending by class letter; `controls` ascending by canonical control id; `families` ascending.",
+      "file": "data/derived/baseline.json",
+      "url": "/api/baseline",
+      "bytes": 178730
+    },
+    {
+      "name": "checks",
+      "description": "Per-KSI collector scaffold: statement, terms, controls, classes in scope and the class vulnerability-response clock.",
+      "ordering": "`checks` in dataset theme order, then indicator order within a theme; `controls` ascending by canonical id; `cadence` and `clocks` ascending by class letter.",
+      "file": "data/derived/checks.json",
+      "url": "/api/checks",
+      "bytes": 68744
+    },
+    {
+      "name": "aws-evidence",
+      "description": "AUTHORED overlay: AWS calls that collect evidence per KSI/control, with cadence, GovCloud notes and an automatable-honesty rating. Versioned separately from the dataset.",
+      "ordering": "`recipes` in authored order — the overlay is a hand-maintained file and its sequence is editorial, not derived. Sort by `id` if you need a stable key.",
+      "file": "data/derived/aws-evidence.json",
+      "url": "/api/aws-evidence",
+      "bytes": 316905
+    },
+    {
+      "name": "automation-frontier",
+      "description": "AUTHORED overlay: per-control dispositions for KSI-reached controls no AWS recipe covers — automatable, partial, or honestly closed as narrative, each with a stated reason. Versioned separately from the dataset.",
+      "ordering": "`queue` by `leverage` DESCENDING, ties broken on canonical control id; `frontier` ascending by canonical control id.",
+      "file": "data/derived/automation-frontier.json",
+      "url": "/api/automation-frontier",
+      "bytes": 123593
+    },
+    {
+      "name": "evidence-plan",
+      "description": "The Evidence Plan: per class, authored AWS recipes grouped by KSI theme (densest first), the class clock, and the orphan/narrative register.",
+      "ordering": "`classes` ascending by class letter; `themes` by `controlFootprint` DESCENDING (densest first), ties broken on theme key; `items` in overlay order; `orphanControls` ascending by canonical id.",
+      "file": "data/derived/evidence-plan.json",
+      "url": "/api/evidence-plan",
+      "bytes": 1124688
+    },
+    {
+      "name": "obligations",
+      "description": "Every timeframed deadline, PAIN grid, notification and rollout date.",
+      "ordering": "`deadlines` TIGHTEST FIRST across incompatible units, ties broken on requirement id then class. The comparison is an internal hours-normalized key; the displayed `num`/`type` are always the dataset's own units and are never converted.",
+      "file": "data/derived/obligations.json",
+      "url": "/api/obligations",
+      "bytes": 107522
+    },
+    {
+      "name": "evidence",
+      "description": "Every artifact the rules demand, by requirement and deduplicated by artifact.",
+      "ordering": "`byRequirement` ascending by requirement id; `byArtifact` by number of demanding requirements DESCENDING (most widely demanded first), ties broken on the artifact text.",
+      "file": "data/derived/evidence.json",
+      "url": "/api/evidence",
+      "bytes": 79837
+    },
+    {
+      "name": "crosswalk",
+      "description": "Bidirectional KSI to NIST 800-53 control mapping.",
+      "ordering": "controls ascending by display id; families ascending.",
+      "file": "data/derived/crosswalk.json",
+      "url": "/api/crosswalk",
+      "bytes": 140783
+    },
+    {
+      "name": "families",
+      "description": "KSI density per control family and theme.",
+      "ordering": "rows ascending by class letter; families ascending by family code.",
+      "file": "data/derived/families.json",
+      "url": "/api/families",
+      "bytes": 5420
+    },
+    {
+      "name": "glossary",
+      "description": "FRD terms with the KSIs and rules that reference each.",
+      "ordering": "terms ascending alphabetically.",
+      "file": "data/derived/glossary.json",
+      "url": "/api/glossary",
+      "bytes": 56896
+    },
+    {
+      "name": "indicator-weight",
+      "description": "KSI indicators ranked by control footprint.",
+      "ordering": "indicators by control footprint DESCENDING, ties broken on indicator id.",
+      "file": "data/derived/indicator-weight.json",
+      "url": "/api/indicator-weight",
+      "bytes": 9332
+    },
+    {
+      "name": "readiness",
+      "description": "Per-class readiness pack: baseline, KSI coverage, artifacts and provider deadlines.",
+      "ordering": "`classes` ascending by class letter; control lists ascending by canonical id.",
+      "file": "data/derived/readiness.json",
+      "url": "/api/readiness",
+      "bytes": 97553
+    },
+    {
+      "name": "roles",
+      "description": "Requirements, deadlines and documents grouped by the party they bind.",
+      "ordering": "parties by requirement count DESCENDING; requirements within a party ascending by requirement id.",
+      "file": "data/derived/roles.json",
+      "url": "/api/roles",
+      "bytes": 143725
+    },
+    {
+      "name": "search",
+      "description": "Flat list of every addressable entity, for the global search palette.",
+      "ordering": "entities grouped by kind, ascending by id within each kind.",
+      "file": "data/derived/search.json",
+      "url": "/api/search",
+      "bytes": 190356
+    }
+  ]
+}

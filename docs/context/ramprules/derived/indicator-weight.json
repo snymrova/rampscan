@@ -1,0 +1,342 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "indicator-weight",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "entries": [
+      {
+        "id": "KSI-IAM-JIT",
+        "name": "Authorizing Just-in-Time",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "controlCount": 38
+      },
+      {
+        "id": "KSI-IAM-ELP",
+        "name": "Ensuring Least Privilege",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "controlCount": 34
+      },
+      {
+        "id": "KSI-MLA-OSM",
+        "name": "Operating SIEM Capability",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "controlCount": 18
+      },
+      {
+        "id": "KSI-RPL-ARP",
+        "name": "Aligning Recovery Plan",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "controlCount": 16
+      },
+      {
+        "id": "KSI-CNA-MAT",
+        "name": "Minimizing Attack Surface",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 14
+      },
+      {
+        "id": "KSI-IAM-APM",
+        "name": "Adopting Passwordless Methods",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "controlCount": 13
+      },
+      {
+        "id": "KSI-PIY-RSD",
+        "name": "Reviewing Security in the SDLC",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "controlCount": 12
+      },
+      {
+        "id": "KSI-SCR-MIT",
+        "name": "Mitigating Supply Chain Risk",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "controlCount": 12
+      },
+      {
+        "id": "KSI-SVC-SIN",
+        "name": "Securing Information",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 12
+      },
+      {
+        "id": "KSI-CED-RAT",
+        "name": "Reviewing All Training",
+        "themeKey": "CED",
+        "themeName": "Cybersecurity Education",
+        "controlCount": 11
+      },
+      {
+        "id": "KSI-SVC-ACM",
+        "name": "Automating Configuration Management",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 11
+      },
+      {
+        "id": "KSI-INR-RIR",
+        "name": "Reviewing Incident Response Procedures",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "controlCount": 10
+      },
+      {
+        "id": "KSI-MLA-LET",
+        "name": "Logging Event Types",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "controlCount": 10
+      },
+      {
+        "id": "KSI-RPL-TRC",
+        "name": "Testing Recovery Capabilities",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "controlCount": 10
+      },
+      {
+        "id": "KSI-SCR-MON",
+        "name": "Monitoring Supply Chain Risk",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "controlCount": 10
+      },
+      {
+        "id": "KSI-IAM-AAM",
+        "name": "Automating Account Management",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "controlCount": 9
+      },
+      {
+        "id": "KSI-PIY-RIS",
+        "name": "Reviewing Investments in Security",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "controlCount": 9
+      },
+      {
+        "id": "KSI-SVC-EIS",
+        "name": "Evaluating and Improving Security",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 9
+      },
+      {
+        "id": "KSI-CNA-ULN",
+        "name": "Using Logical Networking",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 8
+      },
+      {
+        "id": "KSI-CMT-LMC",
+        "name": "Logging Changes",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-CMT-RMV",
+        "name": "Redeploying vs Modifying",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-IAM-SNU",
+        "name": "Securing Non-User Authentication",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-IAM-SUS",
+        "name": "Responding to Suspicious Activity",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-MLA-RVL",
+        "name": "Reviewing Logs",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-PIY-GIV",
+        "name": "Generating Inventories",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-SVC-VRI",
+        "name": "Validating Resource Integrity",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 7
+      },
+      {
+        "id": "KSI-CMT-RVP",
+        "name": "Reviewing Change Procedures",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "controlCount": 6
+      },
+      {
+        "id": "KSI-RPL-ABO",
+        "name": "Aligning Backups with Objectives",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "controlCount": 6
+      },
+      {
+        "id": "KSI-CNA-RNT",
+        "name": "Restricting Network Traffic",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 5
+      },
+      {
+        "id": "KSI-INR-RPI",
+        "name": "Reviewing Past Incidents",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "controlCount": 5
+      },
+      {
+        "id": "KSI-SVC-ASM",
+        "name": "Automating Secret Management",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 5
+      },
+      {
+        "id": "KSI-CMT-VTD",
+        "name": "Validating Throughout Deployment",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "controlCount": 4
+      },
+      {
+        "id": "KSI-INR-AAR",
+        "name": "Generating After Action Reports",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "controlCount": 4
+      },
+      {
+        "id": "KSI-MLA-EVC",
+        "name": "Evaluating Configurations",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "controlCount": 4
+      },
+      {
+        "id": "KSI-CNA-IBP",
+        "name": "Implementing Best Practices",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 3
+      },
+      {
+        "id": "KSI-CNA-RVP",
+        "name": "Reviewing Protections",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 3
+      },
+      {
+        "id": "KSI-CNA-DFP",
+        "name": "Defining Functionality and Privileges",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 2
+      },
+      {
+        "id": "KSI-CNA-EIS",
+        "name": "Enforcing Intended State",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 2
+      },
+      {
+        "id": "KSI-RPL-RRO",
+        "name": "Reviewing Recovery Objectives",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "controlCount": 2
+      },
+      {
+        "id": "KSI-SVC-RUD",
+        "name": "Removing Unwanted Data",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 2
+      },
+      {
+        "id": "KSI-SVC-VCM",
+        "name": "Validating Communications",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 2
+      },
+      {
+        "id": "KSI-MLA-ALA",
+        "name": "Authorizing Log Access",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "controlCount": 1
+      },
+      {
+        "id": "KSI-PIY-RVD",
+        "name": "Reviewing Vulnerability Disclosures",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "controlCount": 1
+      },
+      {
+        "id": "KSI-SVC-PRR",
+        "name": "Preventing Residual Risk",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "controlCount": 1
+      },
+      {
+        "id": "KSI-CNA-OFA",
+        "name": "Optimizing for Availability",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "controlCount": 0
+      },
+      {
+        "id": "KSI-PIY-RES",
+        "name": "Reviewing Executive Support",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "controlCount": 0
+      }
+    ],
+    "zeroControlIds": [
+      "KSI-CNA-OFA",
+      "KSI-PIY-RES"
+    ],
+    "mean": 8.108695652173912,
+    "max": 38
+  }
+}

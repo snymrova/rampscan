@@ -1,0 +1,2490 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "checks",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "classClocks": [
+      {
+        "class": "b",
+        "tightest": {
+          "class": "b",
+          "requirementId": "VDR-TFR-MVX",
+          "name": "Persistent Machine Verification and Validation for 20x",
+          "force": "MUST",
+          "num": 7,
+          "type": "days",
+          "label": "7 days"
+        },
+        "tightestMust": {
+          "class": "b",
+          "requirementId": "VDR-TFR-MVX",
+          "name": "Persistent Machine Verification and Validation for 20x",
+          "force": "MUST",
+          "num": 7,
+          "type": "days",
+          "label": "7 days"
+        }
+      },
+      {
+        "class": "c",
+        "tightest": {
+          "class": "c",
+          "requirementId": "VDR-TFR-MVX",
+          "name": "Persistent Machine Verification and Validation for 20x",
+          "force": "MUST",
+          "num": 3,
+          "type": "days",
+          "label": "3 days"
+        },
+        "tightestMust": {
+          "class": "c",
+          "requirementId": "VDR-TFR-MVX",
+          "name": "Persistent Machine Verification and Validation for 20x",
+          "force": "MUST",
+          "num": 3,
+          "type": "days",
+          "label": "3 days"
+        }
+      },
+      {
+        "class": "d",
+        "tightest": {
+          "class": "d",
+          "requirementId": "VDR-TFR-PSD",
+          "name": "Persistent Sample Detection",
+          "force": "SHOULD",
+          "num": 1,
+          "type": "days",
+          "label": "1 day"
+        },
+        "tightestMust": {
+          "class": "d",
+          "requirementId": "VDR-TFR-MVF",
+          "name": "Persistent Machine Verification and Validation for Rev5",
+          "force": "MUST",
+          "num": 1,
+          "type": "months",
+          "label": "1 month"
+        }
+      }
+    ],
+    "cadenceNote": "cadence is the class-wide Provider VDR-TFR vulnerability-response floor from `classClocks`, replicated on every check in scope for that class. It is NOT a per-KSI collection interval — the dataset authors none. Schedule against `classClocks[].tightestMust`; `.tightest` may be a SHOULD.",
+    "counts": {
+      "total": 46,
+      "inScope": 43,
+      "outOfScope": [
+        {
+          "id": "KSI-CNA-OFA",
+          "reason": "reaches no control at all"
+        },
+        {
+          "id": "KSI-PIY-RES",
+          "reason": "reaches no control at all"
+        },
+        {
+          "id": "KSI-SVC-RUD",
+          "reason": "its 2 control(s) sit outside every Rev5 baseline"
+        }
+      ]
+    },
+    "checks": [
+      {
+        "id": "KSI-CED-RAT",
+        "themeKey": "CED",
+        "themeName": "Cybersecurity Education",
+        "name": "Reviewing All Training",
+        "statement": "The effectiveness of relevant cybersecurity education and training is persistently reviewed, including at least general training for all employees, role-specific training for employees in high risk roles, training for development and engineering staff on secure software delivery, and training for staff involved with incident response or disaster recovery.",
+        "terms": [
+          "Incident",
+          "Persistently",
+          "Vulnerability Response"
+        ],
+        "controls": [
+          "at-2",
+          "at-2.2",
+          "at-2.3",
+          "at-3",
+          "at-3.5",
+          "at-4",
+          "cp-3",
+          "ir-2",
+          "ir-2.3",
+          "ps-6",
+          "sr-11.1"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CMT-LMC",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Logging Changes",
+        "statement": "Modifications to the cloud service offering are logged and monitored.",
+        "terms": [
+          "Cloud Service Offering"
+        ],
+        "controls": [
+          "au-2",
+          "cm-3",
+          "cm-3.2",
+          "cm-4.2",
+          "cm-6",
+          "cm-8.3",
+          "ma-2"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CMT-RMV",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Redeploying vs Modifying",
+        "statement": "Changes to machine-based information resources are executed through the redeployment of version controlled resources rather than direct modification wherever reasonable.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)"
+        ],
+        "controls": [
+          "cm-2",
+          "cm-3",
+          "cm-5",
+          "cm-6",
+          "cm-7",
+          "cm-8.1",
+          "si-3"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CMT-RVP",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Reviewing Change Procedures",
+        "statement": "The effectiveness of documented change management procedures is persistently reviewed.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "cm-3",
+          "cm-3.2",
+          "cm-3.4",
+          "cm-5",
+          "cm-7.1",
+          "cm-9"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CMT-VTD",
+        "themeKey": "CMT",
+        "themeName": "Change Management",
+        "name": "Validating Throughout Deployment",
+        "statement": "Persistent testing and validation of changes throughout deployment is automated.",
+        "terms": [
+          "Persistently",
+          "Validation"
+        ],
+        "controls": [
+          "cm-3",
+          "cm-3.2",
+          "cm-4.2",
+          "si-2"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-DFP",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Defining Functionality and Privileges",
+        "statement": "The functionality and privileges for infrastructure and services are strictly defined.",
+        "terms": [],
+        "controls": [
+          "cm-2",
+          "si-3"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-EIS",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Enforcing Intended State",
+        "statement": null,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "ca-2.1",
+          "ca-7.1"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-IBP",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Implementing Best Practices",
+        "statement": "The use and configuration of third-party machine-based information resources is persistently compared against the original provider's best practices and guidance.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [
+          "ac-17.3",
+          "cm-2",
+          "pl-10"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-MAT",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Minimizing Attack Surface",
+        "statement": "Machine-based information resources are persistently reviewed to ensure they have a minimal attack surface and that lateral movement is minimized if compromised.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "ac-17.3",
+          "ac-18.1",
+          "ac-18.3",
+          "ac-20.1",
+          "ca-9",
+          "sc-7.3",
+          "sc-7.4",
+          "sc-7.5",
+          "sc-7.8",
+          "sc-8",
+          "sc-10",
+          "si-10",
+          "si-11",
+          "si-16"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-OFA",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Optimizing for Availability",
+        "statement": "Machine-based information resources are persistently reviewed to ensure they are appropriately optimized for high availability and rapid recovery.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [],
+        "classesInScope": [],
+        "cadence": []
+      },
+      {
+        "id": "KSI-CNA-RNT",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Restricting Network Traffic",
+        "statement": "Machine-based information resources are persistently reviewed to ensure they are appropriately configured to limit inbound and outbound network traffic.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "ac-17.3",
+          "ca-9",
+          "cm-7.1",
+          "sc-7.5",
+          "si-8"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-RVP",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Reviewing Protections",
+        "statement": "The effectiveness of protection against denial of service attacks and other unwanted activity for machine-based information resources is persistently reviewed.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "sc-5",
+          "si-8",
+          "si-8.2"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-CNA-ULN",
+        "themeKey": "CNA",
+        "themeName": "Cloud Native Architecture",
+        "name": "Using Logical Networking",
+        "statement": "Logical networking and related capabilities are used and persistently reviewed to enforce traffic flow controls.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-12",
+          "ac-17.3",
+          "ca-9",
+          "sc-4",
+          "sc-7",
+          "sc-7.7",
+          "sc-8",
+          "sc-10"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-IAM-AAM",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Automating Account Management",
+        "statement": "The lifecycle and privileges of all accounts, roles, and groups are securely managed using automation.",
+        "terms": [],
+        "controls": [
+          "ac-2.2",
+          "ac-2.3",
+          "ac-2.13",
+          "ac-6.7",
+          "ia-4.4",
+          "ia-12",
+          "ia-12.2",
+          "ia-12.3",
+          "ia-12.5"
+        ],
+        "classesInScope": [
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-IAM-APM",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Adopting Passwordless Methods",
+        "statement": "Secure passwordless methods are used for user authentication and authorization when feasible, otherwise strong passwords with phishing-resistant MFA is used.",
+        "terms": [],
+        "controls": [
+          "ac-2",
+          "ac-3",
+          "ia-2",
+          "ia-2.1",
+          "ia-2.2",
+          "ia-2.8",
+          "ia-5",
+          "ia-5.1",
+          "ia-5.2",
+          "ia-5.6",
+          "ia-6",
+          "ia-8",
+          "sc-23"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-IAM-ELP",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Ensuring Least Privilege",
+        "statement": "Identity and access management measures are used and persistently reviewed to ensure each user or device can only access the resources they need.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-2.5",
+          "ac-2.6",
+          "ac-3",
+          "ac-4",
+          "ac-6",
+          "ac-12",
+          "ac-14",
+          "ac-17",
+          "ac-17.1",
+          "ac-17.2",
+          "ac-17.3",
+          "ac-20",
+          "ac-20.1",
+          "cm-2.7",
+          "cm-9",
+          "ia-2",
+          "ia-3",
+          "ia-4",
+          "ia-4.4",
+          "ia-5.2",
+          "ia-5.6",
+          "ia-11",
+          "ps-2",
+          "ps-3",
+          "ps-4",
+          "ps-5",
+          "ps-6",
+          "sc-4",
+          "sc-20",
+          "sc-21",
+          "sc-22",
+          "sc-23",
+          "sc-39",
+          "si-3"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-IAM-JIT",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Authorizing Just-in-Time",
+        "statement": "A least-privileged, role and attribute-based, and just-in-time security authorization model is used and persistently reviewed for all user and non-user accounts and services.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-2",
+          "ac-2.1",
+          "ac-2.2",
+          "ac-2.3",
+          "ac-2.4",
+          "ac-2.6",
+          "ac-3",
+          "ac-4",
+          "ac-5",
+          "ac-6",
+          "ac-6.1",
+          "ac-6.2",
+          "ac-6.5",
+          "ac-6.7",
+          "ac-6.9",
+          "ac-6.10",
+          "ac-7",
+          "ac-17",
+          "ac-20.1",
+          "au-9.4",
+          "cm-5",
+          "cm-7",
+          "cm-7.2",
+          "cm-7.5",
+          "cm-9",
+          "ia-4",
+          "ia-4.4",
+          "ia-7",
+          "ps-2",
+          "ps-3",
+          "ps-4",
+          "ps-5",
+          "ps-6",
+          "ps-9",
+          "ra-5.5",
+          "sc-2",
+          "sc-23",
+          "sc-39"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-IAM-SNU",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Securing Non-User Authentication",
+        "statement": "Appropriately secure authentication methods are used and persistently reviewed for non-user accounts and services.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-2",
+          "ac-2.2",
+          "ac-4",
+          "ac-6.5",
+          "ia-3",
+          "ia-5.2",
+          "ra-5.5"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-IAM-SUS",
+        "themeKey": "IAM",
+        "themeName": "Identity and Access Management",
+        "name": "Responding to Suspicious Activity",
+        "statement": "Accounts with privileged access are disabled or otherwise secured in response to suspicious activity.",
+        "terms": [
+          "Vulnerability Response"
+        ],
+        "controls": [
+          "ac-2",
+          "ac-2.1",
+          "ac-2.3",
+          "ac-2.13",
+          "ac-7",
+          "ps-4",
+          "ps-8"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-INR-AAR",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "name": "Generating After Action Reports",
+        "statement": "Incident after action reports are generated and lessons learned are persistently incorporated.",
+        "terms": [
+          "Incident",
+          "Persistently"
+        ],
+        "controls": [
+          "ir-3",
+          "ir-4",
+          "ir-4.1",
+          "ir-8"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-INR-RIR",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "name": "Reviewing Incident Response Procedures",
+        "statement": "The effectiveness of documented incident response procedures is persistently reviewed.",
+        "terms": [
+          "Incident",
+          "Persistently",
+          "Vulnerability Response"
+        ],
+        "controls": [
+          "ir-4",
+          "ir-4.1",
+          "ir-6",
+          "ir-6.1",
+          "ir-6.3",
+          "ir-7",
+          "ir-7.1",
+          "ir-8",
+          "ir-8.1",
+          "si-4.5"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-INR-RPI",
+        "themeKey": "INR",
+        "themeName": "Incident Response",
+        "name": "Reviewing Past Incidents",
+        "statement": "Past incidents are persistently reviewed for patterns or vulnerabilities that were not previously apparent or identified.",
+        "terms": [
+          "Incident",
+          "Persistently",
+          "Vulnerability"
+        ],
+        "controls": [
+          "ir-3",
+          "ir-4",
+          "ir-4.1",
+          "ir-5",
+          "ir-8"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-MLA-ALA",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Authorizing Log Access",
+        "statement": null,
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "si-11"
+        ],
+        "classesInScope": [
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-MLA-EVC",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Evaluating Configurations",
+        "statement": "The configuration of machine-based information resources, especially infrastructure as code, is persistently evaluated and tested.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "ca-7",
+          "cm-2",
+          "cm-6",
+          "si-7.7"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-MLA-LET",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Logging Event Types",
+        "statement": "A list of information resources and event types that will be logged, monitored, and audited is maintained and persistently reviewed to ensure these activities occur.",
+        "terms": [
+          "Information Resource",
+          "Persistently"
+        ],
+        "controls": [
+          "ac-2.4",
+          "ac-6.9",
+          "ac-17.1",
+          "ac-20.1",
+          "au-2",
+          "au-7.1",
+          "au-12",
+          "si-4.4",
+          "si-4.5",
+          "si-7.7"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-MLA-OSM",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Operating SIEM Capability",
+        "statement": "A Security Information and Event Management (SIEM) or similar system(s) is used and persistently reviewed for centralized, tamper-resistant logging of events, activities, and changes.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-17.1",
+          "ac-20.1",
+          "au-2",
+          "au-3",
+          "au-3.1",
+          "au-4",
+          "au-5",
+          "au-6.1",
+          "au-6.3",
+          "au-7",
+          "au-7.1",
+          "au-8",
+          "au-9",
+          "au-11",
+          "ir-4.1",
+          "si-4.2",
+          "si-4.4",
+          "si-7.7"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-MLA-RVL",
+        "themeKey": "MLA",
+        "themeName": "Monitoring, Logging, and Auditing",
+        "name": "Reviewing Logs",
+        "statement": "Logs are persistently reviewed and audited.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-2.4",
+          "ac-6.9",
+          "au-2",
+          "au-6",
+          "au-6.1",
+          "si-4",
+          "si-4.4"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-PIY-GIV",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Generating Inventories",
+        "statement": "Authoritative sources are used to automatically generate real-time inventories of all information resources when needed.",
+        "terms": [
+          "Information Resource"
+        ],
+        "controls": [
+          "cm-2.2",
+          "cm-7.5",
+          "cm-8",
+          "cm-8.1",
+          "cm-12",
+          "cm-12.1",
+          "cp-2.8"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-PIY-RES",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Executive Support",
+        "statement": "Executive support for achieving the provider's security goals is persistently reviewed and demonstrated.",
+        "terms": [
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [],
+        "classesInScope": [],
+        "cadence": []
+      },
+      {
+        "id": "KSI-PIY-RIS",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Investments in Security",
+        "statement": "The effectiveness of the provider's investments in achieving security goals is persistently reviewed.",
+        "terms": [
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [
+          "ac-5",
+          "ca-2",
+          "cp-2.1",
+          "cp-4.1",
+          "ir-3.2",
+          "pm-3",
+          "sa-2",
+          "sa-3",
+          "sr-2.1"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-PIY-RSD",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Security in the SDLC",
+        "statement": "The effectiveness of building security and privacy considerations into the Software Development Lifecycle and aligning with CISA Secure By Design principles is persistently reviewed.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-5",
+          "au-3.3",
+          "cm-3.4",
+          "pl-8",
+          "pm-7",
+          "sa-3",
+          "sa-8",
+          "sc-4",
+          "sc-18",
+          "si-10",
+          "si-11",
+          "si-16"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-PIY-RVD",
+        "themeKey": "PIY",
+        "themeName": "Policy and Inventory",
+        "name": "Reviewing Vulnerability Disclosures",
+        "statement": "The effectiveness of the provider's vulnerability disclosure program is persistently reviewed.",
+        "terms": [
+          "Persistently",
+          "Provider",
+          "Vulnerability"
+        ],
+        "controls": [
+          "ra-5.11"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-RPL-ABO",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Aligning Backups with Objectives",
+        "statement": "The alignment of machine-based information resource backups with defined recovery objectives is persistently reviewed.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "cm-2.3",
+          "cp-6",
+          "cp-9",
+          "cp-10",
+          "cp-10.2",
+          "si-12"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-RPL-ARP",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Aligning Recovery Plan",
+        "statement": "The alignment of recovery plans with defined recovery objectives is persistently reviewed.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "cp-2",
+          "cp-2.1",
+          "cp-2.3",
+          "cp-4.1",
+          "cp-6",
+          "cp-6.1",
+          "cp-6.3",
+          "cp-7",
+          "cp-7.1",
+          "cp-7.2",
+          "cp-7.3",
+          "cp-8",
+          "cp-8.1",
+          "cp-8.2",
+          "cp-10",
+          "cp-10.2"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-RPL-RRO",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Reviewing Recovery Objectives",
+        "statement": "The desired Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO) are defined and persistently reviewed for alignment with the provider's business needs and capabilities.",
+        "terms": [
+          "Persistently",
+          "Provider"
+        ],
+        "controls": [
+          "cp-2.3",
+          "cp-10"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-RPL-TRC",
+        "themeKey": "RPL",
+        "themeName": "Recovery Planning",
+        "name": "Testing Recovery Capabilities",
+        "statement": "The capability to recover from incidents and contingencies aligned with defined recovery objectives is persistently tested.",
+        "terms": [
+          "Incident",
+          "Persistently"
+        ],
+        "controls": [
+          "cp-2.1",
+          "cp-2.3",
+          "cp-4",
+          "cp-4.1",
+          "cp-6",
+          "cp-6.1",
+          "cp-9.1",
+          "cp-10",
+          "ir-3",
+          "ir-3.2"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SCR-MIT",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "name": "Mitigating Supply Chain Risk",
+        "statement": "Persistently identify, review, and mitigate potential supply chain risks.",
+        "terms": [
+          "Persistently"
+        ],
+        "controls": [
+          "ac-20",
+          "ca-7.4",
+          "ra-3.1",
+          "sa-9",
+          "sa-10",
+          "sa-11",
+          "sa-15.3",
+          "sa-22",
+          "sc-18",
+          "si-7.1",
+          "sr-5",
+          "sr-6"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SCR-MON",
+        "themeKey": "SCR",
+        "themeName": "Supply Chain Risk",
+        "name": "Monitoring Supply Chain Risk",
+        "statement": "Third party software information resources are automatically monitored for upstream vulnerabilities using mechanisms that may include contractual notification requirements or active monitoring services.",
+        "terms": [
+          "Information Resource",
+          "Vulnerability"
+        ],
+        "controls": [
+          "ac-20",
+          "ca-3",
+          "ir-6.3",
+          "ps-7",
+          "ra-5",
+          "sa-9",
+          "si-5",
+          "sr-5",
+          "sr-6",
+          "sr-8"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-ACM",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Automating Configuration Management",
+        "statement": "The configuration of machine-based information resources is managed using automation and persistently reviewed for drift.",
+        "terms": [
+          "Drift",
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently"
+        ],
+        "controls": [
+          "ac-2.4",
+          "cm-2",
+          "cm-2.2",
+          "cm-2.3",
+          "cm-6",
+          "cm-7.1",
+          "pl-9",
+          "pl-10",
+          "sa-5",
+          "si-5",
+          "sr-10"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-ASM",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Automating Secret Management",
+        "statement": "Management, protection, and regular rotation of digital keys, certificates, and other secrets is automated and persistently reviewed.",
+        "terms": [
+          "Persistently",
+          "Regularly"
+        ],
+        "controls": [
+          "ac-17.2",
+          "ia-5.2",
+          "ia-5.6",
+          "sc-12",
+          "sc-17"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-EIS",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Evaluating and Improving Security",
+        "statement": "Information resources are persistently evaluated for opportunities to improve security and those improvements are persistently made.",
+        "terms": [
+          "Information Resource",
+          "Persistently"
+        ],
+        "controls": [
+          "cm-7.1",
+          "cm-12.1",
+          "ma-2",
+          "pl-8",
+          "sc-7",
+          "sc-39",
+          "si-2.2",
+          "si-4",
+          "sr-10"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-PRR",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Preventing Residual Risk",
+        "statement": null,
+        "terms": [
+          "Federal Customer Data",
+          "Information Resource",
+          "Likely",
+          "Persistently"
+        ],
+        "controls": [
+          "sc-4"
+        ],
+        "classesInScope": [
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-RUD",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Removing Unwanted Data",
+        "statement": null,
+        "terms": [
+          "Agency",
+          "Federal Customer Data",
+          "Promptly"
+        ],
+        "controls": [
+          "si-12.3",
+          "si-18.4"
+        ],
+        "classesInScope": [],
+        "cadence": []
+      },
+      {
+        "id": "KSI-SVC-SIN",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Securing Information",
+        "statement": "Information is encrypted or otherwise secured from unwanted access or modification.",
+        "terms": [],
+        "controls": [
+          "ac-1",
+          "ac-17.2",
+          "cp-9.8",
+          "sc-8",
+          "sc-8.1",
+          "sc-13",
+          "sc-20",
+          "sc-21",
+          "sc-22",
+          "sc-23",
+          "sc-28",
+          "sc-28.1"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-VCM",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Validating Communications",
+        "statement": null,
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Persistently",
+          "Validation"
+        ],
+        "controls": [
+          "sc-23",
+          "si-7.1"
+        ],
+        "classesInScope": [
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      },
+      {
+        "id": "KSI-SVC-VRI",
+        "themeKey": "SVC",
+        "themeName": "Service Configuration",
+        "name": "Validating Resource Integrity",
+        "statement": "Use cryptographic methods to validate the integrity of machine-based information resources.",
+        "terms": [
+          "Information Resource",
+          "Machine-Based (Information Resources)",
+          "Validation"
+        ],
+        "controls": [
+          "cm-2.2",
+          "cm-8.3",
+          "sc-13",
+          "sc-23",
+          "si-7",
+          "si-7.1",
+          "sr-10"
+        ],
+        "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "cadence": [
+          {
+            "class": "b",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "class": "c",
+            "requirementId": "VDR-TFR-MVX",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "class": "d",
+            "requirementId": "VDR-TFR-PSD",
+            "name": "Persistent Sample Detection",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          }
+        ]
+      }
+    ]
+  }
+}

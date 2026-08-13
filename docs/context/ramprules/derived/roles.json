@@ -1,0 +1,3130 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "roles",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "parties": [
+      {
+        "party": "Providers",
+        "slug": "providers",
+        "requirementCount": 180,
+        "forces": {
+          "MUST": 93,
+          "SHOULD": 34,
+          "MUST NOT": 5,
+          "MAY": 15,
+          "SHOULD NOT": 4
+        },
+        "documents": [
+          {
+            "key": "FRC",
+            "name": "FedRAMP Certification",
+            "count": 29
+          },
+          {
+            "key": "CDS",
+            "name": "Certification Data Sharing",
+            "count": 21
+          },
+          {
+            "key": "VER",
+            "name": "Vulnerability Evaluation and Reporting",
+            "count": 19
+          },
+          {
+            "key": "VDR",
+            "name": "Vulnerability Detection and Response",
+            "count": 18
+          },
+          {
+            "key": "CCM",
+            "name": "Collaborative Continuous Monitoring",
+            "count": 17
+          },
+          {
+            "key": "SCN",
+            "name": "Significant Change Notification",
+            "count": 16
+          },
+          {
+            "key": "IVV",
+            "name": "Independent Verification and Validation",
+            "count": 13
+          },
+          {
+            "key": "SCG",
+            "name": "Secure Configuration Guide",
+            "count": 9
+          },
+          {
+            "key": "AFC",
+            "name": "Addressing FedRAMP Communication",
+            "count": 8
+          },
+          {
+            "key": "IEC",
+            "name": "Incident Evaluation and Communication",
+            "count": 7
+          },
+          {
+            "key": "CPO",
+            "name": "Certification Package Overview",
+            "count": 5
+          },
+          {
+            "key": "MAS",
+            "name": "Minimum Assessment Scope",
+            "count": 5
+          },
+          {
+            "key": "MKT",
+            "name": "Marketplace Listing",
+            "count": 5
+          },
+          {
+            "key": "SDR",
+            "name": "Security Decision Record",
+            "count": 5
+          },
+          {
+            "key": "CMU",
+            "name": "Cryptographic Module Use",
+            "count": 3
+          }
+        ],
+        "deadlines": [
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "name": "Persistent Sample Detection",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "days",
+            "label": "1 day"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 2,
+            "type": "days",
+            "label": "2 days"
+          },
+          {
+            "requirementId": "VDR-TFR-MVX",
+            "documentKey": "VDR",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "name": "Persistent Sample Detection",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 3,
+            "type": "days",
+            "label": "3 days"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 5,
+            "type": "days",
+            "label": "5 days"
+          },
+          {
+            "requirementId": "CDS-UTC-AAD",
+            "documentKey": "CDS",
+            "name": "Agency Access Denial",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "weeks",
+            "label": "1 week"
+          },
+          {
+            "requirementId": "SCN-TRF-NAF",
+            "documentKey": "SCN",
+            "name": "Notification After Finishing",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NAV",
+            "documentKey": "SCN",
+            "name": "Notification After Verification",
+            "class": null,
+            "force": "MUST",
+            "num": 5,
+            "type": "bizdays",
+            "label": "5 business days"
+          },
+          {
+            "requirementId": "VDR-TFR-MVX",
+            "documentKey": "VDR",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "class": "b",
+            "force": "MUST",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "name": "Persistent Drift Detection",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "name": "Persistent Sample Detection",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "name": "Historical Activity",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 7,
+            "type": "days",
+            "label": "7 days"
+          },
+          {
+            "requirementId": "CDS-CSO-FRC",
+            "documentKey": "CDS",
+            "name": "FedRAMP Certification Reports",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "weeks",
+            "label": "2 weeks"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "c",
+            "force": "MUST",
+            "num": 2,
+            "type": "weeks",
+            "label": "2 weeks"
+          },
+          {
+            "requirementId": "SCN-ADP-NTF",
+            "documentKey": "SCN",
+            "name": "Notification Requirements",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-NFP",
+            "documentKey": "SCN",
+            "name": "Notification of Final Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "name": "Persistent Drift Detection",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 14,
+            "type": "days",
+            "label": "14 days"
+          },
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "name": "Persistent Sample Detection",
+            "class": "a",
+            "force": "SHOULD",
+            "num": 14,
+            "type": "days",
+            "label": "14 days"
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "class": "a",
+            "force": "SHOULD",
+            "num": 14,
+            "type": "days",
+            "label": "14 days"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "name": "Historical Activity",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 14,
+            "type": "days",
+            "label": "14 days"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-MVX",
+            "documentKey": "VDR",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "class": "a",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "name": "Persistently Complete Detection",
+            "class": "c",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "name": "Persistently Complete Detection",
+            "class": "d",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "name": "Persistent Drift Detection",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MHR",
+            "documentKey": "VER",
+            "name": "Monthly Activity Report",
+            "class": null,
+            "force": "MUST",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "name": "Historical Activity",
+            "class": "a",
+            "force": "MAY",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "name": "Historical Activity",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 1,
+            "type": "months",
+            "label": "1 month"
+          },
+          {
+            "requirementId": "SCN-TRF-NIP",
+            "documentKey": "SCN",
+            "name": "Notification of Initial Plans",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "SCN-TRF-UPD",
+            "documentKey": "SCN",
+            "name": "Update Documentation",
+            "class": null,
+            "force": "MUST",
+            "num": 30,
+            "type": "bizdays",
+            "label": "30 business days"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "name": "Quarterly Review Meeting",
+            "class": "a",
+            "force": "MAY",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "name": "Quarterly Review Meeting",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "name": "Quarterly Review Meeting",
+            "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "name": "Quarterly Review Meeting",
+            "class": "d",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for 20x",
+            "class": "a",
+            "force": "SHOULD",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "name": "Fresh Independent Assessment",
+            "class": "a",
+            "force": "MAY",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "name": "Fresh Independent Assessment",
+            "class": "b",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "name": "Fresh Independent Assessment",
+            "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "name": "Fresh Independent Assessment",
+            "class": "d",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "name": "Persistent Drift Detection",
+            "class": "a",
+            "force": "SHOULD",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for Rev5",
+            "class": "d",
+            "force": "MUST",
+            "num": 6,
+            "type": "months",
+            "label": "6 months"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "name": "Persistently Complete Detection",
+            "class": "a",
+            "force": "SHOULD",
+            "num": 6,
+            "type": "months",
+            "label": "6 months"
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "name": "Persistently Complete Detection",
+            "class": "b",
+            "force": "SHOULD",
+            "num": 6,
+            "type": "months",
+            "label": "6 months"
+          },
+          {
+            "requirementId": "VER-TFR-MAV",
+            "documentKey": "VER",
+            "name": "Mark Accepted Vulnerabilities",
+            "class": null,
+            "force": "MUST",
+            "num": 192,
+            "type": "days",
+            "label": "192 days"
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for Rev5",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "name": "Certification Package Maintenance for Rev5",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "name": "Annual Independent Assessments for Rev5",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "name": "Annual Independent Assessments for Rev5",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "name": "Annual Independent Assessments for Rev5",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "name": "FedRAMP Independent Assessments",
+            "class": "a",
+            "force": "MAY",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "name": "FedRAMP Independent Assessments",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "name": "FedRAMP Independent Assessments",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "name": "FedRAMP Independent Assessments",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "name": "Annual Independent Assessments for 20x",
+            "class": "b",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "name": "Annual Independent Assessments for 20x",
+            "class": "c",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "name": "Annual Independent Assessments for 20x",
+            "class": "d",
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          }
+        ],
+        "requirements": [
+          {
+            "requirementId": "AFC-CSO-ACK",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Acknowledge Receipt",
+            "statement": "Providers SHOULD promptly and automatically acknowledge the receipt of messages received from FedRAMP in their FedRAMP Security Inbox.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-CSO-CRA",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Complete Required Actions",
+            "statement": "Providers MUST complete the required actions in Emergency or Emergency Test designated messages sent by FedRAMP within the timeframe included in the message.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-CSO-EMR",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Emergency Message Routing",
+            "statement": "Providers MUST route Emergency designated messages sent by FedRAMP to a senior security official for their awareness.",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "AFC-CSO-IMA",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Important Message Actions",
+            "statement": "Providers SHOULD complete the required actions in Important designated messages sent by FedRAMP within the timeframe specified in the message.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-CSO-INB",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Maintain a FedRAMP Security Inbox",
+            "statement": "Providers MUST establish and maintain an email address to receive messages from FedRAMP; this inbox is a FedRAMP Security Inbox (FSI).",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "AFC-CSO-NOC",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Notification of Changes",
+            "statement": "Providers MUST immediately notify FedRAMP of any changes to the email address for their FedRAMP Security Inbox.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "AFC-CSO-RCV",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Receive Email Without Disruption",
+            "statement": "Providers MUST receive and react to email messages from FedRAMP without disruption and without requiring additional actions from FedRAMP.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-CSO-TFG",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Trust @fedramp.gov and @gsa.gov",
+            "statement": "Providers MUST treat any email originating from an @fedramp.gov or @gsa.gov email address as if it was sent from FedRAMP by default; if such a message is confirmed to originate from someone other than FedRAMP then the FedRAMP Security Inbox rules no longer apply.",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "CCM-OCR-AFS",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Anonymized Feedback Summary",
+            "statement": "Providers MUST supply an anonymized and desensitized summary of the feedback, questions, and answers about each Ongoing Certification Report as an addendum to the Ongoing Certification Report OR in the next Ongoing Certification Report.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CCM-OCR-AVL",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Report Availability",
+            "statement": "Providers MUST supply an Ongoing Certification Report to all necessary parties every 3 months, covering the entire period since the previous summary, in a consistent format that is human readable; this report MUST include high-level summaries of at least the following information:",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "CCM-OCR-FBM",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Feedback Mechanism",
+            "statement": "Providers MUST supply an asynchronous mechanism for all necessary parties to provide feedback or ask questions about each Ongoing Certification Report.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CCM-OCR-LSI",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Limit Sensitive Information",
+            "statement": "Providers MUST NOT irresponsibly disclose sensitive information in an Ongoing Certification Report that would likely have an adverse effect on the cloud service offering.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-OCR-NRD",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Next Report Date",
+            "statement": "Providers MUST supply the target date for their next Ongoing Certification Report with other public FedRAMP Certification Data.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-OCR-RPS",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Responsible Public Certification Report Sharing",
+            "statement": "Providers MAY responsibly supply some or all of the information an Ongoing Certification Report to the public or other parties if the provider determines doing so will NOT likely have an adverse effect on the cloud service offering.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-OCR-SOR",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Spread Out Reports",
+            "statement": "Providers SHOULD establish a regular 3 month cycle for Ongoing Certification Reports that is spread out from the beginning, middle, or end of each quarter.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-ACT",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Additional Content",
+            "statement": "Providers SHOULD supply additional information in Quarterly Reviews that the provider determines is of interest, use, or otherwise relevant to agencies.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-MTG",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Quarterly Review Meeting",
+            "statement": null,
+            "force": null,
+            "artifactCount": 4
+          },
+          {
+            "requirementId": "CCM-QTR-NID",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "No Irresponsible Disclosure",
+            "statement": "Providers MUST NOT irresponsibly disclose sensitive information in a Quarterly Review that would likely have an adverse effect on the cloud service offering.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-NRD",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Next Review Date",
+            "statement": "Providers MUST publicly supply the target date for their next Quarterly Review with other public FedRAMP Certification Data.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-REG",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Meeting Registration Info",
+            "statement": "Providers MUST supply either a registration link or a downloadable calendar file with meeting information for Quarterly Reviews to all necessary parties.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CCM-QTR-RTP",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Restrict Third Parties",
+            "statement": "Providers SHOULD NOT invite third parties to attend Quarterly Reviews intended for agencies unless they have specific relevance.",
+            "force": "SHOULD NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-RTR",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Record/Transcribe Reviews",
+            "statement": "Providers SHOULD record or transcribe Quarterly Reviews and supply them to all necessary parties.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-SAR",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Schedule Around Reports",
+            "statement": "Providers SHOULD regularly schedule Quarterly Reviews to occur at least 3 business days after releasing an Ongoing Certification Report AND within 10 business days of such release.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-SCR",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Share Content Responsibly",
+            "statement": "Providers MAY responsibly supply content prepared for a Quarterly Review to the public or other parties if the provider determines doing so will NOT likely have an adverse effect on the cloud service offering.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-QTR-SRR",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Share Recordings Responsibly",
+            "statement": "Providers MAY responsibly supply recordings or transcriptions of Quarterly Reviews to the public or other parties ONLY if the provider removes all agency information (comments, questions, names, etc.) AND determines doing so will NOT likely have an adverse effect on the cloud service offering.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSF-TCM",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Trust Center Migration",
+            "statement": "Providers MUST notify all necessary parties when migrating to a trust center and MUST provide information in their existing USDA Connect Community Portal secure folders explaining how to use the trust center to obtain FedRAMP Certification Data.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSO-AVR",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Availability Reporting",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSO-CBF",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Consistency Between Formats",
+            "statement": "Providers MUST use automation to ensure information remains consistent between human-readable and machine-readable formats when FedRAMP Certification Data is provided in both formats.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSO-FID",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Always Include FedRAMP ID",
+            "statement": "Providers MUST always include the FedRAMP ID of the related cloud service offering in all FedRAMP Certification Data once assigned, including all reports, notifications, and other communication that results from FedRAMP rules.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSO-FRC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "FedRAMP Certification Reports",
+            "statement": "Providers MUST include FedRAMP Certification Reports with their FedRAMP Certification Data without inappropriate modifications, and make such reports available within 2 weeks of receiving the materials from FedRAMP.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSO-HAD",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Historical FedRAMP Certification Data",
+            "statement": "Providers MUST supply snapshots of FedRAMP Certification Data aligned to Ongoing Certification Reports to all necessary parties; these snapshots MUST be available for the duration of FedRAMP Certification.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-CSO-IRP",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Include Relevant Policies",
+            "statement": "Providers MUST supply all relevant policies and procedures in the FedRAMP Certification Data, including a human-readable and machine-readable reference that explains at least the following about each included policy and procedure:",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-CSO-PSM",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Per-Service Certification Materials",
+            "statement": null,
+            "force": null,
+            "artifactCount": 4
+          },
+          {
+            "requirementId": "CDS-CSO-PUB",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Public Information",
+            "statement": "Providers MUST publicly share up-to-date information about the cloud service offering in both human-readable and JSON formats, including at least the following information that is available and applicable:",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "CDS-CSO-RIS",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Responsible Information Sharing",
+            "statement": "Providers MUST provide sufficient information in FedRAMP Certification Data to support agency authorization decisions but SHOULD NOT include sensitive information that would likely enable a threat actor to gain unauthorized access, cause harm, disrupt operations, or otherwise have a negative adverse impact on the cloud service offering.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-CSO-RPS",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Responsible Public Package Sharing",
+            "statement": "Providers MAY responsibly share some or all of the information in a FedRAMP Certification Package publicly or with other parties if the provider determines doing so will NOT likely have an adverse effect on the cloud service offering.",
+            "force": "MAY",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-CSO-SVC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Public Service List",
+            "statement": "Providers MUST publicly share a detailed list of specific services and their security categories that are included in the cloud service offering using clear feature or service names that align with standard public marketing materials; this list MUST be complete enough for a potential customer to determine which services are and are not included in the FedRAMP Minimum Assessment Scope without requesting access to underlying FedRAMP Certification Data.",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "CDS-CSO-UTC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Use Trust Centers",
+            "statement": "Providers MUST use a FedRAMP-compatible trust center to store and share FedRAMP Certification Data with all necessary parties.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-TRC-AAI",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Agency Access Inventory",
+            "statement": "Trust centers MUST maintain an inventory and history of federal agency users or systems with access to FedRAMP Certification Data and MUST make this information available to FedRAMP upon request.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-TRC-ACL",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Access Logging",
+            "statement": "Trust centers MUST log access to FedRAMP Certification Data and store summaries of access for at least six months; such information, as it pertains to specific parties, SHOULD be made available upon request by those parties.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-TRC-HMR",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Human and Machine-Readable Certification Data",
+            "statement": "Trust centers SHOULD make FedRAMP Certification Data available to view and download in both human-readable and machine-readable formats.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-TRC-PAC",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Programmatic Access",
+            "statement": "Trust centers MUST provide documented programmatic access to all FedRAMP Certification Data, including programmatic access to human-readable materials.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-TRC-SSM",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Self-Service Access Management",
+            "statement": "Trust centers SHOULD include features that encourage all necessary parties to provision and manage access to FedRAMP Certification Data for their users and services directly.",
+            "force": "SHOULD",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CDS-TRC-USH",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Uninterrupted Sharing",
+            "statement": "Trust centers MUST share FedRAMP Certification Data with all necessary parties without interruption.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-UTC-AAD",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Agency Access Denial",
+            "statement": "Providers MUST notify FedRAMP within 5 business days of denying an agency access request for FedRAMP Certification Data.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CDS-UTC-AGA",
+            "documentKey": "CDS",
+            "documentName": "Certification Data Sharing",
+            "name": "Agency Access",
+            "statement": "Providers SHOULD supply access to the FedRAMP Certification Package with agencies upon request.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "CMU-CSO-CAT",
+            "documentKey": "CMU",
+            "documentName": "Cryptographic Module Use",
+            "name": "Configuration of Agency Tenants",
+            "statement": "Providers SHOULD configure agency tenants by default to use cryptographic services that use cryptographic modules or update streams of cryptographic modules with active validations under the NIST Cryptographic Module Validation Program when such modules are available.",
+            "force": "SHOULD",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CMU-CSO-CMD",
+            "documentKey": "CMU",
+            "documentName": "Cryptographic Module Use",
+            "name": "Cryptographic Module Documentation",
+            "statement": "Providers MUST document the cryptographic modules used in each service (or groups of services that use the same modules) where cryptographic services are used to protect federal customer data, including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "CMU-CSO-UVM",
+            "documentKey": "CMU",
+            "documentName": "Cryptographic Module Use",
+            "name": "Using Validated Cryptographic Modules",
+            "statement": null,
+            "force": null,
+            "artifactCount": 4
+          },
+          {
+            "requirementId": "CPO-CSF-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for Rev5",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CPO-CSO-MTD",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Overview Metadata",
+            "statement": "Providers MUST also include the following basic metadata in their Certification Package Overview:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CPO-CSO-OSA",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Overall Summary of Assessment in Certification Package",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CPO-CSO-OVR",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Overview of the Cloud Service Offering",
+            "statement": "Providers MUST supply a Certification Package Overview within their FedRAMP Certification Package, in both human-readable and JSON formats, that includes at least all of the information required by the following rules:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CPO-CSX-CPM",
+            "documentKey": "CPO",
+            "documentName": "Certification Package Overview",
+            "name": "Certification Package Maintenance for 20x",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APP-AFC",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Applying for FedRAMP Certification",
+            "statement": "Providers MUST complete the FedRAMP Certification Application Form in full to request an initial assessment by FedRAMP.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APP-FCP",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Fresh FedRAMP Certification Package",
+            "statement": "Providers MUST supply a fresh initial FedRAMP Certification Package that shows the current status of the cloud service offering as verified and validated by the provider within the previous 7 days.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APP-FIA",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Fresh Independent Assessment",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APP-MLF",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Marketplace Listing First",
+            "statement": "Providers MUST be listed in the FedRAMP Marketplace before applying for FedRAMP Certification, including:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APP-NTP",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "No Third-Party Applicants",
+            "statement": "Providers MUST NOT use a third party to apply for a FedRAMP Certification on their behalf; this includes independent assessment services.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APP-USA",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Updating Stale Assessments",
+            "statement": "Providers MAY freshen a stale initial independent verification and validation assessment by having a FedRAMP Recognized independent assessment service review any changes between the original assessment and the current status of the cloud service offering in place of a full re-assessment, UNLESS the stale assessment is more than 9 months old.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-APS-ATO",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Agency Authorization to Operate",
+            "statement": "Providers seeking a FedRAMP Rev5 Agency Certification MUST have completed the Authorization to Operate (ATO) process with their agency sponsor for the cloud service offering, concluding with a formal signed ATO letter that the agency has sent over official government channels to FedRAMP.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CCL-DCC",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Downgrading Certification Class",
+            "statement": "Providers MUST apply for a new FedRAMP Certification to downgrade their Certification Class.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CCL-DNP",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Downgrade Notification Period",
+            "statement": "Providers SHOULD notify all necessary parties at least 120 days in advance of an intended downgrade or cancellation of FedRAMP Certification.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CCL-UCC",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Upgrading Certification Class",
+            "statement": "Providers MUST apply for a new FedRAMP Certification to upgrade their Certification Class; all applicable requirements MUST be met in advance.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CLA-ASF",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Approved Alternative Security Frameworks",
+            "statement": "Providers seeking a FedRAMP Class A Certification MUST have completed a certification or equivalent process, including an independent assessment if applicable, from one of the following alternative security frameworks within the past 12 months:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CLA-EAM",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "External Assessment Materials",
+            "statement": "Providers seeking a FedRAMP Class A Certification MUST supply the following materials from their alternative security framework assessment to all necessary parties:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CLA-IVV",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Optional Independent Verification and Validation",
+            "statement": "Providers seeking a FedRAMP Class A Certification MAY have the FedRAMP Certification Package independently verified and validated by a FedRAMP Recognized assessor before submission to FedRAMP.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CLA-MFR",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Mandatory FedRAMP Rules for Class A",
+            "statement": "Providers seeking a Class A FedRAMP Certification MUST address all rules in this FedRAMP Class A Certification subset (FRC-CLA) AND the following additional FedRAMP Class A rules; the appropriate artifacts or information mapping for all rules MUST be supplied in the FedRAMP Certification Package.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CLA-OFR",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Address Optional FedRAMP Rules for Class A",
+            "statement": "Providers seeking a Class A FedRAMP Certification MAY address the following additional optional FedRAMP Class A rules (if applicable):",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CLA-RFR",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Recommended FedRAMP Rules for Class A",
+            "statement": "Providers seeking a Class A FedRAMP Certification SHOULD address the following additional recommended FedRAMP Class A rules (if applicable):",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSF-ACP",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Assign Control Parameters",
+            "statement": "Providers MUST assign all organization-defined control parameters, following FedRAMP Rev5 Controls Guidance, and ensure that all control parameter assignments are documented in the Security Decision Record (SDR).",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSF-BSL",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "FedRAMP Rev5 Baselines",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSF-FFG",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Follow FedRAMP Rev5 Controls Guidance",
+            "statement": "Providers MUST follow FedRAMP Rev5 Controls Guidance for the implementation and documentation of all applicable controls.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSF-RDY",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "FedRAMP Ready Conversion",
+            "statement": "Providers with FedRAMP Rev5 Ready status MUST convert to a FedRAMP Certification by whichever of the follow dates is later: the expiration of their annual assessment or November 17, 2026 (the legacy FedRAMP Ready status will be entirely removed on December 31, 2027).",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSO-FCP",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "FedRAMP Certification Profile",
+            "statement": "Providers MUST identify a target FedRAMP Certification Profile and apply all relevant FedRAMP Practices to the cloud service offering.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSO-JSN",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "FedRAMP JSON Schemas",
+            "statement": "Providers MUST supply machine-readable information in JSON documents that are valid against the corresponding JSON schema when a rule contains a FedRAMP JSON schema, UNLESS otherwise specified in the rule.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSO-MRA",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Maintain Responsibility and Accountability",
+            "statement": "Providers MUST maintain responsibility and accountability for the accuracy and completeness of all information in the FedRAMP Certification Package, especially when they engage a third party (such as an independent assessor, advisory service, or external tools) to supply information on their behalf.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSO-PKG",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "FedRAMP Certification Package",
+            "statement": "Providers seeking a Certification MUST supply a complete FedRAMP Certification Package to FedRAMP for initial certification; the FedRAMP Certification Package MUST include at least the following information:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSO-POP",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Pick One Program Certification Type",
+            "statement": "Providers MUST NOT seek both FedRAMP Rev5 Program Certification and FedRAMP 20x Program Certification for the same cloud service offering; pick one type.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSX-MAS",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Application within MAS",
+            "statement": "Providers SHOULD apply ALL Key Security Indicators to ALL aspects of their cloud service offering that are within the FedRAMP Minimum Assessment Scope.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSX-MOT",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Metrics Over Time for Key Security Indicators",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSX-VVK",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Automated Verification and Validation of Key Security Indicators",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "FRC-CSX-VVR",
+            "documentKey": "FRC",
+            "documentName": "FedRAMP Certification",
+            "name": "Automated Verification and Validation of FedRAMP Rules",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IEC-CSO-AIR",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Automated Incident Reporting",
+            "statement": "Providers SHOULD use automation to minimize human intervention in the process of reporting FedRAMP Reportable Incidents to all affected parties.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IEC-CSO-DPR",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Default PAIN Rating",
+            "statement": "Providers MUST treat FedRAMP Reportable Incidents as if they have a Potential Agency Impact N-rating (PAIN) of 5 UNLESS they promptly estimate the PAIN rating following the rule in IEC-CSO-EFI (Estimate Federal Impact).",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IEC-CSO-EFI",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Estimate Federal Impact",
+            "statement": "Providers SHOULD promptly estimate the likely adverse impact of an incident on agency customers to assign a Potential Agency Impact N-rating; this step is called Incident Rating.",
+            "force": "SHOULD",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "IEC-CSO-EFR",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Evaluate FedRAMP Reportability",
+            "statement": "Providers MUST promptly evaluate incidents to determine if they affect confidentiality or integrity of federal customer data or are likely to affect confidentiality or integrity of federal customer data; such incidents are FedRAMP Reportable Incidents and must be reported following the FedRAMP Incident Evaluation and Communication rules.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "IEC-CSO-FIR",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Final Incident Report",
+            "statement": null,
+            "force": null,
+            "artifactCount": 4
+          },
+          {
+            "requirementId": "IEC-CSO-IIR",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Initial Incident Report",
+            "statement": null,
+            "force": null,
+            "artifactCount": 4
+          },
+          {
+            "requirementId": "IEC-CSO-OIR",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Ongoing Incident Reports",
+            "statement": null,
+            "force": null,
+            "artifactCount": 4
+          },
+          {
+            "requirementId": "IVV-CSF-ACF",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Assessment of Rev5 Controls with Findings",
+            "statement": "Providers MUST have Rev5 Controls with negative findings from the previous FedRAMP independent assessment included in the next FedRAMP independent assessment.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSF-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for Rev5",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSF-MCA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Mandatory Control Assessment",
+            "statement": "Providers MUST have all applicable Rev5 Controls included in FedRAMP independent assessments every 3 years but are not required to have all Rev5 Controls included in the same FedRAMP independent assessment.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSF-PCA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Preferred Control Assessment",
+            "statement": "Providers SHOULD include all applicable Rev5 Controls in each FedRAMP independent assessment.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-DUS",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Document Use of Representative Samples",
+            "statement": "Providers MUST document and explain the use of representative samples during verification and validation when using representative samples as allowed by IVV-CSO-USR (Use Representative Samples).",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-FIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "FedRAMP Independent Assessments",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-ICP",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Inclusion in Certification Package",
+            "statement": "Providers MUST supply the results of FedRAMP independent assessments in their FedRAMP Certification Package without inappropriate modification.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-RAA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Receiving Assessor Advice",
+            "statement": "Providers MAY ask for and accept advice from their assessor during assessment regarding techniques and procedures that will improve their security posture or the effectiveness, clarity, and accuracy of their verification, validation and reporting procedures, UNLESS doing so is likely to compromise the objectivity and integrity of the assessment.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-SEE",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Supply Evidence of Effectiveness",
+            "statement": "Providers MUST supply evidence to all necessary assessors of the effectiveness of the measures that have been implemented to meet FedRAMP Practices; this evidence is the result of validation.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-SEI",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Supply Evidence of Implementation",
+            "statement": "Providers MUST supply evidence to all necessary assessors of the implementation of the measures that have been documented to meet FedRAMP Practices; this evidence is the result of verification.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-STE",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Supply Technical Explanations",
+            "statement": "Providers SHOULD supply all necessary assessors with technical explanations, demonstrations, and other relevant supporting information about the technical capabilities they employ to address FedRAMP rules; this SHOULD be supplied as necessary to ensure the assessor can effectively complete verification and validation.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSO-USR",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Use Representative Samples",
+            "statement": "Providers MAY use representative samples as appropriate during verification and validation.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-CSX-AIA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Annual Independent Assessments for 20x",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MAS-CSO-FLO",
+            "documentKey": "MAS",
+            "documentName": "Minimum Assessment Scope",
+            "name": "Information Flows and Security Categories",
+            "statement": "Providers MUST clearly identify, document, and explain information flows and security categories for ALL information resources or sets of information resources in the cloud service offering.",
+            "force": "MUST",
+            "artifactCount": 3
+          },
+          {
+            "requirementId": "MAS-CSO-IIR",
+            "documentKey": "MAS",
+            "documentName": "Minimum Assessment Scope",
+            "name": "Identify Information Resources",
+            "statement": "Providers MUST identify a set of information resources to assess for FedRAMP Certification that includes all information resources that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering; this set of information resources is the cloud service offering.",
+            "force": "MUST",
+            "artifactCount": 3
+          },
+          {
+            "requirementId": "MAS-CSO-MDI",
+            "documentKey": "MAS",
+            "documentName": "Minimum Assessment Scope",
+            "name": "Metadata Inclusion",
+            "statement": "Providers MUST include metadata (including metadata about federal customer data) in the Minimum Assessment Scope ONLY IF MAS-CSO-IIR (Identify Information Resources) APPLIES.",
+            "force": "MUST",
+            "artifactCount": 3
+          },
+          {
+            "requirementId": "MAS-CSO-SUP",
+            "documentKey": "MAS",
+            "documentName": "Minimum Assessment Scope",
+            "name": "Supplemental Information",
+            "statement": "Providers MAY include additional materials about other information resources that are not part of the cloud service offering in a FedRAMP Certification Package supplement; these resources will not be FedRAMP Certified and MUST be clearly marked and separated from the cloud service offering.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MAS-CSO-TPR",
+            "documentKey": "MAS",
+            "documentName": "Minimum Assessment Scope",
+            "name": "Third-Party Information Resources",
+            "statement": "Providers MUST address the potential impact to federal customer data from third-party information resources used by the cloud service offering, ONLY IF MAS-CSO-IIR (Identify Information Resources) APPLIES, by documenting the following information about each applicable third-party information resource:",
+            "force": "MUST",
+            "artifactCount": 3
+          },
+          {
+            "requirementId": "MKT-CSO-MLR",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Marketplace Listing Requirements",
+            "statement": "Providers MUST address at least these FedRAMP rules to apply for a new FedRAMP Marketplace listing OR to request updates to an existing listing:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-CSO-PML",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Provider Marketplace Listing Requests",
+            "statement": "Providers MUST notify FedRAMP using the FedRAMP Marketplace Providing Listing Request Form to request a listing in the FedRAMP Marketplace.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-IIP-AGU",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Agency Use Cases",
+            "statement": "Providers MUST demonstrate that a cloud service offering is intended for one of the following use cases:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-IIP-DCP",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Demonstrating Continuous Progress",
+            "statement": "Providers MUST demonstrate continuous progress towards a FedRAMP Certification, documented in their Trust Center or website and updated at least quarterly; progress is measured by the provider against documented goals and milestones.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-IIP-DLA",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Deadline for Assessment",
+            "statement": "Providers MUST demonstrate that an assessment for a FedRAMP Certification Class B, C, or D has been scheduled within 2 years of initial listing in the Initial Implementation Phase.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SCG-CSO-AUP",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Use Instructions",
+            "statement": "Providers MUST include instructions in the FedRAMP Certification Package that explain how to obtain and use the Secure Configuration Guide.",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-CSO-PUB",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Public Secure Configuration Guidance",
+            "statement": "Providers SHOULD make the Secure Configuration Guide available publicly.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-CSO-RSC",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Recommended Secure Configuration",
+            "statement": "Providers MUST create, maintain, and make available recommendations for securely configuring their cloud services (the Secure Configuration Guide) that includes at least the following information:",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-CSO-SDF",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Secure Defaults",
+            "statement": "Providers SHOULD set all settings to their recommended secure defaults for top-level administrative accounts and privileged accounts when initially provisioned.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-ENH-API",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "API Capability",
+            "statement": "Providers SHOULD offer the capability to view and adjust security settings via an API or similar capability.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-ENH-CMP",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Comparison Capability",
+            "statement": "Providers SHOULD offer the capability to compare all current settings for top-level administrative accounts and privileged accounts to the recommended secure defaults.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-ENH-EXP",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Export Capability",
+            "statement": "Providers SHOULD offer the capability to export all security settings in a machine-readable format.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-ENH-MRG",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Machine-Readable Guidance",
+            "statement": "Providers SHOULD also provide the Secure Configuration Guide in a machine-readable format that can be used by customers or third-party tools to compare against current settings.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCG-ENH-VRH",
+            "documentKey": "SCG",
+            "documentName": "Secure Configuration Guide",
+            "name": "Versioning and Release History",
+            "statement": "Providers SHOULD provide versioning and a release history for recommended secure default settings for top-level administrative accounts and privileged accounts as they are adjusted over time.",
+            "force": "SHOULD",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCN-ADP-NTF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification Requirements",
+            "statement": "Providers MUST notify all necessary parties within 10 business days after finishing adaptive changes, also including the following information:",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-CSO-ARI",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Additional Relevant Information",
+            "statement": "Providers MAY include additional relevant information in Significant Change Notifications.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SCN-CSO-EMG",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Emergency Changes",
+            "statement": "Providers MAY execute significant changes (including transformative changes) during an emergency or incident without following the Significant Change Notification rules in advance. In such emergencies, providers MUST follow all relevant procedures, notify all necessary parties, retroactively provide all Significant Change Notification materials, and complete appropriate assessment after the incident.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SCN-CSO-EVA",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Evaluate Changes",
+            "statement": "Providers MUST evaluate all potential significant changes to determine the type of significant change and follow the appropriate Significant Change Notification rules.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-CSO-HIS",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Historical Notifications",
+            "statement": "Providers MUST keep 12 months of historical Significant Change Notifications available with their FedRAMP Certification Data.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-CSO-HRM",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Human and Machine-Readable Notifications",
+            "statement": "Providers MUST make ALL Significant Change Notifications and related audit records available in human-readable and JSON formats.",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "SCN-CSO-INF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Required Information",
+            "statement": "Providers MUST include at least the following information in Significant Change Notifications:",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-CSO-MAR",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Maintain Audit Records",
+            "statement": "Providers MUST maintain auditable records of the significant change evaluation activities required by SCN-CSO-EVA (Evaluate Changes) and make them available to FedRAMP as requested.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-CSO-NOM",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification Mechanisms",
+            "statement": "Providers MAY notify necessary parties in a variety of ways as long as the mechanism for notification is clearly documented in the FedRAMP Certification Package and easily accessible.",
+            "force": "MAY",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-RTR-NNR",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "No Notification Requirements",
+            "statement": "Providers SHOULD NOT make formal Significant Change Notifications for routine recurring changes; this type of change is exempted from notification requirements.",
+            "force": "SHOULD NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SCN-TRF-NAF",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Finishing",
+            "statement": "Providers MUST notify all necessary parties within 5 business days after finishing transformative changes, including updates to all previously sent information.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-TRF-NAV",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification After Verification",
+            "statement": "Providers MUST notify all necessary parties within 5 business days after completing the verification, assessment, and/or validation of transformative changes, also including the following information:",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-TRF-NFP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Final Plans",
+            "statement": "Providers MUST notify all necessary parties of final plans for transformative changes at least 10 business days before starting transformative changes, including updates to all previously sent information.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-TRF-NIP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Notification of Initial Plans",
+            "statement": "Providers MUST notify all necessary parties of initial plans for transformative changes at least 30 business days before starting transformative changes, including a summary of any likely security impacts or changes in risk.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-TRF-TPR",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Third-Party Review",
+            "statement": "Providers SHOULD engage a third-party assessor to review the scope and impact of the planned change before starting transformative changes if human validation is necessary; such reviews SHOULD be limited to security decisions that require human validation.",
+            "force": "SHOULD",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SCN-TRF-UPD",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Update Documentation",
+            "statement": "Providers MUST publish updated service documentation and other materials to reflect transformative changes within 30 business days after finishing transformative changes.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "SDR-CSF-CTF",
+            "documentKey": "SDR",
+            "documentName": "Security Decision Record",
+            "name": "Rev5 Controls",
+            "statement": "Providers MUST also include short and simple high-level summaries of at least the following for each applicable Rev5 Control:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SDR-CSO-FRR",
+            "documentKey": "SDR",
+            "documentName": "Security Decision Record",
+            "name": "FedRAMP Rules",
+            "statement": "Providers MUST supply a Security Decision Record, in both human-readable and JSON formats, that includes at least all of the following information for each applicable FedRAMP rule:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SDR-CSO-MTD",
+            "documentKey": "SDR",
+            "documentName": "Security Decision Record",
+            "name": "Security Decision Record Metadata",
+            "statement": "Providers MUST also include the following basic metadata in their Security Decision Record:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SDR-CSX-KMT",
+            "documentKey": "SDR",
+            "documentName": "Security Decision Record",
+            "name": "Key Security Indicator Metrics",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SDR-CSX-KSI",
+            "documentKey": "SDR",
+            "documentName": "Security Decision Record",
+            "name": "Key Security Indicators",
+            "statement": "Providers MUST also include short and simple high-level summaries of at least the following for each applicable Key Security Indicator:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-ADT",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Automate Detection",
+            "statement": "Providers SHOULD use automated services to improve and streamline vulnerability detection and response.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-AKE",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Avoid KEVs",
+            "statement": "Providers SHOULD NOT deploy or otherwise activate new machine-based information resources with Known Exploited Vulnerabilities.",
+            "force": "SHOULD NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-DAC",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Detect After Changes",
+            "statement": "Providers SHOULD automatically perform vulnerability detection on representative samples of new or significantly changed information resources.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-DET",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Vulnerability Detection",
+            "statement": "Providers MUST systematically, persistently, and promptly discover and identify vulnerabilities within their cloud service offering using appropriate techniques such as assessment, scanning, threat intelligence, vulnerability disclosure mechanisms, bug bounties, penetration testing, incident response, automated control testing, supply chain monitoring, and other relevant capabilities; this process is called vulnerability detection. Vulnerability detection includes persistently verifying and validating that information resources and processes are operating as intended and documented for FedRAMP Practices.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-DFR",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Design For Resilience",
+            "statement": "Providers SHOULD make design and architecture decisions for their cloud service offering that mitigate the risk of vulnerabilities by default AND decrease the risk and complexity of vulnerability detection and response.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-FAV",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Failures Are Vulnerabilities",
+            "statement": "Providers MUST treat problems or failures with their vulnerability detection and response processes as vulnerabilities.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-MSP",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Maintain Security",
+            "statement": "Providers SHOULD NOT weaken the security of information resources to facilitate vulnerability scanning, detection, or assessment activities.",
+            "force": "SHOULD NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-RES",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Vulnerability Response",
+            "statement": "Providers MUST systematically, persistently, and promptly track, evaluate, monitor, mitigate, remediate, assess exploitation of, report, and otherwise manage all detected vulnerabilities within their cloud service offering; this process is called vulnerability response.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-CSO-SIR",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Sampling",
+            "statement": "Providers MAY sample effectively identical information resources, especially machine-based information resources, when performing vulnerability detection UNLESS doing so would decrease the efficiency or effectiveness of vulnerability detection.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-KEV",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Remediate KEVs",
+            "statement": "Providers SHOULD remediate Known Exploited Vulnerabilities according to the due dates in the CISA Known Exploited Vulnerabilities Catalog (even if the vulnerability has been fully mitigated) as required by CISA Binding Operational Directive (BOD) 26-04 or any successor guidance from CISA.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-MVF",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for Rev5",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-MVX",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Machine Verification and Validation for 20x",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-NMV",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Non-Machine Verification and Validation",
+            "statement": "Providers MUST verify and validate the status of non-machine-based information resources at least once every 3 months.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-PCD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistently Complete Detection",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-PDD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Drift Detection",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-PSD",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Persistent Sample Detection",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-PVR",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Mitigation and Remediation Expectations",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VDR-TFR-RMN",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Remaining Vulnerabilities",
+            "statement": "Providers SHOULD mitigate or remediate remaining vulnerabilities during routine operations as determined necessary by the provider.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-AIA",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Assume It's Automatable",
+            "statement": "Providers MUST assume the exploitation of vulnerabilities can be automated UNLESS they have evidence proving otherwise.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-EFA",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluation Factors",
+            "statement": "Providers SHOULD consider at least the following factors when considering the context of the cloud service offering to evaluate detected vulnerabilities:",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-EFP",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate False Positives",
+            "statement": "Providers SHOULD evaluate detected vulnerabilities, considering the context of the cloud service offering, to determine if they are false positive vulnerabilities.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-EIR",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate Internet-Reachability",
+            "statement": "Providers MUST evaluate detected vulnerabilities, considering the context of the cloud service offering, to determine if they are internet-reachable vulnerabilities.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-ELX",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate Exploitability",
+            "statement": "Providers MUST evaluate detected vulnerabilities, considering the context of the cloud service offering, to determine if they are likely exploitable vulnerabilities.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-EPA",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Estimate Potential Agency Impact",
+            "statement": "Providers MUST evaluate detected vulnerabilities, considering the context of the cloud service offering, to estimate the potential agency impact of exploitation on government customers AND assign one of the following Potential Agency Impact N-ratings (PAIN):",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-EVA-GRV",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Group Vulnerabilities",
+            "statement": "Providers SHOULD evaluate detected vulnerabilities, considering the context of the cloud service offering, to identify logical groupings of affected information resources that may improve the efficiency and effectiveness of vulnerability response by consolidating further activity; FedRAMP Vulnerability Detection and Response rules are then applied to these consolidated groupings of vulnerabilities instead of each individual detected instance.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-RPT-AVI",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Accepted Vulnerability Info",
+            "statement": "Providers MUST include the following information on accepted vulnerabilities when reporting on vulnerability detection and response activity:",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "VER-RPT-HLO",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "High-Level Overviews",
+            "statement": "Providers SHOULD include high-level overviews of ALL vulnerability detection and response activities conducted during this period for the cloud service offering; this includes vulnerability disclosure programs, bug bounty programs, penetration testing, assessments, etc.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-RPT-NID",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Responsible Disclosure",
+            "statement": "Providers MUST NOT irresponsibly disclose specific sensitive information about vulnerabilities that would likely lead to exploitation, but MUST disclose sufficient information for informed risk-based decision-making to all necessary parties.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-RPT-PER",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Persistent Reporting",
+            "statement": "Providers MUST report vulnerability detection and response activity (including persistent verification and validation) to all necessary parties persistently, summarizing ALL activity since the previous report; these reports are FedRAMP Certification Data and are subject to FedRAMP Certification Data Sharing rules.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-RPT-RPD",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Responsible Public Disclosure",
+            "statement": "Providers MAY responsibly disclose vulnerabilities publicly or with other parties if the provider determines doing so will NOT likely lead to exploitation.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-RPT-VDT",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Vulnerability Details",
+            "statement": "Providers MUST include the following information (if applicable) on detected vulnerabilities when reporting on vulnerability detection and response activity, UNLESS it is an accepted vulnerability:",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "VER-TFR-EVU",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Evaluate Vulnerabilities Quickly",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-TFR-IRI",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Internet-Reachable Incidents",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-TFR-MAV",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Mark Accepted Vulnerabilities",
+            "statement": "Providers MUST categorize any vulnerability that is not or will not be fully mitigated or remediated within 192 days of evaluation as an accepted vulnerability.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-TFR-MHR",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Monthly Activity Report",
+            "statement": "Providers MUST report vulnerability detection and response activity to all necessary parties in a consistent format that is human readable at least monthly.",
+            "force": "MUST",
+            "artifactCount": 1
+          },
+          {
+            "requirementId": "VER-TFR-MRH",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Historical Activity",
+            "statement": null,
+            "force": null,
+            "artifactCount": 7
+          },
+          {
+            "requirementId": "VER-TFR-NRI",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Non-Internet-Reachable Incidents",
+            "statement": null,
+            "force": null,
+            "artifactCount": 0
+          }
+        ]
+      },
+      {
+        "party": "Agencies",
+        "slug": "agencies",
+        "requirementCount": 24,
+        "forces": {
+          "MUST": 11,
+          "MUST NOT": 2,
+          "SHOULD": 10,
+          "SHOULD NOT": 1
+        },
+        "documents": [
+          {
+            "key": "AGU",
+            "name": "Agency Use of FedRAMP Certified Cloud Services",
+            "count": 20
+          },
+          {
+            "key": "CCM",
+            "name": "Collaborative Continuous Monitoring",
+            "count": 2
+          },
+          {
+            "key": "VER",
+            "name": "Vulnerability Evaluation and Reporting",
+            "count": 2
+          }
+        ],
+        "deadlines": [],
+        "requirements": [
+          {
+            "requirementId": "AGU-AGC-AIP",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Agency Internal Policies",
+            "statement": "Agencies MUST maintain agency-wide policy that aligns with the requirements in OMB Memorandum M-24-15.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-GRC",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Governance, Risk, and Compliance Tools",
+            "statement": "Agencies MUST ensure that internal governance, risk, compliance, and inventory tools can produce and ingest machine-readable artifacts using formats identified by FedRAMP, including at least:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-LIA",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Agency Liaison Program",
+            "statement": "Agencies SHOULD assign at least 1 federal employee to be an active participant in the FedRAMP Agency Liaison program.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-NAA",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Notify FedRAMP After Authorization",
+            "statement": "Agencies MUST notify FedRAMP upon authorizing the use of a cloud service within the scope of FedRAMP, supplying at least the following information:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-NAI",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Notify Additional Information Requests",
+            "statement": "Agencies MUST notify FedRAMP after requesting any additional information or materials from a FedRAMP Certified cloud service offering beyond those required by FedRAMP.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-NAR",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "No Additional Security Requirements",
+            "statement": "Agencies MUST NOT require additional information or materials from FedRAMP Certified cloud service offerings beyond those required by FedRAMP UNLESS the head of the agency or an authorized delegate determines there is a demonstrable need and notifies FedRAMP; this does not apply to seeking clarification or asking general questions about FedRAMP Certification Data.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-SIN",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Shared FedRAMP Inbox",
+            "statement": "Agencies SHOULD establish and maintain a dedicated shared FedRAMP agency inbox to serve as the official point of contact for communications between FedRAMP and the agency.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-TPP",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "No Certification Type or Path Preferences",
+            "statement": "Agencies MUST NOT require cloud service offerings to obtain or maintain a specific FedRAMP Certification Type or FedRAMP Certification Path, UNLESS the head of the agency or an authorized delegate determines there is a demonstrable need and notifies FedRAMP.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-AGC-WKG",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "FedRAMP Working Groups",
+            "statement": "Agencies SHOULD participate in FedRAMP working groups, communities of practice, and stakeholder engagements to supply feedback and align practices across government.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-SPN-MRC",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Most Recent Consolidated Rules",
+            "statement": "Agencies MUST follow the most recent FedRAMP Consolidated Rules when initiating agency-sponsored FedRAMP Certification.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-ABU",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Authorization Before Use",
+            "statement": "Agencies MUST complete the Authorization to Operate process for federal information systems that use FedRAMP Certified cloud service offerings.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-AFR",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Accept FedRAMP Rules",
+            "statement": "Agencies MUST allow FedRAMP Certified cloud service offerings to follow FedRAMP rules.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-CLA",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Using FedRAMP Class A Certifications",
+            "statement": "Agencies SHOULD NOT authorize the use of a FedRAMP Class A Certified cloud service offering for more than 12 months UNLESS the cloud service offering is actively seeking a FedRAMP Class B, C, or D Certification.",
+            "force": "SHOULD NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-DSO",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Designate Senior Official",
+            "statement": "Agencies SHOULD designate a federal senior information security official to review Ongoing Certification Reports and represent the agency at Quarterly Reviews for cloud service offerings included in agency information systems.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-NFC",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Notify FedRAMP of Monitoring Concerns",
+            "statement": "Agencies MUST notify FedRAMP if information presented in an Ongoing Certification Report, Quarterly Review, or other FedRAMP Certification Data causes significant concerns for the authorizing official that would likely result in rescission of their Authorization to Operate.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-NPC",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Notify Provider of Concerns",
+            "statement": "Agencies SHOULD formally notify the cloud service provider if information presented in an Ongoing Certification Report, Quarterly Review, or other FedRAMP Certification Data causes significant concerns for the authorizing official that would likely result in rescission of their Authorization to Operate.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-RCF",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Resolve Certification Package Conflicts",
+            "statement": "Agencies MUST collaborate with FedRAMP when discrepancies or conflicts arise between agency-specific security determinations and the FedRAMP Certification Package.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-RIR",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Review All Information Resources",
+            "statement": "Agencies SHOULD consider third-party information resources used by the cloud service offering during initial and ongoing authorization activities.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-ROR",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Review Ongoing Certification Reports",
+            "statement": "Agencies SHOULD review each Ongoing Certification Report to understand how changes to the cloud service offering may impact the risk tolerance documented in the agency Authorization to Operate for the federal information system that includes the cloud service offering in its boundary.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AGU-USE-RSG",
+            "documentKey": "AGU",
+            "documentName": "Agency Use of FedRAMP Certified Cloud Services",
+            "name": "Review Secure Configuration Guides",
+            "statement": "Agencies MUST review the Secure Configuration Guides supplied by Providers and configure relevant security settings.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-AGM-CSC",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Consider Security Category",
+            "statement": "Agencies SHOULD consider the Security Category noted in their Authorization to Operate of the federal information system that includes the cloud service offering in its boundary and assign appropriate information security resources for reviewing Ongoing Certification Reports, attending Quarterly Reviews, and other ongoing FedRAMP Certification Data.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "CCM-AGM-ROR",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Review Ongoing Reports",
+            "statement": "Agencies MUST review each Ongoing Certification Report to understand how changes to the cloud service offering may impact the previously agreed-upon risk tolerance documented in the agency's Authorization to Operate of a federal information system that includes the cloud service offering in its boundary.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-AGM-MAP",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Maintain Agency Plans of Action and Milestones",
+            "statement": "Agencies SHOULD use vulnerability information reported by the Provider to maintain Plans of Action and Milestones for agency security programs when relevant according to agency security policies (such as if the agency takes action to mitigate the risk of exploitation or authorized the continued use of a cloud service with accepted vulnerabilities that put agency information systems at risk).",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-AGM-RVR",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Review Vulnerability Reports",
+            "statement": "Agencies SHOULD review the information provided in vulnerability reports at appropriate and reasonable intervals commensurate with the expectations and risk posture indicated by their Authorization to Operate, and SHOULD use automated processing and filtering of machine readable information from cloud service providers.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          }
+        ]
+      },
+      {
+        "party": "Assessors",
+        "slug": "assessors",
+        "requirementCount": 23,
+        "forces": {
+          "MUST": 20,
+          "SHOULD": 1,
+          "MAY": 1,
+          "MUST NOT": 1
+        },
+        "documents": [
+          {
+            "key": "REC",
+            "name": "FedRAMP Recognition of Independent Assessment Services",
+            "count": 13
+          },
+          {
+            "key": "IVV",
+            "name": "Independent Verification and Validation",
+            "count": 7
+          },
+          {
+            "key": "MKT",
+            "name": "Marketplace Listing",
+            "count": 3
+          }
+        ],
+        "deadlines": [
+          {
+            "requirementId": "REC-IAS-CFI",
+            "documentKey": "REC",
+            "name": "Changes in Foreign Interest",
+            "class": null,
+            "force": "MUST",
+            "num": 48,
+            "type": "hours",
+            "label": "48 hours"
+          },
+          {
+            "requirementId": "REC-IAS-AFI",
+            "documentKey": "REC",
+            "name": "Annual Foreign Interest Reports",
+            "class": null,
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "REC-IAS-ANR",
+            "documentKey": "REC",
+            "name": "Annual Surveillance Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 1,
+            "type": "years",
+            "label": "1 year"
+          },
+          {
+            "requirementId": "REC-IAS-ADA",
+            "documentKey": "REC",
+            "name": "Actually Do Assessments",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "years",
+            "label": "2 years"
+          },
+          {
+            "requirementId": "REC-IAS-RAS",
+            "documentKey": "REC",
+            "name": "Full A2LA Reassessment",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "years",
+            "label": "2 years"
+          },
+          {
+            "requirementId": "REC-IAS-SEP",
+            "documentKey": "REC",
+            "name": "Advisory Separation",
+            "class": null,
+            "force": "MUST NOT",
+            "num": 2,
+            "type": "years",
+            "label": "2 years"
+          }
+        ],
+        "requirements": [
+          {
+            "requirementId": "IVV-IAS-EPX",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Engage Provider Experts",
+            "statement": "Assessors SHOULD engage provider experts in discussion to understand the decisions made by the provider and inform expert qualitative assessment, and SHOULD perform independent research to test such information as part of the expert qualitative assessment process.",
+            "force": "SHOULD",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-IAS-OSA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Overall Summary of Assessment",
+            "statement": "Assessors MUST supply the provider with an overall summary of the verification and validation assessment results, including any resulting failures or areas of dispute; this summary will be included by the provider in the FedRAMP Certification Package Overview for the cloud service offering.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-IAS-SHA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Sharing Advice",
+            "statement": "Assessors MAY share advice with providers they are assessing about techniques and procedures that will improve the provider's security posture or the effectiveness, clarity, and accuracy of their verification, validation and reporting procedures, UNLESS doing so is likely to compromise the objectivity and integrity of the assessment.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-IAS-SUM",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Assessment Summary",
+            "statement": "Assessors MUST supply the provider with a high-level summary of their assessment process and findings for each FedRAMP Practice; this summary will be included by the provider in the FedRAMP Security Decision Record for the cloud service offering.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-IAS-VEF",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Validate Effectiveness",
+            "statement": "Assessors MUST validate the effectiveness of the implemented measures to ensure they have the intended outcome for meeting FedRAMP Practices.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-IAS-VIM",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Verify Implementation",
+            "statement": "Assessors MUST verify that the measures implemented by the cloud service offering matches the measures they documented to meet FedRAMP Practices.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IVV-IAS-VIP",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Verify Inclusion in Certification Package",
+            "statement": "Assessors MUST verify that information supplied during a FedRAMP independent assessment is included in the FedRAMP Certification Package by the provider without inappropriate modification.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-IAS-LRQ",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Listing Requests for Assessors",
+            "statement": "Assessors MUST complete the Assessor Listing Request Form to request listing in the FedRAMP Marketplace.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-IAS-OFR",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Only FedRAMP Recognized Assessors",
+            "statement": "Assessors MUST obtain and maintain FedRAMP Recognition to be listed in the FedRAMP Marketplace.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-IAS-WEB",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Website Requirements for Assessors",
+            "statement": "Assessors MUST have an appropriate web site that publicly supplies at least the following information in human-readable and JSON formats:",
+            "force": "MUST",
+            "artifactCount": 2
+          },
+          {
+            "requirementId": "REC-IAS-ACC",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "A2LA Accreditation",
+            "statement": "Assessors MUST obtain and maintain accreditation through the American Association for Laboratory Accreditation (A2LA) Cybersecurity Inspection Body Program to qualify for FedRAMP Recognition.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-ADA",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Actually Do Assessments",
+            "statement": "Assessors MUST complete at least 2 initial or ongoing assessments for Class B, C, or D FedRAMP Certifications every 2 years to maintain FedRAMP Recognition.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-AFI",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Annual Foreign Interest Reports",
+            "statement": "Assessors MUST report information relating to any foreign interest, foreign influence, or foreign control of the independent assessment service to FedRAMP annually.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-ANR",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Annual Surveillance Assessment",
+            "statement": "Assessors MUST achieve a favorable annual surveillance assessment by the American Association for Laboratory Accreditation (A2LA) to maintain FedRAMP Recognition.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-CAP",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Corrective Action Plan",
+            "statement": "Assessors MUST supply a corrective action plan when FedRAMP requires one for performance standards deficiencies or organizational risks.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-CFI",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Changes in Foreign Interest",
+            "statement": "Assessors MUST report updated information relating to any foreign interest, foreign influence, or foreign control of the independent assessment service within 48 hours of any change in foreign ownership or control.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-INV",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Invalid Deliverables",
+            "statement": "Assessors MUST treat deliverables prepared, performed, or submitted by personnel who do not meet required role qualifications as invalid for FedRAMP purposes.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-PSC",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Policy and Standards Compliance",
+            "statement": "Assessors MUST maintain compliance with the latest American Association for Laboratory Accreditation (A2LA) R311 - Specific Requirements - Federal Risk and Authorization Management Program to maintain FedRAMP Recognition.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-PST",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Performance Standards",
+            "statement": "Assessors MUST meet FedRAMP performance standards for assessor deliverables to support independent, risk-based reviews by FedRAMP and federal agencies, including at least:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-RAR",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Re-entry after Revocation",
+            "statement": "Assessors MUST satisfy all American Association for Laboratory Accreditation (A2LA) re-entry conditions before regaining FedRAMP Recognition after revocation.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-RAS",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Full A2LA Reassessment",
+            "statement": "Assessors MUST achieve a favorable full reassessment by the American Association for Laboratory Accreditation (A2LA) at least once every 2 years to maintain FedRAMP Recognition.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-RQU",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Roles and Qualifications",
+            "statement": "Assessors MUST staff FedRAMP assessments with all roles required by the American Association for Laboratory Accreditation (A2LA) R311, including personnel who meet the qualifications for each role, unless FedRAMP publishes a specific exception for a limited pilot or other explicitly scoped process.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-IAS-SEP",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Advisory Separation",
+            "statement": "Assessors MUST NOT perform a FedRAMP independent assessment of the same cloud service offering within 2 years after supplying advisory or consulting services for that offering, unless FedRAMP publishes a specific exception for a limited pilot or other explicitly scoped process.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          }
+        ]
+      },
+      {
+        "party": "FedRAMP",
+        "slug": "fedramp",
+        "requirementCount": 16,
+        "forces": {
+          "MUST": 9,
+          "MAY": 4,
+          "MUST NOT": 3
+        },
+        "documents": [
+          {
+            "key": "AFC",
+            "name": "Addressing FedRAMP Communication",
+            "count": 8
+          },
+          {
+            "key": "REC",
+            "name": "FedRAMP Recognition of Independent Assessment Services",
+            "count": 3
+          },
+          {
+            "key": "VER",
+            "name": "Vulnerability Evaluation and Reporting",
+            "count": 2
+          },
+          {
+            "key": "IEC",
+            "name": "Incident Evaluation and Communication",
+            "count": 1
+          },
+          {
+            "key": "MKT",
+            "name": "Marketplace Listing",
+            "count": 1
+          },
+          {
+            "key": "SCN",
+            "name": "Significant Change Notification",
+            "count": 1
+          }
+        ],
+        "deadlines": [
+          {
+            "requirementId": "AFC-FRP-PNT",
+            "documentKey": "AFC",
+            "name": "Public Notice of Emergency Tests",
+            "class": null,
+            "force": "MUST",
+            "num": 10,
+            "type": "bizdays",
+            "label": "10 business days"
+          }
+        ],
+        "requirements": [
+          {
+            "requirementId": "AFC-FRP-CDS",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Criticality Designators",
+            "statement": "FedRAMP MUST convey the criticality of the message in the subject line, IF the message requires an elevated reaction, using one of the following designators:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-COR",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Explain Corrective Actions",
+            "statement": "FedRAMP MUST clearly specify the corrective actions that will result from failure to complete the required actions in the body of messages that require an elevated reaction; such actions may vary from negative ratings in the FedRAMP Marketplace to suspension of FedRAMP Certification depending on the severity of the event.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-ERT",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Elevated Reaction Timeframes",
+            "statement": "FedRAMP MUST clearly specify the expected timeframe for completing required actions in the body of messages that require an elevated reaction; timeframes for actions will vary depending on the situation but the default timeframes to provide an estimated resolution time for Emergency and Emergency Test designated messages will be as follows:",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-PNT",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Public Notice of Emergency Tests",
+            "statement": "FedRAMP MUST post a public notice at least 10 business days in advance of sending an Emergency Test message; such notices MUST include explanation of the likely expected actions and timeframes for the Emergency Test message.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-RPM",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Reaction Metrics",
+            "statement": "FedRAMP MAY track and publicly share the time required by cloud service providers to take the actions specified in messages that require an elevated reaction.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-RQA",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Required Actions",
+            "statement": "FedRAMP MUST clearly specify the required actions in the body of messages that require an elevated reaction.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-UFS",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Use FedRAMP_Security Email in Emergencies",
+            "statement": "FedRAMP MUST send Emergency and Emergency Test designated messages from fedramp_security@gsa.gov OR fedramp_security@fedramp.gov.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "AFC-FRP-VRE",
+            "documentKey": "AFC",
+            "documentName": "Addressing FedRAMP Communication",
+            "name": "Verified Emails",
+            "statement": "FedRAMP MUST send messages to cloud service providers using an official @fedramp.gov or @gsa.gov email address with properly configured Sender Policy Framework (SPF), DomainKeys Identified Mail (DKIM), and Domain-based Message Authentication Reporting and Conformance (DMARC) email authentication.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "IEC-FRP-ORV",
+            "documentKey": "IEC",
+            "documentName": "Incident Evaluation and Communication",
+            "name": "Ongoing Review",
+            "statement": "FedRAMP MUST periodically review FedRAMP Incident Evaluation and Communication implementation with providers based on lack of reporting or other information.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-FRP-SOF",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Scope of FedRAMP",
+            "statement": "FedRAMP MUST NOT list cloud service offerings in the Marketplace or perform any FedRAMP Certification activities unless it determines the cloud service offering is within the scope of FedRAMP.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-FRP-DRD",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Double Revocation Disqualification",
+            "statement": "FedRAMP MUST NOT restore FedRAMP Recognition for an assessor after FedRAMP has revoked that assessor's FedRAMP Recognition 2 times.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-FRP-FOC",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Foreign Ownership Collection",
+            "statement": "FedRAMP MUST maintain a process to collect foreign ownership, control, or influence declarations from FedRAMP Recognized assessors and updates to those declarations.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "REC-FRP-RAO",
+            "documentKey": "REC",
+            "documentName": "FedRAMP Recognition of Independent Assessment Services",
+            "name": "Recognized Assessors Only",
+            "statement": "FedRAMP MUST NOT accept verification, validation, or other attestations from independent assessors who are not FedRAMP Recognized.",
+            "force": "MUST NOT",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "SCN-FRP-CAP",
+            "documentKey": "SCN",
+            "documentName": "Significant Change Notification",
+            "name": "Corrective Action Plan Conditions",
+            "statement": "FedRAMP MAY require providers to delay significant changes beyond the standard Significant Change Notification period and/or submit significant changes for approval in advance as a condition of a formal FedRAMP Corrective Action Plan or other agreement.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-FRP-ADV",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Sensitive Details",
+            "statement": "FedRAMP MAY require providers to share additional information or details about vulnerabilities, including sensitive information that would likely lead to exploitation, as part of review, response or investigation by necessary parties.",
+            "force": "MAY",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "VER-FRP-ARP",
+            "documentKey": "VER",
+            "documentName": "Vulnerability Evaluation and Reporting",
+            "name": "Additional Requirements",
+            "statement": "FedRAMP MAY require providers to share additional vulnerability information, alternative reports, or to report at an alternative frequency as a condition of a FedRAMP Corrective Action Plan or other agreements with federal agencies.",
+            "force": "MAY",
+            "artifactCount": 0
+          }
+        ]
+      },
+      {
+        "party": "Advisors",
+        "slug": "advisors",
+        "requirementCount": 3,
+        "forces": {
+          "MUST": 3
+        },
+        "documents": [
+          {
+            "key": "MKT",
+            "name": "Marketplace Listing",
+            "count": 3
+          }
+        ],
+        "deadlines": [],
+        "requirements": [
+          {
+            "requirementId": "MKT-CAS-LRQ",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Listing Requests for Advisors",
+            "statement": "Advisors MUST complete the Advisor Listing Request Form to request listing in the FedRAMP Marketplace.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-CAS-RFR",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Advisor Responses to FedRAMP",
+            "statement": "Advisors MUST reply to all requests from @fedramp.gov or @gsa.gov email addresses sent to the contact information provided in their advisor listing within 5 business days.",
+            "force": "MUST",
+            "artifactCount": 0
+          },
+          {
+            "requirementId": "MKT-CAS-WEB",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Website Requirements for Advisors",
+            "statement": "Advisors MUST have an appropriate web site that publicly supplies at least the following information in consistent machine-readable and human-readable formats:",
+            "force": "MUST",
+            "artifactCount": 2
+          }
+        ]
+      }
+    ],
+    "totalRequirements": 246,
+    "totalDeadlines": 68
+  }
+}

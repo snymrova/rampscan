@@ -1,0 +1,4592 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "automation-frontier",
+  "data": {
+    "overlay_version": "0.6.0",
+    "dataset_version_tested_against": "2026.07.14.01",
+    "liveDatasetVersion": "2026.07.14.01",
+    "versionMatch": true,
+    "rollup": {
+      "ksiReachedControls": 209,
+      "covered": 88,
+      "controlsWithFullRecipe": 22,
+      "fullRecipes": 12,
+      "recipes": 49,
+      "uncovered": 121,
+      "reachable": 109,
+      "ceiling": 0.5215311004784688,
+      "unreviewed": 73,
+      "adjudicated": 136,
+      "byDisposition": {
+        "automatable": 0,
+        "partial": 21,
+        "narrative": 27
+      },
+      "bySource": {
+        "aws": {
+          "covered": 88,
+          "automatable": 0,
+          "partial": 21,
+          "narrative": 27,
+          "unreviewed": 73,
+          "reachable": 109,
+          "ceiling": 0.5215311004784688
+        },
+        "pipeline": {
+          "covered": 0,
+          "automatable": 0,
+          "partial": 0,
+          "narrative": 0,
+          "unreviewed": 121,
+          "reachable": 0,
+          "ceiling": 0
+        }
+      }
+    },
+    "queue": [
+      {
+        "controlId": "ps-5",
+        "displayId": "PS-05",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "CloudTrail records every group and policy change with a timestamp, so the reassignment itself is observable; whether it matched the individual's new role is an HR judgement.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS CloudTrail",
+          "AWS IAM",
+          "AWS IAM Identity Center"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "ac-14",
+        "displayId": "AC-14",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Access Analyzer and the public-access Config rules enumerate every path that reaches a resource without authentication; the rationale for each path that is deliberately permitted is documented.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM Access Analyzer",
+          "AWS Config",
+          "Amazon S3 Block Public Access"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-2",
+        "displayId": "CA-02",
+        "family": "CA",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Security Hub standards and Config conformance packs perform an automated control assessment continuously and return a pass/fail per control, which is the assessment ACTIVITY; the assessment plan that fixed the scope, depth and methods, and the report that came out the other end, are documents no call returns. AWS Audit Manager is the obvious candidate and is deliberately not named — AWS has closed it to new customers, so a recipe built on it would be unfollowable advice for most readers.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Security Hub",
+          "AWS Config",
+          "Amazon Inspector"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-3",
+        "displayId": "CA-03",
+        "family": "CA",
+        "ksis": [
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Every external interface is enumerable — VPC peering connections, Transit Gateway attachments, PrivateLink endpoints, Direct Connect virtual interfaces and the resource policies that admit another account — so the interface characteristics the control asks to be documented are telemetry. The agreement that APPROVES each exchange is not, and the dataset's own AC-20 guidance says exactly this, differentiating CA-3 as the documented agreement between the two system owners.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon VPC",
+          "AWS PrivateLink",
+          "AWS Transit Gateway",
+          "AWS IAM Access Analyzer",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-7",
+        "displayId": "CA-07",
+        "family": "CA",
+        "ksis": [
+          "KSI-MLA-EVC"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The operating half is pure telemetry: whether the Config recorder is on and recording every resource type, which Security Hub standards are enabled and their control statuses, whether Inspector and GuardDuty cover the account. The strategy the control actually names — the metrics chosen, the monitoring frequencies, who correlates and who reports — is a document, and the telemetry is what that document is measured against rather than a substitute for it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Config",
+          "AWS Security Hub",
+          "Amazon Inspector",
+          "Amazon GuardDuty"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-7.4",
+        "displayId": "CA-07 (04)",
+        "family": "CA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Two of the three named ingredients are collectible: compliance monitoring is Security Hub control status and a conformance pack's compliance summary, change monitoring is the Config configuration-item history joined to CloudTrail. Effectiveness monitoring — whether the risk responses in place are actually reducing risk — is the judgement, and it is the third no score substitutes for.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Security Hub",
+          "AWS Config",
+          "AWS CloudTrail"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "cp-4",
+        "displayId": "CP-04",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "AWS Backup restore-testing plans and their job history genuinely evidence that a technical recovery test ran on a schedule, completed, and how long it took — that is more than nothing and should not be closed as narrative. What it does not cover is CP-04's subject: exercising the contingency PLAN, reviewing the results with the participants and initiating corrective actions, which is an exercise report and a remediation record.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Backup",
+          "AWS Elastic Disaster Recovery",
+          "AWS Resilience Hub"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-2.8",
+        "displayId": "IA-02 (08)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The credential report and STS usage prove authentication runs on signed, time-bounded temporary credentials rather than long-lived secrets; replay resistance itself is a property of the SigV4 protocol, cited from AWS documentation rather than measured.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM",
+          "AWS STS",
+          "AWS IAM Identity Center"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-5.2",
+        "displayId": "IA-05 (02)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-SNU",
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "ACM and Private CA enumerate every certificate, its chain and its expiry, and a KMS key policy proves the private key is non-exportable; whether each relying party actually validates the full certification path is a per-application TLS client setting.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Certificate Manager",
+          "AWS Private CA",
+          "AWS KMS",
+          "AWS IAM"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-7",
+        "displayId": "IA-07",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The same shape as SC-13, which the overlay already rates partial: KMS and CloudHSM are enumerable and the FIPS endpoints in use are checkable, but the module's FIPS 140 validation is a certificate that is cited, never measured.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS KMS",
+          "AWS CloudHSM",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ma-2",
+        "displayId": "MA-02",
+        "family": "MA",
+        "ksis": [
+          "KSI-CMT-LMC",
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Systems Manager Maintenance Windows and their execution history prove scheduled maintenance was defined, ran, and what it touched — the schedule, the tasks, the targets and the outcome of each run. The approval before the work, the review of maintenance records afterwards, and all physical maintenance and component replacement, which is AWS's responsibility, are outside that output.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Systems Manager",
+          "AWS Config",
+          "AWS CloudTrail"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-9",
+        "displayId": "SA-09",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The inventory half is already collected by this overlay — Access Analyzer enumerates every external principal trusted by the estate, and that is the same enumeration the AC-20 recipe performs. That each external provider MEETS the security requirements imposed on it is a statement about somebody else's estate, captured in the agreement CA-3 names, which is why the dataset's AC-20 guidance separates the three controls in the first place.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM Access Analyzer",
+          "AWS IAM",
+          "Amazon VPC",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sc-4",
+        "displayId": "SC-04",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP",
+          "KSI-PIY-RSD",
+          "KSI-SVC-PRR"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The customer half is readable: EBS encryption-by-default, no snapshot or AMI shared beyond the account, and instance tenancy all bear on whether storage released by one workload reaches an unintended reader. The control's core — that nothing survives in memory or storage between one tenant's use of a shared resource and the next — is a hypervisor property inherited from AWS's own authorisation and read out of Artifact, never returned by a call against your account.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon EBS",
+          "Amazon EC2",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sc-12",
+        "displayId": "SC-12",
+        "family": "SC",
+        "ksis": [
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Generation and rotation are fields: GetKeyRotationStatus returns whether automatic rotation is enabled and its period, DescribeKey returns the origin — AWS_KMS meaning material generated inside the HSM that never leaves it — and the key policy is the access scoping written down. Destruction is not. DeletionDate is present only when a key is already scheduled for deletion and PendingDeletionWindowInDays only for a pending replica, so on an estate of healthy keys the fields an assertion would read are absent from the response and any claim about the destruction window is vacuously true; the window is a ScheduleKeyDeletion request parameter, not a key attribute. The deeper gap is the control's own wording — generation, distribution, storage, access and destruction are measured against organization-defined requirements, and this dataset carries no SC-12 parameter value, so the check compares KMS state to the SSP rather than to something in the output.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS KMS",
+          "AWS CloudHSM",
+          "AWS Secrets Manager",
+          "AWS Certificate Manager",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "si-12",
+        "displayId": "SI-12",
+        "family": "SI",
+        "ksis": [
+          "KSI-RPL-ABO"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Retention is set where it is enforced and every setting is readable: CloudWatch Logs retention in days, S3 lifecycle rules and Object Lock, and a Backup vault locked IN COMPLIANCE MODE, whose MinRetentionDays and MaxRetentionDays cannot be shortened by anyone, including the root user, once the grace time expires — a governance-mode lock is removable by any principal holding the IAM permission, so the mode is load-bearing rather than decorative. How long the information is REQUIRED to be kept comes from the records schedule and the law behind it, and that number arrives from outside AWS.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon CloudWatch Logs",
+          "Amazon S3",
+          "AWS Backup",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sr-5",
+        "displayId": "SR-05",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The tooling half is real and continuous: Inspector monitors third-party packages for upstream vulnerabilities and exports a CycloneDX 1.4 or SPDX 2.3 SBOM per resource, and ECR scan-on-push gates an image at the moment of acquisition. The acquisition STRATEGY the control names — the contract clauses, the approved-supplier list, the delivery method — is procurement, and no scanner stands in for it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon Inspector",
+          "Amazon ECR",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ac-4",
+        "displayId": "AC-04",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Security groups, network ACLs, route tables, VPC endpoint policies and Network Firewall rules enumerate every flow the deployment actually permits; which flows were APPROVED is a document the enumeration is compared against.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon VPC",
+          "AWS Network Firewall",
+          "AWS Config",
+          "AWS Organizations"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "ac-5",
+        "displayId": "AC-05",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "IAM policies and Identity Center permission sets show whether any principal holds two duties at once, so the implementation is measurable; the set of duties that require separation is stated in the SSP, not in AWS.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM",
+          "AWS IAM Access Analyzer",
+          "AWS Organizations"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "ac-6.9",
+        "displayId": "AC-06 (09)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-RVL"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "CloudTrail records management events by default, and every privileged control-plane call arrives as one — IAM policy writes, KMS key operations, security-group authorizations. A trail capturing read AND write management events, still logging, with log-file validation on, decides the control-plane half from its own output. The in-guest half does not close: AWS documents that Session Manager logging is unavailable for sessions connecting through port forwarding or SSH, so an operator who reaches a host that way executes privileged functions and leaves no session log while get-document still reports logging enabled, and which instances ship the auth log is a CloudWatch agent configuration living on the instance, not a field any API returns. A recipe here evidences the control plane and hands the in-guest plane to a sampled review.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS CloudTrail",
+          "AWS Systems Manager Session Manager",
+          "Amazon CloudWatch Logs",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "cm-3.2",
+        "displayId": "CM-03 (02)",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-RVP",
+          "KSI-CMT-VTD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Three collectible artifacts line up with the three verbs: a CloudFormation change set is the validated preview of what a change would do, a pipeline execution record shows the test stage that gated the deployment and whether it passed, and an approval action on that pipeline carries who signed the change off. Change Manager would carry the approval and the runbook together, but it is one of the Systems Manager capabilities AWS lists as unavailable in the GovCloud (US) Regions, so a recipe leading with it is undeliverable for a FedRAMP estate — build on the change set and the pipeline, which exist in both partitions. Whether the tests were ADEQUATE to the change is the reviewer's judgement, and a green stage cannot report it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS CloudFormation",
+          "AWS CodePipeline",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-2.1",
+        "displayId": "CP-02 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-2.3",
+        "displayId": "CP-02 (03)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP",
+          "KSI-RPL-RRO",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-4.1",
+        "displayId": "CP-04 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-6",
+        "displayId": "CP-06",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ABO",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "ia-4.4",
+        "displayId": "IA-04 (04)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "ia-5.6",
+        "displayId": "IA-05 (06)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-2",
+        "displayId": "SA-02",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-5",
+        "displayId": "SA-05",
+        "family": "SA",
+        "ksis": [
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-8",
+        "displayId": "SA-08",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-22",
+        "displayId": "SA-22",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "si-4.4",
+        "displayId": "SI-04 (04)",
+        "family": "SI",
+        "ksis": [
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM",
+          "KSI-MLA-RVL"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "si-7.7",
+        "displayId": "SI-07 (07)",
+        "family": "SI",
+        "ksis": [
+          "KSI-MLA-EVC",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "si-11",
+        "displayId": "SI-11",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-MLA-ALA",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sr-2.1",
+        "displayId": "SR-02 (01)",
+        "family": "SR",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sr-8",
+        "displayId": "SR-08",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sr-11.1",
+        "displayId": "SR-11 (01)",
+        "family": "SR",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "ac-12",
+        "displayId": "AC-12",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-2.3",
+        "displayId": "CM-02 (03)",
+        "family": "CM",
+        "ksis": [
+          "KSI-RPL-ABO",
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-3.4",
+        "displayId": "CM-03 (04)",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-RVP",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-4.2",
+        "displayId": "CM-04 (02)",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-VTD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-7.5",
+        "displayId": "CM-07 (05)",
+        "family": "CM",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-PIY-GIV"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cp-6.1",
+        "displayId": "CP-06 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ia-3",
+        "displayId": "IA-03",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-SNU"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ir-3.2",
+        "displayId": "IR-03 (02)",
+        "family": "IR",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ra-5.5",
+        "displayId": "RA-05 (05)",
+        "family": "RA",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "sc-10",
+        "displayId": "SC-10",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-CNA-ULN"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "sc-18",
+        "displayId": "SC-18",
+        "family": "SC",
+        "ksis": [
+          "KSI-PIY-RSD",
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "si-8",
+        "displayId": "SI-08",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-RNT",
+          "KSI-CNA-RVP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "si-10",
+        "displayId": "SI-10",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "si-16",
+        "displayId": "SI-16",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ac-2.5",
+        "displayId": "AC-02 (05)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-6.2",
+        "displayId": "AC-06 (02)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-18.1",
+        "displayId": "AC-18 (01)",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-MAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-18.3",
+        "displayId": "AC-18 (03)",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-MAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "au-3.1",
+        "displayId": "AU-03 (01)",
+        "family": "AU",
+        "ksis": [
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "au-6.3",
+        "displayId": "AU-06 (03)",
+        "family": "AU",
+        "ksis": [
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "au-9.4",
+        "displayId": "AU-09 (04)",
+        "family": "AU",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ca-7.1",
+        "displayId": "CA-07 (01)",
+        "family": "CA",
+        "ksis": [
+          "KSI-CNA-EIS"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cm-2.7",
+        "displayId": "CM-02 (07)",
+        "family": "CM",
+        "ksis": [
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cm-7.2",
+        "displayId": "CM-07 (02)",
+        "family": "CM",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-2.8",
+        "displayId": "CP-02 (08)",
+        "family": "CP",
+        "ksis": [
+          "KSI-PIY-GIV"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-6.3",
+        "displayId": "CP-06 (03)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7",
+        "displayId": "CP-07",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7.1",
+        "displayId": "CP-07 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7.2",
+        "displayId": "CP-07 (02)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7.3",
+        "displayId": "CP-07 (03)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-8",
+        "displayId": "CP-08",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-8.1",
+        "displayId": "CP-08 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-8.2",
+        "displayId": "CP-08 (02)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-9.1",
+        "displayId": "CP-09 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-9.8",
+        "displayId": "CP-09 (08)",
+        "family": "CP",
+        "ksis": [
+          "KSI-SVC-SIN"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12",
+        "displayId": "IA-12",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12.2",
+        "displayId": "IA-12 (02)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12.3",
+        "displayId": "IA-12 (03)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12.5",
+        "displayId": "IA-12 (05)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-2",
+        "displayId": "SC-02",
+        "family": "SC",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-7.7",
+        "displayId": "SC-07 (07)",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-ULN"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-7.8",
+        "displayId": "SC-07 (08)",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-MAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-17",
+        "displayId": "SC-17",
+        "family": "SC",
+        "ksis": [
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "si-2.2",
+        "displayId": "SI-02 (02)",
+        "family": "SI",
+        "ksis": [
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "si-4.2",
+        "displayId": "SI-04 (02)",
+        "family": "SI",
+        "ksis": [
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "si-8.2",
+        "displayId": "SI-08 (02)",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-RVP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sr-6",
+        "displayId": "SR-06",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-2.6",
+        "displayId": "AC-02 (06)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "sa-10",
+        "displayId": "SA-10",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "sa-11",
+        "displayId": "SA-11",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "sa-15.3",
+        "displayId": "SA-15 (03)",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "au-3.3",
+        "displayId": "AU-03 (03)",
+        "family": "AU",
+        "ksis": [
+          "KSI-PIY-RSD"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 2
+      },
+      {
+        "controlId": "ir-2.3",
+        "displayId": "IR-02 (03)",
+        "family": "IR",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 2
+      },
+      {
+        "controlId": "pl-9",
+        "displayId": "PL-09",
+        "family": "PL",
+        "ksis": [
+          "KSI-SVC-ACM"
+        ],
+        "classes": [],
+        "disposition": "partial",
+        "rationale": "Organizations SCPs, a Config aggregator and Security Hub central configuration prove that management IS centralized; which controls the organization chose to manage centrally is an ODP a human states.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Organizations",
+          "AWS Config",
+          "AWS Security Hub",
+          "AWS Firewall Manager"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 1
+      },
+      {
+        "controlId": "pm-3",
+        "displayId": "PM-03",
+        "family": "PM",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "pm-7",
+        "displayId": "PM-07",
+        "family": "PM",
+        "ksis": [
+          "KSI-PIY-RSD"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "si-12.3",
+        "displayId": "SI-12 (03)",
+        "family": "SI",
+        "ksis": [],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "si-18.4",
+        "displayId": "SI-18 (04)",
+        "family": "SI",
+        "ksis": [],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      }
+    ],
+    "frontier": [
+      {
+        "controlId": "ac-1",
+        "displayId": "AC-01",
+        "family": "AC",
+        "ksis": [
+          "KSI-SVC-SIN"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "An access control policy and its procedures are documents developed, disseminated and reviewed on a stated cycle; no API reports that a document exists or that anyone read it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ac-2.5",
+        "displayId": "AC-02 (05)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-2.6",
+        "displayId": "AC-02 (06)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "ac-4",
+        "displayId": "AC-04",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Security groups, network ACLs, route tables, VPC endpoint policies and Network Firewall rules enumerate every flow the deployment actually permits; which flows were APPROVED is a document the enumeration is compared against.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon VPC",
+          "AWS Network Firewall",
+          "AWS Config",
+          "AWS Organizations"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "ac-5",
+        "displayId": "AC-05",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "IAM policies and Identity Center permission sets show whether any principal holds two duties at once, so the implementation is measurable; the set of duties that require separation is stated in the SSP, not in AWS.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM",
+          "AWS IAM Access Analyzer",
+          "AWS Organizations"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "ac-6.2",
+        "displayId": "AC-06 (02)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-6.9",
+        "displayId": "AC-06 (09)",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-RVL"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "CloudTrail records management events by default, and every privileged control-plane call arrives as one — IAM policy writes, KMS key operations, security-group authorizations. A trail capturing read AND write management events, still logging, with log-file validation on, decides the control-plane half from its own output. The in-guest half does not close: AWS documents that Session Manager logging is unavailable for sessions connecting through port forwarding or SSH, so an operator who reaches a host that way executes privileged functions and leaves no session log while get-document still reports logging enabled, and which instances ship the auth log is a CloudWatch agent configuration living on the instance, not a field any API returns. A recipe here evidences the control plane and hands the in-guest plane to a sampled review.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS CloudTrail",
+          "AWS Systems Manager Session Manager",
+          "Amazon CloudWatch Logs",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "ac-12",
+        "displayId": "AC-12",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ac-14",
+        "displayId": "AC-14",
+        "family": "AC",
+        "ksis": [
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Access Analyzer and the public-access Config rules enumerate every path that reaches a resource without authentication; the rationale for each path that is deliberately permitted is documented.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM Access Analyzer",
+          "AWS Config",
+          "Amazon S3 Block Public Access"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ac-18.1",
+        "displayId": "AC-18 (01)",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-MAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-18.3",
+        "displayId": "AC-18 (03)",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-MAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ac-20.1",
+        "displayId": "AC-20 (01)",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The enhancement asks for verification that the EXTERNAL system implements the required controls, or a retained agreement saying so — a statement about somebody else's estate that no call against this one can make.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "at-2",
+        "displayId": "AT-02",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Training delivery and completion live in a learning management system; AWS has no notion of a trained person.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-2.2",
+        "displayId": "AT-02 (02)",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The requirement is that awareness training covers insider threat — a property of the course content, not of any system state.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-2.3",
+        "displayId": "AT-02 (03)",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Same shape as the sibling enhancement: what the training covers is a property of the curriculum, which no API enumerates.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 3
+      },
+      {
+        "controlId": "at-3",
+        "displayId": "AT-03",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Role-based training records map people to courses in an LMS; the AWS role a principal assumes says nothing about what they were taught.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-3.5",
+        "displayId": "AT-03 (05)",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [],
+        "disposition": "narrative",
+        "rationale": "Whether PII-handling training was delivered is an LMS record; AWS can show where PII sits, never who was trained on it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 1
+      },
+      {
+        "controlId": "at-4",
+        "displayId": "AT-04",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Retention of individual training records is an LMS retention setting; where those records are stored could be an AWS fact, but their content and completeness never are.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "au-3.1",
+        "displayId": "AU-03 (01)",
+        "family": "AU",
+        "ksis": [
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "au-3.3",
+        "displayId": "AU-03 (03)",
+        "family": "AU",
+        "ksis": [
+          "KSI-PIY-RSD"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 2
+      },
+      {
+        "controlId": "au-6.3",
+        "displayId": "AU-06 (03)",
+        "family": "AU",
+        "ksis": [
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "au-9.4",
+        "displayId": "AU-09 (04)",
+        "family": "AU",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ca-2",
+        "displayId": "CA-02",
+        "family": "CA",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Security Hub standards and Config conformance packs perform an automated control assessment continuously and return a pass/fail per control, which is the assessment ACTIVITY; the assessment plan that fixed the scope, depth and methods, and the report that came out the other end, are documents no call returns. AWS Audit Manager is the obvious candidate and is deliberately not named — AWS has closed it to new customers, so a recipe built on it would be unfollowable advice for most readers.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Security Hub",
+          "AWS Config",
+          "Amazon Inspector"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-2.1",
+        "displayId": "CA-02 (01)",
+        "family": "CA",
+        "ksis": [
+          "KSI-CNA-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Independence is a property of the assessor, not of the assessment: who performed it, who they report to, and whether they had any hand in developing or operating the system. A 3PAO reads the independence attestation and the engagement letter; no account state distinguishes an independent assessor from an employee holding the same IAM role.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-3",
+        "displayId": "CA-03",
+        "family": "CA",
+        "ksis": [
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Every external interface is enumerable — VPC peering connections, Transit Gateway attachments, PrivateLink endpoints, Direct Connect virtual interfaces and the resource policies that admit another account — so the interface characteristics the control asks to be documented are telemetry. The agreement that APPROVES each exchange is not, and the dataset's own AC-20 guidance says exactly this, differentiating CA-3 as the documented agreement between the two system owners.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon VPC",
+          "AWS PrivateLink",
+          "AWS Transit Gateway",
+          "AWS IAM Access Analyzer",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-7",
+        "displayId": "CA-07",
+        "family": "CA",
+        "ksis": [
+          "KSI-MLA-EVC"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The operating half is pure telemetry: whether the Config recorder is on and recording every resource type, which Security Hub standards are enabled and their control statuses, whether Inspector and GuardDuty cover the account. The strategy the control actually names — the metrics chosen, the monitoring frequencies, who correlates and who reports — is a document, and the telemetry is what that document is measured against rather than a substitute for it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Config",
+          "AWS Security Hub",
+          "Amazon Inspector",
+          "Amazon GuardDuty"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-7.1",
+        "displayId": "CA-07 (01)",
+        "family": "CA",
+        "ksis": [
+          "KSI-CNA-EIS"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ca-7.4",
+        "displayId": "CA-07 (04)",
+        "family": "CA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Two of the three named ingredients are collectible: compliance monitoring is Security Hub control status and a conformance pack's compliance summary, change monitoring is the Config configuration-item history joined to CloudTrail. Effectiveness monitoring — whether the risk responses in place are actually reducing risk — is the judgement, and it is the third no score substitutes for.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Security Hub",
+          "AWS Config",
+          "AWS CloudTrail"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "cm-2.3",
+        "displayId": "CM-02 (03)",
+        "family": "CM",
+        "ksis": [
+          "KSI-RPL-ABO",
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-2.7",
+        "displayId": "CM-02 (07)",
+        "family": "CM",
+        "ksis": [
+          "KSI-IAM-ELP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cm-3.2",
+        "displayId": "CM-03 (02)",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-RVP",
+          "KSI-CMT-VTD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Three collectible artifacts line up with the three verbs: a CloudFormation change set is the validated preview of what a change would do, a pipeline execution record shows the test stage that gated the deployment and whether it passed, and an approval action on that pipeline carries who signed the change off. Change Manager would carry the approval and the runbook together, but it is one of the Systems Manager capabilities AWS lists as unavailable in the GovCloud (US) Regions, so a recipe leading with it is undeliverable for a FedRAMP estate — build on the change set and the pipeline, which exist in both partitions. Whether the tests were ADEQUATE to the change is the reviewer's judgement, and a green stage cannot report it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS CloudFormation",
+          "AWS CodePipeline",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "cm-3.4",
+        "displayId": "CM-03 (04)",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-RVP",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-4.2",
+        "displayId": "CM-04 (02)",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-LMC",
+          "KSI-CMT-VTD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-7.2",
+        "displayId": "CM-07 (02)",
+        "family": "CM",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cm-7.5",
+        "displayId": "CM-07 (05)",
+        "family": "CM",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-PIY-GIV"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cm-9",
+        "displayId": "CM-09",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-RVP",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A configuration management plan is a document: it names the roles, defines what counts as a configuration item, and states how the baseline is protected from unauthorised change. AWS enforces whatever baseline it is given and reports drift from it, but the plan that decided what the baseline should be is read, never queried.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-2",
+        "displayId": "CP-02",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A contingency plan is a document: developed, distributed to named roles, coordinated with related plans, reviewed on a cycle and updated after changes. A 3PAO reads the plan, its distribution list and its revision history; no API reports that a plan exists or that anyone maintains it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "cp-2.1",
+        "displayId": "CP-02 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-2.3",
+        "displayId": "CP-02 (03)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP",
+          "KSI-RPL-RRO",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-2.8",
+        "displayId": "CP-02 (08)",
+        "family": "CP",
+        "ksis": [
+          "KSI-PIY-GIV"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-3",
+        "displayId": "CP-03",
+        "family": "CP",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Contingency training is delivered to people on a schedule and recorded in a training system. A 3PAO reads the curriculum, the roster and the completion dates; nothing in an AWS account changes when someone is trained.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "cp-4",
+        "displayId": "CP-04",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "AWS Backup restore-testing plans and their job history genuinely evidence that a technical recovery test ran on a schedule, completed, and how long it took — that is more than nothing and should not be closed as narrative. What it does not cover is CP-04's subject: exercising the contingency PLAN, reviewing the results with the participants and initiating corrective actions, which is an exercise report and a remediation record.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Backup",
+          "AWS Elastic Disaster Recovery",
+          "AWS Resilience Hub"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "cp-4.1",
+        "displayId": "CP-04 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-6",
+        "displayId": "CP-06",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ABO",
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "cp-6.1",
+        "displayId": "CP-06 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "cp-6.3",
+        "displayId": "CP-06 (03)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7",
+        "displayId": "CP-07",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7.1",
+        "displayId": "CP-07 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7.2",
+        "displayId": "CP-07 (02)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-7.3",
+        "displayId": "CP-07 (03)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-8",
+        "displayId": "CP-08",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-8.1",
+        "displayId": "CP-08 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-8.2",
+        "displayId": "CP-08 (02)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-9.1",
+        "displayId": "CP-09 (01)",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "cp-9.8",
+        "displayId": "CP-09 (08)",
+        "family": "CP",
+        "ksis": [
+          "KSI-SVC-SIN"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-2.8",
+        "displayId": "IA-02 (08)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The credential report and STS usage prove authentication runs on signed, time-bounded temporary credentials rather than long-lived secrets; replay resistance itself is a property of the SigV4 protocol, cited from AWS documentation rather than measured.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM",
+          "AWS STS",
+          "AWS IAM Identity Center"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-3",
+        "displayId": "IA-03",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-SNU"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ia-4.4",
+        "displayId": "IA-04 (04)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "ia-5.2",
+        "displayId": "IA-05 (02)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-IAM-SNU",
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "ACM and Private CA enumerate every certificate, its chain and its expiry, and a KMS key policy proves the private key is non-exportable; whether each relying party actually validates the full certification path is a per-application TLS client setting.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Certificate Manager",
+          "AWS Private CA",
+          "AWS KMS",
+          "AWS IAM"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-5.6",
+        "displayId": "IA-05 (06)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM",
+          "KSI-IAM-ELP",
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "ia-6",
+        "displayId": "IA-06",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Obscuring authentication feedback is a property of what a login interface renders; no API reports what a form displayed while someone typed into it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-7",
+        "displayId": "IA-07",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The same shape as SC-13, which the overlay already rates partial: KMS and CloudHSM are enumerable and the FIPS endpoints in use are checkable, but the module's FIPS 140 validation is a certificate that is cited, never measured.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS KMS",
+          "AWS CloudHSM",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-12",
+        "displayId": "IA-12",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12.2",
+        "displayId": "IA-12 (02)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12.3",
+        "displayId": "IA-12 (03)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ia-12.5",
+        "displayId": "IA-12 (05)",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-AAM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "ir-2",
+        "displayId": "IR-02",
+        "family": "IR",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Incident response training is delivered to responders and refreshed on a cycle. A 3PAO reads the training content, the roster of who took it and when, and any simulated-event exercise records; no AWS call reports a trained responder.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ir-2.3",
+        "displayId": "IR-02 (03)",
+        "family": "IR",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 2
+      },
+      {
+        "controlId": "ir-3.2",
+        "displayId": "IR-03 (02)",
+        "family": "IR",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-RPL-TRC"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ma-2",
+        "displayId": "MA-02",
+        "family": "MA",
+        "ksis": [
+          "KSI-CMT-LMC",
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Systems Manager Maintenance Windows and their execution history prove scheduled maintenance was defined, ran, and what it touched — the schedule, the tasks, the targets and the outcome of each run. The approval before the work, the review of maintenance records afterwards, and all physical maintenance and component replacement, which is AWS's responsibility, are outside that output.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Systems Manager",
+          "AWS Config",
+          "AWS CloudTrail"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "pl-8",
+        "displayId": "PL-08",
+        "family": "PL",
+        "ksis": [
+          "KSI-PIY-RSD",
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The security and privacy architecture description is a written artifact reviewed for coherence with the SSP; a resource inventory is evidence about the deployment, not about the document.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "pl-9",
+        "displayId": "PL-09",
+        "family": "PL",
+        "ksis": [
+          "KSI-SVC-ACM"
+        ],
+        "classes": [],
+        "disposition": "partial",
+        "rationale": "Organizations SCPs, a Config aggregator and Security Hub central configuration prove that management IS centralized; which controls the organization chose to manage centrally is an ODP a human states.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS Organizations",
+          "AWS Config",
+          "AWS Security Hub",
+          "AWS Firewall Manager"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 1
+      },
+      {
+        "controlId": "pl-10",
+        "displayId": "PL-10",
+        "family": "PL",
+        "ksis": [
+          "KSI-CNA-IBP",
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Selecting a control baseline is a documented decision recorded in the SSP; no API states which baseline an authorization boundary claims.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "pm-3",
+        "displayId": "PM-03",
+        "family": "PM",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "pm-7",
+        "displayId": "PM-07",
+        "family": "PM",
+        "ksis": [
+          "KSI-PIY-RSD"
+        ],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "ps-2",
+        "displayId": "PS-02",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Risk designations are assigned to positions in an HR system and reviewed against screening criteria; no AWS API knows what a position is.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "ps-3",
+        "displayId": "PS-03",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Background screening happens before access is granted, in an HR or vendor system; AWS sees only the principal that results.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "ps-5",
+        "displayId": "PS-05",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "CloudTrail records every group and policy change with a timestamp, so the reassignment itself is observable; whether it matched the individual's new role is an HR judgement.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS CloudTrail",
+          "AWS IAM",
+          "AWS IAM Identity Center"
+        ],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "ps-6",
+        "displayId": "PS-06",
+        "family": "PS",
+        "ksis": [
+          "KSI-CED-RAT",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A signed access agreement is a document a 3PAO reads; AWS holds no signature and no acknowledgement.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 9
+      },
+      {
+        "controlId": "ps-7",
+        "displayId": "PS-07",
+        "family": "PS",
+        "ksis": [
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Requirements on third-party personnel live in contracts and in provider notifications of personnel changes, not in any AWS resource.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ps-8",
+        "displayId": "PS-08",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-SUS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A sanctions process is an HR procedure invoked after a violation; nothing in an AWS account records that it ran.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ps-9",
+        "displayId": "PS-09",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Security roles and responsibilities are stated in position descriptions maintained entirely outside the system.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ra-3.1",
+        "displayId": "RA-03 (01)",
+        "family": "RA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A supply chain risk assessment is an analysis someone writes about suppliers, components and services and then updates as the supply chain changes. AWS Artifact supplies inputs to it — third-party attestations and audit reports — but the assessment itself is the document a 3PAO reads, and no API produces one.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ra-5.5",
+        "displayId": "RA-05 (05)",
+        "family": "RA",
+        "ksis": [
+          "KSI-IAM-JIT",
+          "KSI-IAM-SNU"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "ra-5.11",
+        "displayId": "RA-05 (11)",
+        "family": "RA",
+        "ksis": [
+          "KSI-PIY-RVD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A public disclosure program is a published intake channel and a commitment to act on what arrives through it. A 3PAO reads the published policy, the disclosure page or security.txt, and the history of reports received and resolved; no AWS call reports that a reporting channel exists, let alone that anyone answered it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-2",
+        "displayId": "SA-02",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-3",
+        "displayId": "SA-03",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The control asks that the system be acquired and built under a documented lifecycle, with security roles assigned and risk management integrated into each phase. None of those three is a property of the estate: a pipeline execution record names no lifecycle, assigns no role and integrates no risk decision, so it is not partial evidence of any limb — it is evidence of a different thing that happens to run alongside. The lifecycle definition, the role assignments and the phase gates live in the SSP and the acquisition record, and a 3PAO reads them there.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-5",
+        "displayId": "SA-05",
+        "family": "SA",
+        "ksis": [
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-8",
+        "displayId": "SA-08",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sa-9",
+        "displayId": "SA-09",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The inventory half is already collected by this overlay — Access Analyzer enumerates every external principal trusted by the estate, and that is the same enumeration the AC-20 recipe performs. That each external provider MEETS the security requirements imposed on it is a statement about somebody else's estate, captured in the agreement CA-3 names, which is why the dataset's AC-20 guidance separates the three controls in the first place.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM Access Analyzer",
+          "AWS IAM",
+          "Amazon VPC",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-10",
+        "displayId": "SA-10",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "sa-11",
+        "displayId": "SA-11",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "sa-15.3",
+        "displayId": "SA-15 (03)",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "sa-22",
+        "displayId": "SA-22",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sc-2",
+        "displayId": "SC-02",
+        "family": "SC",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-4",
+        "displayId": "SC-04",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-ULN",
+          "KSI-IAM-ELP",
+          "KSI-PIY-RSD",
+          "KSI-SVC-PRR"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The customer half is readable: EBS encryption-by-default, no snapshot or AMI shared beyond the account, and instance tenancy all bear on whether storage released by one workload reaches an unintended reader. The control's core — that nothing survives in memory or storage between one tenant's use of a shared resource and the next — is a hypervisor property inherited from AWS's own authorisation and read out of Artifact, never returned by a call against your account.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon EBS",
+          "Amazon EC2",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sc-7.7",
+        "displayId": "SC-07 (07)",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-ULN"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-7.8",
+        "displayId": "SC-07 (08)",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-MAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-10",
+        "displayId": "SC-10",
+        "family": "SC",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-CNA-ULN"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "sc-12",
+        "displayId": "SC-12",
+        "family": "SC",
+        "ksis": [
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Generation and rotation are fields: GetKeyRotationStatus returns whether automatic rotation is enabled and its period, DescribeKey returns the origin — AWS_KMS meaning material generated inside the HSM that never leaves it — and the key policy is the access scoping written down. Destruction is not. DeletionDate is present only when a key is already scheduled for deletion and PendingDeletionWindowInDays only for a pending replica, so on an estate of healthy keys the fields an assertion would read are absent from the response and any claim about the destruction window is vacuously true; the window is a ScheduleKeyDeletion request parameter, not a key attribute. The deeper gap is the control's own wording — generation, distribution, storage, access and destruction are measured against organization-defined requirements, and this dataset carries no SC-12 parameter value, so the check compares KMS state to the SSP rather than to something in the output.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS KMS",
+          "AWS CloudHSM",
+          "AWS Secrets Manager",
+          "AWS Certificate Manager",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sc-17",
+        "displayId": "SC-17",
+        "family": "SC",
+        "ksis": [
+          "KSI-SVC-ASM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sc-18",
+        "displayId": "SC-18",
+        "family": "SC",
+        "ksis": [
+          "KSI-PIY-RSD",
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "sc-39",
+        "displayId": "SC-39",
+        "family": "SC",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A separate execution domain per process is a property of the Nitro hypervisor and the guest operating system, not a setting anyone can query. A 3PAO reads AWS's own FedRAMP authorization package for the hypervisor boundary and your architecture description for the guest side; no customer-invocable API reports process isolation.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 9
+      },
+      {
+        "controlId": "si-2.2",
+        "displayId": "SI-02 (02)",
+        "family": "SI",
+        "ksis": [
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "si-4.2",
+        "displayId": "SI-04 (02)",
+        "family": "SI",
+        "ksis": [
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "si-4.4",
+        "displayId": "SI-04 (04)",
+        "family": "SI",
+        "ksis": [
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM",
+          "KSI-MLA-RVL"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "si-7.7",
+        "displayId": "SI-07 (07)",
+        "family": "SI",
+        "ksis": [
+          "KSI-MLA-EVC",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "si-8",
+        "displayId": "SI-08",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-RNT",
+          "KSI-CNA-RVP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "si-8.2",
+        "displayId": "SI-08 (02)",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-RVP"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "si-10",
+        "displayId": "SI-10",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "si-11",
+        "displayId": "SI-11",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-MLA-ALA",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "si-12",
+        "displayId": "SI-12",
+        "family": "SI",
+        "ksis": [
+          "KSI-RPL-ABO"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "Retention is set where it is enforced and every setting is readable: CloudWatch Logs retention in days, S3 lifecycle rules and Object Lock, and a Backup vault locked IN COMPLIANCE MODE, whose MinRetentionDays and MaxRetentionDays cannot be shortened by anyone, including the root user, once the grace time expires — a governance-mode lock is removable by any principal holding the IAM permission, so the mode is load-bearing rather than decorative. How long the information is REQUIRED to be kept comes from the records schedule and the law behind it, and that number arrives from outside AWS.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon CloudWatch Logs",
+          "Amazon S3",
+          "AWS Backup",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "si-12.3",
+        "displayId": "SI-12 (03)",
+        "family": "SI",
+        "ksis": [],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "si-16",
+        "displayId": "SI-16",
+        "family": "SI",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 5
+      },
+      {
+        "controlId": "si-18.4",
+        "displayId": "SI-18 (04)",
+        "family": "SI",
+        "ksis": [],
+        "classes": [],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 1
+      },
+      {
+        "controlId": "sr-2.1",
+        "displayId": "SR-02 (01)",
+        "family": "SR",
+        "ksis": [
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sr-5",
+        "displayId": "SR-05",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The tooling half is real and continuous: Inspector monitors third-party packages for upstream vulnerabilities and exports a CycloneDX 1.4 or SPDX 2.3 SBOM per resource, and ECR scan-on-push gates an image at the moment of acquisition. The acquisition STRATEGY the control names — the contract clauses, the approved-supplier list, the delivery method — is procurement, and no scanner stands in for it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon Inspector",
+          "Amazon ECR",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sr-6",
+        "displayId": "SR-06",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 4
+      },
+      {
+        "controlId": "sr-8",
+        "displayId": "SR-08",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      },
+      {
+        "controlId": "sr-10",
+        "displayId": "SR-10",
+        "family": "SR",
+        "ksis": [
+          "KSI-SVC-ACM",
+          "KSI-SVC-EIS",
+          "KSI-SVC-VRI"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Inspecting hardware for tampering is AWS's responsibility under the shared model, evidenced by its own authorization package rather than by anything you can call. The customer-side inspection — when components are examined, by whom, and what indication of need triggered it — is a documented procedure and its records, which is what a 3PAO reads.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "sr-11.1",
+        "displayId": "SR-11 (01)",
+        "family": "SR",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 6
+      }
+    ]
+  }
+}

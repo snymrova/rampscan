@@ -1,0 +1,2327 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "evidence",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "defaultArtifacts": [
+      "Explanation of how the rule is followed, or an explanation of the reason and resulting risk to customers for not following the rule.",
+      "Verification that the implementation is appropriate for the rule, or that the reason for not implementing is accepted by a senior official.",
+      "Validation that the implementation is in place and working as intended, or that the reason for not implementing is accepted by a senior official.",
+      "Independent verification.",
+      "Independent validation."
+    ],
+    "ksiDefaultArtifacts": [
+      "Explanation of measures (and their objectives) that demonstrate the Key Security Indicator, or an explanation of the reason and resulting risk to customers for not having measures available for that Key Security Indicator.",
+      "Explanation of the cycle for any measures that are implemented persistently (if applicable).",
+      "Verification that the measures demonstrate the Key Security Indicator, or that the reason for not having them is accepted.",
+      "Verification that the automation in place is accurate and sufficient to demonstrate appropriate measures for the Key Security Indicator, or that automation is not necessary for each measure.",
+      "Validation that the measures are accurately produced and are in place and working as intended, or that the reason for not having them is valid."
+    ],
+    "byRequirement": [
+      {
+        "requirementId": "AFC-CSO-EMR",
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "name": "Emergency Message Routing",
+        "statement": "Providers MUST route Emergency designated messages sent by FedRAMP to a senior security official for their awareness.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Configuration settings for FSI mailbox",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "Automated validation to check FSI mailbox configuration",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "AFC-CSO-INB",
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "name": "Maintain a FedRAMP Security Inbox",
+        "statement": "Providers MUST establish and maintain an email address to receive messages from FedRAMP; this inbox is a FedRAMP Security Inbox (FSI).",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Email address to receive messages from FedRAMP",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "AFC-CSO-NOC",
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "name": "Notification of Changes",
+        "statement": "Providers MUST immediately notify FedRAMP of any changes to the email address for their FedRAMP Security Inbox.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Process, manual or automated, to notify FedRAMP of changes in the FedRAMP Security Inbox",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "AFC-CSO-TFG",
+        "documentKey": "AFC",
+        "documentName": "Addressing FedRAMP Communication",
+        "name": "Trust @fedramp.gov and @gsa.gov",
+        "statement": "Providers MUST treat any email originating from an @fedramp.gov or @gsa.gov email address as if it was sent from FedRAMP by default; if such a message is confirmed to originate from someone other than FedRAMP then the FedRAMP Security Inbox rules no longer apply.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Configuration settings for FSI mailbox",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "Automated validation to check FSI mailbox configuration",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CCM-OCR-AFS",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Anonymized Feedback Summary",
+        "statement": "Providers MUST supply an anonymized and desensitized summary of the feedback, questions, and answers about each Ongoing Certification Report as an addendum to the Ongoing Certification Report OR in the next Ongoing Certification Report.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "How the summary will be delivered",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CCM-OCR-AVL",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Report Availability",
+        "statement": "Providers MUST supply an Ongoing Certification Report to all necessary parties every 3 months, covering the entire period since the previous summary, in a consistent format that is human readable; this report MUST include high-level summaries of at least the following information:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Most recent Ongoing Certification Report. If the report is not available, the provider MUST provide a sample report that includes all required information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "How the report will be delivered",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CCM-OCR-FBM",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Feedback Mechanism",
+        "statement": "Providers MUST supply an asynchronous mechanism for all necessary parties to provide feedback or ask questions about each Ongoing Certification Report.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "How to access the feedback mechanism.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CCM-QTR-MTG",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Quarterly Review Meeting",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "selected ordinal recurrence for the synchronous Quarterly Review cycle if applicable.",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "selected ordinal recurrence for the Ongoing Certification Report cycle if applicable OR explanation for why Ongoing Certification Reports are not being delivered.",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "selected ordinal recurrence for the Ongoing Certification Report cycle.",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "selected ordinal recurrence for the Ongoing Certification Report cycle.",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "requirementId": "CCM-QTR-REG",
+        "documentKey": "CCM",
+        "documentName": "Collaborative Continuous Monitoring",
+        "name": "Meeting Registration Info",
+        "statement": "Providers MUST supply either a registration link or a downloadable calendar file with meeting information for Quarterly Reviews to all necessary parties.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the registration page or calendar file.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-CSO-HAD",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Historical FedRAMP Certification Data",
+        "statement": "Providers MUST supply snapshots of FedRAMP Certification Data aligned to Ongoing Certification Reports to all necessary parties; these snapshots MUST be available for the duration of FedRAMP Certification.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-CSO-IRP",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Include Relevant Policies",
+        "statement": "Providers MUST supply all relevant policies and procedures in the FedRAMP Certification Data, including a human-readable and machine-readable reference that explains at least the following about each included policy and procedure:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-CSO-PSM",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Per-Service Certification Materials",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "Explanation of the supplied materials, including how to access and use them.",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "requirementId": "CDS-CSO-PUB",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Public Information",
+        "statement": "Providers MUST publicly share up-to-date information about the cloud service offering in both human-readable and JSON formats, including at least the following information that is available and applicable:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the human-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-CSO-RPS",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Responsible Public Package Sharing",
+        "statement": "Providers MAY responsibly share some or all of the information in a FedRAMP Certification Package publicly or with other parties if the provider determines doing so will NOT likely have an adverse effect on the cloud service offering.",
+        "force": "MAY",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of if and how this information is shared with other parties.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-CSO-SVC",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Public Service List",
+        "statement": "Providers MUST publicly share a detailed list of specific services and their security categories that are included in the cloud service offering using clear feature or service names that align with standard public marketing materials; this list MUST be complete enough for a potential customer to determine which services are and are not included in the FedRAMP Minimum Assessment Scope without requesting access to underlying FedRAMP Certification Data.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the human-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "URL to the machine-readable data (if applicable).",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-TRC-AAI",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Agency Access Inventory",
+        "statement": "Trust centers MUST maintain an inventory and history of federal agency users or systems with access to FedRAMP Certification Data and MUST make this information available to FedRAMP upon request.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how FedRAMP can obtain this information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-TRC-ACL",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Access Logging",
+        "statement": "Trust centers MUST log access to FedRAMP Certification Data and store summaries of access for at least six months; such information, as it pertains to specific parties, SHOULD be made available upon request by those parties.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how the appropriate parties can obtain this log information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-TRC-PAC",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Programmatic Access",
+        "statement": "Trust centers MUST provide documented programmatic access to all FedRAMP Certification Data, including programmatic access to human-readable materials.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the documentation for programmatic access.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-TRC-SSM",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Self-Service Access Management",
+        "statement": "Trust centers SHOULD include features that encourage all necessary parties to provision and manage access to FedRAMP Certification Data for their users and services directly.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL or explanation how to access documentation of these features and capabilities.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CDS-UTC-AGA",
+        "documentKey": "CDS",
+        "documentName": "Certification Data Sharing",
+        "name": "Agency Access",
+        "statement": "Providers SHOULD supply access to the FedRAMP Certification Package with agencies upon request.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL or explanation of how to request these materials.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CMU-CSO-CAT",
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "name": "Configuration of Agency Tenants",
+        "statement": "Providers SHOULD configure agency tenants by default to use cryptographic services that use cryptographic modules or update streams of cryptographic modules with active validations under the NIST Cryptographic Module Validation Program when such modules are available.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "List of cryptographic modules used by default including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CMU-CSO-CMD",
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "name": "Cryptographic Module Documentation",
+        "statement": "Providers MUST document the cryptographic modules used in each service (or groups of services that use the same modules) where cryptographic services are used to protect federal customer data, including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "CMU-CSO-UVM",
+        "documentKey": "CMU",
+        "documentName": "Cryptographic Module Use",
+        "name": "Using Validated Cryptographic Modules",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "requirementId": "IEC-CSO-EFI",
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "name": "Estimate Federal Impact",
+        "statement": "Providers SHOULD promptly estimate the likely adverse impact of an incident on agency customers to assign a Potential Agency Impact N-rating; this step is called Incident Rating.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "An incident log showing an example of one or more incidents being evaluated including the reason for the determination. The log can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "IEC-CSO-EFR",
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "name": "Evaluate FedRAMP Reportability",
+        "statement": "Providers MUST promptly evaluate incidents to determine if they affect confidentiality or integrity of federal customer data or are likely to affect confidentiality or integrity of federal customer data; such incidents are FedRAMP Reportable Incidents and must be reported following the FedRAMP Incident Evaluation and Communication rules.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "An incident log showing an example of one or more incidents being evaluated including the reason for the determination. The log can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "IEC-CSO-FIR",
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "name": "Final Incident Report",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "requirementId": "IEC-CSO-IIR",
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "name": "Initial Incident Report",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "requirementId": "IEC-CSO-OIR",
+        "documentKey": "IEC",
+        "documentName": "Incident Evaluation and Communication",
+        "name": "Ongoing Incident Reports",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "requirementId": "MAS-CSO-FLO",
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "name": "Information Flows and Security Categories",
+        "statement": "Providers MUST clearly identify, document, and explain information flows and security categories for ALL information resources or sets of information resources in the cloud service offering.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A machine readable output containing all required data of the permitted connections between components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "MAS-CSO-IIR",
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "name": "Identify Information Resources",
+        "statement": "Providers MUST identify a set of information resources to assess for FedRAMP Certification that includes all information resources that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering; this set of information resources is the cloud service offering.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A machine readable output containing all required data of the components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "MAS-CSO-MDI",
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "name": "Metadata Inclusion",
+        "statement": "Providers MUST include metadata (including metadata about federal customer data) in the Minimum Assessment Scope ONLY IF MAS-CSO-IIR (Identify Information Resources) APPLIES.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A machine readable output containing all required data of the metadata collected or maintained by the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "MAS-CSO-TPR",
+        "documentKey": "MAS",
+        "documentName": "Minimum Assessment Scope",
+        "name": "Third-Party Information Resources",
+        "statement": "Providers MUST address the potential impact to federal customer data from third-party information resources used by the cloud service offering, ONLY IF MAS-CSO-IIR (Identify Information Resources) APPLIES, by documenting the following information about each applicable third-party information resource:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A machine readable output containing all required data of the third-party information resources of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "A human readable explanation of how the machine readable output is derived.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "The code for the automated process used to generate the machine readable output.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "MKT-CAS-WEB",
+        "documentKey": "MKT",
+        "documentName": "Marketplace Listing",
+        "name": "Website Requirements for Advisors",
+        "statement": "Advisors MUST have an appropriate web site that publicly supplies at least the following information in consistent machine-readable and human-readable formats:",
+        "force": "MUST",
+        "affects": [
+          "Advisors"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the human-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "MKT-IAS-WEB",
+        "documentKey": "MKT",
+        "documentName": "Marketplace Listing",
+        "name": "Website Requirements for Assessors",
+        "statement": "Assessors MUST have an appropriate web site that publicly supplies at least the following information in human-readable and JSON formats:",
+        "force": "MUST",
+        "affects": [
+          "Assessors"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the human-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-CSO-AUP",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Use Instructions",
+        "statement": "Providers MUST include instructions in the FedRAMP Certification Package that explain how to obtain and use the Secure Configuration Guide.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL or explanation of how to request these materials.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-CSO-PUB",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Public Secure Configuration Guidance",
+        "statement": "Providers SHOULD make the Secure Configuration Guide available publicly.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-CSO-RSC",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Recommended Secure Configuration",
+        "statement": "Providers MUST create, maintain, and make available recommendations for securely configuring their cloud services (the Secure Configuration Guide) that includes at least the following information:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL to the human-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "URL to the machine-readable data.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-CSO-SDF",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Secure Defaults",
+        "statement": "Providers SHOULD set all settings to their recommended secure defaults for top-level administrative accounts and privileged accounts when initially provisioned.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-ENH-API",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "API Capability",
+        "statement": "Providers SHOULD offer the capability to view and adjust security settings via an API or similar capability.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-ENH-CMP",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Comparison Capability",
+        "statement": "Providers SHOULD offer the capability to compare all current settings for top-level administrative accounts and privileged accounts to the recommended secure defaults.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-ENH-EXP",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Export Capability",
+        "statement": "Providers SHOULD offer the capability to export all security settings in a machine-readable format.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-ENH-MRG",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Machine-Readable Guidance",
+        "statement": "Providers SHOULD also provide the Secure Configuration Guide in a machine-readable format that can be used by customers or third-party tools to compare against current settings.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCG-ENH-VRH",
+        "documentKey": "SCG",
+        "documentName": "Secure Configuration Guide",
+        "name": "Versioning and Release History",
+        "statement": "Providers SHOULD provide versioning and a release history for recommended secure default settings for top-level administrative accounts and privileged accounts as they are adjusted over time.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how to access this information",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "or explanation why this functionality is not available",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-ADP-NTF",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification Requirements",
+        "statement": "Providers MUST notify all necessary parties within 10 business days after finishing adaptive changes, also including the following information:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "At least the most recent SCN notification including the date it was sent and the date the change was applied. Additional examples may be provided. If no SCN notifications have been sent then this artifact is not required.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-CSO-EVA",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Evaluate Changes",
+        "statement": "Providers MUST evaluate all potential significant changes to determine the type of significant change and follow the appropriate Significant Change Notification rules.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Evidence of significant change evaluation including a description fo the change, the determined type, and an explanation for the decision. At least one example must be provided for each type of change. Real examples are prefered but the provider may use fictitious examples as long as the example provides evidence of the decision making process.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-CSO-HIS",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Historical Notifications",
+        "statement": "Providers MUST keep 12 months of historical Significant Change Notifications available with their FedRAMP Certification Data.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how FedRAMP can obtain this information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-CSO-HRM",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Human and Machine-Readable Notifications",
+        "statement": "Providers MUST make ALL Significant Change Notifications and related audit records available in human-readable and JSON formats.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL or explanation of how to request these materials.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          },
+          {
+            "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-CSO-INF",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Required Information",
+        "statement": "Providers MUST include at least the following information in Significant Change Notifications:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A recent Significant Change Notification or sample Significant Change Notification",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-CSO-MAR",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Maintain Audit Records",
+        "statement": "Providers MUST maintain auditable records of the significant change evaluation activities required by SCN-CSO-EVA (Evaluate Changes) and make them available to FedRAMP as requested.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Explanation of how FedRAMP can obtain this information.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-CSO-NOM",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification Mechanisms",
+        "statement": "Providers MAY notify necessary parties in a variety of ways as long as the mechanism for notification is clearly documented in the FedRAMP Certification Package and easily accessible.",
+        "force": "MAY",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Current list of available notification mechanisms",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-TRF-NAF",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification After Finishing",
+        "statement": "Providers MUST notify all necessary parties within 5 business days after finishing transformative changes, including updates to all previously sent information.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "At least the most recent post deployment SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-TRF-NAV",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification After Verification",
+        "statement": "Providers MUST notify all necessary parties within 5 business days after completing the verification, assessment, and/or validation of transformative changes, also including the following information:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "At least the most recent after verification SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-TRF-NFP",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification of Final Plans",
+        "statement": "Providers MUST notify all necessary parties of final plans for transformative changes at least 10 business days before starting transformative changes, including updates to all previously sent information.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "At least the most recent final SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-TRF-NIP",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Notification of Initial Plans",
+        "statement": "Providers MUST notify all necessary parties of initial plans for transformative changes at least 30 business days before starting transformative changes, including a summary of any likely security impacts or changes in risk.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "At least the most recent initial SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-TRF-TPR",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Third-Party Review",
+        "statement": "Providers SHOULD engage a third-party assessor to review the scope and impact of the planned change before starting transformative changes if human validation is necessary; such reviews SHOULD be limited to security decisions that require human validation.",
+        "force": "SHOULD",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Third Party assesment report OR explanation why a third party assessor was not engaged",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "SCN-TRF-UPD",
+        "documentKey": "SCN",
+        "documentName": "Significant Change Notification",
+        "name": "Update Documentation",
+        "statement": "Providers MUST publish updated service documentation and other materials to reflect transformative changes within 30 business days after finishing transformative changes.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "Date of the most recent transformative change and the date of the corresponding documentation update. If no documentation updates were required as the result of this change, explain how this was determined.",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "VER-RPT-AVI",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Accepted Vulnerability Info",
+        "statement": "Providers MUST include the following information on accepted vulnerabilities when reporting on vulnerability detection and response activity:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A recent vulnerability report or a sample vulnerability report",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "VER-RPT-VDT",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Vulnerability Details",
+        "statement": "Providers MUST include the following information (if applicable) on detected vulnerabilities when reporting on vulnerability detection and response activity, UNLESS it is an accepted vulnerability:",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A recent vulnerability report or a sample vulnerability report",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "VER-TFR-MHR",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Monthly Activity Report",
+        "statement": "Providers MUST report vulnerability detection and response activity to all necessary parties in a consistent format that is human readable at least monthly.",
+        "force": "MUST",
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "A recent vulnerability report or a sample vulnerability report",
+            "scope": "all",
+            "class": null,
+            "source": "requirement"
+          }
+        ],
+        "classes": []
+      },
+      {
+        "requirementId": "VER-TFR-MRH",
+        "documentKey": "VER",
+        "documentName": "Vulnerability Evaluation and Reporting",
+        "name": "Historical Activity",
+        "statement": null,
+        "force": null,
+        "affects": [
+          "Providers"
+        ],
+        "artifacts": [
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "scope": "all",
+            "class": "a",
+            "source": "requirement"
+          },
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "or an explanation of why machine readable content is not being provided",
+            "scope": "all",
+            "class": "b",
+            "source": "requirement"
+          },
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "or an explanation of why machine readable content is not being provided",
+            "scope": "all",
+            "class": "c",
+            "source": "requirement"
+          },
+          {
+            "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          },
+          {
+            "text": "or an explanation of why machine readable content is not being provided",
+            "scope": "all",
+            "class": "d",
+            "source": "requirement"
+          }
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      }
+    ],
+    "byArtifact": [
+      {
+        "text": "Explanation of how to access this information",
+        "requirementIds": [
+          "SCG-CSO-PUB",
+          "SCG-CSO-SDF",
+          "SCG-ENH-API",
+          "SCG-ENH-CMP",
+          "SCG-ENH-EXP",
+          "SCG-ENH-MRG",
+          "SCG-ENH-VRH"
+        ],
+        "documentKeys": [
+          "SCG"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "or explanation why this functionality is not available",
+        "requirementIds": [
+          "SCG-CSO-PUB",
+          "SCG-CSO-SDF",
+          "SCG-ENH-API",
+          "SCG-ENH-CMP",
+          "SCG-ENH-EXP",
+          "SCG-ENH-MRG",
+          "SCG-ENH-VRH"
+        ],
+        "documentKeys": [
+          "SCG"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL to the human-readable data.",
+        "requirementIds": [
+          "CDS-CSO-PUB",
+          "CDS-CSO-SVC",
+          "MKT-CAS-WEB",
+          "MKT-IAS-WEB",
+          "SCG-CSO-RSC"
+        ],
+        "documentKeys": [
+          "CDS",
+          "MKT",
+          "SCG"
+        ],
+        "affects": [
+          "Advisors",
+          "Assessors",
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "A human readable explanation of how the machine readable output is derived.",
+        "requirementIds": [
+          "MAS-CSO-FLO",
+          "MAS-CSO-IIR",
+          "MAS-CSO-MDI",
+          "MAS-CSO-TPR"
+        ],
+        "documentKeys": [
+          "MAS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "The code for the automated process used to generate the machine readable output.",
+        "requirementIds": [
+          "MAS-CSO-FLO",
+          "MAS-CSO-IIR",
+          "MAS-CSO-MDI",
+          "MAS-CSO-TPR"
+        ],
+        "documentKeys": [
+          "MAS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL to the machine-readable data.",
+        "requirementIds": [
+          "CDS-CSO-PUB",
+          "MKT-CAS-WEB",
+          "MKT-IAS-WEB",
+          "SCG-CSO-RSC"
+        ],
+        "documentKeys": [
+          "CDS",
+          "MKT",
+          "SCG"
+        ],
+        "affects": [
+          "Advisors",
+          "Assessors",
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "A recent vulnerability report or a sample vulnerability report",
+        "requirementIds": [
+          "VER-RPT-AVI",
+          "VER-RPT-VDT",
+          "VER-TFR-MHR"
+        ],
+        "documentKeys": [
+          "VER"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Explanation of how FedRAMP can obtain this information.",
+        "requirementIds": [
+          "CDS-TRC-AAI",
+          "SCN-CSO-HIS",
+          "SCN-CSO-MAR"
+        ],
+        "documentKeys": [
+          "CDS",
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Explanation of how the provider decides whether or not to share these materials or other related policies.",
+        "requirementIds": [
+          "CDS-UTC-AGA",
+          "SCG-CSO-AUP",
+          "SCN-CSO-HRM"
+        ],
+        "documentKeys": [
+          "CDS",
+          "SCG",
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL or explanation of how to request these materials.",
+        "requirementIds": [
+          "CDS-UTC-AGA",
+          "SCG-CSO-AUP",
+          "SCN-CSO-HRM"
+        ],
+        "documentKeys": [
+          "CDS",
+          "SCG",
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "An incident log showing an example of one or more incidents being evaluated including the reason for the determination. The log can be from real incidents, simulated incidents, or a combination of sources.",
+        "requirementIds": [
+          "IEC-CSO-EFI",
+          "IEC-CSO-EFR"
+        ],
+        "documentKeys": [
+          "IEC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Automated validation to check FSI mailbox configuration",
+        "requirementIds": [
+          "AFC-CSO-EMR",
+          "AFC-CSO-TFG"
+        ],
+        "documentKeys": [
+          "AFC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Configuration settings for FSI mailbox",
+        "requirementIds": [
+          "AFC-CSO-EMR",
+          "AFC-CSO-TFG"
+        ],
+        "documentKeys": [
+          "AFC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Explanation of how to access this information.",
+        "requirementIds": [
+          "CDS-CSO-HAD",
+          "CDS-CSO-IRP"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "List of cryptographic modules including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+        "requirementIds": [
+          "CMU-CSO-CMD",
+          "CMU-CSO-UVM"
+        ],
+        "documentKeys": [
+          "CMU"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "A machine readable output containing all required data of the components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+        "requirementIds": [
+          "MAS-CSO-IIR"
+        ],
+        "documentKeys": [
+          "MAS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "A machine readable output containing all required data of the metadata collected or maintained by the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+        "requirementIds": [
+          "MAS-CSO-MDI"
+        ],
+        "documentKeys": [
+          "MAS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "A machine readable output containing all required data of the permitted connections between components of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+        "requirementIds": [
+          "MAS-CSO-FLO"
+        ],
+        "documentKeys": [
+          "MAS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "A machine readable output containing all required data of the third-party information resources of the cloud service offering that are likely to handle federal customer data or likely to impact the confidentiality, integrity, or availability of federal customer data handled by the cloud service offering.",
+        "requirementIds": [
+          "MAS-CSO-TPR"
+        ],
+        "documentKeys": [
+          "MAS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "A recent Significant Change Notification or sample Significant Change Notification",
+        "requirementIds": [
+          "SCN-CSO-INF"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "An Final Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+        "requirementIds": [
+          "IEC-CSO-FIR"
+        ],
+        "documentKeys": [
+          "IEC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "An Initial Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+        "requirementIds": [
+          "IEC-CSO-IIR"
+        ],
+        "documentKeys": [
+          "IEC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "An Ongoing Incident Report for one or more incidents. The report can be from real incidents, simulated incidents, or a combination of sources.",
+        "requirementIds": [
+          "IEC-CSO-OIR"
+        ],
+        "documentKeys": [
+          "IEC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "At least the most recent after verification SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+        "requirementIds": [
+          "SCN-TRF-NAV"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "At least the most recent final SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+        "requirementIds": [
+          "SCN-TRF-NFP"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "At least the most recent initial SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+        "requirementIds": [
+          "SCN-TRF-NIP"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "At least the most recent post deployment SCN notification for a transformative change including the date it was sent and the date the change was applied. Additional examples may be provided. If no transformative SCN notifications have been sent then this artifact is not required.",
+        "requirementIds": [
+          "SCN-TRF-NAF"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "At least the most recent SCN notification including the date it was sent and the date the change was applied. Additional examples may be provided. If no SCN notifications have been sent then this artifact is not required.",
+        "requirementIds": [
+          "SCN-ADP-NTF"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Current list of available notification mechanisms",
+        "requirementIds": [
+          "SCN-CSO-NOM"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Date of the most recent transformative change and the date of the corresponding documentation update. If no documentation updates were required as the result of this change, explain how this was determined.",
+        "requirementIds": [
+          "SCN-TRF-UPD"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Email address to receive messages from FedRAMP",
+        "requirementIds": [
+          "AFC-CSO-INB"
+        ],
+        "documentKeys": [
+          "AFC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Evidence of significant change evaluation including a description fo the change, the determined type, and an explanation for the decision. At least one example must be provided for each type of change. Real examples are prefered but the provider may use fictitious examples as long as the example provides evidence of the decision making process.",
+        "requirementIds": [
+          "SCN-CSO-EVA"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Explanation of how the appropriate parties can obtain this log information.",
+        "requirementIds": [
+          "CDS-TRC-ACL"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Explanation of if and how this information is shared with other parties.",
+        "requirementIds": [
+          "CDS-CSO-RPS"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Explanation of the supplied materials, including how to access and use them.",
+        "requirementIds": [
+          "CDS-CSO-PSM"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "How the report will be delivered",
+        "requirementIds": [
+          "CCM-OCR-AVL"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "How the summary will be delivered",
+        "requirementIds": [
+          "CCM-OCR-AFS"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "How to access the feedback mechanism.",
+        "requirementIds": [
+          "CCM-OCR-FBM"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "List of cryptographic modules used by default including whether these modules are validated under the NIST Cryptographic Module Validation Program or are update streams of such modules.",
+        "requirementIds": [
+          "CMU-CSO-CAT"
+        ],
+        "documentKeys": [
+          "CMU"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "Most recent Ongoing Certification Report. If the report is not available, the provider MUST provide a sample report that includes all required information.",
+        "requirementIds": [
+          "CCM-OCR-AVL"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "or an explanation of why machine readable content is not being provided",
+        "requirementIds": [
+          "VER-TFR-MRH"
+        ],
+        "documentKeys": [
+          "VER"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "Process, manual or automated, to notify FedRAMP of changes in the FedRAMP Security Inbox",
+        "requirementIds": [
+          "AFC-CSO-NOC"
+        ],
+        "documentKeys": [
+          "AFC"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "selected ordinal recurrence for the Ongoing Certification Report cycle if applicable OR explanation for why Ongoing Certification Reports are not being delivered.",
+        "requirementIds": [
+          "CCM-QTR-MTG"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "b"
+        ]
+      },
+      {
+        "text": "selected ordinal recurrence for the Ongoing Certification Report cycle.",
+        "requirementIds": [
+          "CCM-QTR-MTG"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "selected ordinal recurrence for the synchronous Quarterly Review cycle if applicable.",
+        "requirementIds": [
+          "CCM-QTR-MTG"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a"
+        ]
+      },
+      {
+        "text": "Third Party assesment report OR explanation why a third party assessor was not engaged",
+        "requirementIds": [
+          "SCN-TRF-TPR"
+        ],
+        "documentKeys": [
+          "SCN"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL and access instructions for historical vulnerability detection and response activity in machine readable format",
+        "requirementIds": [
+          "VER-TFR-MRH"
+        ],
+        "documentKeys": [
+          "VER"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      {
+        "text": "URL or explanation how to access documentation of these features and capabilities.",
+        "requirementIds": [
+          "CDS-TRC-SSM"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL to the documentation for programmatic access.",
+        "requirementIds": [
+          "CDS-TRC-PAC"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL to the machine-readable data (if applicable).",
+        "requirementIds": [
+          "CDS-CSO-SVC"
+        ],
+        "documentKeys": [
+          "CDS"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      },
+      {
+        "text": "URL to the registration page or calendar file.",
+        "requirementIds": [
+          "CCM-QTR-REG"
+        ],
+        "documentKeys": [
+          "CCM"
+        ],
+        "affects": [
+          "Providers"
+        ],
+        "classes": []
+      }
+    ],
+    "counts": {
+      "requirementsTotal": 246,
+      "requirementsWithArtifacts": 60,
+      "atRequirementLevel": 53,
+      "classOnly": 7,
+      "distinctArtifacts": 51
+    }
+  }
+}

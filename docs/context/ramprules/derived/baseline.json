@@ -1,0 +1,6309 @@
+{
+  "dataset_version": "2026.07.14.01",
+  "last_updated": "2026-07-14",
+  "slice": "baseline",
+  "data": {
+    "info": {
+      "title": "FedRAMP Consolidated Rules for 2026",
+      "version": "2026.07.14.01",
+      "lastUpdated": "2026-07-14"
+    },
+    "classes": [
+      {
+        "class": "b",
+        "interpretedLevel": "Low",
+        "baselineCount": 155,
+        "coveredCount": 95,
+        "orphanCount": 60,
+        "annualAssessmentCount": 35,
+        "families": [
+          "AC",
+          "AT",
+          "AU",
+          "CA",
+          "CM",
+          "CP",
+          "IA",
+          "IR",
+          "MA",
+          "MP",
+          "PE",
+          "PL",
+          "PS",
+          "RA",
+          "SA",
+          "SC",
+          "SI",
+          "SR"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-1",
+            "displayId": "AC-01",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-3",
+            "displayId": "AC-03",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-7",
+            "displayId": "AC-07",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-8",
+            "displayId": "AC-08",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-14",
+            "displayId": "AC-14",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17",
+            "displayId": "AC-17",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-18",
+            "displayId": "AC-18",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-19",
+            "displayId": "AC-19",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-20",
+            "displayId": "AC-20",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-22",
+            "displayId": "AC-22",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "at-1",
+            "displayId": "AT-01",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "at-2",
+            "displayId": "AT-02",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-2.2",
+            "displayId": "AT-02 (02)",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-3",
+            "displayId": "AT-03",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-4",
+            "displayId": "AT-04",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-1",
+            "displayId": "AU-01",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-3",
+            "displayId": "AU-03",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-4",
+            "displayId": "AU-04",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-5",
+            "displayId": "AU-05",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6",
+            "displayId": "AU-06",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-8",
+            "displayId": "AU-08",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-9",
+            "displayId": "AU-09",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-11",
+            "displayId": "AU-11",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-12",
+            "displayId": "AU-12",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-1",
+            "displayId": "CA-01",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-2",
+            "displayId": "CA-02",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-2.1",
+            "displayId": "CA-02 (01)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-3",
+            "displayId": "CA-03",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-6",
+            "displayId": "CA-06",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-7",
+            "displayId": "CA-07",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-7.4",
+            "displayId": "CA-07 (04)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-8",
+            "displayId": "CA-08",
+            "family": "CA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-9",
+            "displayId": "CA-09",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-1",
+            "displayId": "CM-01",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-4",
+            "displayId": "CM-04",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-5",
+            "displayId": "CM-05",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7",
+            "displayId": "CM-07",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8",
+            "displayId": "CM-08",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-10",
+            "displayId": "CM-10",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-11",
+            "displayId": "CM-11",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-1",
+            "displayId": "CP-01",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-2",
+            "displayId": "CP-02",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-3",
+            "displayId": "CP-03",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-4",
+            "displayId": "CP-04",
+            "family": "CP",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-9",
+            "displayId": "CP-09",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-1",
+            "displayId": "IA-01",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2",
+            "displayId": "IA-02",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.1",
+            "displayId": "IA-02 (01)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.2",
+            "displayId": "IA-02 (02)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.8",
+            "displayId": "IA-02 (08)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.12",
+            "displayId": "IA-02 (12)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-4",
+            "displayId": "IA-04",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5",
+            "displayId": "IA-05",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.1",
+            "displayId": "IA-05 (01)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-6",
+            "displayId": "IA-06",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-7",
+            "displayId": "IA-07",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-8",
+            "displayId": "IA-08",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-8.1",
+            "displayId": "IA-08 (01)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-8.2",
+            "displayId": "IA-08 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-8.4",
+            "displayId": "IA-08 (04)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-11",
+            "displayId": "IA-11",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-1",
+            "displayId": "IR-01",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-2",
+            "displayId": "IR-02",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-4",
+            "displayId": "IR-04",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-5",
+            "displayId": "IR-05",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-6",
+            "displayId": "IR-06",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-7",
+            "displayId": "IR-07",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-8",
+            "displayId": "IR-08",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ma-1",
+            "displayId": "MA-01",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-2",
+            "displayId": "MA-02",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ma-4",
+            "displayId": "MA-04",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-5",
+            "displayId": "MA-05",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-1",
+            "displayId": "MP-01",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-2",
+            "displayId": "MP-02",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-6",
+            "displayId": "MP-06",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-7",
+            "displayId": "MP-07",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-1",
+            "displayId": "PE-01",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-2",
+            "displayId": "PE-02",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-3",
+            "displayId": "PE-03",
+            "family": "PE",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-6",
+            "displayId": "PE-06",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-8",
+            "displayId": "PE-08",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-12",
+            "displayId": "PE-12",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13",
+            "displayId": "PE-13",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-14",
+            "displayId": "PE-14",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-15",
+            "displayId": "PE-15",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-16",
+            "displayId": "PE-16",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-1",
+            "displayId": "PL-01",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-2",
+            "displayId": "PL-02",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-4",
+            "displayId": "PL-04",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-4.1",
+            "displayId": "PL-04 (01)",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-8",
+            "displayId": "PL-08",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "pl-10",
+            "displayId": "PL-10",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "pl-11",
+            "displayId": "PL-11",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-1",
+            "displayId": "PS-01",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-2",
+            "displayId": "PS-02",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-3",
+            "displayId": "PS-03",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-4",
+            "displayId": "PS-04",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-5",
+            "displayId": "PS-05",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-6",
+            "displayId": "PS-06",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-7",
+            "displayId": "PS-07",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-8",
+            "displayId": "PS-08",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-9",
+            "displayId": "PS-09",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-1",
+            "displayId": "RA-01",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-2",
+            "displayId": "RA-02",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-3",
+            "displayId": "RA-03",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-3.1",
+            "displayId": "RA-03 (01)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5",
+            "displayId": "RA-05",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5.2",
+            "displayId": "RA-05 (02)",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.11",
+            "displayId": "RA-05 (11)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-7",
+            "displayId": "RA-07",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-1",
+            "displayId": "SA-01",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-2",
+            "displayId": "SA-02",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-3",
+            "displayId": "SA-03",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-4",
+            "displayId": "SA-04",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.10",
+            "displayId": "SA-04 (10)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-5",
+            "displayId": "SA-05",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-8",
+            "displayId": "SA-08",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-9",
+            "displayId": "SA-09",
+            "family": "SA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-22",
+            "displayId": "SA-22",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-1",
+            "displayId": "SC-01",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-5",
+            "displayId": "SC-05",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7",
+            "displayId": "SC-07",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-8",
+            "displayId": "SC-08",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-8.1",
+            "displayId": "SC-08 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-12",
+            "displayId": "SC-12",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-13",
+            "displayId": "SC-13",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-15",
+            "displayId": "SC-15",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-20",
+            "displayId": "SC-20",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-21",
+            "displayId": "SC-21",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-22",
+            "displayId": "SC-22",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-28",
+            "displayId": "SC-28",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-28.1",
+            "displayId": "SC-28 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-39",
+            "displayId": "SC-39",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-1",
+            "displayId": "SI-01",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-2",
+            "displayId": "SI-02",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-3",
+            "displayId": "SI-03",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4",
+            "displayId": "SI-04",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-5",
+            "displayId": "SI-05",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-12",
+            "displayId": "SI-12",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-1",
+            "displayId": "SR-01",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-2",
+            "displayId": "SR-02",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-2.1",
+            "displayId": "SR-02 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-3",
+            "displayId": "SR-03",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-5",
+            "displayId": "SR-05",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-8",
+            "displayId": "SR-08",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-10",
+            "displayId": "SR-10",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-11",
+            "displayId": "SR-11",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-11.1",
+            "displayId": "SR-11 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-11.2",
+            "displayId": "SR-11 (02)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-12",
+            "displayId": "SR-12",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          }
+        ]
+      },
+      {
+        "class": "c",
+        "interpretedLevel": "Moderate",
+        "baselineCount": 322,
+        "coveredCount": 199,
+        "orphanCount": 123,
+        "annualAssessmentCount": 80,
+        "families": [
+          "AC",
+          "AT",
+          "AU",
+          "CA",
+          "CM",
+          "CP",
+          "IA",
+          "IR",
+          "MA",
+          "MP",
+          "PE",
+          "PL",
+          "PS",
+          "RA",
+          "SA",
+          "SC",
+          "SI",
+          "SR"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-1",
+            "displayId": "AC-01",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.1",
+            "displayId": "AC-02 (01)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.2",
+            "displayId": "AC-02 (02)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.3",
+            "displayId": "AC-02 (03)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.4",
+            "displayId": "AC-02 (04)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.5",
+            "displayId": "AC-02 (05)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.7",
+            "displayId": "AC-02 (07)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.9",
+            "displayId": "AC-02 (09)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.12",
+            "displayId": "AC-02 (12)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.13",
+            "displayId": "AC-02 (13)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-3",
+            "displayId": "AC-03",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-4",
+            "displayId": "AC-04",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-4.21",
+            "displayId": "AC-04 (21)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-5",
+            "displayId": "AC-05",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6",
+            "displayId": "AC-06",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.1",
+            "displayId": "AC-06 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.2",
+            "displayId": "AC-06 (02)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.5",
+            "displayId": "AC-06 (05)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.7",
+            "displayId": "AC-06 (07)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.9",
+            "displayId": "AC-06 (09)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.10",
+            "displayId": "AC-06 (10)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-7",
+            "displayId": "AC-07",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-8",
+            "displayId": "AC-08",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-11",
+            "displayId": "AC-11",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-11.1",
+            "displayId": "AC-11 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-12",
+            "displayId": "AC-12",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-14",
+            "displayId": "AC-14",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17",
+            "displayId": "AC-17",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.1",
+            "displayId": "AC-17 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.2",
+            "displayId": "AC-17 (02)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.4",
+            "displayId": "AC-17 (04)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-18",
+            "displayId": "AC-18",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-18.1",
+            "displayId": "AC-18 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-18.3",
+            "displayId": "AC-18 (03)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-19",
+            "displayId": "AC-19",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-19.5",
+            "displayId": "AC-19 (05)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-20",
+            "displayId": "AC-20",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-20.2",
+            "displayId": "AC-20 (02)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-21",
+            "displayId": "AC-21",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-22",
+            "displayId": "AC-22",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "at-1",
+            "displayId": "AT-01",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "at-2",
+            "displayId": "AT-02",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-2.2",
+            "displayId": "AT-02 (02)",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-2.3",
+            "displayId": "AT-02 (03)",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-3",
+            "displayId": "AT-03",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-4",
+            "displayId": "AT-04",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-1",
+            "displayId": "AU-01",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-3",
+            "displayId": "AU-03",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-3.1",
+            "displayId": "AU-03 (01)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-4",
+            "displayId": "AU-04",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-5",
+            "displayId": "AU-05",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6",
+            "displayId": "AU-06",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6.1",
+            "displayId": "AU-06 (01)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6.3",
+            "displayId": "AU-06 (03)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-7",
+            "displayId": "AU-07",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-7.1",
+            "displayId": "AU-07 (01)",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-8",
+            "displayId": "AU-08",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-9",
+            "displayId": "AU-09",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-9.4",
+            "displayId": "AU-09 (04)",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-11",
+            "displayId": "AU-11",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-12",
+            "displayId": "AU-12",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-1",
+            "displayId": "CA-01",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-2",
+            "displayId": "CA-02",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-2.1",
+            "displayId": "CA-02 (01)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-2.3",
+            "displayId": "CA-02 (03)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-3",
+            "displayId": "CA-03",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-6",
+            "displayId": "CA-06",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-7",
+            "displayId": "CA-07",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-7.1",
+            "displayId": "CA-07 (01)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-7.4",
+            "displayId": "CA-07 (04)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-8",
+            "displayId": "CA-08",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-8.1",
+            "displayId": "CA-08 (01)",
+            "family": "CA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-8.2",
+            "displayId": "CA-08 (02)",
+            "family": "CA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-9",
+            "displayId": "CA-09",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-1",
+            "displayId": "CM-01",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-2.2",
+            "displayId": "CM-02 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-2.3",
+            "displayId": "CM-02 (03)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-2.7",
+            "displayId": "CM-02 (07)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3",
+            "displayId": "CM-03",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3.2",
+            "displayId": "CM-03 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3.4",
+            "displayId": "CM-03 (04)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-4",
+            "displayId": "CM-04",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-4.2",
+            "displayId": "CM-04 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-5",
+            "displayId": "CM-05",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-5.1",
+            "displayId": "CM-05 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-5.5",
+            "displayId": "CM-05 (05)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-6.1",
+            "displayId": "CM-06 (01)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-7",
+            "displayId": "CM-07",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7.1",
+            "displayId": "CM-07 (01)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7.2",
+            "displayId": "CM-07 (02)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7.5",
+            "displayId": "CM-07 (05)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8",
+            "displayId": "CM-08",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8.1",
+            "displayId": "CM-08 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8.3",
+            "displayId": "CM-08 (03)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-9",
+            "displayId": "CM-09",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-10",
+            "displayId": "CM-10",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-11",
+            "displayId": "CM-11",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-12",
+            "displayId": "CM-12",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-12.1",
+            "displayId": "CM-12 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-1",
+            "displayId": "CP-01",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-2",
+            "displayId": "CP-02",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-2.1",
+            "displayId": "CP-02 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-2.3",
+            "displayId": "CP-02 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-2.8",
+            "displayId": "CP-02 (08)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-3",
+            "displayId": "CP-03",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-4",
+            "displayId": "CP-04",
+            "family": "CP",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-4.1",
+            "displayId": "CP-04 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-6",
+            "displayId": "CP-06",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-6.1",
+            "displayId": "CP-06 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-6.3",
+            "displayId": "CP-06 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7",
+            "displayId": "CP-07",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.1",
+            "displayId": "CP-07 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.2",
+            "displayId": "CP-07 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.3",
+            "displayId": "CP-07 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-8",
+            "displayId": "CP-08",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-8.1",
+            "displayId": "CP-08 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-8.2",
+            "displayId": "CP-08 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-9",
+            "displayId": "CP-09",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-9.1",
+            "displayId": "CP-09 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-9.8",
+            "displayId": "CP-09 (08)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-10.2",
+            "displayId": "CP-10 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-1",
+            "displayId": "IA-01",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2",
+            "displayId": "IA-02",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.1",
+            "displayId": "IA-02 (01)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.2",
+            "displayId": "IA-02 (02)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.5",
+            "displayId": "IA-02 (05)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2.6",
+            "displayId": "IA-02 (06)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2.8",
+            "displayId": "IA-02 (08)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.12",
+            "displayId": "IA-02 (12)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-3",
+            "displayId": "IA-03",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-4",
+            "displayId": "IA-04",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-4.4",
+            "displayId": "IA-04 (04)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5",
+            "displayId": "IA-05",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.1",
+            "displayId": "IA-05 (01)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.2",
+            "displayId": "IA-05 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.6",
+            "displayId": "IA-05 (06)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.7",
+            "displayId": "IA-05 (07)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-6",
+            "displayId": "IA-06",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-7",
+            "displayId": "IA-07",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-8",
+            "displayId": "IA-08",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-8.1",
+            "displayId": "IA-08 (01)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-8.2",
+            "displayId": "IA-08 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-8.4",
+            "displayId": "IA-08 (04)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-11",
+            "displayId": "IA-11",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12",
+            "displayId": "IA-12",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12.2",
+            "displayId": "IA-12 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12.3",
+            "displayId": "IA-12 (03)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12.5",
+            "displayId": "IA-12 (05)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-1",
+            "displayId": "IR-01",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-2",
+            "displayId": "IR-02",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-3",
+            "displayId": "IR-03",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-3.2",
+            "displayId": "IR-03 (02)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-4",
+            "displayId": "IR-04",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-4.1",
+            "displayId": "IR-04 (01)",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-5",
+            "displayId": "IR-05",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-6",
+            "displayId": "IR-06",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-6.1",
+            "displayId": "IR-06 (01)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-6.3",
+            "displayId": "IR-06 (03)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-7",
+            "displayId": "IR-07",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-7.1",
+            "displayId": "IR-07 (01)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-8",
+            "displayId": "IR-08",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-9",
+            "displayId": "IR-09",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-9.2",
+            "displayId": "IR-09 (02)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-9.3",
+            "displayId": "IR-09 (03)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-9.4",
+            "displayId": "IR-09 (04)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-1",
+            "displayId": "MA-01",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-2",
+            "displayId": "MA-02",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ma-3",
+            "displayId": "MA-03",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3.1",
+            "displayId": "MA-03 (01)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3.2",
+            "displayId": "MA-03 (02)",
+            "family": "MA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3.3",
+            "displayId": "MA-03 (03)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-4",
+            "displayId": "MA-04",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-5",
+            "displayId": "MA-05",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-5.1",
+            "displayId": "MA-05 (01)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-6",
+            "displayId": "MA-06",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-1",
+            "displayId": "MP-01",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-2",
+            "displayId": "MP-02",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-3",
+            "displayId": "MP-03",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-4",
+            "displayId": "MP-04",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-5",
+            "displayId": "MP-05",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-6",
+            "displayId": "MP-06",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-7",
+            "displayId": "MP-07",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-1",
+            "displayId": "PE-01",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-2",
+            "displayId": "PE-02",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-3",
+            "displayId": "PE-03",
+            "family": "PE",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-4",
+            "displayId": "PE-04",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-5",
+            "displayId": "PE-05",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-6",
+            "displayId": "PE-06",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-6.1",
+            "displayId": "PE-06 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-8",
+            "displayId": "PE-08",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-9",
+            "displayId": "PE-09",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-10",
+            "displayId": "PE-10",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-11",
+            "displayId": "PE-11",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-12",
+            "displayId": "PE-12",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13",
+            "displayId": "PE-13",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13.1",
+            "displayId": "PE-13 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13.2",
+            "displayId": "PE-13 (02)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-14",
+            "displayId": "PE-14",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-15",
+            "displayId": "PE-15",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-16",
+            "displayId": "PE-16",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-17",
+            "displayId": "PE-17",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-1",
+            "displayId": "PL-01",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-2",
+            "displayId": "PL-02",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-4",
+            "displayId": "PL-04",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-4.1",
+            "displayId": "PL-04 (01)",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-8",
+            "displayId": "PL-08",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "pl-10",
+            "displayId": "PL-10",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "pl-11",
+            "displayId": "PL-11",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-1",
+            "displayId": "PS-01",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-2",
+            "displayId": "PS-02",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-3",
+            "displayId": "PS-03",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-3.3",
+            "displayId": "PS-03 (03)",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-4",
+            "displayId": "PS-04",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-5",
+            "displayId": "PS-05",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-6",
+            "displayId": "PS-06",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-7",
+            "displayId": "PS-07",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-8",
+            "displayId": "PS-08",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-9",
+            "displayId": "PS-09",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-1",
+            "displayId": "RA-01",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-2",
+            "displayId": "RA-02",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-3",
+            "displayId": "RA-03",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-3.1",
+            "displayId": "RA-03 (01)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5",
+            "displayId": "RA-05",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5.2",
+            "displayId": "RA-05 (02)",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.3",
+            "displayId": "RA-05 (03)",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.5",
+            "displayId": "RA-05 (05)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5.11",
+            "displayId": "RA-05 (11)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-7",
+            "displayId": "RA-07",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-9",
+            "displayId": "RA-09",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-1",
+            "displayId": "SA-01",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-2",
+            "displayId": "SA-02",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-3",
+            "displayId": "SA-03",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-4",
+            "displayId": "SA-04",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.1",
+            "displayId": "SA-04 (01)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.2",
+            "displayId": "SA-04 (02)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.9",
+            "displayId": "SA-04 (09)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.10",
+            "displayId": "SA-04 (10)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-5",
+            "displayId": "SA-05",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-8",
+            "displayId": "SA-08",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-9",
+            "displayId": "SA-09",
+            "family": "SA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-9.1",
+            "displayId": "SA-09 (01)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-9.2",
+            "displayId": "SA-09 (02)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-9.5",
+            "displayId": "SA-09 (05)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-10",
+            "displayId": "SA-10",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-11",
+            "displayId": "SA-11",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-11.1",
+            "displayId": "SA-11 (01)",
+            "family": "SA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-11.2",
+            "displayId": "SA-11 (02)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-15",
+            "displayId": "SA-15",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-15.3",
+            "displayId": "SA-15 (03)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-22",
+            "displayId": "SA-22",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-1",
+            "displayId": "SC-01",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-2",
+            "displayId": "SC-02",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-4",
+            "displayId": "SC-04",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-5",
+            "displayId": "SC-05",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7",
+            "displayId": "SC-07",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.3",
+            "displayId": "SC-07 (03)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.4",
+            "displayId": "SC-07 (04)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.5",
+            "displayId": "SC-07 (05)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.7",
+            "displayId": "SC-07 (07)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.8",
+            "displayId": "SC-07 (08)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.12",
+            "displayId": "SC-07 (12)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-7.18",
+            "displayId": "SC-07 (18)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-8",
+            "displayId": "SC-08",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-8.1",
+            "displayId": "SC-08 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-10",
+            "displayId": "SC-10",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-12",
+            "displayId": "SC-12",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-13",
+            "displayId": "SC-13",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-15",
+            "displayId": "SC-15",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-17",
+            "displayId": "SC-17",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-18",
+            "displayId": "SC-18",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-20",
+            "displayId": "SC-20",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-21",
+            "displayId": "SC-21",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-22",
+            "displayId": "SC-22",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-28",
+            "displayId": "SC-28",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-28.1",
+            "displayId": "SC-28 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-39",
+            "displayId": "SC-39",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-45",
+            "displayId": "SC-45",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-45.1",
+            "displayId": "SC-45 (01)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-1",
+            "displayId": "SI-01",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-2",
+            "displayId": "SI-02",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-2.2",
+            "displayId": "SI-02 (02)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-2.3",
+            "displayId": "SI-02 (03)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-3",
+            "displayId": "SI-03",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4",
+            "displayId": "SI-04",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.1",
+            "displayId": "SI-04 (01)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.2",
+            "displayId": "SI-04 (02)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.4",
+            "displayId": "SI-04 (04)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.5",
+            "displayId": "SI-04 (05)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.16",
+            "displayId": "SI-04 (16)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.18",
+            "displayId": "SI-04 (18)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.23",
+            "displayId": "SI-04 (23)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-5",
+            "displayId": "SI-05",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-6",
+            "displayId": "SI-06",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-7",
+            "displayId": "SI-07",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-7.1",
+            "displayId": "SI-07 (01)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-7.7",
+            "displayId": "SI-07 (07)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-8",
+            "displayId": "SI-08",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-8.2",
+            "displayId": "SI-08 (02)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-10",
+            "displayId": "SI-10",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-11",
+            "displayId": "SI-11",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-12",
+            "displayId": "SI-12",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-16",
+            "displayId": "SI-16",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-1",
+            "displayId": "SR-01",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-2",
+            "displayId": "SR-02",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-2.1",
+            "displayId": "SR-02 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-3",
+            "displayId": "SR-03",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-5",
+            "displayId": "SR-05",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-6",
+            "displayId": "SR-06",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-8",
+            "displayId": "SR-08",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-10",
+            "displayId": "SR-10",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-11",
+            "displayId": "SR-11",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-11.1",
+            "displayId": "SR-11 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-11.2",
+            "displayId": "SR-11 (02)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-12",
+            "displayId": "SR-12",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          }
+        ]
+      },
+      {
+        "class": "d",
+        "interpretedLevel": "High",
+        "baselineCount": 409,
+        "coveredCount": 199,
+        "orphanCount": 210,
+        "annualAssessmentCount": 101,
+        "families": [
+          "AC",
+          "AT",
+          "AU",
+          "CA",
+          "CM",
+          "CP",
+          "IA",
+          "IR",
+          "MA",
+          "MP",
+          "PE",
+          "PL",
+          "PS",
+          "RA",
+          "SA",
+          "SC",
+          "SI",
+          "SR"
+        ],
+        "controls": [
+          {
+            "canonicalId": "ac-1",
+            "displayId": "AC-01",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2",
+            "displayId": "AC-02",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.1",
+            "displayId": "AC-02 (01)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.2",
+            "displayId": "AC-02 (02)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.3",
+            "displayId": "AC-02 (03)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.4",
+            "displayId": "AC-02 (04)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.5",
+            "displayId": "AC-02 (05)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-2.7",
+            "displayId": "AC-02 (07)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.9",
+            "displayId": "AC-02 (09)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.11",
+            "displayId": "AC-02 (11)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.12",
+            "displayId": "AC-02 (12)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-2.13",
+            "displayId": "AC-02 (13)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-3",
+            "displayId": "AC-03",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-4",
+            "displayId": "AC-04",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-4.4",
+            "displayId": "AC-04 (04)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-4.21",
+            "displayId": "AC-04 (21)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-5",
+            "displayId": "AC-05",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6",
+            "displayId": "AC-06",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.1",
+            "displayId": "AC-06 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.2",
+            "displayId": "AC-06 (02)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.3",
+            "displayId": "AC-06 (03)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-6.5",
+            "displayId": "AC-06 (05)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.7",
+            "displayId": "AC-06 (07)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.8",
+            "displayId": "AC-06 (08)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-6.9",
+            "displayId": "AC-06 (09)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-6.10",
+            "displayId": "AC-06 (10)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-7",
+            "displayId": "AC-07",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-8",
+            "displayId": "AC-08",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-10",
+            "displayId": "AC-10",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-11",
+            "displayId": "AC-11",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-11.1",
+            "displayId": "AC-11 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-12",
+            "displayId": "AC-12",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-14",
+            "displayId": "AC-14",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17",
+            "displayId": "AC-17",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.1",
+            "displayId": "AC-17 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.2",
+            "displayId": "AC-17 (02)",
+            "family": "AC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.3",
+            "displayId": "AC-17 (03)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-17.4",
+            "displayId": "AC-17 (04)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-18",
+            "displayId": "AC-18",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-18.1",
+            "displayId": "AC-18 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-18.3",
+            "displayId": "AC-18 (03)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-18.4",
+            "displayId": "AC-18 (04)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-18.5",
+            "displayId": "AC-18 (05)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-19",
+            "displayId": "AC-19",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-19.5",
+            "displayId": "AC-19 (05)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-20",
+            "displayId": "AC-20",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-20.1",
+            "displayId": "AC-20 (01)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ac-20.2",
+            "displayId": "AC-20 (02)",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-21",
+            "displayId": "AC-21",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ac-22",
+            "displayId": "AC-22",
+            "family": "AC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "at-1",
+            "displayId": "AT-01",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "at-2",
+            "displayId": "AT-02",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-2.2",
+            "displayId": "AT-02 (02)",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-2.3",
+            "displayId": "AT-02 (03)",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-3",
+            "displayId": "AT-03",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "at-4",
+            "displayId": "AT-04",
+            "family": "AT",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-1",
+            "displayId": "AU-01",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-2",
+            "displayId": "AU-02",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-3",
+            "displayId": "AU-03",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-3.1",
+            "displayId": "AU-03 (01)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-4",
+            "displayId": "AU-04",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-5",
+            "displayId": "AU-05",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-5.1",
+            "displayId": "AU-05 (01)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-5.2",
+            "displayId": "AU-05 (02)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-6",
+            "displayId": "AU-06",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6.1",
+            "displayId": "AU-06 (01)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6.3",
+            "displayId": "AU-06 (03)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-6.4",
+            "displayId": "AU-06 (04)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-6.5",
+            "displayId": "AU-06 (05)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-6.6",
+            "displayId": "AU-06 (06)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-6.7",
+            "displayId": "AU-06 (07)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-7",
+            "displayId": "AU-07",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-7.1",
+            "displayId": "AU-07 (01)",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-8",
+            "displayId": "AU-08",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-9",
+            "displayId": "AU-09",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-9.2",
+            "displayId": "AU-09 (02)",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-9.3",
+            "displayId": "AU-09 (03)",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-9.4",
+            "displayId": "AU-09 (04)",
+            "family": "AU",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-10",
+            "displayId": "AU-10",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-11",
+            "displayId": "AU-11",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-12",
+            "displayId": "AU-12",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "au-12.1",
+            "displayId": "AU-12 (01)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "au-12.3",
+            "displayId": "AU-12 (03)",
+            "family": "AU",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-1",
+            "displayId": "CA-01",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-2",
+            "displayId": "CA-02",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-2.1",
+            "displayId": "CA-02 (01)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-2.2",
+            "displayId": "CA-02 (02)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-2.3",
+            "displayId": "CA-02 (03)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-3",
+            "displayId": "CA-03",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-3.6",
+            "displayId": "CA-03 (06)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-6",
+            "displayId": "CA-06",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-7",
+            "displayId": "CA-07",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-7.1",
+            "displayId": "CA-07 (01)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-7.4",
+            "displayId": "CA-07 (04)",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ca-8",
+            "displayId": "CA-08",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-8.1",
+            "displayId": "CA-08 (01)",
+            "family": "CA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-8.2",
+            "displayId": "CA-08 (02)",
+            "family": "CA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ca-9",
+            "displayId": "CA-09",
+            "family": "CA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-1",
+            "displayId": "CM-01",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-2",
+            "displayId": "CM-02",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-2.2",
+            "displayId": "CM-02 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-2.3",
+            "displayId": "CM-02 (03)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-2.7",
+            "displayId": "CM-02 (07)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3",
+            "displayId": "CM-03",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3.1",
+            "displayId": "CM-03 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-3.2",
+            "displayId": "CM-03 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3.4",
+            "displayId": "CM-03 (04)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-3.6",
+            "displayId": "CM-03 (06)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-4",
+            "displayId": "CM-04",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-4.1",
+            "displayId": "CM-04 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-4.2",
+            "displayId": "CM-04 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-5",
+            "displayId": "CM-05",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-5.1",
+            "displayId": "CM-05 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-5.5",
+            "displayId": "CM-05 (05)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-6",
+            "displayId": "CM-06",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-6.1",
+            "displayId": "CM-06 (01)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-6.2",
+            "displayId": "CM-06 (02)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-7",
+            "displayId": "CM-07",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7.1",
+            "displayId": "CM-07 (01)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7.2",
+            "displayId": "CM-07 (02)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-7.5",
+            "displayId": "CM-07 (05)",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8",
+            "displayId": "CM-08",
+            "family": "CM",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8.1",
+            "displayId": "CM-08 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8.2",
+            "displayId": "CM-08 (02)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-8.3",
+            "displayId": "CM-08 (03)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-8.4",
+            "displayId": "CM-08 (04)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-9",
+            "displayId": "CM-09",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-10",
+            "displayId": "CM-10",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-11",
+            "displayId": "CM-11",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cm-12",
+            "displayId": "CM-12",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-12.1",
+            "displayId": "CM-12 (01)",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cm-14",
+            "displayId": "CM-14",
+            "family": "CM",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-1",
+            "displayId": "CP-01",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-2",
+            "displayId": "CP-02",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-2.1",
+            "displayId": "CP-02 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-2.2",
+            "displayId": "CP-02 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-2.3",
+            "displayId": "CP-02 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-2.5",
+            "displayId": "CP-02 (05)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-2.8",
+            "displayId": "CP-02 (08)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-3",
+            "displayId": "CP-03",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-3.1",
+            "displayId": "CP-03 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-4",
+            "displayId": "CP-04",
+            "family": "CP",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-4.1",
+            "displayId": "CP-04 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-4.2",
+            "displayId": "CP-04 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-6",
+            "displayId": "CP-06",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-6.1",
+            "displayId": "CP-06 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-6.2",
+            "displayId": "CP-06 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-6.3",
+            "displayId": "CP-06 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7",
+            "displayId": "CP-07",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.1",
+            "displayId": "CP-07 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.2",
+            "displayId": "CP-07 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.3",
+            "displayId": "CP-07 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-7.4",
+            "displayId": "CP-07 (04)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-8",
+            "displayId": "CP-08",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-8.1",
+            "displayId": "CP-08 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-8.2",
+            "displayId": "CP-08 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-8.3",
+            "displayId": "CP-08 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-8.4",
+            "displayId": "CP-08 (04)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-9",
+            "displayId": "CP-09",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-9.1",
+            "displayId": "CP-09 (01)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-9.2",
+            "displayId": "CP-09 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-9.3",
+            "displayId": "CP-09 (03)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-9.5",
+            "displayId": "CP-09 (05)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "cp-9.8",
+            "displayId": "CP-09 (08)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-10",
+            "displayId": "CP-10",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-10.2",
+            "displayId": "CP-10 (02)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "cp-10.4",
+            "displayId": "CP-10 (04)",
+            "family": "CP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-1",
+            "displayId": "IA-01",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2",
+            "displayId": "IA-02",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.1",
+            "displayId": "IA-02 (01)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.2",
+            "displayId": "IA-02 (02)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.5",
+            "displayId": "IA-02 (05)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2.6",
+            "displayId": "IA-02 (06)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-2.8",
+            "displayId": "IA-02 (08)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-2.12",
+            "displayId": "IA-02 (12)",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-3",
+            "displayId": "IA-03",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-4",
+            "displayId": "IA-04",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-4.4",
+            "displayId": "IA-04 (04)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5",
+            "displayId": "IA-05",
+            "family": "IA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.1",
+            "displayId": "IA-05 (01)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.2",
+            "displayId": "IA-05 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.6",
+            "displayId": "IA-05 (06)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-5.7",
+            "displayId": "IA-05 (07)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-5.8",
+            "displayId": "IA-05 (08)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-5.13",
+            "displayId": "IA-05 (13)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-6",
+            "displayId": "IA-06",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-7",
+            "displayId": "IA-07",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-8",
+            "displayId": "IA-08",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-8.1",
+            "displayId": "IA-08 (01)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-8.2",
+            "displayId": "IA-08 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-8.4",
+            "displayId": "IA-08 (04)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-11",
+            "displayId": "IA-11",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12",
+            "displayId": "IA-12",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12.2",
+            "displayId": "IA-12 (02)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12.3",
+            "displayId": "IA-12 (03)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ia-12.4",
+            "displayId": "IA-12 (04)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ia-12.5",
+            "displayId": "IA-12 (05)",
+            "family": "IA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-1",
+            "displayId": "IR-01",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-2",
+            "displayId": "IR-02",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-2.1",
+            "displayId": "IR-02 (01)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-2.2",
+            "displayId": "IR-02 (02)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-3",
+            "displayId": "IR-03",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-3.2",
+            "displayId": "IR-03 (02)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-4",
+            "displayId": "IR-04",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-4.1",
+            "displayId": "IR-04 (01)",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-4.2",
+            "displayId": "IR-04 (02)",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-4.4",
+            "displayId": "IR-04 (04)",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-4.6",
+            "displayId": "IR-04 (06)",
+            "family": "IR",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-4.11",
+            "displayId": "IR-04 (11)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-5",
+            "displayId": "IR-05",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-5.1",
+            "displayId": "IR-05 (01)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-6",
+            "displayId": "IR-06",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-6.1",
+            "displayId": "IR-06 (01)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-6.3",
+            "displayId": "IR-06 (03)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-7",
+            "displayId": "IR-07",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-7.1",
+            "displayId": "IR-07 (01)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-8",
+            "displayId": "IR-08",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ir-9",
+            "displayId": "IR-09",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-9.2",
+            "displayId": "IR-09 (02)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-9.3",
+            "displayId": "IR-09 (03)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ir-9.4",
+            "displayId": "IR-09 (04)",
+            "family": "IR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-1",
+            "displayId": "MA-01",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-2",
+            "displayId": "MA-02",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ma-2.2",
+            "displayId": "MA-02 (02)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3",
+            "displayId": "MA-03",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3.1",
+            "displayId": "MA-03 (01)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3.2",
+            "displayId": "MA-03 (02)",
+            "family": "MA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-3.3",
+            "displayId": "MA-03 (03)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-4",
+            "displayId": "MA-04",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-4.3",
+            "displayId": "MA-04 (03)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-5",
+            "displayId": "MA-05",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-5.1",
+            "displayId": "MA-05 (01)",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ma-6",
+            "displayId": "MA-06",
+            "family": "MA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-1",
+            "displayId": "MP-01",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-2",
+            "displayId": "MP-02",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-3",
+            "displayId": "MP-03",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-4",
+            "displayId": "MP-04",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-5",
+            "displayId": "MP-05",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-6",
+            "displayId": "MP-06",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-6.1",
+            "displayId": "MP-06 (01)",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-6.2",
+            "displayId": "MP-06 (02)",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-6.3",
+            "displayId": "MP-06 (03)",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "mp-7",
+            "displayId": "MP-07",
+            "family": "MP",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-1",
+            "displayId": "PE-01",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-2",
+            "displayId": "PE-02",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-3",
+            "displayId": "PE-03",
+            "family": "PE",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-3.1",
+            "displayId": "PE-03 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-4",
+            "displayId": "PE-04",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-5",
+            "displayId": "PE-05",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-6",
+            "displayId": "PE-06",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-6.1",
+            "displayId": "PE-06 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-6.4",
+            "displayId": "PE-06 (04)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-8",
+            "displayId": "PE-08",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-8.1",
+            "displayId": "PE-08 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-9",
+            "displayId": "PE-09",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-10",
+            "displayId": "PE-10",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-11",
+            "displayId": "PE-11",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-11.1",
+            "displayId": "PE-11 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-12",
+            "displayId": "PE-12",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13",
+            "displayId": "PE-13",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13.1",
+            "displayId": "PE-13 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-13.2",
+            "displayId": "PE-13 (02)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-14",
+            "displayId": "PE-14",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-14.2",
+            "displayId": "PE-14 (02)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-15",
+            "displayId": "PE-15",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-15.1",
+            "displayId": "PE-15 (01)",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-16",
+            "displayId": "PE-16",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-17",
+            "displayId": "PE-17",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pe-18",
+            "displayId": "PE-18",
+            "family": "PE",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-1",
+            "displayId": "PL-01",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-2",
+            "displayId": "PL-02",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-4",
+            "displayId": "PL-04",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-4.1",
+            "displayId": "PL-04 (01)",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "pl-8",
+            "displayId": "PL-08",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "pl-10",
+            "displayId": "PL-10",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "pl-11",
+            "displayId": "PL-11",
+            "family": "PL",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-1",
+            "displayId": "PS-01",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-2",
+            "displayId": "PS-02",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-3",
+            "displayId": "PS-03",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-3.3",
+            "displayId": "PS-03 (03)",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-4",
+            "displayId": "PS-04",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-4.2",
+            "displayId": "PS-04 (02)",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ps-5",
+            "displayId": "PS-05",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-6",
+            "displayId": "PS-06",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-7",
+            "displayId": "PS-07",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-8",
+            "displayId": "PS-08",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ps-9",
+            "displayId": "PS-09",
+            "family": "PS",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-1",
+            "displayId": "RA-01",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-2",
+            "displayId": "RA-02",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-3",
+            "displayId": "RA-03",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-3.1",
+            "displayId": "RA-03 (01)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5",
+            "displayId": "RA-05",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5.2",
+            "displayId": "RA-05 (02)",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.3",
+            "displayId": "RA-05 (03)",
+            "family": "RA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.4",
+            "displayId": "RA-05 (04)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.5",
+            "displayId": "RA-05 (05)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-5.8",
+            "displayId": "RA-05 (08)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-5.11",
+            "displayId": "RA-05 (11)",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "ra-7",
+            "displayId": "RA-07",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "ra-9",
+            "displayId": "RA-09",
+            "family": "RA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-1",
+            "displayId": "SA-01",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-2",
+            "displayId": "SA-02",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-3",
+            "displayId": "SA-03",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-4",
+            "displayId": "SA-04",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.1",
+            "displayId": "SA-04 (01)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.2",
+            "displayId": "SA-04 (02)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.5",
+            "displayId": "SA-04 (05)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.9",
+            "displayId": "SA-04 (09)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-4.10",
+            "displayId": "SA-04 (10)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-5",
+            "displayId": "SA-05",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-8",
+            "displayId": "SA-08",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-9",
+            "displayId": "SA-09",
+            "family": "SA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-9.1",
+            "displayId": "SA-09 (01)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-9.2",
+            "displayId": "SA-09 (02)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-9.5",
+            "displayId": "SA-09 (05)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-10",
+            "displayId": "SA-10",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-11",
+            "displayId": "SA-11",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-11.1",
+            "displayId": "SA-11 (01)",
+            "family": "SA",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-11.2",
+            "displayId": "SA-11 (02)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-15",
+            "displayId": "SA-15",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-15.3",
+            "displayId": "SA-15 (03)",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sa-16",
+            "displayId": "SA-16",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-17",
+            "displayId": "SA-17",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-21",
+            "displayId": "SA-21",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sa-22",
+            "displayId": "SA-22",
+            "family": "SA",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-1",
+            "displayId": "SC-01",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-2",
+            "displayId": "SC-02",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-3",
+            "displayId": "SC-03",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-4",
+            "displayId": "SC-04",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-5",
+            "displayId": "SC-05",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7",
+            "displayId": "SC-07",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.3",
+            "displayId": "SC-07 (03)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.4",
+            "displayId": "SC-07 (04)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.5",
+            "displayId": "SC-07 (05)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.7",
+            "displayId": "SC-07 (07)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.8",
+            "displayId": "SC-07 (08)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-7.10",
+            "displayId": "SC-07 (10)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-7.12",
+            "displayId": "SC-07 (12)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-7.18",
+            "displayId": "SC-07 (18)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-7.20",
+            "displayId": "SC-07 (20)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-7.21",
+            "displayId": "SC-07 (21)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-8",
+            "displayId": "SC-08",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-8.1",
+            "displayId": "SC-08 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-10",
+            "displayId": "SC-10",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-12",
+            "displayId": "SC-12",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-12.1",
+            "displayId": "SC-12 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-13",
+            "displayId": "SC-13",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-15",
+            "displayId": "SC-15",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-17",
+            "displayId": "SC-17",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-18",
+            "displayId": "SC-18",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-20",
+            "displayId": "SC-20",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-21",
+            "displayId": "SC-21",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-22",
+            "displayId": "SC-22",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-23",
+            "displayId": "SC-23",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-24",
+            "displayId": "SC-24",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-28",
+            "displayId": "SC-28",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-28.1",
+            "displayId": "SC-28 (01)",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-39",
+            "displayId": "SC-39",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sc-45",
+            "displayId": "SC-45",
+            "family": "SC",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sc-45.1",
+            "displayId": "SC-45 (01)",
+            "family": "SC",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-1",
+            "displayId": "SI-01",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-2",
+            "displayId": "SI-02",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-2.2",
+            "displayId": "SI-02 (02)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-2.3",
+            "displayId": "SI-02 (03)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-3",
+            "displayId": "SI-03",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4",
+            "displayId": "SI-04",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.1",
+            "displayId": "SI-04 (01)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.2",
+            "displayId": "SI-04 (02)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.4",
+            "displayId": "SI-04 (04)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.5",
+            "displayId": "SI-04 (05)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-4.10",
+            "displayId": "SI-04 (10)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.11",
+            "displayId": "SI-04 (11)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.12",
+            "displayId": "SI-04 (12)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.14",
+            "displayId": "SI-04 (14)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.16",
+            "displayId": "SI-04 (16)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.18",
+            "displayId": "SI-04 (18)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.19",
+            "displayId": "SI-04 (19)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.20",
+            "displayId": "SI-04 (20)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.22",
+            "displayId": "SI-04 (22)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-4.23",
+            "displayId": "SI-04 (23)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-5",
+            "displayId": "SI-05",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-5.1",
+            "displayId": "SI-05 (01)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-6",
+            "displayId": "SI-06",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-7",
+            "displayId": "SI-07",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-7.1",
+            "displayId": "SI-07 (01)",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-7.2",
+            "displayId": "SI-07 (02)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-7.5",
+            "displayId": "SI-07 (05)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-7.7",
+            "displayId": "SI-07 (07)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-7.15",
+            "displayId": "SI-07 (15)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "si-8",
+            "displayId": "SI-08",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-8.2",
+            "displayId": "SI-08 (02)",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-10",
+            "displayId": "SI-10",
+            "family": "SI",
+            "inAnnualAssessment": true,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-11",
+            "displayId": "SI-11",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-12",
+            "displayId": "SI-12",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "si-16",
+            "displayId": "SI-16",
+            "family": "SI",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-1",
+            "displayId": "SR-01",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-2",
+            "displayId": "SR-02",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-2.1",
+            "displayId": "SR-02 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-3",
+            "displayId": "SR-03",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-5",
+            "displayId": "SR-05",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-6",
+            "displayId": "SR-06",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-8",
+            "displayId": "SR-08",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-9",
+            "displayId": "SR-09",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-9.1",
+            "displayId": "SR-09 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-10",
+            "displayId": "SR-10",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-11",
+            "displayId": "SR-11",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-11.1",
+            "displayId": "SR-11 (01)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": true
+          },
+          {
+            "canonicalId": "sr-11.2",
+            "displayId": "SR-11 (02)",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          },
+          {
+            "canonicalId": "sr-12",
+            "displayId": "SR-12",
+            "family": "SR",
+            "inAnnualAssessment": false,
+            "coveredByKsi": false
+          }
+        ]
+      }
+    ],
+    "classesWithoutBaseline": [
+      "a"
+    ]
+  }
+}
