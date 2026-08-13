@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/schema" },
+    { "path": "packages/dataset" },
+    { "path": "packages/core" }
+  ]
+}

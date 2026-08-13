@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+# generated fixture repos (each carries its own inner .git; built by fixtures/*.build.mjs)
+fixtures/vulnerable-app/
+# local run outputs
+scan-result.json
+ledger/
+exports/

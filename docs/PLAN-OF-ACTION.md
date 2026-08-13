@@ -19,10 +19,10 @@
 
 ## Phase A — environment and scaffold (before M0 counts)
 
-- [ ] A1. `git init` + first commit of the docs tree. Commit anchoring is the product's spine; the repo itself needs history from day one (M5 self-scan and gitleaks history scanning both need real commits).
-- [ ] A2. Toolchain check: Node 22, pnpm. Record exact versions in the session log below.
-- [ ] A3. pnpm workspace scaffold — only what M0 needs: `packages/schema`, `packages/dataset`, `packages/core`, `fixtures/vulnerable-app`. Shared `tsconfig`, vitest, Zod. No console/, no infra/, no empty placeholder packages.
-- [ ] A4. `rampscan doctor` (can be a stub script first): checks for syft, osv-scanner, grype, gitleaks, cosign; prints install hints (brew/apt/release download). Docker optional, as fallback runner only.
+- [x] A1. `git init` + first commit of the docs tree. Commit anchoring is the product's spine; the repo itself needs history from day one (M5 self-scan and gitleaks history scanning both need real commits).
+- [x] A2. Toolchain check: Node 22, pnpm. Record exact versions in the session log below.
+- [x] A3. pnpm workspace scaffold — only what M0 needs: `packages/schema`, `packages/dataset`, `packages/core`, `fixtures/vulnerable-app`. Shared `tsconfig`, vitest, Zod. No console/, no infra/, no empty placeholder packages.
+- [x] A4. `rampscan doctor` (can be a stub script first): checks for syft, osv-scanner, grype, gitleaks, cosign; prints install hints (brew/apt/release download). Docker optional, as fallback runner only.
 
 **Exit test:** `pnpm install && pnpm test` runs green on an empty-but-wired workspace; `git log` shows history.
 
@@ -32,10 +32,10 @@
 
 Build order inside the milestone — schema first, because everything else imports it:
 
-- [ ] B1. `packages/schema` — **Finding** (code-graph shared schema + `ksi_ids`/`control_ids`), **PipelineRecipe** (field-for-field mirror of `aws-evidence.json`'s recipe shape: `ksi_ids`, `control_ids`, `evidence`, `collection` with `kind: "pipeline"`, `expected_output`, `assertions`, `cadence`, `automatable`, `notes`, `caveats` — sole rename `govcloud` → `caveats` — plus `anchor: commit`), **EvidenceBundle** (in-toto statement shape). All Zod, with round-trip tests.
-- [ ] B2. `packages/dataset` — loader over `docs/context/ramprules/derived/` (dev mode) with the `/api/*` pinned mode stubbed behind the same interface; `recipe(id)`, `controlsFor(ksi)`, `ksisFor(control)`; hard failure on `dataset_version` mismatch.
-- [ ] B3. `packages/core` — the six ports (`LedgerStore`, `Signer`, `Runner`, `Scheduler`, `RepoSource`, `Projector`) as interfaces; local adapters stubbed, not implemented.
-- [ ] B4. `fixtures/vulnerable-app` — the planted-fault toy repo: a planted secret (in history, not just HEAD), a vulnerable dependency, an unpinned CI action. Committed with its own git history inside the fixture.
+- [x] B1. `packages/schema` — **Finding** (code-graph shared schema + `ksi_ids`/`control_ids`), **PipelineRecipe** (field-for-field mirror of `aws-evidence.json`'s recipe shape: `ksi_ids`, `control_ids`, `evidence`, `collection` with `kind: "pipeline"`, `expected_output`, `assertions`, `cadence`, `automatable`, `notes`, `caveats` — sole rename `govcloud` → `caveats` — plus `anchor: commit`), **EvidenceBundle** (in-toto statement shape). All Zod, with round-trip tests.
+- [x] B2. `packages/dataset` — loader over `docs/context/ramprules/derived/` (dev mode) with the `/api/*` pinned mode stubbed behind the same interface; `recipe(id)`, `controlsFor(ksi)`, `ksisFor(control)`; hard failure on `dataset_version` mismatch.
+- [x] B3. `packages/core` — the six ports (`LedgerStore`, `Signer`, `Runner`, `Scheduler`, `RepoSource`, `Projector`) as interfaces; local adapters stubbed, not implemented.
+- [x] B4. `fixtures/vulnerable-app` — the planted-fault toy repo: a planted secret (in history, not just HEAD), a vulnerable dependency, an unpinned CI action. Committed with its own git history inside the fixture. *Deviation: a nested `.git` cannot be committed, so the fixture is generated deterministically (fixed timestamps/identity → stable SHAs) by the committed `fixtures/build-vulnerable-app.mjs`; the generated repo is gitignored.*
 
 **Exit test (plan §M0):** `pnpm test` green; a hand-written recipe round-trips through the schema; `ksisFor("ac-2.1")` answers correctly against the snapshot.
 
@@ -119,4 +119,5 @@ Update this table as work lands — newest first. "Phase" refers to this documen
 
 | Date | Phase | What landed | Notes / deviations |
 |---|---|---|---|
+| 2026-08-13 | A + B (M0) | git history started; pnpm workspace (Node v22.22.2, pnpm 9.6.0, git 2.43.0); `packages/schema` (Finding / PipelineRecipe / EvidenceBundle / CollectorManifest, Zod, round-trip tests); `packages/dataset` (dev loader over `derived/`, pinned-mode stub, version pin hard-fails, `ksisFor("ac-2.1") → [KSI-IAM-JIT, KSI-IAM-SUS]` verified); `packages/core` (six ports + stubbed local adapters that reject loudly); `fixtures/build-vulnerable-app.mjs`; `scripts/doctor.mjs`. `pnpm test`: 17/17 green; `pnpm typecheck` clean. | Fixture is generated, not committed (nested `.git` can't be committed) — deterministic script committed instead, SHAs stable (HEAD `9352d78`). Doctor: syft/osv-scanner/grype/gitleaks/cosign absent on this machine, Docker present — install before C2. M0 exit tests pass. Next action: C1 (collector manifest + Runner local adapter). |
 | 2026-08-13 | — | Docs phase: spec, implementation plan, architecture reference, this plan | No code yet. Next action: A1 (`git init`). |
