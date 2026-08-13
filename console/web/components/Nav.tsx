@@ -6,6 +6,7 @@ import { useAuth } from "../lib/pb";
 
 const LINKS = [
   { href: "/", label: "Board" },
+  { href: "/queue", label: "Queue" },
   { href: "/clock", label: "Clock" },
   { href: "/drift", label: "Drift" },
   { href: "/approvals", label: "Approvals" },

@@ -43,6 +43,14 @@ export type DaemonEvent =
       refreshed: number;
       survived: number;
       cacheHits: number;
+      /**
+       * The scan's unevidenced rows with their honest reasons. Unevidenced
+       * rows never reach the ledger (no artifacts, nothing to attest), so the
+       * reason a collector skipped rides the event stream — the console's
+       * action queue tells fixable skips (tool missing, collector crashed)
+       * from honest ones (nothing IaC-shaped to scan) by reading it here.
+       */
+      unevidenced: Array<{ recipeId: string; collector: string; reason: string }>;
     };
 
 export interface DaemonOptions {
@@ -175,6 +183,9 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
       refreshed: outcome.evidence?.refreshed.length ?? 0,
       survived: outcome.evidence?.survived.length ?? 0,
       cacheHits,
+      unevidenced: outcome.result.recipes
+        .filter((r) => r.verdict === "unevidenced")
+        .map((r) => ({ recipeId: r.recipe_id, collector: r.collector, reason: r.reason ?? "" })),
     });
 
     if (mode === "incremental") {

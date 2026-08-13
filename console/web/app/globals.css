@@ -80,6 +80,12 @@ table.reg tr.rowlink:hover td { background: var(--bg-hover); }
 .pill.live { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 45%, transparent); }
 .pill.dead { color: var(--text-dim); border-color: var(--border); }
 
+/* ---- action queue tiers (I2a): divergence loudest, then down the ranks ---- */
+.pill.qkind-divergence { color: var(--violated); font-weight: 700; border-color: var(--violated); background: color-mix(in srgb, var(--violated) 18%, transparent); }
+.pill.qkind-expiring { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 45%, transparent); background: color-mix(in srgb, var(--unevidenced) 12%, transparent); }
+.pill.qkind-new-violation { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 45%, transparent); background: color-mix(in srgb, var(--violated) 12%, transparent); }
+.pill.qkind-actionable-unevidenced { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 30%, transparent); }
+
 /* ---- filters / tabs ---- */
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
 .tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }

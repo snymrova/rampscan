@@ -3,11 +3,12 @@ import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { createProjector, writeProjectionPocketBase } from "@rampscan/projector";
+import { DAEMON_EVENTS_COLLECTION, createProjector, writeProjectionPocketBase } from "@rampscan/projector";
 import type { ProjectionSettings } from "@rampscan/projector";
 import { createLocalLedger } from "@rampscan/ledger";
 import type { CertClass } from "@rampscan/core";
 import { windowMsFor } from "@rampscan/scheduler";
+import { tailDaemonEvents } from "./events.js";
 import { loadRecipes } from "./recipes.js";
 import { DEMO_PASSWORD, DEMO_USERS, bootstrapConsole, startPocketBase } from "./pocketbase.js";
 
@@ -31,6 +32,8 @@ export interface ServeOptions {
   recipesDir: string;
   datasetDir: string;
   datasetPin: string;
+  /** scan/daemon output dir — serve tails outDir/daemon-events.jsonl into the console */
+  outDir: string;
   certClass: CertClass;
   pbPort: number;
   webPort: number;
@@ -85,6 +88,19 @@ export async function serve(options: ServeOptions): Promise<void> {
   }
 
   await project("startup");
+
+  // the daemon's event stream, mirrored so the console can see the machinery
+  // (divergence alerts, skip reasons for the action queue, cadence warnings).
+  // The jsonl file stays the record; the mirror rebuilds from it on start.
+  await pb.admin.ensureCollection(DAEMON_EVENTS_COLLECTION);
+  const eventsTail = await tailDaemonEvents({
+    path: join(options.outDir, "daemon-events.jsonl"),
+    sink: {
+      truncate: () => pb.admin.truncate(DAEMON_EVENTS_COLLECTION.name),
+      insert: (row) => pb.admin.create(DAEMON_EVENTS_COLLECTION.name, { ...row }),
+    },
+    log,
+  });
 
   // the ledger is the record: any append re-projects, so a `rampscan scan`
   // in another terminal moves the board live (PocketBase realtime does the rest)
@@ -144,6 +160,7 @@ export async function serve(options: ServeOptions): Promise<void> {
   await new Promise<void>((resolvePromise) => {
     const shutdown = () => {
       watcher.close();
+      eventsTail.close();
       web?.kill("SIGTERM");
       pb.child.kill("SIGTERM");
       resolvePromise();

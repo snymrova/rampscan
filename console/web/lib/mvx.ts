@@ -7,6 +7,9 @@
 
 export const MVX_WINDOW_DAYS: Record<"b" | "c", number> = { b: 7, c: 3 };
 
+/** the fraction of the window where "fresh" becomes "expiring" — the twin test pins it */
+export const EXPIRING_AT_FRACTION = 0.75;
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface ClockState {
@@ -27,7 +30,7 @@ export function clockState(freshAsOf: string, certClass: "b" | "c", now = Date.n
     windowMs,
     remainingMs,
     fractionUsed,
-    status: remainingMs <= 0 ? "expired" : fractionUsed >= 0.75 ? "expiring" : "fresh",
+    status: remainingMs <= 0 ? "expired" : fractionUsed >= EXPIRING_AT_FRACTION ? "expiring" : "fresh",
   };
 }
 

@@ -261,6 +261,25 @@ export const PROPOSALS_COLLECTION: CollectionSpec = {
   deleteRule: null,
 };
 
+/**
+ * Operational telemetry, not a projection: `rampscan serve` tails the
+ * daemon's events file (daemon-events.jsonl) into this collection so the
+ * console can see the machinery — divergence alerts, cadence warnings, scan
+ * records with skip reasons. Console-readable, superuser-written; the FILE
+ * stays the record, and this copy is rebuilt from its tail on every serve
+ * start. Nothing here is evidence and nothing here can move a register.
+ */
+export const DAEMON_EVENTS_COLLECTION: CollectionSpec = {
+  name: "daemon_events",
+  type: "base",
+  fields: [text("at", true), text("kind", true), text("repo"), json("payload")],
+  listRule: AUTHED,
+  viewRule: AUTHED,
+  createRule: null,
+  updateRule: null,
+  deleteRule: null,
+};
+
 /** Console settings the projector stamps into meta — written by one hand only. */
 export interface ProjectionSettings {
   certClass: "b" | "c";

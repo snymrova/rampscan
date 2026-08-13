@@ -76,6 +76,20 @@ export interface MetaRecord {
   settings: { certClass: "b" | "c"; reproduceCommand: string } | null;
 }
 
+/**
+ * One daemon event as `rampscan serve` tails it out of daemon-events.jsonl —
+ * operational telemetry, not a projection: the FILE stays the record, this
+ * copy exists so the console can see the machinery (divergence alerts,
+ * cadence warnings, scan records). `payload` is the whole event line.
+ */
+export interface DaemonEventRecord {
+  id: string;
+  at: string;
+  kind: string;
+  repo: string;
+  payload: Record<string, unknown>;
+}
+
 export interface ProposalRecord {
   id: string;
   repo: string;

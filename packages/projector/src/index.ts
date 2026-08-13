@@ -5,6 +5,7 @@ export {
   PocketBaseAdmin,
   PROJECTION_COLLECTIONS,
   PROPOSALS_COLLECTION,
+  DAEMON_EVENTS_COLLECTION,
   ensureProjectionCollections,
   writeProjectionPocketBase,
   readProjectionPocketBase,
