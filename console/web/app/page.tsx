@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
@@ -340,8 +341,31 @@ function RegisterRowView({ row, change }: { row: RegisterRecord; change?: Regist
         </td>
         <td className="mono">{row.recipe_id}</td>
         <td className="muted">{row.repo}</td>
-        <td className="mono faint">{row.ksi_ids.join(" ")}</td>
-        <td className="mono faint">{row.control_ids.join(" ")}</td>
+        <td className="mono faint">
+          {/* recipe → KSI/control hop (I3a): each id opens its register rollup */}
+          {row.ksi_ids.map((k) => (
+            <Link
+              key={k}
+              href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ marginRight: 8 }}
+            >
+              {k}
+            </Link>
+          ))}
+        </td>
+        <td className="mono faint">
+          {row.control_ids.map((c) => (
+            <Link
+              key={c}
+              href={`/controls?reg=controls&id=${encodeURIComponent(c)}`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ marginRight: 8 }}
+            >
+              {c}
+            </Link>
+          ))}
+        </td>
         <td className="muted">
           {row.fresh_as_of ? `${formatAge(row.fresh_as_of)} ago` : "—"}
         </td>

@@ -103,6 +103,9 @@ table.reg tr.rowlink:hover td { background: var(--bg-hover); }
   overflow-wrap: anywhere;
 }
 
+/* ---- the control/KSI register (I3a): the deep-linked rollup row ---- */
+tr.hl > td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
 /* ---- the "since baseline" diff strip (I2d) ---- */
 .diff-strip {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;

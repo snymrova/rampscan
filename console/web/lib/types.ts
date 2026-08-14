@@ -42,6 +42,32 @@ export interface RegisterRecord {
   scoping: ScopingInfo | null;
 }
 
+export interface RollupCounts {
+  evidenced: number;
+  violated: number;
+  unevidenced: number;
+  notApplicable: number;
+  /** mapped recipes for this (repo, id) — the sum of the four states */
+  total: number;
+}
+
+/**
+ * One row of the control or KSI register (I1a) as the projector writes the
+ * `controls` / `ksis` collections: every mapped recipe folded to a single
+ * verdict (violated beats unevidenced beats evidenced; notApplicable only
+ * when every mapped recipe is). Counts are attributable — an independent
+ * recount from the register rows always reproduces them.
+ */
+export interface RollupRecord {
+  id: string;
+  repo: string;
+  /** a control id ("si-7.1") or a KSI id ("KSI-SCR-MIT") — "id" collides with PB's record id */
+  rollup_id: string;
+  state: RegisterState;
+  recipe_ids: string[];
+  counts: RollupCounts;
+}
+
 export interface CoverageRecord {
   id: string;
   repo: string;

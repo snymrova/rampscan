@@ -99,9 +99,22 @@ function Evidence({ digest }: { digest: string }) {
             </>
           )}
           <dt>ksi</dt>
-          <dd className="mono">{(p["ksi_ids"] as string[]).join(" ")}</dd>
+          <dd className="mono">
+            {/* the traversal's back edge (I3a): bundle → KSI → its register rollup */}
+            {(p["ksi_ids"] as string[]).map((k) => (
+              <Link key={k} href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`} style={{ marginRight: 10 }}>
+                {k}
+              </Link>
+            ))}
+          </dd>
           <dt>controls</dt>
-          <dd className="mono">{(p["control_ids"] as string[]).join(" ")}</dd>
+          <dd className="mono">
+            {(p["control_ids"] as string[]).map((c) => (
+              <Link key={c} href={`/controls?reg=controls&id=${encodeURIComponent(c)}`} style={{ marginRight: 10 }}>
+                {c}
+              </Link>
+            ))}
+          </dd>
           <dt>timestamp</dt>
           <dd>{p["timestamp"]}</dd>
           {isEvidence && (

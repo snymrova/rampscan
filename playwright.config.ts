@@ -16,7 +16,9 @@ export default defineConfig({
   testDir: "./e2e",
   // one serve, one PocketBase: keep the first smoke serial and deterministic
   workers: 1,
-  timeout: 60_000,
+  // roomy per-test cap: a test's first client-side navigation can sit behind
+  // next dev compiling the target route (see the 45s toHaveURL waits)
+  timeout: 120_000,
   // next dev compiles each page on first hit — generous expect timeout
   expect: { timeout: 15_000 },
   reporter: [["list"]],

@@ -50,13 +50,44 @@ test("evidence detail: assertions render with the flagship call path", async ({ 
   // click the recipe cell, not the row: the row's trailing actions cell
   // swallows clicks (stopPropagation), and a row-center click can land there
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
-  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/);
+  // first client-side hit of /evidence/[digest]: next dev compiles the route
+  // on demand, and under load that can outlast the default expect timeout
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
 
   // at least one failing assertion, with the reachability call path —
   // the » separator is the call-path grammar (src/index.js » lodash/merge)
   await expect(page.locator(".assertion-fail").first()).toBeVisible();
   await expect(page.locator("body")).toContainText("lodash");
   await expect(page.locator("body")).toContainText("»");
+});
+
+test("control register: rollup → recipe → evidence, and the evidence links back (I3a)", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/controls");
+  await expect(page.getByRole("heading", { name: "Control register" })).toBeVisible();
+
+  // ra-5 maps the flagship recipe — the fixture scan left the rollup violated,
+  // because violated beats every other mapped verdict in the rollup precedence
+  const row = page
+    .locator("tr")
+    .filter({ has: page.getByRole("cell", { name: "ra-5", exact: true }) });
+  await expect(row.locator(".pill.violated").first()).toBeVisible();
+
+  // control → mapped recipes: expanding lists the flagship with its own verdict
+  await row.click();
+  const sub = page.locator("tr").filter({ hasText: FLAGSHIP });
+  await expect(sub.first()).toBeVisible();
+
+  // recipe → evidence bundle (45s: dev-compile-on-first-hit, as above)
+  await sub.first().click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+
+  // and back (the other direction of the hop): the bundle's control ids link
+  // into the register, deep-linking the rollup row expanded and highlighted
+  await page.getByRole("link", { name: "ra-5", exact: true }).click();
+  await expect(page).toHaveURL(/\/controls\?reg=controls&id=ra-5/);
+  await expect(page.locator("tr.hl .pill.violated").first()).toBeVisible();
+  await expect(page.locator("tr").filter({ hasText: FLAGSHIP }).first()).toBeVisible();
 });
 
 test("action queue: renders ranked, with the scan's new violations", async ({ page }) => {
