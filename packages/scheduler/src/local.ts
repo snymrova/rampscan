@@ -1,5 +1,5 @@
 import type { CertClass, ScanTarget, Scheduler } from "@rampscan/core";
-import { assessCadence } from "./cadence.js";
+import { DEFAULT_SCAN_AT_FRACTION, assessCadence } from "./cadence.js";
 import type { LiveEvidence, ScanReason } from "./cadence.js";
 import { formatDuration, windowMsFor } from "./mvx.js";
 
@@ -24,6 +24,28 @@ export interface SchedulerAssessment {
 
 export type SchedulerEvent =
   | { kind: "registered"; repo: string; cls: CertClass; windowMs: number }
+  | {
+      /**
+       * The heartbeat (plan I2b): one per assessment, INCLUDING quiet ones —
+       * without it a healthy-but-quiet daemon and a dead one write the same
+       * nothing, and the console cannot say which. Carries the cadence
+       * outlook so "next expected action" is computed by the daemon from the
+       * real assessment, never re-derived (or typed) elsewhere.
+       */
+      kind: "tick";
+      repo: string;
+      cls: CertClass;
+      windowMs: number;
+      checkIntervalMs: number;
+      /** live evidence rows this assessment saw */
+      rows: number;
+      scanDue: boolean;
+      reason?: ScanReason;
+      /** when the cadence math next forces a scan — absent when no evidence (a scan is due now) */
+      nextScanDueAt?: string;
+      /** the furthest-run clock, when evidence exists */
+      oldestFractionUsed?: number;
+    }
   | {
       kind: "warn-expiring" | "warn-expired";
       repo: string;
@@ -103,7 +125,29 @@ export function createLocalScheduler(options: LocalSchedulerOptions): LocalSched
     if (options.warnAtFraction !== undefined) cadenceOpts.warnAtFraction = options.warnAtFraction;
     const assessment = assessCadence(rows, cadenceOpts);
 
-    // warnings first — they must land even if the scan below fails or hangs
+    // the heartbeat lands first — like the warnings below, it must be on the
+    // record even if the scan this tick decides on fails or hangs. The next
+    // due time is the oldest bundle's clock crossing the scan-at fraction.
+    const scanAt = options.scanAtFraction ?? DEFAULT_SCAN_AT_FRACTION;
+    const tickEvent: SchedulerEvent & { kind: "tick" } = {
+      kind: "tick",
+      repo: reg.target.repo,
+      cls: reg.cls,
+      windowMs: reg.windowMs,
+      checkIntervalMs,
+      rows: rows.length,
+      scanDue: assessment.scanDue,
+    };
+    if (assessment.reason !== undefined) tickEvent.reason = assessment.reason;
+    if (assessment.oldest) {
+      tickEvent.nextScanDueAt = new Date(
+        Date.parse(assessment.oldest.freshAsOf) + reg.windowMs * scanAt,
+      ).toISOString();
+      tickEvent.oldestFractionUsed = assessment.oldest.clock.fractionUsed;
+    }
+    emit(tickEvent);
+
+    // warnings next — they too must land even if the scan below fails or hangs
     for (const row of [...assessment.expired, ...assessment.expiring]) {
       const kind = row.clock.status === "expired" ? "warn-expired" : "warn-expiring";
       const onceKey = `${row.bundleDigest}:${kind}`;
@@ -190,6 +234,11 @@ export function describeEvent(event: SchedulerEvent): string {
   switch (event.kind) {
     case "registered":
       return `watching ${event.repo} (class window ${formatDuration(event.windowMs)})`;
+    case "tick":
+      return event.scanDue
+        ? `tick: scan due (${event.reason})`
+        : `tick: quiet — ${event.rows} live row(s)` +
+            (event.nextScanDueAt ? `, next cadence scan at ${event.nextScanDueAt}` : "");
     case "warn-expiring":
       return `NEARING EXPIRY ${event.recipeId} — ${formatDuration(event.remainingMs)} left in the window (evidence ${event.bundleDigest.slice(0, 12)})`;
     case "warn-expired":

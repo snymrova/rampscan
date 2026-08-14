@@ -139,6 +139,58 @@ describe("createLocalScheduler", () => {
     expect(h.scans).toHaveLength(1); // the retry on the next tick succeeded
   });
 
+  it("every assessment emits one tick heartbeat — including quiet ones (I2b: a silent daemon is indistinguishable from a dead one)", async () => {
+    const h = harness();
+    h.setRows([row("a", T0 - 100)]); // fresh — nothing due
+    await h.scheduler.ensureCadence("b", { repo: "/repo" });
+    await h.scheduler.tick();
+    h.scheduler.stop();
+    expect(h.scans).toHaveLength(0); // both ticks were quiet
+    const ticks = h.events.filter((e) => e.kind === "tick");
+    expect(ticks).toHaveLength(2);
+    expect(ticks[0]).toMatchObject({
+      repo: "/repo",
+      cls: "b",
+      windowMs: WINDOW,
+      checkIntervalMs: 60_000_000,
+      rows: 1,
+      scanDue: false,
+    });
+  });
+
+  it("the tick carries the cadence outlook: next scan due when the oldest bundle crosses the scan-at fraction", async () => {
+    const h = harness();
+    h.setRows([row("young", T0 - 100), row("old", T0 - 300)]);
+    await h.scheduler.ensureCadence("b", { repo: "/repo" });
+    h.scheduler.stop();
+    const tick = h.events.find((e) => e.kind === "tick");
+    expect(tick).toBeDefined();
+    if (tick?.kind !== "tick") throw new Error("unreachable");
+    // the OLDEST bundle (T0-300) + 0.5 × window drives the next due time
+    expect(tick.nextScanDueAt).toBe(new Date(T0 - 300 + WINDOW * 0.5).toISOString());
+    expect(tick.oldestFractionUsed).toBeCloseTo(300 / WINDOW);
+  });
+
+  it("a due tick says so: scanDue + reason ride the heartbeat; no evidence means no next-due time", async () => {
+    const h = harness();
+    await h.scheduler.ensureCadence("b", { repo: "/repo" }); // no evidence → scan now
+    h.scheduler.stop();
+    const tick = h.events.find((e) => e.kind === "tick");
+    if (tick?.kind !== "tick") throw new Error("no tick emitted");
+    expect(tick.scanDue).toBe(true);
+    expect(tick.reason).toBe("no-evidence");
+    expect(tick.nextScanDueAt).toBeUndefined();
+  });
+
+  it("the heartbeat lands before the scan decision — like the warnings, it must be on the record even if the scan hangs", async () => {
+    const h = harness();
+    h.setRows([row("a", T0 - 600)]); // cadence due
+    await h.scheduler.ensureCadence("b", { repo: "/repo" });
+    h.scheduler.stop();
+    const kinds = h.events.map((e) => e.kind);
+    expect(kinds.indexOf("tick")).toBeLessThan(kinds.indexOf("scan-started"));
+  });
+
   it("stop() halts the loop; registrations remain listed", async () => {
     const h = harness();
     h.setRows([row("a", T0 - 100)]);

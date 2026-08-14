@@ -211,7 +211,7 @@ describe("M5: the clock runs itself", () => {
     expect(recorded.commit).toBe(git(appRoot, "rev-parse", "HEAD"));
   });
 
-  it("the daemon's event log is a computed record: every scan and warning is in daemon-events.jsonl", async () => {
+  it("the daemon's event log is a computed record: every scan and warning is in daemon-events.jsonl — and the tick heartbeat stays OUT of it", async () => {
     daemon.stop();
     const lines = (await readFile(join(base, "out", "daemon-events.jsonl"), "utf8"))
       .trim()
@@ -223,6 +223,25 @@ describe("M5: the clock runs itself", () => {
     expect(kinds.has("cache-verified")).toBe(true);
     expect(kinds.has("divergence")).toBe(true);
     expect(lines.filter((l) => l.kind === "scan-recorded")).toHaveLength(daemon.scanCount());
+    // one heartbeat per check interval would drown the events mirror's tail
+    // (and a standing divergence with it) — ticks live in the snapshot file
+    expect(kinds.has("tick")).toBe(false);
+  });
+
+  it("the tick heartbeat is a snapshot (I2b): daemon-status.json holds exactly the LAST tick's assessment", async () => {
+    const status = JSON.parse(
+      await readFile(join(base, "out", "daemon-status.json"), "utf8"),
+    ) as Record<string, unknown>;
+    expect(status.kind).toBe("tick");
+    expect(status.repo).toBe(resolve(appRoot));
+    expect(status.at).toBe(new Date(T0 + WINDOW * 3.3).toISOString()); // the last tick
+    expect(status.checkIntervalMs).toBe(60_000_000);
+    expect(status.windowMs).toBe(WINDOW);
+    // the last tick's assessment saw the moved HEAD and decided to scan
+    expect(status.scanDue).toBe(true);
+    expect(status.reason).toBe("head-moved");
+    // ticks were emitted to the listener too — one per driven assessment
+    expect(eventsOf("tick").length).toBeGreaterThan(0);
   });
 
   it("resolves paths consistently: the recorded repo is the resolved target", () => {

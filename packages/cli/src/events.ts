@@ -43,7 +43,11 @@ export interface TailHandle {
 
 const DEFAULT_TAIL_LIMIT = 500;
 
-function parseRow(line: string, log: (l: string) => void): DaemonEventRow | undefined {
+function parseRow(
+  line: string,
+  log: (l: string) => void,
+  label = "daemon-events",
+): DaemonEventRow | undefined {
   try {
     const event = JSON.parse(line) as Record<string, unknown>;
     return {
@@ -53,9 +57,69 @@ function parseRow(line: string, log: (l: string) => void): DaemonEventRow | unde
       payload: event,
     };
   } catch {
-    log(`daemon-events: unparseable line skipped: ${line.slice(0, 120)}`);
+    log(`${label}: unparseable line skipped: ${line.slice(0, 120)}`);
     return undefined;
   }
+}
+
+export interface DaemonStatusSink {
+  /** replace the mirror's single row — undefined clears it (no status file, no daemon claim) */
+  replace(row: DaemonEventRow | undefined): Promise<void>;
+}
+
+export interface MirrorStatusOptions {
+  /** the daemon's heartbeat snapshot (outDir/daemon-status.json) — may not exist */
+  path: string;
+  sink: DaemonStatusSink;
+  log?: (line: string) => void;
+}
+
+/**
+ * Mirror daemon-status.json into the console (plan I2b). Unlike the events
+ * tail this is a SNAPSHOT mirror: the file is overwritten each tick, so the
+ * mirror holds at most one row and is replaced wholesale on every change. A
+ * missing file clears the mirror — a stale heartbeat from a previous run must
+ * never masquerade as a live daemon. A half-written file (the overwrite is
+ * not atomic) keeps the previous row; the watcher fires again on completion.
+ */
+export async function mirrorDaemonStatus(options: MirrorStatusOptions): Promise<TailHandle> {
+  const log = options.log ?? (() => {});
+
+  async function refresh(): Promise<void> {
+    let raw: string | undefined;
+    try {
+      raw = await readFile(options.path, "utf8");
+    } catch {
+      await options.sink.replace(undefined);
+      return;
+    }
+    const row = parseRow(raw.trim(), log, "daemon-status");
+    if (row) await options.sink.replace(row);
+  }
+
+  await refresh();
+
+  let chain = Promise.resolve();
+  const schedule = (work: () => Promise<void>): void => {
+    chain = chain.then(work).catch((e) => log(`daemon-status: mirror failed: ${e}`));
+  };
+  let watcher: FSWatcher | undefined;
+  try {
+    watcher = watch(dirname(options.path), (_event, filename) => {
+      if (filename !== basename(options.path)) return;
+      schedule(() => refresh());
+    });
+  } catch (e) {
+    log(`daemon-status: not watching ${dirname(options.path)}: ${e}`);
+  }
+
+  return {
+    ingestNew: () => {
+      schedule(() => refresh());
+      return chain;
+    },
+    close: () => watcher?.close(),
+  };
 }
 
 export async function tailDaemonEvents(options: TailOptions): Promise<TailHandle> {

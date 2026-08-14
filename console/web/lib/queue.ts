@@ -1,4 +1,5 @@
 import { EXPIRING_AT_FRACTION, clockState, formatDuration } from "./mvx";
+import { standingDivergences } from "./status";
 import type { DaemonEventRecord, DriftRecord, RegisterRecord } from "./types";
 
 // The action queue (plan I2a): "what do I act on today", as one ranked list.
@@ -90,17 +91,9 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
 
   // tier 0 — divergence: the most recent full-scan verification outcome per
   // repo stands. A later cache-verified means the cache agrees again; until
-  // then the divergence is live and outranks everything.
-  const verifications = new Map<string, DaemonEventRecord>();
-  for (const event of eventsByTime) {
-    if (event.kind === "divergence" || event.kind === "cache-verified") {
-      verifications.set(event.repo, event);
-    }
-  }
-  const standing = [...verifications.values()]
-    .filter((event) => event.kind === "divergence")
-    .sort((a, b) => b.at.localeCompare(a.at));
-  for (const event of standing) {
+  // then the divergence is live and outranks everything. The reading is
+  // shared with the status strip (status.ts) so the two can never disagree.
+  for (const event of standingDivergences(input.events)) {
     const payload = event.payload as DivergencePayload;
     const divergences = payload.comparison?.divergences ?? [];
     items.push({

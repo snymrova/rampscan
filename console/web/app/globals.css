@@ -67,6 +67,31 @@ table.reg tr:last-child td { border-bottom: none; }
 table.reg tr.rowlink { cursor: pointer; }
 table.reg tr.rowlink:hover td { background: var(--bg-hover); }
 
+/* ---- daemon status strip (I2b) ---- */
+.strip {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; margin: 0 0 16px; font-size: 13px;
+}
+.strip + .strip { margin-top: -8px; }
+.strip-dot {
+  width: 8px; height: 8px; border-radius: 50%; align-self: center;
+  background: var(--text-faint); flex: none;
+}
+.strip.alive { border-color: color-mix(in srgb, var(--evidenced) 35%, transparent); }
+.strip.alive .strip-dot { background: var(--evidenced); }
+.strip.alive.diverged { border-color: color-mix(in srgb, var(--violated) 45%, transparent); }
+.strip.stale {
+  border-color: var(--violated); font-weight: 500;
+  background: color-mix(in srgb, var(--violated) 10%, transparent);
+}
+.strip.stale .strip-dot { background: var(--violated); }
+.strip.stale b { color: var(--violated); letter-spacing: 0.03em; }
+.strip.nodaemon { color: var(--text-dim); }
+.strip-sep { color: var(--text-faint); }
+.strip-divergence { color: var(--violated); }
+.strip-repo { margin-left: auto; }
+
 /* ---- state pills ---- */
 .pill {
   display: inline-block; padding: 1px 9px; border-radius: 999px;

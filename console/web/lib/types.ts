@@ -90,6 +90,15 @@ export interface DaemonEventRecord {
   payload: Record<string, unknown>;
 }
 
+/**
+ * The daemon's heartbeat snapshot as `rampscan serve` mirrors it out of
+ * daemon-status.json — same row shape as an event, but the collection holds
+ * at most one row per repo and is replaced wholesale on every tick: latest
+ * state, not history. An empty collection means no daemon heartbeat exists,
+ * and the status strip says so instead of guessing.
+ */
+export type DaemonStatusRecord = DaemonEventRecord;
+
 export interface ProposalRecord {
   id: string;
   repo: string;

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
 import { getPb, useAuth, useCollection } from "../lib/pb";
 import { controlFamily, ksiTheme } from "../lib/types";
@@ -67,6 +68,8 @@ function Board() {
           ? `dataset ${metaRow.dataset_version} · projected ${new Date(metaRow.projected_at).toLocaleString()} · class ${metaRow.settings?.certClass ?? "?"}`
           : "waiting for a projection — run a scan, or start `rampscan serve` with a ledger"}
       </p>
+
+      <DaemonStrip />
 
       <div className="filters">
         <div className="tabs">

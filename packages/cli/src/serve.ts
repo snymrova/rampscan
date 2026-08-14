@@ -3,12 +3,18 @@ import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { DAEMON_EVENTS_COLLECTION, createProjector, writeProjectionPocketBase } from "@rampscan/projector";
+import {
+  DAEMON_EVENTS_COLLECTION,
+  DAEMON_STATUS_COLLECTION,
+  createProjector,
+  writeProjectionPocketBase,
+} from "@rampscan/projector";
 import type { ProjectionSettings } from "@rampscan/projector";
 import { createLocalLedger } from "@rampscan/ledger";
 import type { CertClass } from "@rampscan/core";
 import { windowMsFor } from "@rampscan/scheduler";
-import { tailDaemonEvents } from "./events.js";
+import { DAEMON_STATUS_FILE } from "./daemon.js";
+import { mirrorDaemonStatus, tailDaemonEvents } from "./events.js";
 import { loadRecipes } from "./recipes.js";
 import { DEMO_PASSWORD, DEMO_USERS, bootstrapConsole, startPocketBase } from "./pocketbase.js";
 
@@ -102,6 +108,23 @@ export async function serve(options: ServeOptions): Promise<void> {
     log,
   });
 
+  // the daemon's heartbeat snapshot (plan I2b): daemon-status.json is
+  // overwritten each tick, so the mirror holds at most one row and is
+  // replaced wholesale — the board's status strip reads it to call the
+  // daemon alive or stale out loud. No file → empty mirror → the strip
+  // says "no daemon" instead of trusting a leftover heartbeat.
+  await pb.admin.ensureCollection(DAEMON_STATUS_COLLECTION);
+  const statusMirror = await mirrorDaemonStatus({
+    path: join(options.outDir, DAEMON_STATUS_FILE),
+    sink: {
+      replace: async (row) => {
+        await pb.admin.truncate(DAEMON_STATUS_COLLECTION.name);
+        if (row) await pb.admin.create(DAEMON_STATUS_COLLECTION.name, { ...row });
+      },
+    },
+    log,
+  });
+
   // the ledger is the record: any append re-projects, so a `rampscan scan`
   // in another terminal moves the board live (PocketBase realtime does the rest)
   await mkdir(options.ledgerDir, { recursive: true });
@@ -161,6 +184,7 @@ export async function serve(options: ServeOptions): Promise<void> {
     const shutdown = () => {
       watcher.close();
       eventsTail.close();
+      statusMirror.close();
       web?.kill("SIGTERM");
       pb.child.kill("SIGTERM");
       resolvePromise();

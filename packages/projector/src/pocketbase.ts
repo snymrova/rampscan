@@ -280,6 +280,25 @@ export const DAEMON_EVENTS_COLLECTION: CollectionSpec = {
   deleteRule: null,
 };
 
+/**
+ * The daemon's heartbeat snapshot (plan I2b): at most one row per repo,
+ * mirrored from daemon-status.json — which the daemon OVERWRITES each tick,
+ * so unlike daemon_events this is latest-state, not history. The board's
+ * status strip reads it to say alive/stale out loud; an empty collection
+ * means no daemon has heartbeat here, and the strip says that instead of
+ * guessing. Console-readable, superuser-written, like the events mirror.
+ */
+export const DAEMON_STATUS_COLLECTION: CollectionSpec = {
+  name: "daemon_status",
+  type: "base",
+  fields: [text("at", true), text("kind", true), text("repo"), json("payload")],
+  listRule: AUTHED,
+  viewRule: AUTHED,
+  createRule: null,
+  updateRule: null,
+  deleteRule: null,
+};
+
 /** Console settings the projector stamps into meta — written by one hand only. */
 export interface ProjectionSettings {
   certClass: "b" | "c";

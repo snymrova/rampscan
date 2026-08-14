@@ -11,7 +11,7 @@ export { recordScoping } from "./scoping.js";
 export type { RecordScopingOptions } from "./scoping.js";
 export { serve } from "./serve.js";
 export type { ServeOptions } from "./serve.js";
-export { startDaemon, describeDaemonEvent } from "./daemon.js";
+export { startDaemon, describeDaemonEvent, DAEMON_STATUS_FILE } from "./daemon.js";
 export type { DaemonOptions, DaemonHandle, DaemonEvent } from "./daemon.js";
 export { report, generateFrontierReport } from "./report.js";
 export type { ReportOptions } from "./report.js";

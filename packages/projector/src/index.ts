@@ -6,6 +6,7 @@ export {
   PROJECTION_COLLECTIONS,
   PROPOSALS_COLLECTION,
   DAEMON_EVENTS_COLLECTION,
+  DAEMON_STATUS_COLLECTION,
   ensureProjectionCollections,
   writeProjectionPocketBase,
   readProjectionPocketBase,

@@ -53,6 +53,9 @@ export type DaemonEvent =
       unevidenced: Array<{ recipeId: string; collector: string; reason: string }>;
     };
 
+/** the heartbeat snapshot, overwritten each tick — outDir/daemon-status.json */
+export const DAEMON_STATUS_FILE = "daemon-status.json";
+
 export interface DaemonOptions {
   /** path to the checkout to keep evidenced */
   path: string;
@@ -116,6 +119,7 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
   const outDir = resolve(options.outDir);
   await mkdir(outDir, { recursive: true });
   const eventsPath = join(outDir, "daemon-events.jsonl");
+  const statusPath = join(outDir, DAEMON_STATUS_FILE);
 
   const recipes = await loadRecipes(options.recipesDir);
   const windowMs = options.windowMs?.[options.certClass] ?? windowMsFor(options.certClass);
@@ -131,8 +135,19 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
   let eventWrites = Promise.resolve();
   const emit = (event: DaemonEvent): void => {
     log(describeDaemonEvent(event));
-    const line = JSON.stringify({ at: new Date(clock()).toISOString(), ...event }) + "\n";
-    eventWrites = eventWrites.then(() => appendFile(eventsPath, line)).catch(() => {});
+    const stamped = JSON.stringify({ at: new Date(clock()).toISOString(), ...event });
+    // the tick heartbeat (plan I2b) is a snapshot, not history: it OVERWRITES
+    // daemon-status.json instead of riding the append-only events file — one
+    // heartbeat per check interval would drown the events mirror's tail (and
+    // with it a standing divergence alert) under quiet ticks. Latest state in
+    // the status file; what happened in the events file.
+    eventWrites = eventWrites
+      .then(() =>
+        event.kind === "tick"
+          ? writeFile(statusPath, stamped + "\n")
+          : appendFile(eventsPath, stamped + "\n"),
+      )
+      .catch(() => {});
     options.onEvent?.(event);
   };
 
