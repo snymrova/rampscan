@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/", label: "Board" },
   { href: "/queue", label: "Queue" },
   { href: "/controls", label: "Controls" },
+  { href: "/scoping", label: "Scoping" },
   { href: "/clock", label: "Clock" },
   { href: "/drift", label: "Drift" },
   { href: "/approvals", label: "Approvals" },

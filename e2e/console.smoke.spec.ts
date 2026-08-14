@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { createHash, createPublicKey, verify as cryptoVerify } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { PB_PORT } from "../playwright.config";
 
 // The first console smoke (plan I2e, ground rule 5): serve → login → board
 // renders rows from a real fixture scan → evidence detail shows assertions +
@@ -10,15 +12,16 @@ import { expect, test, type Page } from "@playwright/test";
 // verdict) — "something rendered" is not evidence.
 
 const VIEWER = "viewer@rampscan.local";
+const APPROVER = "approver@rampscan.local";
 const PASSWORD = "rampscan-demo";
 /** flagship recipe (M4): reachable lodash CRITICAL with path src/index.js » lodash/merge */
 const FLAGSHIP = "no-critical-reachable-advisories";
 
-async function signIn(page: Page): Promise<void> {
+async function signIn(page: Page, email: string = VIEWER): Promise<void> {
   await page.goto("/");
   // signed out, every register page bounces to the login card
   await expect(page).toHaveURL(/\/login/);
-  await page.locator("#email").fill(VIEWER);
+  await page.locator("#email").fill(email);
   await page.locator("#password").fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
@@ -145,6 +148,88 @@ test("control register: rollup → recipe → evidence, and the evidence links b
   await expect(page).toHaveURL(/\/controls\?reg=controls&id=ra-5/);
   await expect(page.locator("tr.hl .pill.violated").first()).toBeVisible();
   await expect(page.locator("tr").filter({ hasText: FLAGSHIP }).first()).toBeVisible();
+});
+
+test("scoping register: the two-key flow lands on the record, approved verified and rejected kept (I3c)", async ({ page }) => {
+  const approveRecipe = "container-runs-nonroot";
+  const rejectRecipe = "codeowners-defined";
+  const approveJustification = "the fixture ships no production container image — smoke scope-out";
+  const rejectJustification = "declined by the smoke — this recipe stays in scope";
+
+  await signIn(page, APPROVER);
+
+  // first key: file both proposals — the exact write the board's propose form
+  // performs (a `proposals` create with the console identity's token). The
+  // form's button only renders on unevidenced rows, and a fully-tooled scan
+  // of the fixture leaves none — the register under test starts at the
+  // proposal ROW, not at the form.
+  const pbUrl = `http://127.0.0.1:${PB_PORT}`;
+  const auth = (await (
+    await fetch(`${pbUrl}/api/collections/users/auth-with-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identity: APPROVER, password: PASSWORD }),
+    })
+  ).json()) as { token: string; record: { id: string } };
+  const repo = resolve("fixtures/vulnerable-app"); // the scan recorded the absolute path
+  for (const [recipe, justification] of [
+    [approveRecipe, approveJustification],
+    [rejectRecipe, rejectJustification],
+  ] as const) {
+    const created = await fetch(`${pbUrl}/api/collections/proposals/records`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: auth.token },
+      body: JSON.stringify({
+        repo,
+        recipe_id: recipe,
+        justification,
+        status: "pending",
+        proposed_by: `${APPROVER} (pb:${auth.record.id})`,
+      }),
+    });
+    expect(created.ok, `filing the ${recipe} proposal failed: ${created.status}`).toBe(true);
+  }
+
+  // second key: the approver decides — one approval (a REAL signed scoping
+  // event appended to the scratch ledger) and one rejection (which never
+  // touches the ledger; the register must list it all the same)
+  await page.goto("/approvals");
+  const entry = (recipe: string) => page.locator(".panel > div").filter({ hasText: recipe });
+  await entry(approveRecipe).getByRole("button", { name: "approve & sign" }).click();
+  // first hit compiles the decide route, then signs + appends — be generous
+  await expect(
+    entry(approveRecipe).filter({ hasText: "approved" }).first(),
+  ).toBeVisible({ timeout: 45_000 });
+  await entry(rejectRecipe).getByRole("button", { name: "reject", exact: true }).click();
+  await expect(entry(rejectRecipe).filter({ hasText: "rejected" }).first()).toBeVisible();
+
+  // the register: the approved decision reads from the LEDGER's signed event,
+  // its signature re-verified server-side on this very load
+  await page.goto("/scoping");
+  await expect(page.getByRole("heading", { name: "Scoping register" })).toBeVisible({
+    timeout: 45_000,
+  });
+  const approved = page.locator(".panel > div").filter({ hasText: approveRecipe }).first();
+  await expect(approved).toContainText("scoped out");
+  await expect(approved).toContainText("signature verified");
+  await expect(approved).toContainText(approveJustification);
+  await expect(approved).toContainText(APPROVER); // the identity the predicate carries
+  await expect(approved).toContainText("removed from scope:");
+
+  // the rejected decision is on the record too — with its justification and
+  // the honest framing that nothing left scope
+  const rejected = page
+    .locator(".panel > div")
+    .filter({ hasText: rejectRecipe })
+    .filter({ hasText: "rejected" })
+    .first();
+  await expect(rejected).toContainText(rejectJustification);
+  await expect(rejected).toContainText("kept in scope:");
+
+  // and the hop: the approved row's digest opens the scoping bundle itself
+  await approved.locator("a[href^='/evidence/']").click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  await expect(page.locator("body")).toContainText(approveJustification);
 });
 
 test("action queue: renders ranked, with the scan's new violations", async ({ page }) => {

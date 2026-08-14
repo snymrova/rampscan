@@ -206,6 +206,39 @@ export interface BoardDiffResponse {
   error?: string;
 }
 
+/**
+ * The scoping register (I3c) as /api/scoping/register returns it — the exact
+ * shape `computeScopingRegister` in @rampscan/cli produces (camelCase: the
+ * compute's own output serialized, not a PocketBase record). Approved rows
+ * come from the LEDGER's signed events, re-verified server-side; rejected and
+ * pending rows come from the proposals collection, the only place they exist.
+ * Mirror, never invent.
+ */
+export type ScopingSignatureStatus = "verified" | "failed" | "unsigned" | "missing";
+
+export interface ScopingRegisterRow {
+  decision: "approved" | "rejected" | "pending";
+  repo: string;
+  recipeId: string;
+  ksiIds: string[];
+  controlIds: string[];
+  justification: string;
+  proposedBy: string;
+  decidedBy: string;
+  timestamp: string;
+  digest?: string;
+  signature?: ScopingSignatureStatus;
+  /** honesty flags the compute raised — rendered, never smoothed over */
+  problems: string[];
+}
+
+export interface ScopingRegisterResponse {
+  rows?: ScopingRegisterRow[];
+  counts?: { approved: number; rejected: number; pending: number };
+  /** present on a real failure (not signed in, server error) */
+  error?: string;
+}
+
 /** KSI theme = the middle segment: KSI-SVC-CLS → SVC. */
 export function ksiTheme(id: string): string {
   const parts = id.split("-");
