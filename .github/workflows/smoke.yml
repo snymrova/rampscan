@@ -1,0 +1,65 @@
+# The console smoke in CI (plan I2e): a real fixture scan behind a real
+# `rampscan serve`, walked by Playwright. Deliberately NOT the engine track's
+# collector-family CI (deferred by name in docs/PLAN-OF-ACTION-CONSOLE.md):
+# this job installs the four core tool binaries and lets the Phase H tools
+# (semgrep/checkov/spectral) resolve through their pinned Docker images, the
+# collectors' documented fallback — the same shape the smoke was validated
+# against locally. A tool that resolves neither way skips honestly, and the
+# smoke asserts nothing about those recipes.
+name: smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# rampscan's own recipes police this file when the repo self-scans:
+# ci-actions-pinned wants SHA pins, checkov wants least-privilege permissions
+permissions:
+  contents: read
+
+jobs:
+  console-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 9.6.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # the vendored, pin-verified PocketBase binary (not committed)
+      - run: pnpm fetch-pocketbase
+
+      - name: install scan tools (pinned — same versions the plan records)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            | tar -xz -C "$HOME/.local/bin" gitleaks
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+            | sh -s -- -b "$HOME/.local/bin" v1.51.0
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+            | sh -s -- -b "$HOME/.local/bin" v0.117.0
+          curl -sSfL -o "$HOME/.local/bin/osv-scanner" \
+            https://github.com/google/osv-scanner/releases/download/v2.5.0/osv-scanner_linux_amd64
+          chmod +x "$HOME/.local/bin/osv-scanner"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: node_modules/.bin/playwright install --with-deps chromium
+
+      - run: pnpm smoke
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7

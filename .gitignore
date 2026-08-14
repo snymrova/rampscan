@@ -18,4 +18,9 @@ console/pocketbase/bin/
 console/pocketbase/data/
 # Next.js build output
 console/web/.next/
+console/web/.next-smoke/
+# Playwright smoke (I2e): scratch ledger/keys/out/pb-data + runner artifacts
+e2e/.smoke/
+test-results/
+playwright-report/
 .gstack/

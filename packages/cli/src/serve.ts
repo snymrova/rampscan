@@ -45,6 +45,10 @@ export interface ServeOptions {
   webPort: number;
   /** spawn the Next.js dev server (disable for headless smoke tests) */
   web: boolean;
+  /** PocketBase data dir override (default: console/pocketbase/data) — the
+   * Playwright smoke passes a scratch dir so a test serve never touches the
+   * dev console's users/proposals, which live nowhere but that dir */
+  pbDataDir?: string;
   log?: (line: string) => void;
 }
 
@@ -55,7 +59,7 @@ export async function serve(options: ServeOptions): Promise<void> {
 
   const pb = await startPocketBase({
     binPath: join(pbDir, "bin/pocketbase"),
-    dataDir: join(pbDir, "data"),
+    dataDir: options.pbDataDir ?? join(pbDir, "data"),
     port: options.pbPort,
     log,
   });

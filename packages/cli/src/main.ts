@@ -65,6 +65,7 @@ function usage(): never {
       "  --pb-port <n>     serve: PocketBase port (default: 8090)",
       "  --web-port <n>    serve: console port (default: 3000)",
       "  --no-web          serve: PocketBase + projector only, no Next.js",
+      "  --pb-data <dir>   serve: PocketBase data dir (default: console/pocketbase/data)",
       "  --cache <dir>     daemon: scan cache dir (default: ./rampscan-cache)",
       "  --check-interval <s>  daemon: clock check interval in seconds (default: 300)",
       "  --full-every <n>  daemon: every Nth scan bypasses the cache and verifies it (default: 6)",
@@ -94,6 +95,7 @@ async function main(): Promise<void> {
       "pb-port": { type: "string" },
       "web-port": { type: "string" },
       "no-web": { type: "boolean" },
+      "pb-data": { type: "string" },
       cache: { type: "string" },
       "check-interval": { type: "string" },
       "full-every": { type: "string" },
@@ -247,6 +249,7 @@ async function main(): Promise<void> {
         pbPort: Number(values["pb-port"] ?? 8090),
         webPort: Number(values["web-port"] ?? 3000),
         web: !values["no-web"],
+        ...(values["pb-data"] !== undefined ? { pbDataDir: resolve(values["pb-data"]) } : {}),
         log: (line) => console.error(`· ${line}`),
       });
       return;
