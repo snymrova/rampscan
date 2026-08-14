@@ -8,7 +8,8 @@ import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
 import { windowMsFor } from "@rampscan/scheduler";
-import { renderBoard } from "./board.js";
+import { renderBoard, renderBoardDiff } from "./board.js";
+import { computeBoardDiff } from "./board-diff.js";
 import { startDaemon } from "./daemon.js";
 import { rebuild } from "./rebuild.js";
 import { loadRecipes } from "./recipes.js";
@@ -41,6 +42,7 @@ function usage(): never {
       "  verify <digest>   verify one ledger bundle offline (content + signature)",
       "  board             show the projection: registers, live evidence, graveyard",
       "  board --as-of <iso>  the same projection at a past instant, refolded from the ledger",
+      "  board --since previous|<iso>  what moved since a prior scan's board (I2d)",
       "  rebuild           rebuild projection stores from the ledger and PROVE projection ≡ ledger",
       "  serve             start PocketBase + the Next.js console (the visual board)",
       "  daemon <path>     keep the target evidenced on cadence: incremental re-scans,",
@@ -58,6 +60,8 @@ function usage(): never {
       "  --recipes <dir>   pipeline recipe dir (default: recipes/pipeline)",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b)",
       "  --as-of <iso>     board: fold only statements at or before this instant (I1b)",
+      "  --since <v>       board: lead with the diff against a baseline board — `previous`",
+      "                    (the scan before the current one) or an ISO instant (I2d)",
       "  --pb-port <n>     serve: PocketBase port (default: 8090)",
       "  --web-port <n>    serve: console port (default: 3000)",
       "  --no-web          serve: PocketBase + projector only, no Next.js",
@@ -86,6 +90,7 @@ async function main(): Promise<void> {
       recipes: { type: "string" },
       class: { type: "string" },
       "as-of": { type: "string" },
+      since: { type: "string" },
       "pb-port": { type: "string" },
       "web-port": { type: "string" },
       "no-web": { type: "boolean" },
@@ -143,15 +148,32 @@ async function main(): Promise<void> {
         console.error(`--as-of is not a parseable instant: ${asOf}`);
         process.exit(2);
       }
+      const since = values.since;
+      if (since !== undefined && since !== "previous" && Number.isNaN(Date.parse(since))) {
+        console.error(`--since is not \`previous\` or a parseable instant: ${since}`);
+        process.exit(2);
+      }
+      const asOfIso = asOf !== undefined ? new Date(asOf).toISOString() : undefined;
+      if (since !== undefined) {
+        // the diff leads (I2d): what moved since the baseline, then the board
+        const outcome = await computeBoardDiff({
+          ledgerDir,
+          recipesDir,
+          since: since === "previous" ? since : new Date(since).toISOString(),
+          ...(asOfIso !== undefined ? { asOf: asOfIso } : {}),
+        });
+        console.log(renderBoardDiff(outcome, useColor));
+        console.log("");
+      }
       const projector = createProjector({
         recipes,
         windowMs: windowMsFor(certClass),
-        ...(asOf !== undefined ? { asOf: new Date(asOf).toISOString() } : {}),
+        ...(asOfIso !== undefined ? { asOf: asOfIso } : {}),
       });
       const projection = await projector.fold(createLocalLedger(ledgerDir));
-      if (asOf !== undefined) {
+      if (asOfIso !== undefined) {
         console.log(
-          `AS OF ${new Date(asOf).toISOString()} — refolded from ledger statements at or before this instant\n`,
+          `AS OF ${asOfIso} — refolded from ledger statements at or before this instant\n`,
         );
       }
       console.log(renderBoard(projection, useColor));

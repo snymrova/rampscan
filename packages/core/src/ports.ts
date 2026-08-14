@@ -263,6 +263,56 @@ export interface DriftEvent {
   bundleDigest: Digest;
 }
 
+/**
+ * How one (repo, recipe) cell moved between a baseline fold and the current
+ * one (I2d). Classified from the two register states alone — the classifier
+ * is total over every (from, to) pair and pinned by test, so no transition
+ * can fall through unnamed.
+ */
+export type RegisterChangeKind =
+  | "newly-violated" // → violated, from any prior state or a new cell
+  | "evidence-lapsed" // evidenced|violated → unevidenced (the evidence died, nothing replaced it)
+  | "unscoped" // notApplicable → unevidenced (the scoping no longer holds the cell)
+  | "removed" // the cell existed at baseline and is gone (recipe or repo left the projection)
+  | "appeared" // a new cell since baseline, in any non-violated state
+  | "scoped" // → notApplicable (a two-key scoping landed)
+  | "newly-evidenced" // unevidenced|notApplicable → evidenced (first passing evidence)
+  | "resolved"; // violated → evidenced
+
+/** One cell's movement between the baseline board and the current one. */
+export interface RegisterChange {
+  repo: string;
+  recipeId: string;
+  kind: RegisterChangeKind;
+  /** absent when the cell appeared since baseline */
+  from?: RegisterState;
+  /** absent when the cell was removed since baseline */
+  to?: RegisterState;
+  /** the current side's live bundle, when it has one */
+  bundleDigest?: Digest;
+  /** the baseline side's live bundle, when it had one */
+  baselineDigest?: Digest;
+  /** on newly-violated cells: the current row's fix pointers (I2c), when the evidence carries them */
+  pointers?: OffenderPointer[];
+  introducedAt?: string; // ISO 8601
+  introducingCommit?: string;
+}
+
+/**
+ * The board diffed against a prior as-of fold (I2d). Both sides are folds of
+ * the same append-only ledger, so the diff is exactly as deterministic as the
+ * folds. Cells whose STATE held still count as unchanged even when their
+ * evidence refreshed — bundle-level movement is the drift view's story.
+ */
+export interface RegisterDiff {
+  /** the instant the baseline was folded as-of */
+  baseline: string; // ISO 8601
+  /** every cell whose state moved, severity-sorted (bad news first) */
+  changes: RegisterChange[];
+  counts: Record<RegisterChangeKind, number>;
+  unchanged: number;
+}
+
 export interface Projection {
   /** every evidence bundle ever recorded, live or dead — the chain view */
   rows: CoverageRow[];

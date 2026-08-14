@@ -1,13 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
 import { getPb, useAuth, useCollection } from "../lib/pb";
 import { describePointer } from "../lib/pointers";
 import { controlFamily, ksiTheme } from "../lib/types";
-import type { MetaRecord, RegisterRecord, RegisterState } from "../lib/types";
+import type {
+  BoardDiffResponse,
+  MetaRecord,
+  RegisterChange,
+  RegisterChangeKind,
+  RegisterRecord,
+  RegisterState,
+} from "../lib/types";
 import { formatAge } from "../lib/mvx";
 
 // The coverage board (SPEC §8.1): three registers plus notApplicable —
@@ -22,6 +29,40 @@ const STATES: Array<{ key: RegisterState | "all"; label: string }> = [
   { key: "unevidenced", label: "Unevidenced" },
   { key: "notApplicable", label: "N/A" },
 ];
+
+// the "since baseline" toggle (I2d): shared phrasing with the diff strip and
+// the row badges so the summary and the rows can never disagree. Severity
+// order twins packages/projector/src/diff.ts — bad news first.
+const KIND_ORDER: RegisterChangeKind[] = [
+  "newly-violated",
+  "evidence-lapsed",
+  "unscoped",
+  "removed",
+  "appeared",
+  "scoped",
+  "newly-evidenced",
+  "resolved",
+];
+const KIND_PHRASE: Record<RegisterChangeKind, string> = {
+  "newly-violated": "newly violated",
+  "evidence-lapsed": "evidence lapsed",
+  unscoped: "unscoped",
+  removed: "removed",
+  appeared: "appeared",
+  scoped: "scoped n/a",
+  "newly-evidenced": "newly evidenced",
+  resolved: "resolved",
+};
+const KIND_PILL: Record<RegisterChangeKind, RegisterState> = {
+  "newly-violated": "violated",
+  "evidence-lapsed": "violated",
+  unscoped: "unevidenced",
+  removed: "unevidenced",
+  appeared: "unevidenced",
+  scoped: "notApplicable",
+  "newly-evidenced": "evidenced",
+  resolved: "evidenced",
+};
 
 export default function BoardPage() {
   return (
@@ -40,6 +81,45 @@ function Board() {
   const [repo, setRepo] = useState("all");
   const [theme, setTheme] = useState("all");
   const [family, setFamily] = useState("all");
+  // "since baseline" (I2d): null = off; "previous" or a scan instant = on
+  const [since, setSince] = useState<string | null>(null);
+  const [changedOnly, setChangedOnly] = useState(false);
+  const [diffData, setDiffData] = useState<BoardDiffResponse | null>(null);
+  const metaRow = meta.records[0];
+  const projectedAt = metaRow?.projected_at;
+
+  // the diff is computed server-side by the SAME code the CLI runs
+  // (computeBoardDiff — two as-of folds of the ledger). Refetched whenever
+  // the projection moves, so the badges never describe a stale board.
+  useEffect(() => {
+    if (!since) {
+      setDiffData(null);
+      return;
+    }
+    let cancelled = false;
+    setDiffData(null);
+    fetch(`/api/board/diff?since=${encodeURIComponent(since)}`, {
+      headers: { Authorization: getPb().authStore.token },
+    })
+      .then((r) => r.json())
+      .then((data: BoardDiffResponse) => {
+        if (!cancelled) setDiffData(data);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setDiffData({ error: e instanceof Error ? e.message : String(e) });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [since, projectedAt]);
+
+  const changeByCell = useMemo(() => {
+    const map = new Map<string, RegisterChange>();
+    for (const change of diffData?.diff?.changes ?? []) {
+      map.set(`${change.repo} ${change.recipeId}`, change);
+    }
+    return map;
+  }, [diffData]);
 
   const repos = useMemo(() => [...new Set(records.map((r) => r.repo))].sort(), [records]);
   const themes = useMemo(
@@ -56,10 +136,10 @@ function Board() {
       (state === "all" || r.state === state) &&
       (repo === "all" || r.repo === repo) &&
       (theme === "all" || r.ksi_ids.some((k) => ksiTheme(k) === theme)) &&
-      (family === "all" || r.control_ids.some((c) => controlFamily(c) === family)),
+      (family === "all" || r.control_ids.some((c) => controlFamily(c) === family)) &&
+      (!since || !changedOnly || changeByCell.has(`${r.repo} ${r.recipe_id}`)),
   );
   const count = (s: RegisterState) => records.filter((r) => r.state === s).length;
-  const metaRow = meta.records[0];
 
   return (
     <>
@@ -105,7 +185,47 @@ function Board() {
             <option key={f}>{f}</option>
           ))}
         </select>
+        <button
+          className={`btn${since ? " primary" : ""}`}
+          onClick={() => {
+            setSince(since ? null : "previous");
+            setChangedOnly(false);
+          }}
+        >
+          since baseline
+        </button>
+        {since && (diffData?.scans?.length ?? 0) > 1 && (
+          <select value={since} onChange={(e) => setSince(e.target.value)}>
+            <option value="previous">previous scan</option>
+            {diffData!
+              .scans!.slice(0, -1)
+              .reverse()
+              .map((s) => (
+                <option key={s} value={s}>
+                  scan {new Date(s).toLocaleString()}
+                </option>
+              ))}
+          </select>
+        )}
       </div>
+
+      {since && (
+        <div className="panel diff-strip">
+          {!diffData ? (
+            <span className="muted">diffing against the baseline…</span>
+          ) : diffData.error ? (
+            <span className="error">{diffData.error}</span>
+          ) : diffData.reason ? (
+            <span className="muted">{diffData.reason}</span>
+          ) : (
+            <DiffSummary
+              data={diffData}
+              changedOnly={changedOnly}
+              setChangedOnly={setChangedOnly}
+            />
+          )}
+        </div>
+      )}
 
       {error && <p className="error">{error}</p>}
       <div className="panel">
@@ -123,7 +243,11 @@ function Board() {
           </thead>
           <tbody>
             {filtered.map((row) => (
-              <RegisterRowView key={row.id} row={row} />
+              <RegisterRowView
+                key={row.id}
+                row={row}
+                change={since ? changeByCell.get(`${row.repo} ${row.recipe_id}`) : undefined}
+              />
             ))}
             {!loading && filtered.length === 0 && (
               <tr>
@@ -139,7 +263,56 @@ function Board() {
   );
 }
 
-function RegisterRowView({ row }: { row: RegisterRecord }) {
+function DiffSummary({
+  data,
+  changedOnly,
+  setChangedOnly,
+}: {
+  data: BoardDiffResponse;
+  changedOnly: boolean;
+  setChangedOnly: (v: boolean) => void;
+}) {
+  const diff = data.diff!;
+  const moved = KIND_ORDER.filter((k) => diff.counts[k] > 0);
+  const removed = diff.changes.filter((c) => c.kind === "removed");
+  const baselineLabel = `${new Date(diff.baseline).toLocaleString()}${
+    data.baselineIsScan ? "" : " (as-of instant, not a scan)"
+  }`;
+  return (
+    <>
+      <span className="muted">since {baselineLabel} —</span>
+      {moved.length === 0 ? (
+        <span className="muted">
+          no register moved ({diff.unchanged} cell{diff.unchanged === 1 ? "" : "s"} held)
+        </span>
+      ) : (
+        <>
+          {moved.map((kind) => (
+            <span key={kind} className={`pill ${KIND_PILL[kind]}`}>
+              {diff.counts[kind]} {KIND_PHRASE[kind]}
+            </span>
+          ))}
+          <span className="faint">{diff.unchanged} unchanged</span>
+          {removed.length > 0 && (
+            <span className="faint">
+              removed: {removed.map((c) => `${c.recipeId} (${c.repo})`).join(", ")}
+            </span>
+          )}
+          <label className="muted" style={{ marginLeft: "auto", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={changedOnly}
+              onChange={(e) => setChangedOnly(e.target.checked)}
+            />{" "}
+            changed only
+          </label>
+        </>
+      )}
+    </>
+  );
+}
+
+function RegisterRowView({ row, change }: { row: RegisterRecord; change?: RegisterChange }) {
   const router = useRouter();
   const [proposing, setProposing] = useState(false);
   const open = row.bundle_digest
@@ -153,6 +326,17 @@ function RegisterRowView({ row }: { row: RegisterRecord }) {
           <span className={`pill ${row.state}`}>
             {row.state === "notApplicable" ? "n/a" : row.state}
           </span>
+          {change && (
+            <span
+              className={`pill ${KIND_PILL[change.kind]}`}
+              style={{ marginLeft: 6 }}
+              title={KIND_PHRASE[change.kind]}
+            >
+              {change.from
+                ? `was ${change.from === "notApplicable" ? "n/a" : change.from}`
+                : "new row"}
+            </span>
+          )}
         </td>
         <td className="mono">{row.recipe_id}</td>
         <td className="muted">{row.repo}</td>

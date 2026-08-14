@@ -129,6 +129,52 @@ export interface ProposalRecord {
   updated: string;
 }
 
+/**
+ * The "since baseline" diff (I2d) as /api/board/diff returns it — the exact
+ * shape `computeBoardDiff` in @rampscan/cli produces (camelCase: this is the
+ * projector's own output serialized, not a PocketBase record). Mirror, never
+ * invent.
+ */
+export type RegisterChangeKind =
+  | "newly-violated"
+  | "evidence-lapsed"
+  | "unscoped"
+  | "removed"
+  | "appeared"
+  | "scoped"
+  | "newly-evidenced"
+  | "resolved";
+
+export interface RegisterChange {
+  repo: string;
+  recipeId: string;
+  kind: RegisterChangeKind;
+  from?: RegisterState;
+  to?: RegisterState;
+  bundleDigest?: string;
+  baselineDigest?: string;
+  pointers?: OffenderPointer[];
+  introducedAt?: string;
+  introducingCommit?: string;
+}
+
+export interface BoardDiffResponse {
+  /** present when the diff computed */
+  scans?: string[];
+  baseline?: string;
+  baselineIsScan?: boolean;
+  diff?: {
+    baseline: string;
+    changes: RegisterChange[];
+    counts: Record<RegisterChangeKind, number>;
+    unchanged: number;
+  };
+  /** present when the ledger cannot answer (e.g. only one scan recorded) */
+  reason?: string;
+  /** present on a real failure (not signed in, bad request, server error) */
+  error?: string;
+}
+
 /** KSI theme = the middle segment: KSI-SVC-CLS → SVC. */
 export function ksiTheme(id: string): string {
   const parts = id.split("-");

@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { join, posix } from "node:path";
+import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import type { Collector, CollectOutput } from "@rampscan/core";
@@ -20,7 +20,14 @@ import { absentReason, resolveTool } from "./tools.js";
 // so evidence identity doesn't re-key on plumbing.
 
 export const SEMGREP_RESULTS_ARTIFACT = "semgrep-results.json";
-export const SEMGREP_RULES_PATH = fileURLToPath(new URL("../semgrep-rules.yaml", import.meta.url));
+// `join(dirname(fileURLToPath(...)))`, NOT `new URL("...", import.meta.url)`:
+// the console's Next.js routes transpile this package, and webpack rewrites
+// the relative-URL pattern into an asset reference that crashes at module
+// load — which took the console's server routes down with it
+export const SEMGREP_RULES_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../semgrep-rules.yaml",
+);
 
 const RawSemgrepOutput = z
   .object({

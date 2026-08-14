@@ -1,4 +1,6 @@
-import type { Projection } from "@rampscan/core";
+import type { Projection, RegisterChange, RegisterChangeKind } from "@rampscan/core";
+import { CHANGE_KIND_SEVERITY } from "@rampscan/projector";
+import type { BoardDiffOutcome } from "./board-diff.js";
 
 // `rampscan board` — the projection as text (the visual console is
 // `rampscan serve`). As of M3 the projection joins the recipe catalog, so the
@@ -51,5 +53,79 @@ export function renderBoard(projection: Projection, useColor: boolean): string {
   if (dead.length === 0) lines.push(dim("  (none)"));
 
   lines.push("", dim(`dataset ${projection.datasetVersion} · projected ${projection.projectedAt}`));
+  return lines.join("\n");
+}
+
+// `rampscan board --since` (I2d): what moved between a prior scan's board and
+// this one. State-level by design — refreshed evidence with a held state is
+// "unchanged" here; the drift view narrates bundle movement.
+
+const KIND_LABEL: Record<RegisterChangeKind, string> = {
+  "newly-violated": "NEWLY VIOLATED",
+  "evidence-lapsed": "EVIDENCE LAPSED",
+  unscoped: "UNSCOPED",
+  removed: "ROWS REMOVED",
+  appeared: "ROWS APPEARED",
+  scoped: "SCOPED N/A",
+  "newly-evidenced": "NEWLY EVIDENCED",
+  resolved: "RESOLVED",
+};
+
+export function renderBoardDiff(outcome: BoardDiffOutcome, useColor: boolean): string {
+  const paint = (code: string, s: string) => (useColor ? `[${code}m${s}[0m` : s);
+  const green = (s: string) => paint("32", s);
+  const red = (s: string) => paint("31", s);
+  const yellow = (s: string) => paint("33", s);
+  const dim = (s: string) => paint("2", s);
+  const colorFor: Record<RegisterChangeKind, (s: string) => string> = {
+    "newly-violated": red,
+    "evidence-lapsed": red,
+    unscoped: yellow,
+    removed: yellow,
+    appeared: yellow,
+    scoped: dim,
+    "newly-evidenced": green,
+    resolved: green,
+  };
+
+  const { diff } = outcome;
+  const label = outcome.baselineIsScan ? "a prior scan's board" : "an as-of fold at that instant";
+  const lines: string[] = [
+    `SINCE ${diff.baseline} — the board diffed against ${label}, both refolded from the ledger`,
+    "",
+  ];
+  if (diff.changes.length === 0) {
+    lines.push(dim(`  no register moved since the baseline (${diff.unchanged} cell(s) held their state)`));
+    return lines.join("\n");
+  }
+
+  const describe = (change: RegisterChange): string => {
+    const arrow =
+      change.from === undefined
+        ? `new row → ${change.to}`
+        : change.to === undefined
+          ? `was ${change.from}, row removed`
+          : `${change.from} → ${change.to}`;
+    const pointers = (change.pointers ?? [])
+      .map((p) => [p.file, p.line].filter((x) => x !== undefined).join(":") || p.check || p.call_path)
+      .filter((s): s is string => !!s)
+      .slice(0, 3)
+      .join("  ");
+    const since = change.introducedAt
+      ? ` (violating since ${change.introducedAt}${change.introducingCommit ? ` at ${change.introducingCommit.slice(0, 12)}` : ""})`
+      : "";
+    return `${arrow}${pointers ? `  ${pointers}` : ""}${since}`;
+  };
+
+  for (const kind of CHANGE_KIND_SEVERITY) {
+    const changes = diff.changes.filter((c) => c.kind === kind);
+    if (changes.length === 0) continue;
+    lines.push(`${colorFor[kind](KIND_LABEL[kind])} (${changes.length})`);
+    for (const change of changes) {
+      lines.push(`  ${change.recipeId.padEnd(36)} ${dim(change.repo.padEnd(28))} ${describe(change)}`);
+    }
+    lines.push("");
+  }
+  lines.push(dim(`unchanged: ${diff.unchanged} cell(s) held their state`));
   return lines.join("\n");
 }

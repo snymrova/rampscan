@@ -1,5 +1,12 @@
 export { createProjector, foldEntries } from "./fold.js";
 export type { FoldOptions, ProjectorOptions } from "./fold.js";
+export {
+  CHANGE_KIND_SEVERITY,
+  classifyChange,
+  diffRegisters,
+  resolveBaseline,
+  scanInstants,
+} from "./diff.js";
 export { writeProjectionSqlite, readProjectionSqlite } from "./sqlite.js";
 export {
   PocketBaseAdmin,

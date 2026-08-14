@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { posix } from "node:path";
+import { dirname, join, posix } from "node:path";
+import { fileURLToPath } from "node:url";
 import { exec, toolVersion } from "./support.js";
 import type { ExecResult } from "./support.js";
 
@@ -33,9 +34,13 @@ export type ToolManifest = Record<string, ToolSpec>;
 
 let manifestCache: Promise<ToolManifest> | undefined;
 export function loadToolManifest(): Promise<ToolManifest> {
-  return (manifestCache ??= readFile(new URL("../tools.json", import.meta.url), "utf8").then(
-    (raw) => (JSON.parse(raw) as { tools: ToolManifest }).tools,
-  ));
+  // path via dirname(fileURLToPath(...)), not `new URL("...", import.meta.url)`
+  // — webpack (the console's Next routes transpile this package) rewrites the
+  // relative-URL pattern into an asset reference that breaks at runtime
+  return (manifestCache ??= readFile(
+    join(dirname(fileURLToPath(import.meta.url)), "../tools.json"),
+    "utf8",
+  ).then((raw) => (JSON.parse(raw) as { tools: ToolManifest }).tools));
 }
 
 let dockerProbe: Promise<boolean> | undefined;
