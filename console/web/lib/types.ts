@@ -116,7 +116,12 @@ export interface MetaRecord {
   id: string;
   dataset_version: string;
   projected_at: string;
-  settings: { certClass: "b" | "c"; reproduceCommand: string } | null;
+  settings: {
+    certClass: "b" | "c";
+    reproduceCommand: string;
+    /** the offline verify invocation with the serve's real dirs (I3b); older serves omit it */
+    verifyCommand?: string;
+  } | null;
 }
 
 /**

@@ -329,6 +329,13 @@ export interface ProjectionSettings {
   certClass: "b" | "c";
   /** how a reader reproduces the evidence, e.g. "pnpm rampscan scan <path>" */
   reproduceCommand: string;
+  /**
+   * The offline verification invocation (I3b), with the REAL ledger/keys dirs
+   * the serving process reads from — so the copy-paste command on the evidence
+   * page names the record it actually verifies against, never a guessed
+   * default. `<digest>` is the placeholder. Optional: older serves predate it.
+   */
+  verifyCommand?: string;
 }
 
 export async function ensureProjectionCollections(pb: PocketBaseAdmin): Promise<void> {

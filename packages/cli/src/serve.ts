@@ -70,6 +70,9 @@ export async function serve(options: ServeOptions): Promise<void> {
   const settings: ProjectionSettings = {
     certClass: options.certClass,
     reproduceCommand: "pnpm rampscan scan <repo-path>",
+    // I3b: the verify-this-yourself block quotes this verbatim — it must name
+    // the dirs THIS serve reads, or the copy-paste invocation checks nothing
+    verifyCommand: `pnpm rampscan verify <digest> --ledger ${options.ledgerDir} --keys ${options.keysDir}`,
   };
 
   let projecting = false;

@@ -87,6 +87,27 @@ function Evidence({ digest }: { digest: string }) {
         {coverage && <span className={`pill ${coverage.state}`}>{coverage.state}</span>}
       </h1>
       <p className="subtitle mono">{digest}</p>
+      <p className="subtitle" style={{ marginTop: -14 }}>
+        {/* what the bundle already carries (I3b), surfaced where an auditor
+            lands — every value below is the signed predicate's own claim */}
+        {isEvidence && (
+          <>
+            scanned commit <span className="mono">{String(p["commit"]).slice(0, 12)}</span> ·{" "}
+          </>
+        )}
+        dataset pin <span className="mono">{p["dataset_version"]}</span>
+        {isEvidence && Object.keys((p["tool_versions"] as Record<string, string>) ?? {}).length > 0 && (
+          <>
+            {" "}
+            · tools{" "}
+            <span className="mono">
+              {Object.entries((p["tool_versions"] as Record<string, string>) ?? {})
+                .map(([tool, version]) => `${tool} ${version}`)
+                .join(", ")}
+            </span>
+          </>
+        )}
+      </p>
 
       <div className="panel">
         <dl className="kv">
@@ -257,10 +278,38 @@ function Evidence({ digest }: { digest: string }) {
         </dl>
       </div>
 
+      <div className="section-title">Verify this yourself</div>
+      <div className="panel" style={{ padding: "12px 14px" }}>
+        <p className="muted" style={{ margin: "0 0 10px", fontSize: 13 }}>
+          Don&apos;t trust this page — it renders a projection. The record is the signed envelope:
+          its payload is the exact canonical statement (sha256 of those bytes is this bundle&apos;s
+          digest), signed ECDSA P-256 over the DSSE PAE — the same attestation envelope cosign
+          uses, verifiable with the public key and standard crypto alone.
+        </p>
+        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+          <DownloadButton
+            label="download DSSE bundle"
+            url={`/api/verify/bundle?digest=${digest}`}
+            filename={`${digest}.envelope.json`}
+            disabled={!bundle.envelope}
+          />
+          <DownloadButton
+            label="download public key"
+            url="/api/verify/key"
+            filename="rampscan.pub"
+          />
+        </div>
+        <code className="copycmd">
+          {(meta?.settings?.verifyCommand ?? "pnpm rampscan verify <digest>").replace(
+            "<digest>",
+            digest,
+          )}
+        </code>
+      </div>
+
       <div className="section-title">Reproduce</div>
       <code className="copycmd">
-        {`pnpm rampscan verify ${digest}`}
-        {isEvidence ? `\n${(meta?.settings?.reproduceCommand ?? "pnpm rampscan scan <repo-path>").replace("<repo-path>", String(p["repo"]))}` : ""}
+        {isEvidence ? (meta?.settings?.reproduceCommand ?? "pnpm rampscan scan <repo-path>").replace("<repo-path>", String(p["repo"])) : `pnpm rampscan verify ${digest}`}
         {/* the collector's own re-run statement (I2c), when the evidence carries one */}
         {isEvidence && typeof p["reproduce"] === "string"
           ? `\n${(p["reproduce"] as string).replace("<repo>", String(p["repo"]))}`
@@ -270,5 +319,57 @@ function Evidence({ digest }: { digest: string }) {
       <div className="section-title">Raw statement</div>
       <pre className="raw">{JSON.stringify(bundle.statement, null, 2)}</pre>
     </>
+  );
+}
+
+// The download routes are auth-gated like every read (a plain <a href> would
+// arrive without the PocketBase token), so: authorized fetch → blob → save.
+function DownloadButton({
+  label,
+  url,
+  filename,
+  disabled,
+}: {
+  label: string;
+  url: string;
+  filename: string;
+  disabled?: boolean;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function download() {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: getPb().authStore.token },
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? `${response.status} ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      const href = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = href;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(href);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <span>
+      <button className="btn" disabled={busy || disabled} onClick={download}>
+        {label}
+      </button>
+      {disabled && <span className="faint"> — appended unsigned, nothing to verify</span>}
+      {error && <span className="error"> {error}</span>}
+    </span>
   );
 }

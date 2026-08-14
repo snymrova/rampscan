@@ -1,3 +1,6 @@
+import { execFileSync } from "node:child_process";
+import { createHash, createPublicKey, verify as cryptoVerify } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 // The first console smoke (plan I2e, ground rule 5): serve → login → board
@@ -59,6 +62,60 @@ test("evidence detail: assertions render with the flagship call path", async ({ 
   await expect(page.locator(".assertion-fail").first()).toBeVisible();
   await expect(page.locator("body")).toContainText("lodash");
   await expect(page.locator("body")).toContainText("»");
+});
+
+test("verify yourself: the downloads verify with standard crypto alone (I3b)", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  const digest = /[0-9a-f]{64}/.exec(page.url())![0];
+
+  // the header surfaces what the bundle already carries
+  await expect(page.locator("body")).toContainText("scanned commit");
+  await expect(page.locator("body")).toContainText("dataset pin");
+
+  // download the raw DSSE envelope and the public key
+  const [bundleDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "download DSSE bundle" }).click(),
+  ]);
+  const [keyDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "download public key" }).click(),
+  ]);
+  const envelope = JSON.parse(readFileSync((await bundleDownload.path())!, "utf8")) as {
+    payload: string;
+    payloadType: string;
+    signatures: Array<{ sig: string }>;
+  };
+  const publicKeyPem = readFileSync((await keyDownload.path())!, "utf8");
+
+  // independent verification — node:crypto ONLY, no rampscan code:
+  // 1. content: the signed payload hashes to the bundle's address
+  const payload = Buffer.from(envelope.payload, "base64");
+  expect(createHash("sha256").update(payload).digest("hex")).toBe(digest);
+  // 2. the payload is the flagship's statement, not something else signed
+  expect(payload.toString("utf8")).toContain(FLAGSHIP);
+  // 3. signature: ECDSA P-256/SHA-256 over the DSSE PAE, against the key alone
+  const pae = Buffer.concat([
+    Buffer.from(`DSSEv1 ${envelope.payloadType.length} ${envelope.payloadType} ${payload.length} `),
+    payload,
+  ]);
+  const publicKey = createPublicKey(publicKeyPem);
+  expect(
+    envelope.signatures.some((s) => cryptoVerify("sha256", pae, publicKey, Buffer.from(s.sig, "base64"))),
+  ).toBe(true);
+
+  // and the page's own copy-paste invocation passes, run verbatim (modulo the
+  // `pnpm rampscan` prefix → the package script's real entry point)
+  const command = (await page.locator("code.copycmd").first().textContent()) ?? "";
+  expect(command).toContain(`rampscan verify ${digest} --ledger`);
+  const args = command.trim().split(/\s+/).slice(2); // drop "pnpm rampscan"
+  const report = execFileSync("node_modules/.bin/tsx", ["packages/cli/src/main.ts", ...args], {
+    encoding: "utf8",
+  });
+  expect(report).toContain("signature ok");
+  expect(report).toContain("payload  ok");
 });
 
 test("control register: rollup → recipe → evidence, and the evidence links back (I3a)", async ({ page }) => {
