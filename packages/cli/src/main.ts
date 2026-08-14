@@ -9,6 +9,7 @@ import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
 import { windowMsFor } from "@rampscan/scheduler";
 import { renderBoard, renderBoardDiff } from "./board.js";
+import { computeBoardAsOf } from "./board-asof.js";
 import { computeBoardDiff } from "./board-diff.js";
 import { startDaemon } from "./daemon.js";
 import { rebuild } from "./rebuild.js";
@@ -167,17 +168,19 @@ async function main(): Promise<void> {
         console.log(renderBoardDiff(outcome, useColor));
         console.log("");
       }
-      const projector = createProjector({
-        recipes,
-        windowMs: windowMsFor(certClass),
-        ...(asOfIso !== undefined ? { asOf: asOfIso } : {}),
-      });
-      const projection = await projector.fold(createLocalLedger(ledgerDir));
       if (asOfIso !== undefined) {
+        // the same hand the console's as-of route calls (I3d) — terminal and
+        // browser can never disagree about what the past board looked like
+        const outcome = await computeBoardAsOf({ ledgerDir, recipesDir, asOf: asOfIso });
         console.log(
-          `AS OF ${asOfIso} — refolded from ledger statements at or before this instant\n`,
+          `AS OF ${asOfIso} — refolded from ledger statements at or before this instant` +
+            `${outcome.asOfIsScan ? " (a scan instant)" : ""}\n`,
         );
+        console.log(renderBoard(outcome.projection, useColor));
+        return;
       }
+      const projector = createProjector({ recipes, windowMs: windowMsFor(certClass) });
+      const projection = await projector.fold(createLocalLedger(ledgerDir));
       console.log(renderBoard(projection, useColor));
       return;
     }

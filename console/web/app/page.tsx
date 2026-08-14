@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
+import { asOfRegisterRecord, toLocalInputValue, useAsOfBoard } from "../lib/asof";
 import { getPb, useAuth, useCollection } from "../lib/pb";
 import { describePointer } from "../lib/pointers";
 import { controlFamily, ksiTheme } from "../lib/types";
@@ -86,8 +87,13 @@ function Board() {
   const [since, setSince] = useState<string | null>(null);
   const [changedOnly, setChangedOnly] = useState(false);
   const [diffData, setDiffData] = useState<BoardDiffResponse | null>(null);
+  // "as of" (I3d): null = live board; an ISO instant = the board refolded
+  // there, server-side, by the same hand `rampscan board --as-of` calls
+  const [asOf, setAsOf] = useState<string | null>(null);
   const metaRow = meta.records[0];
   const projectedAt = metaRow?.projected_at;
+  const asOfData = useAsOfBoard(asOf, projectedAt);
+  const historical = asOf !== null;
 
   // the diff is computed server-side by the SAME code the CLI runs
   // (computeBoardDiff — two as-of folds of the ledger). Refetched whenever
@@ -122,17 +128,24 @@ function Board() {
     return map;
   }, [diffData]);
 
-  const repos = useMemo(() => [...new Set(records.map((r) => r.repo))].sort(), [records]);
-  const themes = useMemo(
-    () => [...new Set(records.flatMap((r) => r.ksi_ids.map(ksiTheme)))].sort(),
-    [records],
-  );
-  const families = useMemo(
-    () => [...new Set(records.flatMap((r) => r.control_ids.map(controlFamily)))].sort(),
-    [records],
+  // the rendered world: the live projection, or the as-of fold's registers
+  // renamed into the live record shape — one row component renders both
+  const rows = useMemo(
+    () => (historical ? (asOfData?.projection?.registers ?? []).map(asOfRegisterRecord) : records),
+    [historical, asOfData, records],
   );
 
-  const filtered = records.filter(
+  const repos = useMemo(() => [...new Set(rows.map((r) => r.repo))].sort(), [rows]);
+  const themes = useMemo(
+    () => [...new Set(rows.flatMap((r) => r.ksi_ids.map(ksiTheme)))].sort(),
+    [rows],
+  );
+  const families = useMemo(
+    () => [...new Set(rows.flatMap((r) => r.control_ids.map(controlFamily)))].sort(),
+    [rows],
+  );
+
+  const filtered = rows.filter(
     (r) =>
       (state === "all" || r.state === state) &&
       (repo === "all" || r.repo === repo) &&
@@ -140,7 +153,7 @@ function Board() {
       (family === "all" || r.control_ids.some((c) => controlFamily(c) === family)) &&
       (!since || !changedOnly || changeByCell.has(`${r.repo} ${r.recipe_id}`)),
   );
-  const count = (s: RegisterState) => records.filter((r) => r.state === s).length;
+  const count = (s: RegisterState) => rows.filter((r) => r.state === s).length;
 
   return (
     <>
@@ -163,7 +176,7 @@ function Board() {
             >
               {s.label}
               <span className="count">
-                {s.key === "all" ? records.length : count(s.key)}
+                {s.key === "all" ? rows.length : count(s.key)}
               </span>
             </button>
           ))}
@@ -186,15 +199,17 @@ function Board() {
             <option key={f}>{f}</option>
           ))}
         </select>
-        <button
-          className={`btn${since ? " primary" : ""}`}
-          onClick={() => {
-            setSince(since ? null : "previous");
-            setChangedOnly(false);
-          }}
-        >
-          since baseline
-        </button>
+        {!historical && (
+          <button
+            className={`btn${since ? " primary" : ""}`}
+            onClick={() => {
+              setSince(since ? null : "previous");
+              setChangedOnly(false);
+            }}
+          >
+            since baseline
+          </button>
+        )}
         {since && (diffData?.scans?.length ?? 0) > 1 && (
           <select value={since} onChange={(e) => setSince(e.target.value)}>
             <option value="previous">previous scan</option>
@@ -208,7 +223,68 @@ function Board() {
               ))}
           </select>
         )}
+        <button
+          className={`btn${historical ? " primary" : ""}`}
+          onClick={() => {
+            // the two lenses on the past are exclusive: turning the as-of
+            // view on parks the since-baseline diff
+            setAsOf(historical ? null : new Date().toISOString());
+            setSince(null);
+            setChangedOnly(false);
+          }}
+        >
+          as of
+        </button>
+        {historical && (
+          <>
+            <input
+              type="datetime-local"
+              value={toLocalInputValue(asOf!)}
+              onChange={(e) => {
+                if (e.target.value) setAsOf(new Date(e.target.value).toISOString());
+              }}
+            />
+            {(asOfData?.scans?.length ?? 0) > 0 && (
+              <select
+                value={asOfData!.scans!.includes(asOf!) ? asOf! : ""}
+                onChange={(e) => {
+                  if (e.target.value) setAsOf(e.target.value);
+                }}
+              >
+                <option value="">jump to a scan…</option>
+                {[...asOfData!.scans!].reverse().map((s) => (
+                  <option key={s} value={s}>
+                    scan {new Date(s).toLocaleString()}
+                  </option>
+                ))}
+              </select>
+            )}
+          </>
+        )}
       </div>
+
+      {historical && (
+        <div className="panel diff-strip asof-strip">
+          {!asOfData ? (
+            <span className="muted">refolding the ledger as of {new Date(asOf!).toLocaleString()}…</span>
+          ) : asOfData.error ? (
+            <span className="error">{asOfData.error}</span>
+          ) : (
+            <>
+              <span className="pill asof">as of {new Date(asOf!).toLocaleString()}</span>
+              <span className="muted">
+                refolded from ledger statements at or before this instant
+                {asOfData.asOfIsScan ? " (a scan instant)" : ""} · historical view, read-only
+              </span>
+              {asOfData.projection && (
+                <span className="faint" style={{ marginLeft: "auto" }}>
+                  dataset {asOfData.projection.datasetVersion || "—"}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {since && (
         <div className="panel diff-strip">
@@ -248,12 +324,15 @@ function Board() {
                 key={row.id}
                 row={row}
                 change={since ? changeByCell.get(`${row.repo} ${row.recipe_id}`) : undefined}
+                historical={historical}
               />
             ))}
-            {!loading && filtered.length === 0 && (
+            {!loading && (!historical || asOfData !== null) && filtered.length === 0 && (
               <tr>
                 <td colSpan={7} className="empty">
-                  nothing in this register{records.length === 0 ? " — no projection yet" : ""}
+                  {historical
+                    ? "nothing in this register as of this instant — no ledger statement at or before it"
+                    : `nothing in this register${records.length === 0 ? " — no projection yet" : ""}`}
                 </td>
               </tr>
             )}
@@ -313,7 +392,16 @@ function DiffSummary({
   );
 }
 
-function RegisterRowView({ row, change }: { row: RegisterRecord; change?: RegisterChange }) {
+function RegisterRowView({
+  row,
+  change,
+  historical = false,
+}: {
+  row: RegisterRecord;
+  change?: RegisterChange;
+  /** an as-of row (I3d): a historical fold offers no actions to take today */
+  historical?: boolean;
+}) {
   const router = useRouter();
   const [proposing, setProposing] = useState(false);
   const open = row.bundle_digest
@@ -370,7 +458,7 @@ function RegisterRowView({ row, change }: { row: RegisterRecord; change?: Regist
           {row.fresh_as_of ? `${formatAge(row.fresh_as_of)} ago` : "—"}
         </td>
         <td onClick={(e) => e.stopPropagation()}>
-          {row.state === "unevidenced" && (
+          {row.state === "unevidenced" && !historical && (
             <button className="btn" onClick={() => setProposing((p) => !p)}>
               propose N/A
             </button>

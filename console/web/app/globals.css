@@ -112,6 +112,43 @@ tr.hl > td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
   padding: 8px 12px; margin-bottom: 12px; font-size: 13px;
 }
 
+/* ---- the as-of view (I3d): the past board, loudly labeled ---- */
+.asof-strip { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.pill.asof {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+input[type="datetime-local"] {
+  background: var(--bg-raised); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 9px; font: inherit; font-size: 13px;
+  color-scheme: dark;
+}
+
+/* ---- the cadence-gap timeline (I3d over I1d) ---- */
+.gap-summary {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.gap-ongoing-count { color: var(--violated); font-weight: 700; letter-spacing: 0.03em; }
+.gaptrack {
+  position: relative; height: 10px; border-radius: 3px;
+  background: var(--bg-hover); overflow: hidden; min-width: 180px;
+}
+.gapseg {
+  position: absolute; top: 0; bottom: 0;
+  background: var(--violated); opacity: 0.85; border-radius: 2px;
+}
+.gapseg:hover { opacity: 1; }
+.gapseg.ongoing {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--violated) 0 4px,
+    color-mix(in srgb, var(--violated) 55%, transparent) 4px 8px
+  );
+}
+
 /* ---- state pills ---- */
 .pill {
   display: inline-block; padding: 1px 9px; border-radius: 999px;

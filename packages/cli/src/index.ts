@@ -7,6 +7,8 @@ export type { VerifyReport } from "./verify.js";
 export { renderBoard, renderBoardDiff } from "./board.js";
 export { computeBoardDiff } from "./board-diff.js";
 export type { BoardDiffOptions, BoardDiffOutcome } from "./board-diff.js";
+export { computeBoardAsOf } from "./board-asof.js";
+export type { BoardAsOfOptions, BoardAsOfOutcome } from "./board-asof.js";
 export { rebuild } from "./rebuild.js";
 export type { RebuildOptions, RebuildReport } from "./rebuild.js";
 export { recordScoping } from "./scoping.js";

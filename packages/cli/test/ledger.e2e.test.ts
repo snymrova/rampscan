@@ -11,7 +11,7 @@ import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { windowMsFor } from "@rampscan/scheduler";
 import { canonicalJson } from "@rampscan/schema";
 import type { Projection } from "@rampscan/core";
-import { loadRecipes, scan, verify } from "../src/index.js";
+import { computeBoardAsOf, loadRecipes, scan, verify } from "../src/index.js";
 import type { ScanOutcome } from "../src/index.js";
 
 // The M2 exit test (plan §M2 "done when"): two successive scans of the same
@@ -187,6 +187,61 @@ describe("Phase I1 exit: point-in-time truth over the append-only record", () =>
   it("without as-of, the fold over both scans differs — the second scan really moved the board", async () => {
     const current = await foldNow();
     expect(canonicalJson(current)).not.toBe(canonicalJson(projectionAfterScan1));
+  });
+
+  // I3d: computeBoardAsOf is the one hand behind `rampscan board --as-of`
+  // AND the console's /api/board/asof route — pinned here against the same
+  // real two-scan ledger the I1b exit test uses, so both surfaces inherit
+  // the byte-for-byte determinism proven above.
+  it("computeBoardAsOf between the scans reproduces the first scan's registers and rollups (I3d)", async () => {
+    const outcome = await computeBoardAsOf({
+      ledgerDir,
+      recipesDir: join(repoRoot, "recipes/pipeline"),
+      asOf: "2026-08-13T10:30:00.000Z",
+    });
+    expect(canonicalJson(outcome.projection.registers)).toBe(
+      canonicalJson(projectionAfterScan1.registers),
+    );
+    expect(canonicalJson(outcome.projection.controls)).toBe(
+      canonicalJson(projectionAfterScan1.controls),
+    );
+    expect(canonicalJson(outcome.projection.ksis)).toBe(canonicalJson(projectionAfterScan1.ksis));
+    // both scan instants enumerated, ascending — the selector's quick picks
+    expect(outcome.scans).toHaveLength(2);
+    expect(outcome.scans[0]! < outcome.scans[1]!).toBe(true);
+    // a between-scans instant is honestly labeled as not a scan
+    expect(outcome.asOfIsScan).toBe(false);
+  });
+
+  it("computeBoardAsOf at a scan instant includes that scan and says it is one (I3d)", async () => {
+    const scansOnly = await computeBoardAsOf({
+      ledgerDir,
+      recipesDir: join(repoRoot, "recipes/pipeline"),
+      asOf: (await computeBoardAsOf({
+        ledgerDir,
+        recipesDir: join(repoRoot, "recipes/pipeline"),
+        asOf: "2026-08-13T10:30:00.000Z",
+      })).scans[0]!,
+    });
+    expect(scansOnly.asOfIsScan).toBe(true);
+    // the fold filter is inclusive: as-of AT the first scan's instant IS the
+    // first scan's board
+    expect(canonicalJson(scansOnly.projection.registers)).toBe(
+      canonicalJson(projectionAfterScan1.registers),
+    );
+  });
+
+  it("computeBoardAsOf before any scan folds an honestly empty world (I3d)", async () => {
+    const outcome = await computeBoardAsOf({
+      ledgerDir,
+      recipesDir: join(repoRoot, "recipes/pipeline"),
+      asOf: "2020-01-01T00:00:00.000Z",
+    });
+    // no repo had been scanned at that instant — no rows exist to show, and
+    // the empty board is the answer, not an error
+    expect(outcome.projection.registers).toHaveLength(0);
+    expect(outcome.projection.controls).toHaveLength(0);
+    expect(outcome.projection.ksis).toHaveLength(0);
   });
 
   it("control-register counts match an independent recount from the register rows", async () => {

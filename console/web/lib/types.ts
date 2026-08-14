@@ -207,6 +207,73 @@ export interface BoardDiffResponse {
 }
 
 /**
+ * The as-of board (I3d) as /api/board/asof returns it — the exact shape
+ * `computeBoardAsOf` in @rampscan/cli produces (camelCase: the projector's
+ * own output serialized, not a PocketBase record). One as-of fold of the
+ * ledger (I1b); the register rows and rollups here are the projector's, so
+ * a mapping to the live record shapes is mechanical renaming, never
+ * recomputation. Mirror, never invent. Only the fields the pages render are
+ * mirrored — the fold also carries chains and drift, which stay server-side.
+ */
+export interface AsOfRegisterRow {
+  repo: string;
+  recipeId: string;
+  ksiIds: string[];
+  controlIds: string[];
+  state: RegisterState;
+  cadence?: string;
+  bundleDigest?: string;
+  freshAsOf?: string;
+  commit?: string;
+  pointers?: OffenderPointer[];
+  introducedAt?: string;
+  introducingCommit?: string;
+  scoping?: ScopingInfo;
+}
+
+export interface AsOfRollupRow {
+  repo: string;
+  id: string;
+  state: RegisterState;
+  recipeIds: string[];
+  counts: RollupCounts;
+}
+
+export interface BoardAsOfResponse {
+  /** present when the fold computed */
+  scans?: string[];
+  asOf?: string;
+  asOfIsScan?: boolean;
+  projection?: {
+    registers: AsOfRegisterRow[];
+    controls: AsOfRollupRow[];
+    ksis: AsOfRollupRow[];
+    datasetVersion: string;
+    projectedAt: string;
+  };
+  /** present on a real failure (not signed in, bad request, server error) */
+  error?: string;
+}
+
+/**
+ * One cadence lapse (I1d) as the projector writes the `gaps` collection: an
+ * interval where a (repo, recipe) sat past its MVX window unrefreshed,
+ * derived from the bundle chain × the class window — never a wall clock. An
+ * ongoing lapse ends at the fold's projected_at.
+ */
+export interface GapRecord {
+  id: string;
+  repo: string;
+  recipe_id: string;
+  /** the bundle whose window closed unrefreshed */
+  bundle_digest: string;
+  gap_start: string;
+  gap_end: string;
+  duration_ms: number;
+  ongoing: boolean;
+}
+
+/**
  * The scoping register (I3c) as /api/scoping/register returns it — the exact
  * shape `computeScopingRegister` in @rampscan/cli produces (camelCase: the
  * compute's own output serialized, not a PocketBase record). Approved rows

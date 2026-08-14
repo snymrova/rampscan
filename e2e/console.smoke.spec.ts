@@ -232,6 +232,54 @@ test("scoping register: the two-key flow lands on the record, approved verified 
   await expect(page.locator("body")).toContainText(approveJustification);
 });
 
+test("as-of selector: the past refolds honestly on board and control register; the clock shows the lapse record (I3d)", async ({ page }) => {
+  await signIn(page);
+
+  // turn the as-of view on — it defaults to now, so the refold must agree
+  // with the live board: the flagship stays violated
+  await page.getByRole("button", { name: "as of", exact: true }).click();
+  await expect(page.locator(".asof-strip")).toBeVisible();
+  // first hit compiles the asof route (dev compile-on-first-hit, as elsewhere)
+  const flagshipRow = page.getByRole("row").filter({ hasText: FLAGSHIP }).first();
+  await expect(flagshipRow.locator(".pill.violated")).toBeVisible({ timeout: 45_000 });
+  await expect(page.locator(".asof-strip")).toContainText("read-only");
+  // a historical fold offers no actions to take today
+  await expect(page.getByRole("button", { name: "propose N/A" })).toHaveCount(0);
+
+  // rewind to before the scan: the board empties honestly — an answer, not
+  // an error ("what did the world look like?" — nothing was recorded yet)
+  await page.locator("input[type='datetime-local']").fill("2000-01-01T00:00");
+  await expect(page.locator("td.empty")).toContainText(
+    "no ledger statement at or before it",
+    { timeout: 15_000 },
+  );
+
+  // jump to the scan instant via the quick-pick: the scan's board returns,
+  // and the strip says the instant IS a scan
+  await page.locator("select:has(option[value=''])").selectOption({ index: 1 });
+  await expect(page.locator(".asof-strip")).toContainText("(a scan instant)");
+  await expect(flagshipRow.locator(".pill.violated")).toBeVisible();
+
+  // the control register rides the SAME fold: as-of now shows ra-5 violated,
+  // as-of before the scan shows an honestly empty register
+  await page.goto("/controls");
+  await expect(page.getByRole("heading", { name: "Control register" })).toBeVisible();
+  await page.getByRole("button", { name: "as of", exact: true }).click();
+  const ra5 = page
+    .locator("tr")
+    .filter({ has: page.getByRole("cell", { name: "ra-5", exact: true }) });
+  await expect(ra5.locator(".pill.violated").first()).toBeVisible({ timeout: 15_000 });
+  await page.locator("input[type='datetime-local']").fill("2000-01-01T00:00");
+  await expect(page.locator("td.empty")).toContainText("no ledger statement at or before it");
+
+  // the cadence-gap timeline (I1d's projection, rendered): the fixture was
+  // scanned minutes ago, so the honest record is that nothing has lapsed —
+  // the section must say that, not render an invented gap
+  await page.goto("/clock");
+  await expect(page.getByRole("heading", { name: "Cadence lapses" })).toBeVisible();
+  await expect(page.locator(".panel .empty").last()).toContainText("no cadence lapse on record");
+});
+
 test("action queue: renders ranked, with the scan's new violations", async ({ page }) => {
   await signIn(page);
   await page.goto("/queue");

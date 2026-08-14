@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { RequireAuth } from "../../components/guard";
+import {
+  asOfRegisterRecord,
+  asOfRollupRecord,
+  toLocalInputValue,
+  useAsOfBoard,
+} from "../../lib/asof";
 import { useCollection } from "../../lib/pb";
 import { formatAge } from "../../lib/mvx";
 import type { MetaRecord, RegisterRecord, RegisterState, RollupRecord } from "../../lib/types";
@@ -50,26 +56,48 @@ function Registers() {
   const [repo, setRepo] = useState("all");
   // expansion override per row; unset rows fall back to the deep-linked id
   const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
+  // "as of" (I3d): null = live rollups; an ISO instant = both registers
+  // refolded there, server-side, by the same hand the board's selector calls
+  const [asOf, setAsOf] = useState<string | null>(null);
 
-  const active = reg === "controls" ? controls : ksis;
   const metaRow = meta.records[0];
+  const asOfData = useAsOfBoard(asOf, metaRow?.projected_at);
+  const historical = asOf !== null;
+
+  // the rendered world: the live rollup collections, or the as-of fold's
+  // rollups renamed into the live record shape — one row component for both
+  const controlRows = useMemo(
+    () =>
+      historical
+        ? (asOfData?.projection?.controls ?? []).map(asOfRollupRecord)
+        : controls.records,
+    [historical, asOfData, controls.records],
+  );
+  const ksiRows = useMemo(
+    () =>
+      historical ? (asOfData?.projection?.ksis ?? []).map(asOfRollupRecord) : ksis.records,
+    [historical, asOfData, ksis.records],
+  );
+  const activeRows = reg === "controls" ? controlRows : ksiRows;
+  const activeCol = reg === "controls" ? controls : ksis;
 
   // recipe register rows by (repo, recipe) — the expansion joins through this,
-  // so the sub-rows show exactly what the coverage board shows, never a copy
+  // so the sub-rows show exactly what the coverage board shows (the as-of
+  // board when an instant is selected), never a copy
   const registerByCell = useMemo(() => {
     const map = new Map<string, RegisterRecord>();
-    for (const r of registers.records) map.set(`${r.repo} ${r.recipe_id}`, r);
+    const rows = historical
+      ? (asOfData?.projection?.registers ?? []).map(asOfRegisterRecord)
+      : registers.records;
+    for (const r of rows) map.set(`${r.repo} ${r.recipe_id}`, r);
     return map;
-  }, [registers.records]);
+  }, [historical, asOfData, registers.records]);
 
-  const repos = useMemo(
-    () => [...new Set(active.records.map((r) => r.repo))].sort(),
-    [active.records],
-  );
-  const filtered = active.records.filter(
+  const repos = useMemo(() => [...new Set(activeRows.map((r) => r.repo))].sort(), [activeRows]);
+  const filtered = activeRows.filter(
     (r) => (state === "all" || r.state === state) && (repo === "all" || r.repo === repo),
   );
-  const count = (s: RegisterState) => active.records.filter((r) => r.state === s).length;
+  const count = (s: RegisterState) => activeRows.filter((r) => r.state === s).length;
 
   return (
     <>
@@ -85,10 +113,10 @@ function Registers() {
       <div className="filters">
         <div className="tabs">
           <button className={reg === "controls" ? "active" : ""} onClick={() => setReg("controls")}>
-            Controls<span className="count">{controls.records.length}</span>
+            Controls<span className="count">{controlRows.length}</span>
           </button>
           <button className={reg === "ksis" ? "active" : ""} onClick={() => setReg("ksis")}>
-            KSIs<span className="count">{ksis.records.length}</span>
+            KSIs<span className="count">{ksiRows.length}</span>
           </button>
         </div>
         <div className="tabs">
@@ -99,7 +127,7 @@ function Registers() {
               onClick={() => setState(s.key)}
             >
               {s.label}
-              <span className="count">{s.key === "all" ? active.records.length : count(s.key)}</span>
+              <span className="count">{s.key === "all" ? activeRows.length : count(s.key)}</span>
             </button>
           ))}
         </div>
@@ -111,10 +139,62 @@ function Registers() {
             ))}
           </select>
         )}
+        <button
+          className={`btn${historical ? " primary" : ""}`}
+          onClick={() => setAsOf(historical ? null : new Date().toISOString())}
+        >
+          as of
+        </button>
+        {historical && (
+          <>
+            <input
+              type="datetime-local"
+              value={toLocalInputValue(asOf!)}
+              onChange={(e) => {
+                if (e.target.value) setAsOf(new Date(e.target.value).toISOString());
+              }}
+            />
+            {(asOfData?.scans?.length ?? 0) > 0 && (
+              <select
+                value={asOfData!.scans!.includes(asOf!) ? asOf! : ""}
+                onChange={(e) => {
+                  if (e.target.value) setAsOf(e.target.value);
+                }}
+              >
+                <option value="">jump to a scan…</option>
+                {[...asOfData!.scans!].reverse().map((s) => (
+                  <option key={s} value={s}>
+                    scan {new Date(s).toLocaleString()}
+                  </option>
+                ))}
+              </select>
+            )}
+          </>
+        )}
       </div>
 
-      {(active.error ?? registers.error) && (
-        <p className="error">{active.error ?? registers.error}</p>
+      {historical && (
+        <div className="panel diff-strip asof-strip">
+          {!asOfData ? (
+            <span className="muted">
+              refolding the ledger as of {new Date(asOf!).toLocaleString()}…
+            </span>
+          ) : asOfData.error ? (
+            <span className="error">{asOfData.error}</span>
+          ) : (
+            <>
+              <span className="pill asof">as of {new Date(asOf!).toLocaleString()}</span>
+              <span className="muted">
+                both registers refolded from ledger statements at or before this instant
+                {asOfData.asOfIsScan ? " (a scan instant)" : ""} · historical view, read-only
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
+      {(activeCol.error ?? registers.error) && (
+        <p className="error">{activeCol.error ?? registers.error}</p>
       )}
       <div className="panel">
         <table className="reg">
@@ -147,10 +227,12 @@ function Registers() {
                 />
               );
             })}
-            {!active.loading && filtered.length === 0 && (
+            {!activeCol.loading && (!historical || asOfData !== null) && filtered.length === 0 && (
               <tr>
                 <td colSpan={5} className="empty">
-                  nothing in this register{active.records.length === 0 ? " — no projection yet" : ""}
+                  {historical
+                    ? "nothing in this register as of this instant — no ledger statement at or before it"
+                    : `nothing in this register${activeCol.records.length === 0 ? " — no projection yet" : ""}`}
                 </td>
               </tr>
             )}

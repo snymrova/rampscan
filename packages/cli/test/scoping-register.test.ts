@@ -53,6 +53,10 @@ async function scopedWorld(): Promise<{ ledgerDir: string; keysDir: string; dige
     datasetPin: DEFAULT_DATASET_PIN,
     ledgerDir,
     keysDir,
+    // pinned: the rejected-proposal test asserts sort order against this
+    // instant — a wall-clock stamp made the suite fail once real time
+    // passed the proposal fixtures' timestamps
+    now: new Date("2026-08-14T09:00:00.000Z"),
   });
   return { ledgerDir, keysDir, digest };
 }
