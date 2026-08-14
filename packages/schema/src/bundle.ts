@@ -20,10 +20,37 @@ export const Subject = z.object({
 });
 export type Subject = z.infer<typeof Subject>;
 
+/**
+ * A fix pointer (I2c): where one failing observation row lives, in the
+ * operator's terms — file, line, check id, call path — so a violation can be
+ * acted on without a context switch. Every field is optional because rows
+ * carry what their producer carries (a package-level advisory has no file);
+ * an extractable-but-empty pointer is dropped rather than recorded as `{}`.
+ */
+export const OffenderPointer = z.object({
+  /** repo-relative file the failing row points at */
+  file: z.string().optional(),
+  line: z.number().int().optional(),
+  /** the failing check/rule/advisory id, under whichever name its producer uses */
+  check: z.string().optional(),
+  /** entry point » … » sink, as the graph labeled it */
+  call_path: z.string().optional(),
+});
+export type OffenderPointer = z.infer<typeof OffenderPointer>;
+
 export const AssertionResult = z.object({
   description: z.string(),
   passed: z.boolean(),
   detail: z.string().optional(), // what failed / matched, human-readable
+  /**
+   * Fix pointers for the failing rows (I2c), bounded — the first few
+   * offenders with any pointer fields at all. Deliberately EXCLUDED from
+   * evidence identity (`sameEvidence`): existing bundles survive unchanged
+   * and gain pointers only when real drift re-keys them.
+   */
+  offenders: z.array(OffenderPointer).optional(),
+  /** total failing rows, so a bounded `offenders` can honestly say "+N more" */
+  offender_count: z.number().int().optional(),
 });
 export type AssertionResult = z.infer<typeof AssertionResult>;
 
@@ -43,6 +70,13 @@ export const EvidencePredicate = z.object({
   dataset_version: z.string(),
   tool_versions: z.record(z.string(), z.string()), // { syft: "1.x", ... }
   assertions: z.array(AssertionResult),
+  /**
+   * How to re-run the check that produced this verdict (I2c), as the
+   * collector itself stated it — never typed elsewhere. Optional: older
+   * bundles predate it, and a collector may not state one. Excluded from
+   * evidence identity, like `offenders`.
+   */
+  reproduce: z.string().optional(),
   cadence: Cadence,
   run_id: z.string(),
   timestamp: z.string(), // ISO 8601

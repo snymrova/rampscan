@@ -1,4 +1,5 @@
 import { EXPIRING_AT_FRACTION, clockState, formatDuration } from "./mvx";
+import { pointerSummary } from "./pointers";
 import { standingDivergences } from "./status";
 import type { DaemonEventRecord, DriftRecord, RegisterRecord } from "./types";
 
@@ -165,6 +166,16 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
         a.row.recipe_id.localeCompare(b.row.recipe_id),
     );
   for (const { row, event } of violations) {
+    // the fix pointer (I2c) rides the register row, lifted from the evidence
+    // at fold time — pre-I2c evidence carries none and the detail falls back
+    // to the commit alone, honestly unadorned
+    const pointer = pointerSummary(row.pointers ?? []);
+    const introducedAt = row.introducing_commit || null;
+    const commitNote = introducedAt
+      ? `first seen at commit ${introducedAt.slice(0, 12)}`
+      : event?.killing_commit
+        ? `at commit ${event.killing_commit.slice(0, 12)}`
+        : `at commit ${row.commit_sha.slice(0, 12)}`;
     const item: QueueItem = {
       kind: "new-violation",
       rank: 2,
@@ -175,9 +186,7 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
         event?.kind === "verdict-flipped"
           ? `flipped to violated (was ${event.from_verdict})`
           : "violated since first evidence",
-      detail: event?.killing_commit
-        ? `at commit ${event.killing_commit.slice(0, 12)}`
-        : `at commit ${row.commit_sha.slice(0, 12)}`,
+      detail: pointer !== "" ? `${pointer} — ${commitNote}` : commitNote,
       action: "open the evidence — the assertions and artifacts name exactly what failed",
     };
     if (row.bundle_digest) item.bundleDigest = row.bundle_digest;

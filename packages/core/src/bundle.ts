@@ -66,6 +66,7 @@ export function toEvidenceBundle(
       dataset_version: ctx.datasetVersion,
       tool_versions: { [result.collector]: ctx.toolVersion },
       assertions: result.assertions,
+      ...(result.reproduce !== undefined ? { reproduce: result.reproduce } : {}),
       cadence: recipe.cadence,
       run_id: ctx.runId,
       timestamp: ctx.timestamp,
@@ -82,7 +83,11 @@ export function toEvidenceBundle(
  * collector artifacts aggregate every recipe the collector observes (e.g.
  * repo-facts.json), so hashing them into identity would kill every recipe's
  * evidence whenever any one file changes — recreating exactly the coupling
- * anchor-death exists to measure.
+ * anchor-death exists to measure. Also deliberately NOT keyed on the I2c
+ * additions (assertion `offenders`/`offender_count`, predicate `reproduce`):
+ * they restate what detail already witnesses, so comparing them would re-key
+ * every pre-I2c bundle for zero informational change — existing evidence
+ * survives and gains pointers only when real drift re-keys it.
  */
 export function sameEvidence(a: EvidenceBundle, b: EvidenceBundle): boolean {
   const p = a.predicate;

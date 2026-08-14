@@ -219,6 +219,34 @@ describe("deriveActionQueue: the ranked list of record", () => {
     expect(violations[1]!.title).toContain("since first evidence");
   });
 
+  it("a violation whose register row carries fix pointers (I2c) leads with them and the introducing commit", () => {
+    const items = queue.deriveActionQueue({
+      registers: [
+        register({
+          recipe_id: "pointed-recipe",
+          state: "violated",
+          fresh_as_of: iso(60 * 60 * 1000),
+          bundle_digest: "sha256:ptr",
+          commit_sha: "feedface0000feedface",
+          pointers: [
+            { file: "src/exec.ts", line: 42, check: "detect-child-process" },
+            { file: "src/other.ts", line: 7 },
+          ],
+          introduced_at: iso(3 * DAY),
+          introducing_commit: "beefbeef1111beefbeef",
+        }),
+      ],
+      drift: [],
+      events: [],
+      certClass: "b",
+      now: NOW,
+    });
+    const item = items.find((i) => i.kind === "new-violation")!;
+    expect(item.detail).toBe(
+      "detect-child-process — src/exec.ts:42 (+1 more) — first seen at commit beefbeef1111",
+    );
+  });
+
   it("fixable skips are queued with the doctor hint; honest skips never are", () => {
     const actionable = derive().filter((i) => i.kind === "actionable-unevidenced");
     expect(actionable).toHaveLength(1);

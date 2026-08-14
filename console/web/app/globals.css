@@ -92,6 +92,17 @@ table.reg tr.rowlink:hover td { background: var(--bg-hover); }
 .strip-divergence { color: var(--violated); }
 .strip-repo { margin-left: auto; }
 
+/* ---- fix pointers on violated rows (I2c) ---- */
+.pointer-row {
+  padding-top: 0 !important;
+  border-bottom: 1px solid var(--border);
+}
+.pointer-row .pointer {
+  display: inline-block; margin-right: 10px;
+  color: var(--violated);
+  overflow-wrap: anywhere;
+}
+
 /* ---- state pills ---- */
 .pill {
   display: inline-block; padding: 1px 9px; border-radius: 999px;

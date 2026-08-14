@@ -348,6 +348,7 @@ export const repoFacts: Collector = {
       anchors,
       toolVersion: REPO_FACTS_VERSION,
       exitCode: 0,
+      reproduce: "rampscan scan <repo> (repo-facts over the committed tree)",
     };
   },
 };

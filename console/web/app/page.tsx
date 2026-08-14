@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
 import { getPb, useAuth, useCollection } from "../lib/pb";
+import { describePointer } from "../lib/pointers";
 import { controlFamily, ksiTheme } from "../lib/types";
 import type { MetaRecord, RegisterRecord, RegisterState } from "../lib/types";
 import { formatAge } from "../lib/mvx";
@@ -177,6 +178,25 @@ function RegisterRowView({ row }: { row: RegisterRecord }) {
         <tr>
           <td colSpan={7} onClick={(e) => e.stopPropagation()}>
             <ProposeForm row={row} done={() => setProposing(false)} />
+          </td>
+        </tr>
+      )}
+      {row.state === "violated" && ((row.pointers?.length ?? 0) > 0 || row.introducing_commit) && (
+        // the fix pointers (I2c): where the violation lives + when it arrived,
+        // on the row itself — the evidence page has the full offender list
+        <tr className={open ? "rowlink" : ""} onClick={open}>
+          <td colSpan={7} className="pointer-row" style={{ fontSize: 12.5 }}>
+            {(row.pointers ?? []).map((p, i) => (
+              <span key={i} className="mono pointer">
+                {describePointer(p)}
+              </span>
+            ))}
+            {row.introducing_commit && (
+              <span className="faint">
+                violating since {formatAge(row.introduced_at)} ago · first seen at commit{" "}
+                <span className="mono">{row.introducing_commit.slice(0, 12)}</span>
+              </span>
+            )}
           </td>
         </tr>
       )}

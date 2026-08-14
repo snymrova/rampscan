@@ -11,7 +11,7 @@ import type {
   RollupRow,
   ScopingInfo,
 } from "@rampscan/core";
-import type { EvidenceBundle, PipelineRecipe, ScopingEvent } from "@rampscan/schema";
+import type { EvidenceBundle, OffenderPointer, PipelineRecipe, ScopingEvent } from "@rampscan/schema";
 import { isEvidenceBundle, isScopingEvent } from "@rampscan/schema";
 
 // Projector v2 (plan M3): still a pure fold of the ledger — identical in
@@ -40,6 +40,32 @@ function anchorKey(anchors: Array<{ path: string; contentHash: string }>): strin
   return JSON.stringify(
     [...anchors].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0)),
   );
+}
+
+/** the register row's pointer summary carries at most this many entries */
+const MAX_REGISTER_POINTERS = 5;
+
+/**
+ * Fix pointers for a violated register row (I2c): the failing assertions'
+ * offenders, deduplicated and bounded. Pre-I2c bundles carry no offenders and
+ * yield [] — the row simply has no pointers until real drift re-keys it.
+ */
+function fixPointers(
+  assertions: Array<{ passed: boolean; offenders?: OffenderPointer[] | undefined }>,
+): OffenderPointer[] {
+  const pointers: OffenderPointer[] = [];
+  const seen = new Set<string>();
+  for (const assertion of assertions) {
+    if (assertion.passed) continue;
+    for (const pointer of assertion.offenders ?? []) {
+      const key = JSON.stringify([pointer.file, pointer.line, pointer.check, pointer.call_path]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pointers.push(pointer);
+      if (pointers.length === MAX_REGISTER_POINTERS) return pointers;
+    }
+  }
+  return pointers;
 }
 
 function byTime(a: LedgerEntry, b: LedgerEntry): number {
@@ -241,6 +267,23 @@ export function foldEntries(
       row.bundleDigest = live.digest;
       row.freshAsOf = p.timestamp;
       row.commit = p.commit;
+      if (p.verdict === "violated") {
+        // fix pointers (I2c): where the violation lives, lifted from the
+        // live bundle's failing assertions — absent when the evidence
+        // predates offenders (pre-I2c bundles), never invented
+        const pointers = fixPointers(p.assertions);
+        if (pointers.length > 0) row.pointers = pointers;
+        // the current violated streak: walk the chain back to the first
+        // consecutive violated bundle. The streak spans evidence gaps (the
+        // chain only holds bundles) and breaks on a clean bundle; "first
+        // scanned commit the violation appeared at" is the honest claim.
+        const chain = groups.get(cell)!;
+        let first = chain.length - 1; // live is the chain's tail
+        while (first > 0 && chain[first - 1]!.bundle.predicate.verdict === "violated") first--;
+        const intro = chain[first]!.bundle.predicate;
+        row.introducedAt = intro.timestamp;
+        row.introducingCommit = intro.commit;
+      }
       if (scopingInfo) row.scoping = scopingInfo;
     } else if (scopingInfo) {
       row.state = "notApplicable";

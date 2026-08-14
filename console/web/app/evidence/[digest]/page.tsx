@@ -4,7 +4,8 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { RequireAuth } from "../../../components/guard";
 import { getPb } from "../../../lib/pb";
-import type { BundleRecord, CoverageRecord, MetaRecord } from "../../../lib/types";
+import { describePointer } from "../../../lib/pointers";
+import type { BundleRecord, CoverageRecord, MetaRecord, OffenderPointer } from "../../../lib/types";
 
 // Evidence detail (SPEC §8.1): each row opens the evidence — artifacts,
 // assertions, commit, signature, reproduce command. Everything shown here is
@@ -24,11 +25,14 @@ interface AssertionResult {
   description: string;
   passed: boolean;
   detail?: string;
+  /** structured fix pointers (I2c) — bundles minted since carry them */
+  offenders?: OffenderPointer[];
+  offender_count?: number;
 }
 
-// M4: advisory and route rows carry the call path as the artifact; the SAST
-// gate's rows carry it as `call_path` — surface every one embedded in an
-// assertion's example row as its own line.
+// Pre-I2c fallback: older bundles carry no structured offenders, only the one
+// example row embedded in the detail prose — scrape its call path out so old
+// evidence keeps showing what it always showed. New bundles never hit this.
 function callPathsIn(detail: string | undefined): string[] {
   if (!detail) return [];
   return [...detail.matchAll(/"(?:call_)?path":"([^"]+)"/g)]
@@ -157,11 +161,35 @@ function Evidence({ digest }: { digest: string }) {
                     <td>{a.description}</td>
                     <td className="faint" style={{ overflowWrap: "anywhere" }}>
                       {a.detail ?? ""}
-                      {callPathsIn(a.detail).map((p, j) => (
-                        <div key={j} className="mono" style={{ marginTop: 4 }}>
-                          call path: {p}
-                        </div>
-                      ))}
+                      {a.offenders ? (
+                        // structured offenders (I2c): every failing row's
+                        // pointer, bounded — the count says what was cut
+                        <>
+                          {a.offenders.map((o, j) => (
+                            <div key={j} className="mono" style={{ marginTop: 4 }}>
+                              {describePointer(o)}
+                              {/* describePointer falls back to the call path only when the
+                                  pointer has nothing else — otherwise it gets its own line */}
+                              {o.call_path && (o.file || o.check) && (
+                                <div className="faint">call path: {o.call_path}</div>
+                              )}
+                            </div>
+                          ))}
+                          {(a.offender_count ?? 0) > a.offenders.length && (
+                            <div style={{ marginTop: 4 }}>
+                              +{a.offender_count! - a.offenders.length} more failing row(s) — the
+                              artifact carries them all
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        // pre-I2c bundle: the example row in the prose is all it carries
+                        callPathsIn(a.detail).map((p, j) => (
+                          <div key={j} className="mono" style={{ marginTop: 4 }}>
+                            call path: {p}
+                          </div>
+                        ))
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -220,6 +248,10 @@ function Evidence({ digest }: { digest: string }) {
       <code className="copycmd">
         {`pnpm rampscan verify ${digest}`}
         {isEvidence ? `\n${(meta?.settings?.reproduceCommand ?? "pnpm rampscan scan <repo-path>").replace("<repo-path>", String(p["repo"]))}` : ""}
+        {/* the collector's own re-run statement (I2c), when the evidence carries one */}
+        {isEvidence && typeof p["reproduce"] === "string"
+          ? `\n${(p["reproduce"] as string).replace("<repo>", String(p["repo"]))}`
+          : ""}
       </code>
 
       <div className="section-title">Raw statement</div>

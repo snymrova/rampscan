@@ -221,6 +221,7 @@ export const reachability: Collector = {
       anchors: { "no-critical-reachable-advisories": anchorPaths },
       toolVersion: version,
       exitCode: 0,
+      reproduce: "rampscan scan <repo> (reachability: osv-results.json × graph.db)",
     };
   },
 };

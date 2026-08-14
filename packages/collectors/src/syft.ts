@@ -133,6 +133,7 @@ export const syft: Collector = {
       anchors: { "sbom-exists-and-fresh": anchorPaths },
       toolVersion: version,
       exitCode,
+      reproduce: "syft scan dir:<repo> -o cyclonedx-json",
     };
   },
 };

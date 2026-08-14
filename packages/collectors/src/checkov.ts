@@ -240,6 +240,7 @@ export const checkov: Collector = {
       anchors: { "iac-baseline-clean": anchorPaths },
       toolVersion: version,
       exitCode,
+      reproduce: `checkov -d <repo> --framework ${iac.frameworks.join(" ")}`,
     };
   },
 };

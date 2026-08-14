@@ -106,6 +106,19 @@ describe("sast-reachability gate — the flagship move, SAST edition", () => {
     expect(deadEval["call_path"]).toBeNull();
   });
 
+  it("the gate's live rows yield fix pointers — the I2c extraction pinned to the real producer", async () => {
+    const { offenderPointer } = await import("@rampscan/core");
+    const rows = out.observations["no-reachable-dangerous-code"]!;
+    const reachableEval = rows.find(
+      (r) => r["path"] === "src/render.js" && r["check_id"] === "dangerous-eval",
+    )!;
+    const pointer = offenderPointer(reachableEval)!;
+    expect(pointer.file).toBe("src/render.js");
+    expect(pointer.check).toBe("dangerous-eval");
+    expect(typeof pointer.line).toBe("number");
+    expect(pointer.call_path).toContain("»");
+  });
+
   it("only the reachable ERROR becomes a finding, with the call path as trace evidence", () => {
     const findings = out.findings.filter((f) => f.variable === "sast");
     expect(findings).toHaveLength(1);

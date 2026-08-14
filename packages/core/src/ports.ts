@@ -3,6 +3,7 @@ import type {
   CollectorManifest,
   Finding,
   LedgerStatement,
+  OffenderPointer,
   Verdict,
 } from "@rampscan/schema";
 
@@ -76,6 +77,8 @@ export interface RunResult {
   anchors: Record<string, Array<{ path: string; contentHash: string }>>;
   toolVersion: string;
   exitCode: number;
+  /** how to re-run this collector's check (I2c) — stated by the collector, when it did */
+  reproduce?: string;
   /** set when the collector could not run at all (tool missing, no Dockerfile, …) */
   skipped?: { reason: string };
 }
@@ -109,6 +112,8 @@ export interface CollectOutput {
   anchors?: Record<string, Array<{ path: string; contentHash: string }>>;
   toolVersion: string;
   exitCode: number;
+  /** how to re-run this collector's check (I2c) — rides every recipe this collector evidences */
+  reproduce?: string;
   skipped?: { reason: string };
 }
 
@@ -182,6 +187,21 @@ export interface RegisterRow {
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601 — bundle timestamp, for the clock view
   commit?: string;
+  /**
+   * Fix pointers (I2c): where the violation lives, lifted from the live
+   * bundle's failing assertions at fold time — set only when state is
+   * violated AND the evidence carries them (pre-I2c bundles do not).
+   */
+  pointers?: OffenderPointer[];
+  /**
+   * The start of the current violated streak (I2c), walked back through the
+   * cell's bundle chain: the first consecutive violated bundle's timestamp
+   * and scanned commit. "Scanned" said honestly — scans sample commits, so
+   * this is the first commit rampscan SAW the violation at, and the streak
+   * spans evidence gaps (it breaks only on a clean bundle).
+   */
+  introducedAt?: string; // ISO 8601
+  introducingCommit?: string;
   /** set when state is notApplicable */
   scoping?: ScopingInfo;
 }

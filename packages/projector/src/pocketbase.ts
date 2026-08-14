@@ -73,8 +73,30 @@ export class PocketBaseAdmin {
   }
 
   async ensureCollection(spec: CollectionSpec): Promise<void> {
-    if (await this.hasCollection(spec.name)) return;
-    await this.request("POST", "/api/collections", spec);
+    let existing: { fields?: Array<{ name: string }> } | undefined;
+    try {
+      existing = (await this.request("GET", `/api/collections/${spec.name}`)) as {
+        fields?: Array<{ name: string }>;
+      };
+    } catch {
+      // not there yet
+    }
+    if (!existing) {
+      await this.request("POST", "/api/collections", spec);
+      return;
+    }
+    // Additive schema sync (I2c): an existing collection gains any field the
+    // spec has grown — without this, PocketBase silently DROPS unknown fields
+    // on record create, and a new projection column would vanish on every
+    // deployment older than the spec. Additive only: fields are never removed
+    // or retyped here (that stays a deliberate, hand-written migration).
+    const have = new Set((existing.fields ?? []).map((f) => f.name));
+    const missing = spec.fields.filter((f) => !have.has(f["name"] as string));
+    if (missing.length > 0) {
+      await this.request("PATCH", `/api/collections/${spec.name}`, {
+        fields: [...(existing.fields ?? []), ...missing],
+      });
+    }
   }
 
   async truncate(name: string): Promise<void> {
@@ -128,6 +150,9 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("bundle_digest"),
       text("fresh_as_of"),
       text("commit_sha"),
+      json("pointers"),
+      text("introduced_at"),
+      text("introducing_commit"),
       json("scoping"),
     ],
     listRule: AUTHED,
@@ -336,6 +361,9 @@ export async function writeProjectionPocketBase(
       bundle_digest: row.bundleDigest ?? "",
       fresh_as_of: row.freshAsOf ?? "",
       commit_sha: row.commit ?? "",
+      pointers: row.pointers ?? null,
+      introduced_at: row.introducedAt ?? "",
+      introducing_commit: row.introducingCommit ?? "",
       scoping: row.scoping ?? null,
     });
   }
@@ -431,6 +459,9 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     if (r.bundle_digest) row.bundleDigest = r.bundle_digest;
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
     if (r.commit_sha) row.commit = r.commit_sha;
+    if (r.pointers) row.pointers = r.pointers;
+    if (r.introduced_at) row.introducedAt = r.introduced_at;
+    if (r.introducing_commit) row.introducingCommit = r.introducing_commit;
     if (r.scoping) row.scoping = r.scoping;
     return row;
   });

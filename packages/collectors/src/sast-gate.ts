@@ -187,6 +187,7 @@ export const sastGate: Collector = {
         anchors: { "no-reachable-dangerous-code": anchorPaths },
         toolVersion: version,
         exitCode: 0,
+        reproduce: "rampscan scan <repo> (sast-reachability: semgrep-results.json × graph.db)",
       };
     } finally {
       db?.close();

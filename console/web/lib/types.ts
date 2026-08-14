@@ -11,6 +11,18 @@ export interface ScopingInfo {
   timestamp: string;
 }
 
+/**
+ * A fix pointer (I2c): where a failing observation row lives, as the
+ * evaluator extracted it from the real producer's row shape. Every field
+ * optional — rows carry what their producer carries.
+ */
+export interface OffenderPointer {
+  file?: string;
+  line?: number;
+  check?: string;
+  call_path?: string;
+}
+
 export interface RegisterRecord {
   id: string;
   repo: string;
@@ -22,6 +34,11 @@ export interface RegisterRecord {
   bundle_digest: string;
   fresh_as_of: string;
   commit_sha: string;
+  /** fix pointers (I2c) — violated rows whose evidence carries them; null before that */
+  pointers: OffenderPointer[] | null;
+  /** start of the current violated streak — first scanned commit the violation appeared at */
+  introduced_at: string;
+  introducing_commit: string;
   scoping: ScopingInfo | null;
 }
 

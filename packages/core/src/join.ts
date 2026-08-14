@@ -62,7 +62,7 @@ export function joinRecipeResults(input: JoinInput): RecipeResult[] {
 
     const assertions = evaluateAssertions(recipe.assertions, rows, input.now);
     const verdict = assertions.every((a) => a.passed) ? "evidenced" : "violated";
-    return {
+    const result: RecipeResult = {
       recipe_id: recipe.id,
       ksi_ids: recipe.ksi_ids,
       control_ids: recipe.control_ids,
@@ -72,6 +72,10 @@ export function joinRecipeResults(input: JoinInput): RecipeResult[] {
       artifacts: run.artifacts,
       anchor_paths: run.anchors[recipe.id] ?? [],
     };
+    // the reproduce command (I2c) is the collector's own statement of how to
+    // re-run its check — it rides every recipe this collector evidences
+    if (run.reproduce !== undefined) result.reproduce = run.reproduce;
+    return result;
   });
 }
 

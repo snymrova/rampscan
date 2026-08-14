@@ -30,7 +30,7 @@ const PASSWORD = "test-superuser-pass-1";
 
 let child: ChildProcess | undefined;
 
-function evidenceEntry(recipe: string, timestamp: string): LedgerEntry {
+function evidenceEntry(recipe: string, timestamp: string, violated = false): LedgerEntry {
   const bundle: EvidenceBundle = {
     _type: "https://in-toto.io/Statement/v1",
     subject: [{ name: "x", digest: { sha256: "e".repeat(64) } }],
@@ -39,13 +39,23 @@ function evidenceEntry(recipe: string, timestamp: string): LedgerEntry {
       recipe_id: recipe,
       ksi_ids: ["KSI-SCR-MIT"],
       control_ids: ["si-7.1"],
-      verdict: "evidenced",
+      verdict: violated ? "violated" : "evidenced",
       repo: "fixtures/app",
       commit: "1".repeat(40),
       anchor_paths: [{ path: "f", contentHash: "a".repeat(64) }],
       dataset_version: "2026.07.14.01",
       tool_versions: { "repo-facts": "0.1.0" },
-      assertions: [{ description: "check", passed: true }],
+      assertions: violated
+        ? [
+            {
+              description: "check",
+              passed: false,
+              detail: "1 of 1 row(s) fail",
+              offenders: [{ file: "bad.ts", line: 2, check: "b" }],
+              offender_count: 1,
+            },
+          ]
+        : [{ description: "check", passed: true }],
       cadence: "continuous",
       run_id: `run-${timestamp}`,
       timestamp,
@@ -83,8 +93,13 @@ describe.skipIf(!HAVE_PB)("pocketbase projection store", () => {
     const entries = [
       evidenceEntry("lockfile-pinned-deps", "2026-08-01T00:00:00.000Z"),
       evidenceEntry("sbom-exists-and-fresh", "2026-08-02T00:00:00.000Z"),
+      // a violated cell whose register row carries fix pointers + the streak (I2c)
+      evidenceEntry("no-secrets-in-history", "2026-08-02T01:00:00.000Z", true),
     ];
     const projection = foldEntries(entries, "2026-08-03T00:00:00.000Z");
+    expect(
+      projection.registers.find((r) => r.recipeId === "no-secrets-in-history")!.pointers,
+    ).toBeDefined();
     const settings = { certClass: "b" as const, reproduceCommand: "pnpm rampscan scan <path>" };
 
     await writeProjectionPocketBase(projection, entries, pb, settings);
@@ -92,8 +107,29 @@ describe.skipIf(!HAVE_PB)("pocketbase projection store", () => {
     expect(await readProjectionPocketBase(pb)).toEqual(projection);
 
     const bundles = await pb.listAll("bundles");
-    expect(bundles).toHaveLength(2);
+    expect(bundles).toHaveLength(3);
     expect((bundles[0] as any).envelope.signatures).toHaveLength(1);
+  });
+
+  it("ensureCollection grows an existing collection additively — a new spec field reaches old deployments", async () => {
+    const pb = new PocketBaseAdmin(URL);
+    await pb.auth(EMAIL, PASSWORD);
+    const rules = { listRule: null, viewRule: null, createRule: null, updateRule: null, deleteRule: null };
+    const reduced = {
+      name: "sync_probe",
+      type: "base" as const,
+      fields: [{ name: "a", type: "text", required: true }],
+      ...rules,
+    };
+    await pb.ensureCollection(reduced);
+    // the spec grew a field (the I2c situation: registers gained pointers)
+    await pb.ensureCollection({
+      ...reduced,
+      fields: [...reduced.fields, { name: "b", type: "text", required: false }],
+    });
+    await pb.create("sync_probe", { a: "x", b: "kept" });
+    const rows = await pb.listAll("sync_probe");
+    expect((rows[0] as any).b).toBe("kept"); // without the sync, PB silently drops unknown fields
   });
 
   it("projection collections reject writes that are not the projector's — rule 1 enforced", async () => {

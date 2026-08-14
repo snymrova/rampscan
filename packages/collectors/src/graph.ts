@@ -126,6 +126,7 @@ export const graphCollector: Collector = {
       anchors: rows.length > 0 ? { "route-auth-coverage": anchorPaths } : {},
       toolVersion: version,
       exitCode: 0,
+      reproduce: "rampscan scan <repo> (graph collector: routeAuthCoverage over graph.db)",
     };
   },
 };

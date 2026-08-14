@@ -52,6 +52,9 @@ export async function writeProjectionSqlite(
         bundle_digest      TEXT,
         fresh_as_of        TEXT,
         commit_sha         TEXT,
+        pointers           TEXT, -- JSON array of fix pointers (I2c), violated rows only
+        introduced_at      TEXT, -- start of the current violated streak
+        introducing_commit TEXT,
         scoping_digest     TEXT,
         scoping_just       TEXT,
         scoping_proposed   TEXT,
@@ -124,8 +127,9 @@ export async function writeProjectionSqlite(
     const insertRegister = db.prepare(
       `INSERT INTO registers
          (repo, recipe_id, ksi_ids, control_ids, state, cadence, bundle_digest, fresh_as_of, commit_sha,
+          pointers, introduced_at, introducing_commit,
           scoping_digest, scoping_just, scoping_proposed, scoping_approved, scoping_timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.registers) {
       insertRegister.run(
@@ -138,6 +142,9 @@ export async function writeProjectionSqlite(
         row.bundleDigest ?? null,
         row.freshAsOf ?? null,
         row.commit ?? null,
+        row.pointers ? JSON.stringify(row.pointers) : null,
+        row.introducedAt ?? null,
+        row.introducingCommit ?? null,
         row.scoping?.digest ?? null,
         row.scoping?.justification ?? null,
         row.scoping?.proposedBy ?? null,
@@ -247,6 +254,9 @@ export function readProjectionSqlite(dbPath: string): Projection {
         if (r.bundle_digest) row.bundleDigest = r.bundle_digest;
         if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
         if (r.commit_sha) row.commit = r.commit_sha;
+        if (r.pointers) row.pointers = JSON.parse(r.pointers);
+        if (r.introduced_at) row.introducedAt = r.introduced_at;
+        if (r.introducing_commit) row.introducingCommit = r.introducing_commit;
         if (r.scoping_digest) {
           row.scoping = {
             digest: r.scoping_digest,

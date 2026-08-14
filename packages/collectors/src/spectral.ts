@@ -193,6 +193,7 @@ export const spectral: Collector = {
       anchors: { "api-spec-lint-clean": anchorPaths },
       toolVersion: version,
       exitCode,
+      reproduce: `spectral lint --ruleset '{"extends":["spectral:oas"]}' ${specs.join(" ")}`,
     };
   },
 };

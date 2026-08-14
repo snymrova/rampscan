@@ -22,6 +22,8 @@ export const RecipeResult = z.object({
   verdict: Verdict,
   /** why the verdict is what it is when no assertions ran (skips, missing tools) */
   reason: z.string().optional(),
+  /** how to re-run the check (I2c) — the collector's own statement, when it made one */
+  reproduce: z.string().optional(),
   assertions: z.array(AssertionResult),
   artifacts: z.array(ArtifactRef),
   anchor_paths: z.array(AnchorPath),

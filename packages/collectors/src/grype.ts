@@ -182,6 +182,7 @@ export const grype: Collector = {
       },
       toolVersion: version,
       exitCode,
+      reproduce: `grype ${image}`,
     };
   },
 };

@@ -1,4 +1,4 @@
-import type { AssertionResult, RecipeAssertion } from "@rampscan/schema";
+import type { AssertionResult, OffenderPointer, RecipeAssertion } from "@rampscan/schema";
 import type { ObservationRows } from "./ports.js";
 
 // Assertion evaluation over observation rows — the same semantics
@@ -58,6 +58,57 @@ function describeRow(row: Record<string, unknown>): string {
   return s.length > 400 ? `${s.slice(0, 400)}…` : s;
 }
 
+/** first `MAX_OFFENDER_POINTERS` rows ride the assertion result as pointers */
+export const MAX_OFFENDER_POINTERS = 5;
+
+/**
+ * The fix pointer of one failing row (I2c), extracted from the field names
+ * the real observation producers use — assert.test.ts pins the extraction to
+ * every producer's actual row shape, so a renamed field breaks a test instead
+ * of a violation silently losing its pointer. One ambiguity carried from M4:
+ * `path` is a FILE for semgrep/sast-gate rows but the CALL PATH for
+ * reachability rows — the "»" separator is the discriminator, same as the
+ * console has read it since M4. Returns undefined when the row carries no
+ * pointer field at all (e.g. a summary row like `{workflow_count: 0}`).
+ */
+export function offenderPointer(row: Record<string, unknown>): OffenderPointer | undefined {
+  const str = (v: unknown): string | undefined =>
+    typeof v === "string" && v !== "" ? v : undefined;
+  const pathish = str(row["path"]);
+  const pathIsCallPath = pathish?.includes("»") ?? false;
+
+  const pointer: OffenderPointer = {};
+  const file = (pathIsCallPath ? undefined : pathish) ?? str(row["file"]) ?? str(row["workflow"]);
+  if (file !== undefined) pointer.file = file;
+  const line = [row["line"], row["start_line"]].find((v) => typeof v === "number");
+  if (line !== undefined) pointer.line = line as number;
+  const check =
+    str(row["check_id"]) ??
+    str(row["rule_id"]) ??
+    str(row["code"]) ??
+    str(row["advisory"]) ??
+    str(row["action"]);
+  if (check !== undefined) pointer.check = check;
+  const callPath = str(row["call_path"]) ?? (pathIsCallPath ? pathish : undefined);
+  if (callPath !== undefined) pointer.call_path = callPath;
+
+  return Object.keys(pointer).length > 0 ? pointer : undefined;
+}
+
+/**
+ * Attach fix pointers for the failing rows to an assertion result — mutating
+ * `result`, never its `detail`: detail participates in evidence identity
+ * (`sameEvidence`) and must stay byte-identical to what it always was.
+ */
+function attachOffenders(result: AssertionResult, failing: ObservationRows): void {
+  const pointers = failing
+    .slice(0, MAX_OFFENDER_POINTERS)
+    .map(offenderPointer)
+    .filter((p): p is OffenderPointer => p !== undefined);
+  if (pointers.length > 0) result.offenders = pointers;
+  if (failing.length > 0) result.offender_count = failing.length;
+}
+
 export function evaluateAssertion(
   assertion: RecipeAssertion,
   rows: ObservationRows,
@@ -78,7 +129,7 @@ export function evaluateAssertion(
     }
     const passed =
       assertion.op === "count_eq" ? filtered.length === expected : filtered.length <= expected;
-    return {
+    const result: AssertionResult = {
       description: assertion.description,
       passed,
       detail: passed
@@ -86,17 +137,23 @@ export function evaluateAssertion(
         : `expected count ${assertion.op === "count_eq" ? "==" : "<="} ${expected}, got ${filtered.length}` +
           (filtered.length > 0 ? `; e.g. ${describeRow(filtered[0]!)}` : ""),
     };
+    // a failing count assertion's offenders are the counted rows themselves
+    // ("zero leaks" failing means every filtered row is a leak)
+    if (!passed) attachOffenders(result, filtered);
+    return result;
   }
 
   const offenders = filtered.filter((row) => !clauseHolds(row, assertion, now));
   const passed = offenders.length === 0;
-  return {
+  const result: AssertionResult = {
     description: assertion.description,
     passed,
     detail: passed
       ? `${filtered.length} row(s) satisfy ${assertion.field} ${assertion.op}`
       : `${offenders.length} of ${filtered.length} row(s) fail ${assertion.field} ${assertion.op}; e.g. ${describeRow(offenders[0]!)}`,
   };
+  if (!passed) attachOffenders(result, offenders);
+  return result;
 }
 
 export function evaluateAssertions(

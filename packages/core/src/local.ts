@@ -75,6 +75,7 @@ export function createLocalRunner(options: {
         toolVersion: out.toolVersion,
         exitCode: out.exitCode,
       };
+      if (out.reproduce !== undefined) result.reproduce = out.reproduce;
       if (out.skipped) result.skipped = out.skipped;
       return result;
     },

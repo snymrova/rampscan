@@ -107,6 +107,7 @@ export const gitleaks: Collector = {
       anchors: { "no-secrets-in-history": [] },
       toolVersion: version,
       exitCode,
+      reproduce: "gitleaks git --redact <repo>",
     };
   },
 };
