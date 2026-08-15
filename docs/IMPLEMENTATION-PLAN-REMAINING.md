@@ -1,6 +1,6 @@
 # rampscan — implementation plan: what remains
 
-**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens; I3e landed 2026-08-15, I3f folded into J5). Phase J is underway — J1, J2, J3 and J4 landed 2026-08-15, J5 (+I3f) is next. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
+**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens, complete — I3e landed 2026-08-15, I3f folded into and landed with J5). **Phase J is complete**: J1–J5 all landed 2026-08-15. K1 is next, and then the two held go/no-gos (K2, L). This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
 **Date:** 2026-08-15
 **Reads against:** all of `docs/` — SPEC (target architecture), IMPLEMENTATION-PLAN (M0–M5, complete), COMPLIANCE-SCAN-HARNESS (founding doc §11–13 decisions), ARCHITECTURE (invariants), BRAINSTORM-DAST-OBSERVABILITY-AI-HELPER (the options analysis this plan promotes from), FRONTIER-PIPELINE (the generated self-scan record).
 
@@ -15,13 +15,13 @@ Walked across all eight documents. Nothing below is invented here; each line nam
 | # | Item | Source | State |
 |---|---|---|---|
 | I3e | Export: register CSV · per-control evidence package (tar) · print-friendly evidence page | CONSOLE I3, SPEC §8.5 | **landed 2026-08-15** |
-| I3f | Not-affected claims show their work (entry-point provenance, over-approximation statement, exact-vs-inferred edges) | CONSOLE I3 | not started |
+| I3f | Not-affected claims show their work (entry-point provenance, over-approximation statement, exact-vs-inferred edges) | CONSOLE I3 | **landed 2026-08-15** (folded into J5) |
 | J1 | The run record, ledger-first: `scan-run` statement kind + capture | PLAN J, BRAINSTORM §2.2/§5 | **landed 2026-08-15** |
 | J2 | `/runs` console page: scan timeline → per-collector table | PLAN J, BRAINSTORM §2.3 | **landed 2026-08-15** |
 | J3 | Board hop: "how was this produced?" on every row | PLAN J | **landed 2026-08-15** |
 | J4 | Artifact viewers: normalized artifacts as tables + raw download | PLAN J | **landed 2026-08-15** |
-| J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | **next** |
-| K1 | Plain-language layer, no AI: `plain` on every recipe · glossary · guided empty states | PLAN K, BRAINSTORM §3.1 | not started |
+| J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | **landed 2026-08-15** |
+| K1 | Plain-language layer, no AI: `plain` on every recipe · glossary · guided empty states | PLAN K, BRAINSTORM §3.1 | **next** |
 
 ### Tier 2 — held at an explicit go/no-go, analysis already written
 
@@ -59,8 +59,10 @@ Resulting order:
 
 ```
 I3e  →  J1  →  J2  →  J3  →  J4  →  J5 (+I3f folded in)  →  K1  →  [go/no-go: K2, L]
- ✓      ✓      ✓      ✓      ✓          ←next
+ ✓      ✓      ✓      ✓      ✓             ✓                ←next
 ```
+
+Phase J is complete; Phase I closed with it, since I3f was the last unlanded item of the auditor lens.
 
 Estimates, focused-work days, honest but rough: I3e 1–1.5 · J1 2.5–3 · J2 1.5 · J3 0.25 · J4 1.5 · J5+I3f 2 · K1 1.5. **Total ≈ 10–11 days** to the end of K1.
 
@@ -208,6 +210,19 @@ Three pieces, one theme: make the whole causal line visible in both directions.
 - **`rampscan tools` CLI:** the static map — recipe ↔ collector ↔ tool ↔ pinned image. Doctor answers "can it run", `tools` answers "who feeds whom", `/runs` answers "what happened". Pure derivation over the recipe catalog + collector manifests + `tools.json`; no new data.
 
 **Exit test.** From `no-reachable-dangerous-code`'s board row, every hop of the chain reaches the next in one click and returns; the not-affected claim on the fixture's unreachable eval renders its entry-point set, its provenance, and the over-approximation statement; `rampscan tools` output agrees with `doctor` on which tools exist and with `/runs` on which ran. Phase J exit test (as written in PLAN-OF-ACTION) passes end to end.
+
+### 7.1 As built (2026-08-15) — J5 (+I3f)
+
+**The plan's first line was wrong, and the flagship is exactly where it breaks.** "Every hop already exists in data after J1; the page draws the line." Two hops did not exist. A bundle named its recipe and its tool *versions* but never the **collector** that produced it — recipe→collector was catalog-only, which J3 had already discovered from the other side. And the run record listed what each collector *produced*, never what it **consumed** — so for `sast-reachability`, which spawns no process at all, a chain assembled from the run record's `tools` would have rendered **"no external tool"** over a verdict that is entirely semgrep's output judged against the graph. That is not a rough chain, it is a false one. So two fields were signed rather than inferred: `collector` on the evidence predicate, `consumes` on each run record's collector row.
+
+- **The basis is signed with the claim, because it is recoverable from nowhere else.** `graph.db` is a binary artifact the browser cannot parse (J4 refused to table it for exactly that reason) and it is **not even a subject of the SAST bundle** — that bundle's subjects are anchor files. A console that fetched the entry-point set from somewhere beside the claim would be describing a different walk than the one that produced the verdict above it. So `ClaimBasis` rides the predicate: the entry-point set, its provenance (`config` | `package.json` | `fallback` | `none` | `unavailable`, each rendered as a sentence naming what the reader can do about it), any declared entry that **resolved to no file** (a dropped root silently widens every not-affected claim), the route roots, the graph's own shape (nodes, edges, and how many edges are only name-inferred), and a `degraded` reason when the gate ran without a graph or without roots. Three recipes carry one, and the two gates' `approximation: "over"` sits opposite `route-auth-coverage`'s `"under"` — a positive "this route reaches auth" may only rest on a real chain, and the two walks must not read alike.
+- **`collector` and `basis` are KEYED into evidence identity, and the hole that decided it is concrete.** I2c's additions were deliberately excluded because they restate what `detail` already witnesses; these do not — they are claims about what the evidence *rests on*. `sast-reachability` anchors the flagged files and `rampscan.config.json`, **not `package.json`**: with the basis outside identity, editing `package.json` so entry-point inference lands on a different set leaves every "not affected" bundle alive, still claiming unreachability from a set that no longer exists. Keyed on the basis, that scan re-keys and the stale claim dies. The cost is taken openly: a bundle predating J5 does **not** match its re-scan, so every live bundle supersedes once, with no back-compat exemption — "absent means whatever is there now" is how an identity rule stops being one.
+- **Every displayed edge is marked, or none of them are.** `shortestPath` already knew each hop's resolution and threw it away in an OR; it now returns `resolutions[]`, one per hop, and the marks ride the **offender pointer** (I2c's slot, already outside identity) rather than being reconstructed console-side. `offenderPointer` accepts them only when the array length matches the path it claims to describe — a short array would shift every mark onto the wrong edge, and a wrong mark on a call path is worse than no mark, so a mismatch renders every hop `unmarked`. Pre-I3f evidence renders unmarked too, never assumed exact.
+- **Gaps are drawn as gaps.** The chain emits five hop kinds always; a hop it cannot draw carries the *reason* in its own slot. Three of them are load-bearing and two predate this commit: the run older than the projection cap, the run that was never written down (J3's two facts, one hand — `missingRunReason`), the collector the run never dispatched, and a pre-J5 bundle whose producer cannot be named — where the chain **refuses to fall back to the catalog**, because the catalog says what would produce it *today*, not what did.
+- **`rampscan tools` prints the transitive truth, not the local one.** The first version rendered `no-reachable-dangerous-code` as "pure — no external tool" and that was the same lie the chain nearly told, caught by reading the real output. The map now closes over the input graph: the flagship names `semgrep (via semgrep)`, the advisory recipe names `osv-scanner` and `syft` two artifacts upstream. It probes nothing — same three inputs, same bytes on any machine — and exits nonzero on a broken link: a recipe naming an unregistered collector, a one-way recipe↔collector link, a declared recipe the catalog lacks, an input nothing produces, a tool with no pin. `tools: []` is a new manifest field and therefore a *declaration*, so a test greps every collector's source for its `resolveTool("…")` calls and fails on drift — verified by breaking one on purpose.
+- **The `/runs` back edge stays on the right side of J2's rule.** Each collector row now names the statements it produced, by recipe id and digest **only**; no verdict is read and none rendered, so the page still computes nothing about the board. A bundle with no `collector` is dropped rather than attached to a guessed one (J3's refusal, same reason).
+- **Tooling health is history and says so.** The card walks the run records: current resolution, the collectors that asked for it, absent-run count, and a change dated at the **oldest run that already showed the current answer** — as precisely as a record of discrete runs can date something that happened between two of them, which is why it reads "since" and not "at". The live half is left to `doctor` by name: a console inferring present-tense tool health from the last recorded run would be reporting a probe it never ran.
+- vitest **476/476** (64 new: 25 twin tests over the console's own `lib/provenance.ts` — the two-level upstream walk, cycle and diamond termination, both run-absence reasons, the collector never dispatched, marks that do not fit their path, every entry-point source sentence, and `toolHealth`'s dating rule; 15 over `buildToolMap` — the real catalog's wiring green, plus six synthetic breakages proving the checker actually notices; 10 in a J5/I3f exit test over a real signed ledger built with the real gate and graph and no external tool; 8 over per-hop resolutions and graph shape; 5 over the new identity rules; 3 on manifest-vs-source drift). Root + console typecheck clean. `rampscan rebuild` on the live ledger: 63 statements → 75 cells, sqlite byte-identical.
 
 ---
 

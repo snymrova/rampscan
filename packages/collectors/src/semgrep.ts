@@ -80,6 +80,7 @@ export const semgrep: Collector = {
   manifest: {
     name: "semgrep",
     toolVersion: "resolved-at-run",
+    tools: ["semgrep"],
     recipes: [], // producer only — the SAST recipe is evidenced by `sast-reachability`
     outputs: [SEMGREP_RESULTS_ARTIFACT],
     // the sources the rules read; the ruleset content itself rides in the

@@ -89,6 +89,7 @@ export const checkov: Collector = {
   manifest: {
     name: "checkov",
     toolVersion: "resolved-at-run",
+    tools: ["checkov"],
     recipes: ["iac-baseline-clean"],
     outputs: [CHECKOV_RESULTS_ARTIFACT],
     cacheScope: ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", ".github/workflows/**", "**/*.tf", "**/*.tf.json"],

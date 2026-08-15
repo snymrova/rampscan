@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AssertionResult, AnchorPath, Verdict } from "./bundle.js";
+import { AssertionResult, AnchorPath, ClaimBasis, Verdict } from "./bundle.js";
 import { Finding } from "./finding.js";
 
 // scan-result.json — the M1 output of `rampscan scan` (plan C5). Each recipe
@@ -24,6 +24,8 @@ export const RecipeResult = z.object({
   reason: z.string().optional(),
   /** how to re-run the check (I2c) — the collector's own statement, when it made one */
   reproduce: z.string().optional(),
+  /** the walk this verdict rests on (I3f), for the graph-gated recipes only */
+  basis: ClaimBasis.optional(),
   assertions: z.array(AssertionResult),
   artifacts: z.array(ArtifactRef),
   anchor_paths: z.array(AnchorPath),

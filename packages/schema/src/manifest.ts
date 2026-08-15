@@ -12,6 +12,19 @@ export const CollectorManifest = z.object({
   recipes: z.array(z.string()), // recipe IDs this collector can evidence
   inputs: z.array(z.string()).optional(), // artifacts consumed from earlier collectors
   outputs: z.array(z.string()).optional(), // artifacts produced (e.g. "sbom.cdx.json")
+  /**
+   * External tools this collector asks `resolveTool()` for, by the name it
+   * asks under (J5). Absent or empty means a PURE collector — it reads the
+   * repo (or earlier artifacts) itself and spawns no scan tool, which is a
+   * fact about the collector, never a missing binary.
+   *
+   * This is a DECLARATION, and a declaration can drift from the code that
+   * makes the call. `rampscan tools` reads it, so a collector-manifest test
+   * greps every collector source for its `resolveTool("…")` calls and asserts
+   * the declared set is exactly that set — drift fails a test instead of
+   * printing a map that quietly disagrees with what runs.
+   */
+  tools: z.array(z.string()).optional(),
   dirtySetDepth: z.number().int().min(0).optional(), // blast-radius depth for incremental scans
   /**
    * What this collector's output depends on — the incremental-scan dirty set

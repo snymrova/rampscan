@@ -1,12 +1,13 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
-import type { Finding } from "@rampscan/schema";
+import type { ClaimBasis, Finding } from "@rampscan/schema";
 import {
   GRAPH_CONFIG_FILE,
   GRAPH_DB_ARTIFACT,
   GRAPH_VERSION,
   dependencyReachability,
+  graphShape,
   openGraphDb,
   readGraphMeta,
 } from "@rampscan/graph";
@@ -25,6 +26,15 @@ import { fileSha256, makeFinding, sha256 } from "./support.js";
 
 export const REACHABILITY_VERSION = "0.1.0";
 export const OPENVEX_ARTIFACT = "openvex.json";
+
+/**
+ * The sentence every not_affected claim from this gate must be read with
+ * (I3f). Signed into the bundle and rendered inline beside the claim — the
+ * OpenVEX document carries the same statement per-claim, and this is the
+ * standing version of it for the recipe as a whole.
+ */
+export const OVER_APPROXIMATION_STATEMENT =
+  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the package. Unknowns count against us: a package the graph never saw as a node is only unreachable because nothing imports it, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it.";
 
 interface OpenVexStatement {
   vulnerability: { name: string; aliases?: string[] };
@@ -75,13 +85,36 @@ export const reachability: Collector = {
     let deps: Map<string, DepReachability> | undefined;
     let gateNote: string | undefined;
     let entrypoints: string[] = [];
+    // the basis (I3f): the ground under every not_affected claim below, built
+    // from the same graph read that decides them
+    const basis: ClaimBasis = {
+      approximation: "over",
+      statement: OVER_APPROXIMATION_STATEMENT,
+      entrypoints: [],
+      entrypoint_source: "unavailable",
+    };
     if (graphPath) {
       const db = openGraphDb(graphPath);
       try {
         const meta = readGraphMeta(db);
+        const shape = graphShape(db);
         entrypoints = meta.entrypoints;
+        basis.entrypoints = meta.entrypoints;
+        basis.entrypoint_source = meta.entrypointSource;
+        if (meta.entrypointsUnresolved.length > 0) {
+          basis.entrypoints_unresolved = meta.entrypointsUnresolved;
+        }
+        basis.route_roots = shape.route_count;
+        basis.graph = {
+          commit: meta.commit,
+          extractor_version: meta.extractorVersion,
+          node_count: shape.node_count,
+          edge_count: shape.edge_count,
+          inferred_edge_count: shape.inferred_edge_count,
+        };
         if (meta.entrypoints.length === 0) {
           gateNote = `graph built but no entry points detected — set graph.entrypoints in ${GRAPH_CONFIG_FILE}; every advisory counts until then`;
+          basis.degraded = gateNote;
         } else {
           deps = dependencyReachability(db);
         }
@@ -90,6 +123,7 @@ export const reachability: Collector = {
       }
     } else {
       gateNote = "graph.db unavailable (graph collector skipped) — every advisory counts, none can be proven unreachable";
+      basis.degraded = gateNote;
     }
 
     const rows: ObservationRows = [];
@@ -116,6 +150,8 @@ export const reachability: Collector = {
         not_affected: notAffected,
         path,
         ...(dep?.inferred ? { path_resolution: "inferred" } : {}),
+        // per-hop marking (I3f): which edge of this chain is the weak one
+        ...(dep?.resolutions ? { call_path_resolutions: dep.resolutions } : {}),
         ...(gateNote !== undefined ? { gate_note: gateNote } : {}),
         aliases: adv.aliases,
       });
@@ -219,6 +255,7 @@ export const reachability: Collector = {
       artifacts,
       observations: { "no-critical-reachable-advisories": rows },
       anchors: { "no-critical-reachable-advisories": anchorPaths },
+      basis: { "no-critical-reachable-advisories": basis },
       toolVersion: version,
       exitCode: 0,
       reproduce: "rampscan scan <repo> (reachability: osv-results.json × graph.db)",

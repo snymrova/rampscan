@@ -173,6 +173,43 @@ table.reg.subtable td { padding: 6px 10px; }
 /* a wide findings table scrolls itself — the page body never scrolls sideways */
 .artifact-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
 
+/* ---- the provenance chain (J5): recipe → collector → tool → artifact → bundle ---- */
+ol.chain { list-style: none; margin: 0; padding: 0; }
+.chain-hop {
+  position: relative; padding: 6px 0 6px 18px; font-size: 13px;
+  border-left: 2px solid var(--border); margin-left: 6px;
+}
+.chain-hop::before {
+  content: ""; position: absolute; left: -5px; top: 12px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); border: 1px solid var(--bg);
+}
+/* a gap in the chain is drawn as a gap, never as a shorter chain */
+.chain-hop.chain-missing { border-left-color: var(--unevidenced); }
+.chain-hop.chain-missing::before { background: var(--unevidenced); }
+.chain-kind {
+  display: inline-block; min-width: 74px; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.chain-label { font-weight: 600; }
+.chain-hop > div { margin-left: 74px; font-size: 12px; }
+
+/* ---- call paths (I3f): every hop marked exact or inferred ---- */
+.callpath { margin-top: 4px; overflow-wrap: anywhere; }
+.hop-exact { color: var(--evidenced); }
+/* the weak link, drawn differently rather than footnoted */
+.hop-inferred { color: var(--unevidenced); font-weight: 700; }
+.hop-unmarked { color: var(--text-faint); }
+
+/* ---- tooling health (J5): how each tool resolves, live and per run ---- */
+.tooling { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 2px; }
+.tool-card {
+  border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px;
+  font-size: 12px; min-width: 190px; background: var(--bg);
+}
+.tool-card .tool-name { font-weight: 600; }
+.tool-card.tool-changed { border-color: var(--unevidenced); }
+
 /* ---- the board hop (J3): conclusion → the machinery that produced it ---- */
 .runhop {
   font-size: 12px; white-space: nowrap; margin-right: 10px;

@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
+import { producedByRun, toolHealth } from "../../lib/provenance";
+import type { ProducedEvidence, ToolHealth } from "../../lib/provenance";
 import {
   argvLine,
   formatRunDuration,
@@ -16,7 +18,7 @@ import {
   sortRuns,
   toolLabel,
 } from "../../lib/runs";
-import type { CollectorRunRecord, MetaRecord, ScanRunRecord } from "../../lib/types";
+import type { BundleRecord, CollectorRunRecord, MetaRecord, ScanRunRecord } from "../../lib/types";
 
 // The run view (plan J2): every recorded scan, and inside each one every
 // collector that was dispatched — which tool resolved, at what version,
@@ -58,6 +60,11 @@ function Runs() {
   const linkedRepo = params.get("repo");
   const runs = useCollection<ScanRunRecord>("scan_runs", { sort: "-run_timestamp" });
   const meta = useCollection<MetaRecord>("meta");
+  // the chain's back edge (J5): which signed statements each collector of a
+  // run emitted. Read for their run_id/collector/recipe_id and digest ONLY —
+  // no verdict is read here and none is rendered, so this page still states
+  // no conclusions about the board.
+  const bundles = useCollection<BundleRecord>("bundles");
   const [repo, setRepo] = useState(linkedRepo ?? "all");
   const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
 
@@ -87,6 +94,8 @@ function Runs() {
   // recounted from the rows on screen, never typed — the same discipline every
   // register summary on this console follows
   const skippedRuns = filtered.filter((r) => runCounts(r.collectors).skipped > 0).length;
+  const produced = useMemo(() => producedByRun(bundles.records), [bundles.records]);
+  const health = useMemo(() => toolHealth(filtered), [filtered]);
 
   return (
     <>
@@ -158,6 +167,27 @@ function Runs() {
         </p>
       )}
       {runs.error && <p className="error">{runs.error}</p>}
+
+      {health.length > 0 && (
+        <>
+          <div className="section-title">
+            Tooling health
+            <span className="faint" style={{ fontWeight: 400, textTransform: "none" }}>
+              {" "}
+              · how each tool resolved across the {filtered.length} recorded run
+              {filtered.length === 1 ? "" : "s"} — history, not a live probe:{" "}
+              <span className="mono">pnpm doctor</span> is what answers whether a tool can run right
+              now
+            </span>
+          </div>
+          <div className="tooling">
+            {health.map((h) => (
+              <ToolCard key={h.tool} h={h} />
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="panel">
         <table className="reg">
           <thead>
@@ -179,6 +209,7 @@ function Runs() {
                 showRepo={repos.length > 1 && repo === "all"}
                 open={expanded.get(run.run_id) ?? run.run_id === openRunId}
                 linkedCollector={run.run_id === openRunId ? linkedCollector : null}
+                produced={produced}
                 toggle={() =>
                   setExpanded((m) => {
                     const next = new Map(m);
@@ -205,6 +236,36 @@ function Runs() {
 }
 
 /**
+ * One tool, as the run records describe it. The date on a change is the
+ * OLDEST run that already showed the current resolution — as precisely as a
+ * record of discrete runs can date a thing that happened between two of them,
+ * and the card says "since" rather than "at" for exactly that reason.
+ */
+function ToolCard({ h }: { h: ToolHealth }) {
+  return (
+    <div className={`tool-card${h.changedAt ? " tool-changed" : ""}`}>
+      <div className="tool-name mono">
+        {h.tool}
+        {h.latest.version ? `@${h.latest.version}` : ""}
+      </div>
+      <div className="mono faint">{h.latest.runtime}</div>
+      <div className="faint">asked for by {h.askedBy.join(", ")}</div>
+      {h.changedAt && (
+        <div className="run-skips" style={{ fontWeight: 600 }}>
+          was {h.changedAt.from} — resolves this way since{" "}
+          {new Date(h.changedAt.since).toLocaleString()}
+        </div>
+      )}
+      {h.absentRuns > 0 && (
+        <div className="assertion-fail">
+          resolved to nothing in {h.absentRuns} recorded run{h.absentRuns === 1 ? "" : "s"}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * One scan. The counts are a recount of this run&rsquo;s own collector list —
  * ran + cache-hit + skipped is exactly the number dispatched — and the skip
  * count is loud on purpose: a silently absent tool quietly turning a board
@@ -215,12 +276,14 @@ function RunRow({
   showRepo,
   open,
   linkedCollector,
+  produced,
   toggle,
 }: {
   run: ScanRunRecord;
   showRepo: boolean;
   open: boolean;
   linkedCollector: string | null;
+  produced: Map<string, ProducedEvidence[]>;
   toggle: () => void;
 }) {
   const counts = runCounts(run.collectors);
@@ -257,6 +320,7 @@ function RunRow({
               collectors={run.collectors}
               linkedCollector={linkedCollector}
               runId={run.run_id}
+              produced={produced}
             />
           </td>
         </tr>
@@ -269,10 +333,12 @@ function CollectorTable({
   collectors,
   linkedCollector,
   runId,
+  produced,
 }: {
   collectors: CollectorRunRecord[];
   linkedCollector: string | null;
   runId: string;
+  produced: Map<string, ProducedEvidence[]>;
 }) {
   const rows = useMemo(() => sortCollectors(collectors), [collectors]);
   return (
@@ -291,11 +357,17 @@ function CollectorTable({
             <th>Exit</th>
             <th>Findings</th>
             <th>Tools &amp; artifacts</th>
+            <th>Evidence produced</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((c) => (
-            <CollectorRow key={c.collector} c={c} linked={c.collector === linkedCollector} />
+            <CollectorRow
+              key={c.collector}
+              c={c}
+              linked={c.collector === linkedCollector}
+              produced={produced.get(`${runId}\n${c.collector}`) ?? []}
+            />
           ))}
         </tbody>
       </table>
@@ -303,7 +375,15 @@ function CollectorTable({
   );
 }
 
-function CollectorRow({ c, linked }: { c: CollectorRunRecord; linked: boolean }) {
+function CollectorRow({
+  c,
+  linked,
+  produced,
+}: {
+  c: CollectorRunRecord;
+  linked: boolean;
+  produced: ProducedEvidence[];
+}) {
   const [showArgv, setShowArgv] = useState(linked);
   const kind = runtimeKind(c);
   const redactions = redactionCount(c);
@@ -334,7 +414,17 @@ function CollectorRow({ c, linked }: { c: CollectorRunRecord; linked: boolean })
           })}
           {c.tools.length === 0 && c.skip_reason === undefined && (
             <div className="faint" style={{ fontSize: 12 }}>
-              no external tool — this collector reads the repo itself
+              no external tool — this collector{" "}
+              {(c.consumes?.length ?? 0) > 0
+                ? "judges what earlier collectors produced"
+                : "reads the repo itself"}
+            </div>
+          )}
+          {/* the chain's upstream link (J5): a gate that spawns nothing still
+              rests on the tool that produced what it ate */}
+          {(c.consumes?.length ?? 0) > 0 && (
+            <div className="faint" style={{ fontSize: 12, marginTop: 4 }}>
+              consumes <span className="mono">{c.consumes!.join(", ")}</span>
             </div>
           )}
           {c.artifacts.length > 0 && (
@@ -383,6 +473,28 @@ function CollectorRow({ c, linked }: { c: CollectorRunRecord; linked: boolean })
                 </span>
               </div>
             ))}
+      </td>
+      {/* the chain, walked backwards (J5): the signed statements this collector
+          emitted in this run. Recipe id and digest only — no verdict is shown
+          here, because a run record moves no board cell and neither does this
+          page. */}
+      <td style={{ overflowWrap: "anywhere" }}>
+        {produced.length > 0 ? (
+          produced.map((e) => (
+            <div key={e.digest} style={{ fontSize: 12 }}>
+              <Link href={`/evidence/${e.digest}`} className="mono">
+                {e.recipeId}
+              </Link>{" "}
+              <span className="mono faint">{e.digest.slice(0, 12)}</span>
+            </div>
+          ))
+        ) : (
+          <span className="faint" style={{ fontSize: 12 }}>
+            {c.skip_reason !== undefined
+              ? "none — it did not run"
+              : "no live statement in this projection names this collector and run"}
+          </span>
+        )}
       </td>
     </tr>
   );

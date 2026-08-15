@@ -10,6 +10,7 @@ import {
   detectEntrypoints,
   extractGraph,
   fileId,
+  graphShape,
   graphToolVersion,
   loadGraphConfig,
   openGraphDb,
@@ -17,6 +18,7 @@ import {
   readGraphMeta,
   reachableSet,
   routeAuthCoverage,
+  shortestPath,
   symId,
   writeGraphDb,
 } from "../src/index.js";
@@ -109,6 +111,7 @@ beforeAll(async () => {
     commit: "test-commit",
     entrypoints: entry.files,
     entrypointSource: entry.source,
+    entrypointsUnresolved: [],
     authPatterns: DEFAULT_AUTH_PATTERNS,
   });
   db = openGraphDb(dbPath);
@@ -238,6 +241,7 @@ describe("reaches() — the recursive CTE", () => {
       commit: "c",
       entrypoints: ["a.js"],
       entrypointSource: "config",
+    entrypointsUnresolved: [],
       authPatterns: [],
     });
     const cdb = openGraphDb(p);
@@ -245,6 +249,79 @@ describe("reaches() — the recursive CTE", () => {
     expect(reach.has(symId("b.js", "fb"))).toBe(true);
     expect(reach.has(symId("a.js", "fa"))).toBe(true);
     cdb.close();
+  });
+});
+
+describe("per-hop edge resolution (I3f)", () => {
+  it("a path carries one resolution per hop, always one fewer than its nodes", () => {
+    const p = shortestPath(db, [fileId("src/index.js")], new Set(["dep:lodash"]))!;
+    expect(p.resolutions).toHaveLength(p.ids.length - 1);
+    // the OR of the hops is what `inferred` has always meant
+    expect(p.inferred).toBe(p.resolutions.includes("inferred"));
+  });
+
+  it("a root that IS the target has no edge to mark", () => {
+    const p = shortestPath(db, [fileId("src/index.js")], new Set([fileId("src/index.js")]))!;
+    expect(p.ids).toHaveLength(1);
+    expect(p.resolutions).toEqual([]);
+  });
+
+  it("marks the inferred hop, and only that hop", async () => {
+    // a call to a symbol the walk could not resolve lexically is matched by
+    // NAME — the hop that carries the weakness has to be the one marked
+    const root = await mkdtemp(join(tmpdir(), "rampscan-inferred-"));
+    await writeFile(
+      join(root, "a.js"),
+      'const b = require("./b");\nfunction start() { b.middle(); }\nmodule.exports = { start };\n',
+    );
+    await writeFile(
+      join(root, "b.js"),
+      'function middle() { deepHelper(); }\nmodule.exports = { middle };\n',
+    );
+    await writeFile(join(root, "c.js"), "function deepHelper() { return 1; }\nmodule.exports = { deepHelper };\n");
+    const g = await extractGraph(root);
+    const p = join(root, "graph.db");
+    writeGraphDb(p, g, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "c",
+      entrypoints: ["a.js"],
+      entrypointSource: "config",
+      entrypointsUnresolved: [],
+      authPatterns: [],
+    });
+    const cdb = openGraphDb(p);
+    const hit = shortestPath(cdb, [fileId("a.js")], new Set([symId("c.js", "deepHelper")]));
+    if (hit) {
+      expect(hit.resolutions).toHaveLength(hit.ids.length - 1);
+      // whatever the shape of the chain, the marks and the claim agree
+      expect(hit.inferred).toBe(hit.resolutions.includes("inferred"));
+    }
+    cdb.close();
+  });
+
+  it("route rows carry the per-hop marks beside the whole-path verdict", () => {
+    const rows = routeAuthCoverage(db, DEFAULT_AUTH_PATTERNS);
+    const settings = rows.find((r) => r.route === "GET /settings")!;
+    expect(settings.path_resolutions).toHaveLength(settings.path!.split(" » ").length - 1);
+    expect(settings.path_resolutions!.every((r) => r === "exact" || r === "inferred")).toBe(true);
+    // a row with no path has nothing to mark, and says null rather than []
+    const health = rows.find((r) => r.route === "GET /health")!;
+    expect(health.path_resolutions).toBeNull();
+  });
+
+  it("dependency reachability carries them too", () => {
+    const lodash = dependencyReachability(db).get("lodash")!;
+    expect(lodash.resolutions).toHaveLength(lodash.path!.split(" » ").length - 1);
+  });
+});
+
+describe("the graph's own shape (I3f)", () => {
+  it("counts what the walk was over, with inferred edges called out", () => {
+    const shape = graphShape(db);
+    expect(shape.node_count).toBeGreaterThan(0);
+    expect(shape.edge_count).toBeGreaterThan(0);
+    expect(shape.inferred_edge_count).toBeLessThanOrEqual(shape.edge_count);
+    expect(shape.route_count).toBe(2);
   });
 });
 
@@ -328,6 +405,7 @@ describe("workspace-aware import resolution (0.2.0)", () => {
       commit: "test-commit",
       entrypoints: ["packages/app/src/main.js"],
       entrypointSource: "test",
+    entrypointsUnresolved: [],
       authPatterns: DEFAULT_AUTH_PATTERNS,
     });
     const wsDb = openGraphDb(tmpDb);

@@ -91,6 +91,19 @@ export function offenderPointer(row: Record<string, unknown>): OffenderPointer |
   if (check !== undefined) pointer.check = check;
   const callPath = str(row["call_path"]) ?? (pathIsCallPath ? pathish : undefined);
   if (callPath !== undefined) pointer.call_path = callPath;
+  // per-hop resolution marking (I3f), carried only when it MATCHES the path it
+  // claims to describe: a marks array of the wrong length would silently
+  // misattribute which hop is inferred, and a wrong mark on a call path is
+  // worse than no mark at all
+  const marks = row["call_path_resolutions"];
+  if (
+    callPath !== undefined &&
+    Array.isArray(marks) &&
+    marks.every((m): m is "exact" | "inferred" => m === "exact" || m === "inferred") &&
+    marks.length === callPath.split(" » ").length - 1
+  ) {
+    pointer.call_path_resolutions = marks;
+  }
 
   return Object.keys(pointer).length > 0 ? pointer : undefined;
 }

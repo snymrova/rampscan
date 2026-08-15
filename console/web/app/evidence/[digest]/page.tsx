@@ -7,13 +7,21 @@ import { DownloadButton } from "../../../components/DownloadButton";
 import { RequireAuth } from "../../../components/guard";
 import { getPb } from "../../../lib/pb";
 import { describePointer } from "../../../lib/pointers";
+import {
+  basisStrength,
+  callPathHops,
+  entrypointSourceNote,
+  provenanceChain,
+} from "../../../lib/provenance";
 import { runCounts } from "../../../lib/runs";
 import type {
   BundleRecord,
+  ClaimBasisRecord,
   CollectorRunRecord,
   CoverageRecord,
   MetaRecord,
   OffenderPointer,
+  ScanRunRecord,
 } from "../../../lib/types";
 
 // Evidence detail (SPEC §8.1): each row opens the evidence — artifacts,
@@ -39,6 +47,48 @@ interface AssertionResult {
   offender_count?: number;
 }
 
+/**
+ * One call path with every hop marked (I3f). An inferred hop is where the
+ * graph matched a NAME rather than resolving an import to a file it saw —
+ * the chain still stands, but that link is the one to check first, so it is
+ * drawn differently rather than described in a footnote.
+ */
+function CallPath({ path, marks }: { path: string; marks?: Array<"exact" | "inferred"> }) {
+  const hops = callPathHops(path, marks);
+  const inferred = hops.filter((h) => h.resolution === "inferred").length;
+  const unmarked = hops.some((h) => h.resolution === "unmarked");
+  return (
+    <div className="callpath mono">
+      {hops.map((h, i) => (
+        <span key={i}>
+          {i > 0 && (
+            <span
+              className={`hop hop-${h.resolution}`}
+              title={
+                h.resolution === "inferred"
+                  ? "inferred edge — matched by name, not resolved to a file the walk saw"
+                  : h.resolution === "exact"
+                    ? "exact edge — resolved to a file the walk saw"
+                    : "unmarked — this evidence predates per-hop marking"
+              }
+            >
+              {h.resolution === "inferred" ? " ⇢ " : h.resolution === "exact" ? " → " : " » "}
+            </span>
+          )}
+          {h.node}
+        </span>
+      ))}
+      <span className="faint">
+        {unmarked
+          ? " · hops unmarked (pre-I3f evidence)"
+          : inferred > 0
+            ? ` · ${inferred} of ${hops.length - 1} hop(s) ⇢ inferred by name`
+            : ` · all ${hops.length - 1} hop(s) → exactly resolved`}
+      </span>
+    </div>
+  );
+}
+
 // Pre-I2c fallback: older bundles carry no structured offenders, only the one
 // example row embedded in the detail prose — scrape its call path out so old
 // evidence keeps showing what it always showed. New bundles never hit this.
@@ -49,11 +99,95 @@ function callPathsIn(detail: string | undefined): string[] {
     .filter((p) => p.includes("»"));
 }
 
+/**
+ * The ground under a graph-gated verdict (I3f). Everything here is the signed
+ * predicate's own `basis` — the console computes none of it, because a page
+ * that derived the entry-point set from somewhere else would be describing a
+ * different walk than the one that produced the verdict above it.
+ */
+function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
+  const strength = basisStrength(basis);
+  return (
+    <>
+      <div className="section-title">
+        What this claim rests on
+        {strength === "weak" && <span className="run-skips"> · WEAK GROUND ⚠</span>}
+      </div>
+      <div className="panel" style={{ padding: "12px 14px" }}>
+        <p style={{ margin: "0 0 10px", fontSize: 13 }}>
+          {basis.approximation === "over" ? (
+            <>
+              This verdict rests on an <strong>over-approximate</strong> walk of the code graph.{" "}
+            </>
+          ) : (
+            <>
+              This verdict rests on an <strong>under-approximate</strong> walk of the code graph.{" "}
+            </>
+          )}
+          {basis.statement}
+        </p>
+        {basis.degraded && (
+          <p className="assertion-fail" style={{ margin: "0 0 10px", fontSize: 13 }}>
+            the gate ran degraded: {basis.degraded}
+          </p>
+        )}
+        <dl className="kv">
+          <dt>entry points</dt>
+          <dd className="mono">
+            {basis.entrypoints.length > 0 ? (
+              basis.entrypoints.map((e) => (
+                <div key={e}>{e}</div>
+              ))
+            ) : (
+              <span className="assertion-fail">
+                none — the walk had no root, so nothing could be proven unreachable
+              </span>
+            )}
+            {basis.route_roots !== undefined && basis.route_roots > 0 && (
+              <div className="faint">
+                + {basis.route_roots} declared route{basis.route_roots === 1 ? "" : "s"} also seeded
+                the walk
+              </div>
+            )}
+          </dd>
+          <dt>where they came from</dt>
+          <dd>{entrypointSourceNote(basis.entrypoint_source)}</dd>
+          {(basis.entrypoints_unresolved?.length ?? 0) > 0 && (
+            <>
+              <dt>declared but unresolved</dt>
+              {/* a dropped root silently widens every not-affected claim — the
+                  one thing about an entry-point set that must never be quiet */}
+              <dd className="mono assertion-fail">
+                {basis.entrypoints_unresolved!.join(", ")} — named as entry points but matched no
+                file the walk saw, so they seeded nothing
+              </dd>
+            </>
+          )}
+          {basis.graph && (
+            <>
+              <dt>the graph walked</dt>
+              <dd className="mono faint">
+                {basis.graph.node_count} nodes · {basis.graph.edge_count} edges (
+                {basis.graph.inferred_edge_count} inferred by name) · extractor{" "}
+                {basis.graph.extractor_version} · commit {basis.graph.commit.slice(0, 12)}
+              </dd>
+            </>
+          )}
+        </dl>
+      </div>
+    </>
+  );
+}
+
 function Evidence({ digest }: { digest: string }) {
   const [bundle, setBundle] = useState<BundleRecord | null>(null);
   const [coverage, setCoverage] = useState<CoverageRecord | null>(null);
   const [meta, setMeta] = useState<MetaRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // the run record behind this bundle (J5) — the chain's middle hops live in
+  // it, and its absence is a fact with two different causes, both stated
+  const [run, setRun] = useState<ScanRunRecord | null>(null);
+  const [runCount, setRunCount] = useState<number | null>(null);
 
   useEffect(() => {
     const pb = getPb();
@@ -70,6 +204,24 @@ function Evidence({ digest }: { digest: string }) {
       .then((rows) => setMeta(rows[0] ?? null))
       .catch(() => {});
   }, [digest]);
+
+  // the chain's run hop: fetched by the run id the predicate itself carries,
+  // and the projection's own size fetched beside it so "not held" can say
+  // WHICH of the two reasons applies (older than the cap vs no run records at
+  // all) instead of leaving the reader to guess
+  const runId = bundle ? String((bundle.statement.predicate as Record<string, unknown>)["run_id"] ?? "") : "";
+  useEffect(() => {
+    if (runId === "") return;
+    const pb = getPb();
+    pb.collection("scan_runs")
+      .getFirstListItem<ScanRunRecord>(`run_id="${runId}"`)
+      .then(setRun)
+      .catch(() => setRun(null));
+    pb.collection("scan_runs")
+      .getList(1, 1)
+      .then((r) => setRunCount(r.totalItems))
+      .catch(() => setRunCount(0));
+  }, [runId]);
 
   if (error) return <p className="error">{error}</p>;
   if (!bundle) return <p className="muted">loading…</p>;
@@ -272,6 +424,51 @@ function Evidence({ digest }: { digest: string }) {
 
       {isEvidence && (
         <>
+          {/* the chain (J5): recipe → collector → tool → artifact → bundle,
+              every hop a signed fact and every gap named where the hop would
+              have been */}
+          <div className="section-title">How this was produced</div>
+          <div className="panel" style={{ padding: "12px 14px" }}>
+            <ol className="chain">
+              {provenanceChain({
+                recipeId: String(p["recipe_id"]),
+                collector: String(p["collector"] ?? ""),
+                runId: String(p["run_id"] ?? ""),
+                repo: String(p["repo"]),
+                digest,
+                controlIds: (p["control_ids"] as string[]) ?? [],
+                subjects: bundle.statement.subject.map((s) => ({
+                  name: s.name,
+                  sha256: s.digest["sha256"] ?? "",
+                  isAnchor: anchorPaths.has(s.name),
+                })),
+                run,
+                runsLoaded: runCount !== null,
+                runCount: runCount ?? 0,
+              }).map((hop, i) => (
+                <li key={i} className={`chain-hop${hop.missing ? " chain-missing" : ""}`}>
+                  <span className="chain-kind faint">{hop.kind}</span>
+                  <span className="chain-label mono">
+                    {hop.href ? <Link href={hop.href}>{hop.label}</Link> : hop.label}
+                  </span>
+                  {hop.digest && (
+                    <span className="mono faint" title={hop.digest}>
+                      {" "}
+                      {hop.digest.slice(0, 12)}
+                    </span>
+                  )}
+                  <div className={hop.missing ? "assertion-fail" : "faint"}>
+                    {hop.missing ?? hop.detail}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* I3f: a verdict that rests on a walk says where the walk started,
+              which way it errs, and over what graph — signed with the claim */}
+          {p["basis"] !== undefined && <BasisPanel basis={p["basis"] as ClaimBasisRecord} />}
+
           <div className="section-title">Assertions</div>
           <div className="panel">
             <table className="reg">
@@ -292,9 +489,10 @@ function Evidence({ digest }: { digest: string }) {
                             <div key={j} className="mono" style={{ marginTop: 4 }}>
                               {describePointer(o)}
                               {/* describePointer falls back to the call path only when the
-                                  pointer has nothing else — otherwise it gets its own line */}
+                                  pointer has nothing else — otherwise it gets its own line,
+                                  with every hop marked exact or inferred (I3f) */}
                               {o.call_path && (o.file || o.check) && (
-                                <div className="faint">call path: {o.call_path}</div>
+                                <CallPath path={o.call_path} marks={o.call_path_resolutions} />
                               )}
                             </div>
                           ))}
@@ -307,11 +505,7 @@ function Evidence({ digest }: { digest: string }) {
                         </>
                       ) : (
                         // pre-I2c bundle: the example row in the prose is all it carries
-                        callPathsIn(a.detail).map((p, j) => (
-                          <div key={j} className="mono" style={{ marginTop: 4 }}>
-                            call path: {p}
-                          </div>
-                        ))
+                        callPathsIn(a.detail).map((p, j) => <CallPath key={j} path={p} />)
                       )}
                     </td>
                   </tr>

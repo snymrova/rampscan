@@ -2,7 +2,7 @@
 import { parseArgs } from "node:util";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { allCollectors } from "@rampscan/collectors";
+import { allCollectors, loadToolManifest } from "@rampscan/collectors";
 import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
@@ -18,6 +18,7 @@ import { report } from "./report.js";
 import { scan } from "./scan.js";
 import { serve } from "./serve.js";
 import { renderSummary } from "./summary.js";
+import { buildToolMap, renderToolMap, toolMapProblems } from "./tools.js";
 import { verify } from "./verify.js";
 
 // rampscan CLI — M5 surface:
@@ -29,6 +30,7 @@ import { verify } from "./verify.js";
 //   rampscan daemon <path>   the clock runs itself: cadence re-scans,
 //                            near-expiry warnings, cache self-verification
 //   rampscan report          FRONTIER-PIPELINE.md from a real run
+//   rampscan tools           the static map: recipe ↔ collector ↔ tool ↔ image
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -49,6 +51,8 @@ function usage(): never {
       "  daemon <path>     keep the target evidenced on cadence: incremental re-scans,",
       "                    near-expiry warnings, scheduled full-scan cache verification",
       "  report            generate docs/FRONTIER-PIPELINE.md from the last scan result",
+      "  tools             the static map: which collector answers which recipe, with which",
+      "                    tool and pinned image (doctor: can it run · tools: who feeds whom)",
       "",
       "options:",
       "  --out <dir>       scan/daemon output directory (default: ./rampscan-out);",
@@ -72,6 +76,7 @@ function usage(): never {
       "  --full-every <n>  daemon: every Nth scan bypasses the cache and verifies it (default: 6)",
       "  --result <path>   report: scan result to report from (default: ./rampscan-out/scan-result.json)",
       "  --report-out <path>  report: output file (default: docs/FRONTIER-PIPELINE.md)",
+      "  --json            tools: the map as JSON instead of text",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -102,6 +107,7 @@ async function main(): Promise<void> {
       "full-every": { type: "string" },
       result: { type: "string" },
       "report-out": { type: "string" },
+      json: { type: "boolean" },
       "no-color": { type: "boolean" },
     },
   });
@@ -237,6 +243,29 @@ async function main(): Promise<void> {
         outPath: values["report-out"] ?? join(REPO_ROOT, "docs/FRONTIER-PIPELINE.md"),
       });
       console.log(outcome.lines.join("\n"));
+      return;
+    }
+
+    case "tools": {
+      // pure derivation — catalog + manifests + tools.json, nothing probed
+      const map = buildToolMap({
+        recipes: await loadRecipes(recipesDir),
+        collectors: allCollectors,
+        toolManifest: await loadToolManifest(),
+      });
+      if (values.json) {
+        console.log(JSON.stringify(map, null, 2));
+      } else {
+        console.log(renderToolMap(map, useColor));
+      }
+      const problems = toolMapProblems(map);
+      if (problems.length > 0) {
+        console.error(
+          `\n${problems.length} broken link(s) in the map:\n` +
+            problems.map((p) => `  - ${p}`).join("\n"),
+        );
+        process.exit(1);
+      }
       return;
     }
 

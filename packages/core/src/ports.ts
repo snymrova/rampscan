@@ -1,5 +1,6 @@
 import type {
   Cadence,
+  ClaimBasis,
   CollectorManifest,
   CollectorRun,
   Finding,
@@ -103,6 +104,12 @@ export interface RunResult {
   exitCode: number;
   /** how to re-run this collector's check (I2c) — stated by the collector, when it did */
   reproduce?: string;
+  /**
+   * recipeId → the walk a graph-gated verdict rests on (I3f). Keyed per recipe
+   * like `anchors`, because one collector can gate several claims and each is
+   * entitled to say what its own ground was.
+   */
+  basis?: Record<string, ClaimBasis>;
   /** set when the collector could not run at all (tool missing, no Dockerfile, …) */
   skipped?: { reason: string };
   /** how the run went (J1) — attached by the journaling runner, absent when none wrapped it */
@@ -140,6 +147,8 @@ export interface CollectOutput {
   exitCode: number;
   /** how to re-run this collector's check (I2c) — rides every recipe this collector evidences */
   reproduce?: string;
+  /** recipeId → the walk this collector's verdict for that recipe rests on (I3f) */
+  basis?: Record<string, ClaimBasis>;
   skipped?: { reason: string };
 }
 

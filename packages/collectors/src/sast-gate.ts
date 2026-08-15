@@ -1,13 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
-import type { Finding } from "@rampscan/schema";
+import type { ClaimBasis, Finding } from "@rampscan/schema";
 import {
   GRAPH_CONFIG_FILE,
   GRAPH_DB_ARTIFACT,
   GRAPH_VERSION,
   entryRoots,
   fileId,
+  graphShape,
   labelPath,
   openGraphDb,
   reachableSet,
@@ -28,6 +29,17 @@ import { fileSha256, makeFinding, sha256 } from "./support.js";
 // counts, marked "unknown", never silently waved through.
 
 export const SAST_GATE_VERSION = "0.1.0";
+
+/**
+ * The sentence a not-affected claim from this gate has to be read with (I3f) —
+ * signed into every bundle it produces, and rendered inline wherever the claim
+ * is shown. It states the direction of the error, which is the only thing that
+ * makes "not affected" safe to publish: the walk is loose, so a hit it cannot
+ * reach is genuinely unreachable, and everything it cannot decide counts
+ * against us rather than for us.
+ */
+export const OVER_APPROXIMATION_STATEMENT =
+  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the file. Unknowns count against us: a file the graph never saw, a missing graph, or no detectable entry point all make the hit COUNT, never waive it.";
 
 export const sastGate: Collector = {
   manifest: {
@@ -63,13 +75,37 @@ export const sastGate: Collector = {
       let reach: Set<string> | undefined;
       let hasNode: ((rel: string) => boolean) | undefined;
       let gateNote: string | undefined;
+      // the basis (I3f): what this claim rests on, built alongside the gate
+      // itself so it can never describe a walk other than the one that ran
+      const basis: ClaimBasis = {
+        approximation: "over",
+        statement: OVER_APPROXIMATION_STATEMENT,
+        entrypoints: [],
+        entrypoint_source: "unavailable",
+      };
       if (!db) {
         gateNote =
           "graph.db unavailable (graph collector skipped) — every SAST hit counts, none can be proven unreachable";
+        basis.degraded = gateNote;
       } else {
         const meta = readGraphMeta(db);
+        const shape = graphShape(db);
+        basis.entrypoints = meta.entrypoints;
+        basis.entrypoint_source = meta.entrypointSource;
+        if (meta.entrypointsUnresolved.length > 0) {
+          basis.entrypoints_unresolved = meta.entrypointsUnresolved;
+        }
+        basis.route_roots = shape.route_count;
+        basis.graph = {
+          commit: meta.commit,
+          extractor_version: meta.extractorVersion,
+          node_count: shape.node_count,
+          edge_count: shape.edge_count,
+          inferred_edge_count: shape.inferred_edge_count,
+        };
         if (meta.entrypoints.length === 0) {
           gateNote = `graph built but no entry points detected — set graph.entrypoints in ${GRAPH_CONFIG_FILE}; every SAST hit counts until then`;
+          basis.degraded = gateNote;
         } else {
           roots = entryRoots(db);
           reach = reachableSet(db, roots);
@@ -100,11 +136,13 @@ export const sastGate: Collector = {
 
         let path: string | null = null;
         let inferred = false;
+        let resolutions: string[] | undefined;
         if (reachable === "true" && db) {
           const p = shortestPath(db, roots, new Set([fileId(hit.path)]));
           if (p) {
             path = labelPath(db, p.ids);
             inferred = p.inferred;
+            resolutions = p.resolutions;
           }
         }
 
@@ -118,6 +156,8 @@ export const sastGate: Collector = {
           not_affected: notAffected,
           call_path: path,
           ...(inferred ? { path_resolution: "inferred" } : {}),
+          // per-hop marking (I3f): which edge of this chain is the weak one
+          ...(resolutions ? { call_path_resolutions: resolutions } : {}),
           ...(rowNote !== undefined ? { gate_note: rowNote } : {}),
         });
 
@@ -185,6 +225,7 @@ export const sastGate: Collector = {
         // observation (count_eq 0 passes → evidenced), not an absence
         observations: { "no-reachable-dangerous-code": rows },
         anchors: { "no-reachable-dangerous-code": anchorPaths },
+        basis: { "no-reachable-dangerous-code": basis },
         toolVersion: version,
         exitCode: 0,
         reproduce: "rampscan scan <repo> (sast-reachability: semgrep-results.json × graph.db)",

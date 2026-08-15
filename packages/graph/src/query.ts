@@ -50,6 +50,13 @@ export interface PathResult {
   ids: string[];
   /** true when any edge on the path was name-inferred rather than lexically resolved */
   inferred: boolean;
+  /**
+   * How each HOP was resolved, root-first — always `ids.length - 1` entries
+   * (I3f). `inferred` above is the OR of these: it answers "can this path be
+   * trusted end to end", and this answers "which hop is the weak one", which
+   * is the question a reader looking at a call path actually has.
+   */
+  resolutions: Array<"exact" | "inferred">;
 }
 
 /** shortest path from any root to any target — BFS over the stored edges */
@@ -61,7 +68,7 @@ export function shortestPath(
 ): PathResult | undefined {
   if (roots.length === 0 || targets.size === 0) return undefined;
   for (const root of roots) {
-    if (targets.has(root)) return { ids: [root], inferred: false };
+    if (targets.has(root)) return { ids: [root], inferred: false, resolutions: [] };
   }
   const kindSet = new Set(kinds);
   const adjacency = new Map<string, Array<{ dst: string; inferred: boolean }>>();
@@ -89,15 +96,19 @@ export function shortestPath(
       parent.set(dst, { prev: cur, inferred });
       if (targets.has(dst)) {
         const ids = [dst];
+        const resolutions: Array<"exact" | "inferred"> = [];
         let anyInferred = false;
         let at = dst;
         while (parent.has(at)) {
           const p = parent.get(at)!;
           anyInferred = anyInferred || p.inferred;
+          // walking backwards, so each hop goes on the FRONT beside the node
+          // it arrives at — resolutions[i] is the edge ids[i] → ids[i+1]
+          resolutions.unshift(p.inferred ? "inferred" : "exact");
           ids.unshift(p.prev);
           at = p.prev;
         }
-        return { ids, inferred: anyInferred };
+        return { ids, inferred: anyInferred, resolutions };
       }
       queue.push(dst);
     }
@@ -132,6 +143,8 @@ export interface DepReachability {
   path?: string;
   /** the path rests on at least one name-inferred edge */
   inferred?: boolean;
+  /** per-hop resolution of `path`, one entry shorter than its node count (I3f) */
+  resolutions?: Array<"exact" | "inferred">;
 }
 
 /** package-level reachability for every dependency node in the graph */
@@ -161,7 +174,7 @@ export function dependencyReachability(db: DatabaseSync): Map<string, DepReachab
       package: pkg,
       reachable: true,
       ...(path
-        ? { path: labelPath(db, path.ids), inferred: path.inferred }
+        ? { path: labelPath(db, path.ids), inferred: path.inferred, resolutions: path.resolutions }
         : {}),
     });
   }
@@ -177,6 +190,8 @@ export interface RouteAuthRow extends Record<string, unknown> {
   path: string | null;
   /** "exact" | "inferred" when auth was reached; null otherwise */
   path_resolution: string | null;
+  /** per-hop resolution of `path` (I3f); null when there is no path to mark */
+  path_resolutions: string[] | null;
 }
 
 const AUTH_EDGE_KINDS: readonly EdgeKind[] = ["handles", "calls"];
@@ -206,6 +221,7 @@ export function routeAuthCoverage(db: DatabaseSync, authPatterns: string[]): Rou
         auth_symbol: null,
         path: null,
         path_resolution: null,
+        path_resolutions: null,
       };
     }
     const path = shortestPath(db, [route.id], new Set(authNodes.keys()), AUTH_EDGE_KINDS);
@@ -217,6 +233,33 @@ export function routeAuthCoverage(db: DatabaseSync, authPatterns: string[]): Rou
       auth_symbol: authNodes.get(hitId) ?? null,
       path: path ? labelPath(db, path.ids) : null,
       path_resolution: path ? (path.inferred ? "inferred" : "exact") : null,
+      path_resolutions: path ? path.resolutions : null,
     };
   });
+}
+
+export interface GraphShape {
+  node_count: number;
+  edge_count: number;
+  /** edges matched by NAME rather than lexically resolved to a file the walk saw */
+  inferred_edge_count: number;
+  /** declared routes, which seed the gates' walks alongside the entry points */
+  route_count: number;
+}
+
+/**
+ * The graph's own shape (I3f) — what a reachability claim was computed over.
+ * Two graphs with the same entry points can still disagree, and the honest
+ * way to say "this walk saw 412 edges, 37 of them name-inferred" is to count
+ * them at claim time and sign the count with the claim.
+ */
+export function graphShape(db: DatabaseSync): GraphShape {
+  const one = (sql: string): number =>
+    Number((db.prepare(sql).get() as { n: number } | undefined)?.n ?? 0);
+  return {
+    node_count: one("SELECT COUNT(*) AS n FROM nodes"),
+    edge_count: one("SELECT COUNT(*) AS n FROM edges"),
+    inferred_edge_count: one("SELECT COUNT(*) AS n FROM edges WHERE resolution = 'inferred'"),
+    route_count: one("SELECT COUNT(*) AS n FROM routes"),
+  };
 }

@@ -21,6 +21,32 @@ export interface OffenderPointer {
   line?: number;
   check?: string;
   call_path?: string;
+  /** how each HOP of call_path resolved (I3f) — always one shorter than its node count */
+  call_path_resolutions?: Array<"exact" | "inferred">;
+}
+
+/**
+ * The walk a graph-gated verdict rests on (I3f), exactly as the signed
+ * predicate carries it. `graph.db` is a binary artifact no browser can parse
+ * and is not even a subject of the SAST bundle, so this is the only place the
+ * ground under a "not affected" claim is readable — which is why it is signed
+ * with the claim rather than looked up beside it.
+ */
+export interface ClaimBasisRecord {
+  approximation: "over" | "under";
+  statement: string;
+  entrypoints: string[];
+  entrypoint_source: string;
+  entrypoints_unresolved?: string[];
+  route_roots?: number;
+  graph?: {
+    commit: string;
+    extractor_version: string;
+    node_count: number;
+    edge_count: number;
+    inferred_edge_count: number;
+  };
+  degraded?: string;
 }
 
 export interface RegisterRecord {
@@ -218,6 +244,8 @@ export interface CollectorRunRecord {
   tools: ToolResolutionRecord[];
   invocations: ToolInvocationRecord[];
   artifacts: Array<{ name: string; sha256: string; bytes?: number }>;
+  /** artifact names this collector ate from earlier collectors in the same run (J5) */
+  consumes?: string[];
   cache: CacheStateRecord;
   /** set when the collector could not run at all — the reason an operator needs */
   skip_reason?: string;

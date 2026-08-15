@@ -1,11 +1,12 @@
 import { join } from "node:path";
 import type { Collector, CollectOutput } from "@rampscan/core";
-import type { Finding } from "@rampscan/schema";
+import type { ClaimBasis, Finding } from "@rampscan/schema";
 import {
   DEFAULT_AUTH_PATTERNS,
   GRAPH_DB_ARTIFACT,
   detectEntrypoints,
   extractGraph,
+  graphShape,
   graphToolVersion,
   listSourceFiles,
   loadGraphConfig,
@@ -68,16 +69,42 @@ export const graphCollector: Collector = {
       commit: ctx.workspace.commit,
       entrypoints: entry.files,
       entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
       authPatterns,
     });
 
     const db = openGraphDb(dbPath);
     let rows;
+    let shape;
     try {
       rows = routeAuthCoverage(db, authPatterns);
+      shape = graphShape(db);
     } finally {
       db.close();
     }
+
+    // This recipe's walk errs the OTHER way from the two gates (I3f): "this
+    // route reaches an auth check" is a positive claim, so it may only rest on
+    // an actual call chain — an over-approximate walk would let a coincidence
+    // of names read as authentication.
+    const basis: ClaimBasis = {
+      approximation: "under",
+      statement:
+        "auth coverage is claimed only when a real call chain runs from the route to a symbol matching " +
+        `[${authPatterns.join(", ")}] over calls/handles edges alone; a route whose chain cannot be walked reads as UNCOVERED, never as covered. ` +
+        "Inferred hops are marked, because a chain that rests on a name match is weaker than one resolved to a file.",
+      entrypoints: entry.files,
+      entrypoint_source: entry.source,
+      ...(entry.unresolved.length > 0 ? { entrypoints_unresolved: entry.unresolved } : {}),
+      route_roots: shape.route_count,
+      graph: {
+        commit: ctx.workspace.commit,
+        extractor_version: version,
+        node_count: shape.node_count,
+        edge_count: shape.edge_count,
+        inferred_edge_count: shape.inferred_edge_count,
+      },
+    };
 
     const provenance = { analyzer: "graph", version, runId: ctx.runId };
     const findings: Finding[] = [];
@@ -124,6 +151,7 @@ export const graphCollector: Collector = {
       // rather than vacuously evidenced on a repo with no server surface
       observations: rows.length > 0 ? { "route-auth-coverage": rows } : {},
       anchors: rows.length > 0 ? { "route-auth-coverage": anchorPaths } : {},
+      ...(rows.length > 0 ? { basis: { "route-auth-coverage": basis } } : {}),
       toolVersion: version,
       exitCode: 0,
       reproduce: "rampscan scan <repo> (graph collector: routeAuthCoverage over graph.db)",

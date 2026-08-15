@@ -22,6 +22,7 @@ export const gitleaks: Collector = {
   manifest: {
     name: "gitleaks",
     toolVersion: "resolved-at-run",
+    tools: ["gitleaks"],
     recipes: ["no-secrets-in-history"],
     cacheScope: ["@commit"], // scans the full history — any new commit re-runs it
   },

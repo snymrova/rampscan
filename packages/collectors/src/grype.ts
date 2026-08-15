@@ -53,6 +53,7 @@ export const grype: Collector = {
   manifest: {
     name: "grype",
     toolVersion: "resolved-at-run",
+    tools: ["grype"],
     recipes: ["container-base-image-patched"],
     // keyed on the Dockerfile (the final FROM decides the scanned image); a
     // cached result can miss newly published CVEs — the scheduled full scan

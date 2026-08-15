@@ -58,6 +58,7 @@ export const spectral: Collector = {
   manifest: {
     name: "spectral",
     toolVersion: "resolved-at-run",
+    tools: ["spectral"],
     recipes: ["api-spec-lint-clean"],
     outputs: [SPECTRAL_RESULTS_ARTIFACT],
     cacheScope: ["**/openapi*.yaml", "**/openapi*.yml", "**/openapi*.json", "**/swagger*.yaml", "**/swagger*.yml", "**/swagger*.json"],

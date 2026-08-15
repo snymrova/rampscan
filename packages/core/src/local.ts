@@ -76,6 +76,7 @@ export function createLocalRunner(options: {
         exitCode: out.exitCode,
       };
       if (out.reproduce !== undefined) result.reproduce = out.reproduce;
+      if (out.basis !== undefined) result.basis = out.basis;
       if (out.skipped) result.skipped = out.skipped;
       return result;
     },

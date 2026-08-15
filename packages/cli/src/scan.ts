@@ -147,6 +147,11 @@ async function buildCollectorRuns(
       artifacts,
       cache: cacheRecords.get(name) ?? { state: "none" },
     };
+    // what this collector ate (J5): the chain's link from a gate that spawns
+    // nothing back to the tool whose output it judged
+    if (collector.manifest.inputs && collector.manifest.inputs.length > 0) {
+      row.consumes = [...collector.manifest.inputs];
+    }
     if (run.skipped) row.skip_reason = run.skipped.reason;
     rows.push(row);
   }

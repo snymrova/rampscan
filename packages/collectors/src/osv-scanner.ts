@@ -15,6 +15,7 @@ export const osvScanner: Collector = {
   manifest: {
     name: "osv-scanner",
     toolVersion: "resolved-at-run",
+    tools: ["osv-scanner"],
     recipes: [], // producer only — the advisories recipe is evidenced by `reachability`
     inputs: [SBOM_ARTIFACT],
     outputs: [OSV_RESULTS_ARTIFACT],

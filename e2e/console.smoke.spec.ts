@@ -707,6 +707,97 @@ test("artifact viewers: the tool's own output, verified in the browser, and a ta
   await expect(page.locator("body")).not.toContainText("<aws-key-shape-assembled-at-build-time>");
 });
 
+test("provenance chain: the whole causal line, both directions, and the walk a not-affected claim rests on (J5 + I3f)", async ({
+  page,
+}) => {
+  await signIn(page);
+
+  // ── the chain, forwards ─────────────────────────────────────────────────
+  // The SAST recipe is the case the chain exists for: `sast-reachability`
+  // spawns no tool at all, so a chain built from the collector's own tools
+  // would print "no external tool" over a verdict semgrep's output produced.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.getByRole("cell", { name: "no-reachable-dangerous-code", exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  const evidenceUrl = page.url();
+
+  const chain = page.locator("ol.chain .chain-hop");
+  await expect(chain.first()).toBeVisible({ timeout: 30_000 });
+  // every hop drawn, none silently dropped
+  await expect(chain.filter({ hasText: "no-reachable-dangerous-code" })).toBeVisible();
+  await expect(chain.filter({ hasText: "sast-reachability" })).toBeVisible();
+  // the tool hop reached THROUGH the artifact the gate ate — this is the link
+  // that makes the line causal rather than decorative
+  const toolHop = chain.filter({ hasText: "semgrep@" });
+  await expect(toolHop).toBeVisible();
+  await expect(toolHop).toContainText("semgrep-results.json");
+  await expect(toolHop).toContainText("produced by semgrep in this run");
+  // no gap: this bundle came out of the smoke's own scan, so every hop resolves
+  expect(await page.locator("ol.chain .chain-missing").count()).toBe(0);
+
+  // ── the hop lands where it says it lands ────────────────────────────────
+  await toolHop.getByRole("link").first().click();
+  await expect(page).toHaveURL(/\/runs\?scan=/, { timeout: 45_000 });
+  await expect(page.locator("tr.hl")).toContainText("semgrep");
+
+  // ── the chain, backwards ────────────────────────────────────────────────
+  // From the run, the collector row names the statements it produced — recipe
+  // and digest only. A verdict here would make /runs a second source of truth
+  // about the board, which is the one thing this page may never be.
+  const gateRow = page
+    .locator("table.subtable tr")
+    .filter({ has: page.getByRole("cell", { name: "sast-reachability", exact: true }) });
+  await expect(gateRow).toContainText("no-reachable-dangerous-code");
+  await expect(gateRow).toContainText("consumes");
+  await expect(gateRow).toContainText("semgrep-results.json");
+  await expect(gateRow.locator(".pill")).not.toContainText(["violated", "evidenced"]);
+  await gateRow.getByRole("link", { name: "no-reachable-dangerous-code" }).click();
+  await expect(page).toHaveURL(evidenceUrl, { timeout: 45_000 });
+
+  // ── tooling health: history, and it says it is history ──────────────────
+  await page.goto("/runs");
+  const tooling = page.locator(".tooling");
+  await expect(tooling).toBeVisible({ timeout: 30_000 });
+  // the fixture scan really ran semgrep, so its card carries a real runtime
+  const semgrepCard = tooling.locator(".tool-card").filter({ hasText: "semgrep" });
+  await expect(semgrepCard).toContainText(/docker|binary/);
+  await expect(semgrepCard).toContainText("asked for by semgrep");
+  // and the page refuses to pass historical resolution off as a live probe
+  await expect(page.locator("body")).toContainText("pnpm doctor");
+
+  // ── I3f: the not-affected claim shows its work ──────────────────────────
+  await page.goto(evidenceUrl);
+  const basis = page.locator(".panel").filter({ hasText: "entry points" }).first();
+  await expect(basis).toBeVisible({ timeout: 30_000 });
+  // the fixture's entry point is inferred from package.json — the set AND
+  // where it came from, because "not affected" means "unreachable from THESE"
+  await expect(basis).toContainText("src/index.js");
+  await expect(basis).toContainText("inferred from package.json");
+  // the direction of the error, stated where the claim is read
+  await expect(basis).toContainText("over-approximate");
+  await expect(basis).toContainText("Unknowns count against us");
+  // the graph it walked, counted — including how many edges are only names
+  await expect(basis).toContainText(/\d+ nodes · \d+ edges \(\d+ inferred by name\)/);
+
+  // ── every displayed edge marked ─────────────────────────────────────────
+  // The fixture's reachable eval sits one exact hop from the entry point.
+  const callPath = page.locator(".callpath").first();
+  await expect(callPath).toBeVisible();
+  await expect(callPath).toContainText("src/index.js");
+  await expect(callPath).toContainText("src/render.js");
+  await expect(callPath).toContainText("exactly resolved");
+  expect(await callPath.locator(".hop-unmarked").count()).toBe(0);
+
+  // ── and the flagship advisory's claim rests on the same stated ground ───
+  await page.goto("/");
+  await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  const advisoryBasis = page.locator(".panel").filter({ hasText: "entry points" }).first();
+  await expect(advisoryBasis).toContainText("src/index.js");
+  await expect(advisoryBasis).toContainText("declared route");
+});
+
 /** the reference tar reader — the package must be readable without our writer */
 function untar(bytes: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();

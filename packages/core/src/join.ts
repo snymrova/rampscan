@@ -75,6 +75,11 @@ export function joinRecipeResults(input: JoinInput): RecipeResult[] {
     // the reproduce command (I2c) is the collector's own statement of how to
     // re-run its check — it rides every recipe this collector evidences
     if (run.reproduce !== undefined) result.reproduce = run.reproduce;
+    // the basis (I3f) is per-recipe, not per-collector: it names the walk THIS
+    // claim rests on, and a collector that gated one recipe and not another
+    // must not lend its ground to the second
+    const basis = run.basis?.[recipe.id];
+    if (basis !== undefined) result.basis = basis;
     return result;
   });
 }

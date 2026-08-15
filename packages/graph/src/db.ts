@@ -13,6 +13,13 @@ export interface GraphMeta {
   commit: string;
   entrypoints: string[];
   entrypointSource: string;
+  /**
+   * Declared entries that resolved to no file the walk saw (I3f). A dropped
+   * root silently shrinks the reachable set and therefore silently widens
+   * every "not affected" claim, so it travels with the graph and gets named
+   * wherever the claim is read.
+   */
+  entrypointsUnresolved: string[];
   authPatterns: string[];
 }
 
@@ -77,6 +84,7 @@ export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphM
     insertMeta.run("commit", meta.commit);
     insertMeta.run("entrypoints", JSON.stringify(meta.entrypoints));
     insertMeta.run("entrypoint_source", meta.entrypointSource);
+    insertMeta.run("entrypoints_unresolved", JSON.stringify(meta.entrypointsUnresolved));
     insertMeta.run("auth_patterns", JSON.stringify(meta.authPatterns));
     insertMeta.run("file_count", String(graph.files.length));
     db.exec("COMMIT");
@@ -103,6 +111,7 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
     commit: map.get("commit") ?? "unknown",
     entrypoints: JSON.parse(map.get("entrypoints") ?? "[]") as string[],
     entrypointSource: map.get("entrypoint_source") ?? "none",
+    entrypointsUnresolved: JSON.parse(map.get("entrypoints_unresolved") ?? "[]") as string[],
     authPatterns: JSON.parse(map.get("auth_patterns") ?? "[]") as string[],
   };
 }

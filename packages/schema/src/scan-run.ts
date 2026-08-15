@@ -103,6 +103,19 @@ export const CollectorRun = z.object({
       bytes: z.number().int().optional(),
     }),
   ),
+  /**
+   * Artifacts this collector consumed from earlier collectors in the same run,
+   * by name (J5). Without it the provenance chain dead-ends at every gate:
+   * `sast-reachability` spawns no tool of its own, so a chain built from
+   * `tools` alone would say "no external tool" about a verdict that rests
+   * entirely on semgrep's output. With it, the reader follows the artifact
+   * name to the collector in THIS run whose `artifacts` produced it, and the
+   * line runs from the verdict all the way back to the tool that spoke.
+   *
+   * A fact about the run, not a re-statement of the catalog: it is what the
+   * manifest declared at the moment the run dispatched.
+   */
+  consumes: z.array(z.string()).optional(),
   cache: CacheRecord,
   /** set when the collector could not run at all — the reason an operator needs */
   skip_reason: z.string().optional(),

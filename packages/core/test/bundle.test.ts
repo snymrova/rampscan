@@ -11,6 +11,8 @@ function bundle(extra: {
   offenders?: Array<{ file?: string; line?: number }>;
   offender_count?: number;
   reproduce?: string;
+  collector?: string;
+  basis?: EvidenceBundle["predicate"]["basis"];
 }): EvidenceBundle {
   return {
     _type: "https://in-toto.io/Statement/v1",
@@ -36,6 +38,8 @@ function bundle(extra: {
         },
       ],
       ...(extra.reproduce !== undefined ? { reproduce: extra.reproduce } : {}),
+      ...(extra.collector !== undefined ? { collector: extra.collector } : {}),
+      ...(extra.basis !== undefined ? { basis: extra.basis } : {}),
       cadence: "continuous",
       run_id: "run-1",
       timestamp: "2026-08-01T00:00:00.000Z",
@@ -60,5 +64,60 @@ describe("sameEvidence × the I2c additions", () => {
     const b = bundle({});
     b.predicate.assertions[0]!.detail = "2 of 2 row(s) fail x eq";
     expect(sameEvidence(a, b)).toBe(false);
+  });
+});
+
+// The J5/I3f additions go the OTHER way from I2c's: `collector` and `basis`
+// are claims about what the evidence RESTS ON, not restatements of what it
+// says, so they are keyed. The hole this closes is concrete: sast-reachability
+// anchors the flagged files and rampscan.config.json — not package.json — so
+// with the basis outside identity, an edit to package.json that moves
+// entry-point inference leaves every "not affected" bundle alive, still
+// claiming unreachability from a set that no longer exists.
+
+const basis = (over: Record<string, unknown> = {}) =>
+  ({
+    approximation: "over" as const,
+    statement: "unknowns count against us",
+    entrypoints: ["src/index.js"],
+    entrypoint_source: "package.json",
+    ...over,
+  }) as EvidenceBundle["predicate"]["basis"];
+
+describe("sameEvidence × the J5/I3f additions", () => {
+  it("a different producing collector is different evidence", () => {
+    expect(
+      sameEvidence(bundle({ collector: "sast-reachability" }), bundle({ collector: "semgrep" })),
+    ).toBe(false);
+  });
+
+  it("a moved entry-point set re-keys even when every row and verdict is identical", () => {
+    const before = bundle({ collector: "c", basis: basis() });
+    const after = bundle({
+      collector: "c",
+      basis: basis({ entrypoints: ["src/index.js", "src/cli.js"] }),
+    });
+    expect(sameEvidence(before, after)).toBe(false);
+  });
+
+  it("the SOURCE of an unchanged entry-point set re-keys too", () => {
+    // same files, but "declared in config" and "guessed from filenames" are
+    // different ground under the same claim
+    const declared = bundle({ collector: "c", basis: basis({ entrypoint_source: "config" }) });
+    const guessed = bundle({ collector: "c", basis: basis({ entrypoint_source: "fallback" }) });
+    expect(sameEvidence(declared, guessed)).toBe(false);
+  });
+
+  it("an identical basis is the same evidence — nothing re-keys for restating the ground", () => {
+    expect(sameEvidence(bundle({ collector: "c", basis: basis() }), bundle({ collector: "c", basis: basis() }))).toBe(
+      true,
+    );
+  });
+
+  it("a pre-J5 bundle does NOT match its re-scan, deliberately and once", () => {
+    // no back-compat exemption: "absent means whatever is there now" is how an
+    // identity rule stops being one. Every live bundle supersedes once, in the
+    // open, on the first scan after this change.
+    expect(sameEvidence(bundle({}), bundle({ collector: "repo-facts" }))).toBe(false);
   });
 });

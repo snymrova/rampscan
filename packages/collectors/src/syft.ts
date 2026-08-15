@@ -34,6 +34,7 @@ export const syft: Collector = {
   manifest: {
     name: "syft",
     toolVersion: "resolved-at-run",
+    tools: ["syft"],
     recipes: ["sbom-exists-and-fresh"],
     outputs: [SBOM_ARTIFACT],
     cacheScope: ["@tree"], // scans the committed tree — any content change re-runs it

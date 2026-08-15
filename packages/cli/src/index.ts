@@ -36,6 +36,8 @@ export { serve } from "./serve.js";
 export type { ServeOptions } from "./serve.js";
 export { startDaemon, describeDaemonEvent, DAEMON_STATUS_FILE } from "./daemon.js";
 export type { DaemonOptions, DaemonHandle, DaemonEvent } from "./daemon.js";
+export { buildToolMap, renderToolMap, toolMapProblems } from "./tools.js";
+export type { ToolMap, ToolMapCollector, ToolMapRecipe, ToolMapTool } from "./tools.js";
 export { report, generateFrontierReport } from "./report.js";
 export type { ReportOptions } from "./report.js";
 export { startPocketBase, bootstrapConsole, DEMO_USERS, DEMO_PASSWORD } from "./pocketbase.js";
