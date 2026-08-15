@@ -165,6 +165,14 @@ table.reg.subtable td { padding: 6px 10px; }
   overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;
 }
 
+/* ---- artifact viewers (J4): what the tool actually said ---- */
+.artifact-view { margin-top: 8px; }
+.artifact-view p { margin: 4px 0 6px; font-size: 12.5px; }
+/* the reader's own hash check, stated where the table begins */
+.artifact-verified { color: var(--evidenced); }
+/* a wide findings table scrolls itself — the page body never scrolls sideways */
+.artifact-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+
 /* ---- the board hop (J3): conclusion → the machinery that produced it ---- */
 .runhop {
   font-size: 12px; white-space: nowrap; margin-right: 10px;
@@ -318,4 +326,7 @@ pre.raw {
   table { break-inside: auto; }
   tr { break-inside: avoid; }
   .section-title { break-after: avoid; }
+  /* an OPEN artifact table is content and prints; its scroll box is a screen
+     affordance, and a cut-off table on paper is a withheld fact (J4) */
+  .artifact-scroll { overflow: visible !important; max-height: none !important; }
 }

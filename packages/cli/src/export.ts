@@ -1,10 +1,10 @@
-import { createHash } from "node:crypto";
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { RegisterState, RollupCounts, RollupRow, RegisterRow } from "@rampscan/core";
 import { isEvidenceBundle } from "@rampscan/schema";
 import { createLocalLedger } from "@rampscan/ledger";
 import { foldEntries } from "@rampscan/projector";
+import { indexArtifacts, matchByDigest, type SubjectKind } from "./artifact.js";
 import { loadRecipes } from "./recipes.js";
 
 // Export (plan I3e): the auditor takes the record with them.
@@ -121,8 +121,11 @@ export function tar(entries: TarEntry[], mtimeSeconds: number): Uint8Array {
  *   justification — a scoping event's subject; the text is in the signed
  *                   predicate already, so shipping a second copy would create
  *                   two things to disagree
+ *
+ * Defined with the resolver (J4) so the package and the viewer classify a
+ * subject the same way — two surfaces, one rule.
  */
-export type SubjectKind = "artifact" | "anchor" | "justification";
+export type { SubjectKind } from "./artifact.js";
 
 export interface PackageArtifact {
   /** the name the statement's subject attests */
@@ -192,31 +195,6 @@ export interface EvidencePackage {
 
 function slug(text: string): string {
   return text.toLowerCase().replaceAll(/[^a-z0-9._-]+/g, "-");
-}
-
-/** every file under `dir`, one level deep per collector subdir: name → paths */
-async function indexArtifacts(dir: string): Promise<Map<string, string[]>> {
-  const index = new Map<string, string[]>();
-  let collectors: string[];
-  try {
-    collectors = await readdir(dir);
-  } catch {
-    return index;
-  }
-  for (const collector of collectors) {
-    let names: string[];
-    try {
-      names = await readdir(join(dir, collector));
-    } catch {
-      continue; // a file where a collector dir was expected — not an artifact
-    }
-    for (const name of names) {
-      const paths = index.get(name) ?? [];
-      paths.push(join(dir, collector, name));
-      index.set(name, paths);
-    }
-  }
-  return index;
 }
 
 /**
@@ -381,14 +359,7 @@ export async function computeEvidencePackage(
         continue;
       }
       const candidates = artifactIndex.get(subject.name) ?? [];
-      let matched: { path: string; bytes: Buffer } | undefined;
-      for (const candidate of candidates) {
-        const bytes = await readFile(candidate);
-        if (createHash("sha256").update(bytes).digest("hex") === sha256) {
-          matched = { path: candidate, bytes };
-          break;
-        }
-      }
+      const matched = await matchByDigest(candidates, sha256);
       if (matched) {
         const path = `artifacts/${sha256}/${subject.name}`;
         push(path, new Uint8Array(matched.bytes));

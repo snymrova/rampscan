@@ -1,6 +1,6 @@
 # rampscan — implementation plan: what remains
 
-**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens; I3e landed 2026-08-15, I3f folded into J5). Phase J is underway — J1, J2 and J3 landed 2026-08-15, J4 is next. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
+**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens; I3e landed 2026-08-15, I3f folded into J5). Phase J is underway — J1, J2, J3 and J4 landed 2026-08-15, J5 (+I3f) is next. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
 **Date:** 2026-08-15
 **Reads against:** all of `docs/` — SPEC (target architecture), IMPLEMENTATION-PLAN (M0–M5, complete), COMPLIANCE-SCAN-HARNESS (founding doc §11–13 decisions), ARCHITECTURE (invariants), BRAINSTORM-DAST-OBSERVABILITY-AI-HELPER (the options analysis this plan promotes from), FRONTIER-PIPELINE (the generated self-scan record).
 
@@ -19,8 +19,8 @@ Walked across all eight documents. Nothing below is invented here; each line nam
 | J1 | The run record, ledger-first: `scan-run` statement kind + capture | PLAN J, BRAINSTORM §2.2/§5 | **landed 2026-08-15** |
 | J2 | `/runs` console page: scan timeline → per-collector table | PLAN J, BRAINSTORM §2.3 | **landed 2026-08-15** |
 | J3 | Board hop: "how was this produced?" on every row | PLAN J | **landed 2026-08-15** |
-| J4 | Artifact viewers: normalized artifacts as tables + raw download | PLAN J | **next** |
-| J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | not started |
+| J4 | Artifact viewers: normalized artifacts as tables + raw download | PLAN J | **landed 2026-08-15** |
+| J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | **next** |
 | K1 | Plain-language layer, no AI: `plain` on every recipe · glossary · guided empty states | PLAN K, BRAINSTORM §3.1 | not started |
 
 ### Tier 2 — held at an explicit go/no-go, analysis already written
@@ -59,7 +59,7 @@ Resulting order:
 
 ```
 I3e  →  J1  →  J2  →  J3  →  J4  →  J5 (+I3f folded in)  →  K1  →  [go/no-go: K2, L]
- ✓      ✓      ✓     ←next
+ ✓      ✓      ✓      ✓      ✓          ←next
 ```
 
 Estimates, focused-work days, honest but rough: I3e 1–1.5 · J1 2.5–3 · J2 1.5 · J3 0.25 · J4 1.5 · J5+I3f 2 · K1 1.5. **Total ≈ 10–11 days** to the end of K1.
@@ -182,6 +182,19 @@ Normalized artifacts rendered as tables instead of raw JSON dumps: semgrep resul
 One decision: **artifacts are not in the ledger** — they live in `rampscan-out/artifacts/`, addressed by the digest the bundle's subject names. The viewer needs a `GET /api/artifact?digest=` route in the diff-route posture that resolves digest → path and **re-hashes before serving**, refusing on mismatch. Serving an artifact by path without re-hashing would let a modified file on disk render under a signed bundle's digest — the exact confusion the whole architecture exists to prevent.
 
 **Exit test.** Flagship violated bundle → artifact table renders the same offender count the assertion reports → raw download's sha256 equals the subject digest → a tampered artifact on disk yields a loud refusal, not a rendered table.
+
+### 6.1 As built (2026-08-15) — J4
+
+**The refusal is not the edge case; on any machine that has scanned since, it is the ORDINARY case.** Counted before writing a line: of the nine artifacts in this repo's own scan output, only three still hash to a digest the ledger attests — the other six were overwritten by later runs. A viewer built around the happy path and bolted on a mismatch branch would have had the proportions exactly backwards, so the resolver was written refusal-first and every reason is a distinct sentence.
+
+- **Three refusals to serve, and they are different facts.** *Not attested at all* → 404, "this system serves attested artifacts, not files": a digest no signed statement names is a request to read an arbitrary file and is refused as one, which is also what keeps the route from becoming a file-read primitive. *Attested, but the bytes on disk are from a later run* → 409 naming that fact, and never conflated with *attested, but no file of that name was retained*. *An anchor* → never served at all: it is the client's own source at the scanned commit, so the evidence page renders the `git show <commit>:<path>` line in place of a button that would only ever refuse (I3e's rule, same reason, now with a UI consequence).
+- **Two hashes, and the second one is the point.** The route re-hashes before serving — serving by path would let a modified file render under a signed bundle's digest — and then the *browser* re-hashes the received bytes with SubtleCrypto against the digest the statement attests, before a single row is drawn. The evidence page's standing line is "don't trust this page — it renders a projection"; a table drawn from bytes the page merely received is exactly the thing that warns about. After the check, the table is a rendering of bytes **the reader's own browser confirmed**.
+- **The family comes from the attested NAME, never from sniffing the content.** The subject name is part of what was signed; the shape of the bytes is not. A viewer that guessed the family from content could be steered by the bytes into rendering them as something they are not — pinned by a test that feeds semgrep-shaped JSON under another name and gets no table.
+- **A secret is absent, not masked.** The gitleaks table is rule · file:line · commit · date; `Secret` and `Match` have no column, and the test greps the *whole rendered table* rather than the column list, because a column list can be right while a message field quietly carries the value. The table says out loud that it withheld it.
+- **Nine families ship** (semgrep, checkov, spectral, gitleaks, osv-scanner, grype, openvex, repo-facts, cyclonedx) — more than §6 listed, because the fixture's real evidence attests grype/openvex/repo-facts/sbom too and "raw JSON dump" is what J4 exists to remove. Each table states what it does *not* show: checkov names the passed count it is not listing, semgrep names the run's own error count, openvex carries the over-approximation statement, and every capped table states the true total (I2c's offender-count precedent).
+- **`graph.db` gets no table, deliberately.** §6 sketched "graph route rows (method · path · authed · call path)"; the actual schema is `routes(id, method, route_path, file, line)` with **no `authed` column**, and it is a binary SQLite file the browser cannot parse — a table would require deriving rows server-side, which breaks the property that the table renders bytes the reader verified. It downloads byte-exact with the reason stated, and the graph's rendering belongs to **J5 (+I3f)**, which already owns entry-point provenance and exact-vs-inferred edges over the same file for the same reader.
+- **One hand, and I3e now shares it.** `indexArtifacts` + `matchByDigest` moved into `packages/cli/src/artifact.ts` and the evidence package calls them, so the package and the viewer cannot come to different conclusions about the same file on disk.
+- vitest 412/412 (31 new: 8 resolver tests over a real scanned world — the tamper refusal restoring cleanly afterwards, `not retained` vs no-out-dir, the anchor's `git show` line, an unattested digest, and `../../etc/passwd` and friends refused before any lookup; plus 23 twin tests over the console's own `lib/artifacts.ts`, including the secret-absence grep, the content-sniffing refusal, an OSV advisory found only by alias still reporting its fixed version, grype's `not-fixed` stated rather than blank, the row cap naming its true total, and every shipped family re-rendered against this repo's real artifacts with every row as wide as its header). Smoke 12/12 cold (2.9m). Root + console typecheck clean.
 
 ---
 

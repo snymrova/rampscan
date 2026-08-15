@@ -21,6 +21,8 @@ export type {
   ScopingProposalInput,
   ScopingSignatureStatus,
 } from "./scoping-register.js";
+export { resolveArtifact, ArtifactNotAttestedError, indexArtifacts, matchByDigest } from "./artifact.js";
+export type { ArtifactResolution, ResolveArtifactOptions, SubjectKind } from "./artifact.js";
 export { computeEvidencePackage, tar } from "./export.js";
 export type {
   EvidencePackage,

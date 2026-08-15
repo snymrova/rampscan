@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash, createPublicKey, verify as cryptoVerify } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { PB_PORT } from "../playwright.config";
@@ -598,6 +598,113 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
     .first()
     .click();
   await expect(page.locator("a.runhop").first()).toBeVisible();
+});
+
+test("artifact viewers: the tool's own output, verified in the browser, and a tampered file refused (J4)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+
+  // the advisory the verdict rests on, read off the assertion the page already
+  // renders — this is what the artifact table has to agree with
+  const assertionText = (await page.locator(".assertion-fail").first().locator("..").innerText()) ?? "";
+  const advisory = /(?:GHSA-[0-9a-z-]+|CVE-\d{4}-\d+)/.exec(assertionText)?.[0];
+  expect(advisory, "the flagship assertion names an advisory").toBeTruthy();
+
+  // ── the artifact renders, and the BROWSER verified the bytes first ───────
+  const vexRow = page.getByRole("row").filter({ hasText: "openvex.json" }).first();
+  await expect(vexRow).toBeVisible();
+  const attestedDigest = (await vexRow.locator("td").nth(2).innerText()).trim();
+  expect(attestedDigest).toMatch(/^[0-9a-f]{64}$/);
+
+  await vexRow.getByRole("button", { name: "view", exact: true }).click();
+  const verified = vexRow.locator(".artifact-verified");
+  await expect(verified).toBeVisible({ timeout: 30_000 });
+  await expect(verified).toContainText("sha256 verified in this browser");
+
+  const vexTable = vexRow.locator(".artifact-scroll table");
+  await expect(vexTable).toBeVisible();
+  await expect(vexTable.locator("th")).toContainText(["vulnerability", "product", "status"]);
+  // the tool's own record names the very advisory the verdict cites: the
+  // page's conclusion and the artifact behind it agree, which is the whole
+  // reason this table exists beside the pill
+  await expect(vexTable).toContainText(advisory!);
+  // the claim's own limit travels with the claim
+  await expect(vexRow.locator(".artifact-view")).toContainText("unknowns count against us");
+
+  // ── the raw download is byte-exact: it hashes to the attested digest ─────
+  const [raw] = await Promise.all([
+    page.waitForEvent("download"),
+    vexRow.getByRole("button", { name: "raw", exact: true }).click(),
+  ]);
+  const rawBytes = readFileSync((await raw.path())!);
+  expect(createHash("sha256").update(rawBytes).digest("hex")).toBe(attestedDigest);
+  // and it is the artifact itself, not a re-serialization of the projection
+  expect(JSON.parse(rawBytes.toString("utf8"))["@context"]).toContain("openvex.dev");
+
+  // ── an anchor is never served: `git show` is the answer, not a button ────
+  const anchorRow = page
+    .getByRole("row")
+    .filter({ hasText: "anchor — drift here kills this evidence" })
+    .first();
+  await expect(anchorRow).toBeVisible();
+  await expect(anchorRow).toContainText("git show");
+  await expect(anchorRow.getByRole("button", { name: "view", exact: true })).toHaveCount(0);
+
+  // ── the load-bearing refusal: a file on disk that no longer matches ──────
+  // Serving an artifact by path without re-hashing would let a modified file
+  // render under a signed bundle's digest. Prove it cannot, against the real
+  // scan output the serve is pointed at.
+  // the same scan output dir the serve is pointed at (smoke-server.mjs)
+  const artifactsRoot = resolve("e2e/.smoke/out/artifacts");
+  const vexPath = readdirSync(artifactsRoot)
+    .map((collector) => resolve(artifactsRoot, collector, "openvex.json"))
+    .find((candidate) => existsSync(candidate));
+  expect(vexPath, "the smoke scan wrote an openvex.json").toBeTruthy();
+  const original = readFileSync(vexPath!);
+  try {
+    writeFileSync(vexPath!, JSON.stringify({ "@context": "tampered", statements: [] }));
+    await page.reload();
+    const tamperedRow = page.getByRole("row").filter({ hasText: "openvex.json" }).first();
+    await tamperedRow.getByRole("button", { name: "view", exact: true }).click();
+    const view = tamperedRow.locator(".artifact-view");
+    await expect(view).toContainText("no bytes:", { timeout: 30_000 });
+    // the two facts stay separate: the digest is still attested, the BYTES are
+    // the problem, and the reason names which
+    await expect(view).toContainText("from a later run");
+    await expect(view).toContainText("does not match the attested digest");
+    // and nothing was rendered from them
+    await expect(tamperedRow.locator(".artifact-scroll")).toHaveCount(0);
+    await expect(tamperedRow.locator(".artifact-verified")).toHaveCount(0);
+  } finally {
+    writeFileSync(vexPath!, original);
+  }
+
+  // the refusal was about the bytes: with them back, the table returns
+  await page.reload();
+  const restored = page.getByRole("row").filter({ hasText: "openvex.json" }).first();
+  await restored.getByRole("button", { name: "view", exact: true }).click();
+  await expect(restored.locator(".artifact-verified")).toBeVisible({ timeout: 30_000 });
+
+  // ── a secret is never rendered ──────────────────────────────────────────
+  // The fixture plants a well-formed AWS key in commit history (fault 1). The
+  // gitleaks table names the rule, the file:line and the commit — and never
+  // the value, which is the one column this viewer must not have.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.getByRole("cell", { name: "no-secrets-in-history", exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  const leakRow = page.getByRole("row").filter({ hasText: "gitleaks-report.json" }).first();
+  await leakRow.getByRole("button", { name: "view", exact: true }).click();
+  const leakTable = leakRow.locator(".artifact-scroll table");
+  await expect(leakTable).toBeVisible({ timeout: 30_000 });
+  await expect(leakTable.locator("th")).toContainText(["rule", "file:line", "commit"]);
+  await expect(leakTable).toContainText("aws-access");
+  await expect(leakRow.locator(".artifact-view")).toContainText("deliberately not rendered");
+  // the planted value, absent from the entire page — not masked, not truncated
+  await expect(page.locator("body")).not.toContainText("<aws-key-shape-assembled-at-build-time>");
 });
 
 /** the reference tar reader — the package must be readable without our writer */

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
+import { ArtifactView } from "../../../components/ArtifactView";
 import { DownloadButton } from "../../../components/DownloadButton";
 import { RequireAuth } from "../../../components/guard";
 import { getPb } from "../../../lib/pb";
@@ -334,16 +335,33 @@ function Evidence({ digest }: { digest: string }) {
               <th>Name</th>
               <th>Kind</th>
               <th>sha256</th>
+              <th>Contents</th>
             </tr>
           </thead>
           <tbody>
-            {bundle.statement.subject.map((s, i) => (
-              <tr key={i}>
-                <td className="mono">{s.name}</td>
-                <td className="faint">{anchorPaths.has(s.name) ? "anchor — drift here kills this evidence" : "artifact"}</td>
-                <td className="mono faint">{s.digest["sha256"]}</td>
-              </tr>
-            ))}
+            {bundle.statement.subject.map((s, i) => {
+              const isAnchor = anchorPaths.has(s.name);
+              return (
+                <tr key={i}>
+                  <td className="mono">{s.name}</td>
+                  <td className="faint">{isAnchor ? "anchor — drift here kills this evidence" : "artifact"}</td>
+                  <td className="mono faint">{s.digest["sha256"]}</td>
+                  <td>
+                    {/* An anchor is the client's own source at the scanned
+                        commit — this system does not serve it, and offering a
+                        button that always refuses would be worse than saying
+                        so. `git show` is the answer, so `git show` is here. */}
+                    {isAnchor ? (
+                      <code className="faint mono" style={{ fontSize: 12 }}>
+                        git show {String(p["commit"] ?? "HEAD").slice(0, 12)}:{s.name}
+                      </code>
+                    ) : (
+                      <ArtifactView name={s.name} digest={s.digest["sha256"] ?? ""} />
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
