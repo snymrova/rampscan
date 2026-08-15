@@ -26,6 +26,8 @@ interface QueueModule {
     events: unknown[];
     certClass: "b" | "c";
     now?: number;
+    /** run records (K1) — the skip-reason tier's source when no daemon has run */
+    runs?: unknown[];
   }): Array<{
     kind: string;
     rank: number;
@@ -35,6 +37,8 @@ interface QueueModule {
     title: string;
     detail: string;
     action: string;
+    /** the recipe's authored "fixing it" sentence (K1) */
+    plain?: string;
     bundleDigest?: string;
   }>;
 }
@@ -269,5 +273,181 @@ describe("deriveActionQueue: the ranked list of record", () => {
       "new-violation",
       "new-violation",
     ]);
+  });
+});
+
+// K1 — the skip-reason tier used to be reachable only through the daemon's
+// `scan-recorded` events. An operator who runs `rampscan scan` by hand got an
+// empty action queue while their toolchain was broken, and the page told them
+// so in the subtitle, which is not the same as telling them what was wrong.
+// Every scan has signed a run record since J1 and that record carries the same
+// reason, so the tier now falls back to it — through the SAME hand the board's
+// guided empty states use, because two surfaces disagreeing about whether a
+// collector failure is worth doing something about would be worse than either
+// of them being silent.
+describe("actionable-unevidenced from the run record, with no daemon anywhere (K1)", () => {
+  const registers = [
+    register({
+      id: "u1",
+      recipe_id: "iac-baseline-clean",
+      state: "unevidenced",
+      collector: "checkov",
+      plain: { checks: "c", violation: "v", fix: "the authored fix sentence" },
+    }),
+    register({
+      id: "u2",
+      recipe_id: "api-spec-lint-clean",
+      state: "unevidenced",
+      collector: "spectral",
+      plain: null,
+    }),
+  ];
+
+  function collectorRow(overrides: Record<string, unknown>): Record<string, unknown> {
+    return {
+      collector: "checkov",
+      tool_version: "",
+      duration_ms: 10,
+      exit_code: 0,
+      findings: 0,
+      tools: [],
+      invocations: [],
+      artifacts: [],
+      cache: { state: "miss" },
+      ...overrides,
+    };
+  }
+
+  const runRecord = {
+    id: "run1",
+    digest: "a".repeat(64),
+    run_id: "run-2026-08-14T11:30:00.000Z",
+    repo: "/repo",
+    commit_sha: "b".repeat(40),
+    trigger_kind: "manual",
+    started_at: iso(31 * 60 * 1000),
+    run_timestamp: iso(30 * 60 * 1000),
+    duration_ms: 60_000,
+    dataset_version: "2026.07.14.01",
+    collectors: [
+      collectorRow({ collector: "checkov", skip_reason: absentReason("checkov") }),
+      collectorRow({
+        collector: "spectral",
+        skip_reason:
+          "no OpenAPI/Swagger documents in the committed tree — nothing API-shaped to lint",
+      }),
+    ],
+  };
+
+  const derive = (extra: Record<string, unknown> = {}) =>
+    queue.deriveActionQueue({
+      registers,
+      drift: [],
+      events: [],
+      runs: [runRecord],
+      certClass: "b",
+      now: NOW,
+      ...extra,
+    });
+
+  it("the missing tool reaches the queue with no daemon event in sight", () => {
+    const items = derive();
+    expect(items).toHaveLength(1);
+    expect(items[0]!.kind).toBe("actionable-unevidenced");
+    expect(items[0]!.recipeIds).toEqual(["iac-baseline-clean"]);
+    expect(items[0]!.detail).toContain(absentReason("checkov"));
+    expect(items[0]!.action).toContain("pnpm doctor");
+    // stamped with the run's own clock — the queue says when, and the only
+    // honest instant available is the scan's
+    expect(items[0]!.at).toBe(runRecord.run_timestamp);
+  });
+
+  it("an honest skip is still not a task, whichever source states it", () => {
+    expect(derive().some((i) => i.recipeIds.includes("api-spec-lint-clean"))).toBe(false);
+  });
+
+  it("the recipe's authored fix sentence rides the item, and its absence is not faked", () => {
+    expect(derive()[0]!.plain).toBe("the authored fix sentence");
+    const noProse = queue.deriveActionQueue({
+      registers: [register({ id: "u3", recipe_id: "iac-baseline-clean", state: "unevidenced", collector: "checkov", plain: null })],
+      drift: [],
+      events: [],
+      runs: [runRecord],
+      certClass: "b",
+      now: NOW,
+    });
+    expect(noProse[0]!.plain).toBeUndefined();
+  });
+
+  it("the daemon event wins where both exist — the fallback only fills silence", () => {
+    const withEvent = derive({
+      events: [
+        daemonEvent({
+          id: "e9",
+          at: iso(5 * 60 * 1000),
+          kind: "scan-recorded",
+          payload: {
+            unevidenced: [
+              {
+                recipeId: "iac-baseline-clean",
+                collector: "checkov",
+                reason: `collector "checkov" skipped: ${absentReason("checkov")}`,
+              },
+            ],
+          },
+        }),
+      ],
+    });
+    const actionable = withEvent.filter((i) => i.kind === "actionable-unevidenced");
+    // one item, not two — the same cell explained twice is a queue that
+    // double-counts the same piece of work
+    expect(actionable).toHaveLength(1);
+    expect(actionable[0]!.at).toBe(iso(5 * 60 * 1000));
+    expect(actionable[0]!.title).toContain("has no tool to run");
+  });
+
+  it("a collector the run never dispatched is queued as its own fact", () => {
+    const items = queue.deriveActionQueue({
+      registers: [register({ id: "u4", recipe_id: "no-secrets-in-history", state: "unevidenced", collector: "gitleaks" })],
+      drift: [],
+      events: [],
+      runs: [runRecord],
+      certClass: "b",
+      now: NOW,
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0]!.title).toContain("never dispatched");
+    expect(items[0]!.detail).toContain("never dispatched");
+  });
+
+  it("passing no run records at all leaves the queue exactly as it was", () => {
+    expect(
+      queue.deriveActionQueue({ registers, drift: [], events: [], certClass: "b", now: NOW }),
+    ).toEqual([]);
+  });
+
+  it("conditions with no instant stay off the queue and are left to the board", () => {
+    // "no scan of this repo has ever been recorded" and "the catalog lost this
+    // recipe" are conditions, not events: there is no honest time to stamp a
+    // queue row with, so they are explained on the board's empty row instead
+    // of arriving here dated with something invented.
+    const noRunForRepo = queue.deriveActionQueue({
+      registers,
+      drift: [],
+      events: [],
+      runs: [{ ...runRecord, repo: "/somewhere-else" }],
+      certClass: "b",
+      now: NOW,
+    });
+    expect(noRunForRepo).toEqual([]);
+    const lostRecipe = queue.deriveActionQueue({
+      registers: [register({ id: "u5", recipe_id: "gone-from-catalog", state: "unevidenced", collector: "" })],
+      drift: [],
+      events: [],
+      runs: [runRecord],
+      certClass: "b",
+      now: NOW,
+    });
+    expect(lostRecipe).toEqual([]);
   });
 });

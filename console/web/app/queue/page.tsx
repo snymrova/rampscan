@@ -7,7 +7,13 @@ import { useCollection } from "../../lib/pb";
 import { formatAge } from "../../lib/mvx";
 import { deriveActionQueue } from "../../lib/queue";
 import type { QueueItem, QueueKind } from "../../lib/queue";
-import type { DaemonEventRecord, DriftRecord, MetaRecord, RegisterRecord } from "../../lib/types";
+import type {
+  DaemonEventRecord,
+  DriftRecord,
+  MetaRecord,
+  RegisterRecord,
+  ScanRunRecord,
+} from "../../lib/types";
 
 // The action queue (plan I2a): "what do I act on today", one ranked list —
 // divergence > expiring-before-next-cadence > new violation > actionable
@@ -34,6 +40,10 @@ function Queue() {
   const registers = useCollection<RegisterRecord>("registers");
   const drift = useCollection<DriftRecord>("drift");
   const events = useCollection<DaemonEventRecord>("daemon_events");
+  // run records (K1): the skip-reason tier used to need a daemon to have run.
+  // Every scan signs one of these, so a hand-run scan's broken toolchain now
+  // reaches this list too.
+  const runs = useCollection<ScanRunRecord>("scan_runs");
   const meta = useCollection<MetaRecord>("meta");
   const [now, setNow] = useState(() => Date.now());
 
@@ -49,12 +59,13 @@ function Queue() {
         registers: registers.records,
         drift: drift.records,
         events: events.records,
+        runs: runs.records,
         certClass,
         now,
       }),
-    [registers.records, drift.records, events.records, certClass, now],
+    [registers.records, drift.records, events.records, runs.records, certClass, now],
   );
-  const loading = registers.loading || drift.loading || events.loading;
+  const loading = registers.loading || drift.loading || events.loading || runs.loading;
   const count = (kind: QueueKind) => items.filter((i) => i.kind === kind).length;
 
   return (
@@ -68,8 +79,10 @@ function Queue() {
         {events.records.length === 0 && !events.loading && (
           <>
             {" "}
-            · no daemon events yet — the divergence and skip-reason tiers appear once{" "}
-            <code>rampscan daemon</code> has run
+            · no daemon events yet — divergence needs <code>rampscan daemon</code>
+            {runs.records.length > 0
+              ? "; skip reasons are read from the run records below"
+              : " and skip reasons need a recorded scan run"}
           </>
         )}
       </p>
@@ -130,6 +143,14 @@ function QueueRow({ item, now }: { item: QueueItem; now: number }) {
       <td>
         {item.detail && <div className="muted" style={{ fontSize: 12.5 }}>{item.detail}</div>}
         <div style={{ fontSize: 12.5 }}>{item.action}</div>
+        {/* the recipe's own "what fixing it looks like" (K1) — authored prose
+            about the check, kept visually separate from the computed detail
+            above it so the two are never read as one voice */}
+        {item.plain && (
+          <div className="faint" style={{ fontSize: 12.5, marginTop: 4, maxWidth: "68ch" }}>
+            {item.plain}
+          </div>
+        )}
       </td>
     </tr>
   );

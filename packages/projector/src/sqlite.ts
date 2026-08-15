@@ -60,6 +60,7 @@ export async function writeProjectionSqlite(
         state              TEXT NOT NULL, -- evidenced | violated | unevidenced | notApplicable
         cadence            TEXT,
         collector          TEXT, -- the catalog's collector for this recipe (J3)
+        plain              TEXT, -- JSON {checks, violation, fix}: the catalog's operator English (K1)
         run_id             TEXT, -- the run that produced the live evidence (J3)
         bundle_digest      TEXT,
         fresh_as_of        TEXT,
@@ -153,11 +154,11 @@ export async function writeProjectionSqlite(
 
     const insertRegister = db.prepare(
       `INSERT INTO registers
-         (repo, recipe_id, ksi_ids, control_ids, state, cadence, collector, run_id,
+         (repo, recipe_id, ksi_ids, control_ids, state, cadence, collector, plain, run_id,
           bundle_digest, fresh_as_of, commit_sha,
           pointers, introduced_at, introducing_commit,
           scoping_digest, scoping_just, scoping_proposed, scoping_approved, scoping_timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.registers) {
       insertRegister.run(
@@ -168,6 +169,7 @@ export async function writeProjectionSqlite(
         row.state,
         row.cadence ?? null,
         row.collector ?? null,
+        row.plain ? JSON.stringify(row.plain) : null,
         row.runId ?? null,
         row.bundleDigest ?? null,
         row.freshAsOf ?? null,
@@ -303,6 +305,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
         };
         if (r.cadence) row.cadence = r.cadence;
         if (r.collector) row.collector = r.collector;
+        if (r.plain) row.plain = JSON.parse(r.plain);
         if (r.run_id) row.runId = r.run_id;
         if (r.bundle_digest) row.bundleDigest = r.bundle_digest;
         if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;

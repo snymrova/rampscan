@@ -326,6 +326,61 @@ pre.raw {
 .empty { padding: 28px; text-align: center; color: var(--text-faint); }
 .badge-count { color: var(--text-faint); font-weight: 400; }
 
+/* ---- the plain-language layer (K1) ----
+   Authored operator English about the CHECK, never about the row's verdict —
+   which is why it is set apart from the computed values around it rather than
+   woven into them. The board keeps it collapsed (one row per recipe, opened on
+   demand); the evidence page shows all three parts; the queue takes the "fix"
+   sentence only. */
+.plainbtn {
+  background: none; border: none; padding: 0 8px 0 0; cursor: pointer;
+  color: var(--text-faint); font: inherit; font-size: 12px; line-height: 1;
+}
+.plainbtn:hover { color: var(--accent); }
+.plain-row > td {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px 12px;
+}
+.plain dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+.plain dt {
+  color: var(--text-faint); font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: 0.06em; padding-top: 2px;
+}
+.plain dd { margin: 0; color: var(--text-dim); font-size: 13px; line-height: 1.65; max-width: 74ch; }
+.plain-src { margin-top: 10px; color: var(--text-faint); font-size: 11.5px; }
+
+/* ---- glossary on hover (K1) ----
+   A word with an entry gets a dotted underline and a popover; a word without
+   one is rendered by the component as bare text and never reaches this CSS. */
+.term {
+  border-bottom: 1px dotted var(--text-faint); cursor: help;
+  position: relative; outline-offset: 2px;
+}
+.term:hover, .term:focus-visible { border-bottom-color: var(--accent); }
+.termtip {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
+  width: max-content; max-width: 340px;
+  background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; font-size: 12.5px; line-height: 1.55;
+  color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: normal;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); white-space: normal;
+}
+.termtip b { color: var(--text); }
+
+/* ---- guided empty states (K1 over J1) ----
+   Why an unevidenced row is empty, in the run record's own words. Sits under
+   the row like the violated row's fix pointers, and reads as a diagnosis
+   rather than a verdict — the cell is still unevidenced either way. */
+.why-row > td {
+  background: color-mix(in srgb, var(--unevidenced) 5%, transparent);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px 10px; font-size: 12.5px; line-height: 1.6;
+}
+.why-reason { color: var(--text-dim); }
+.why-action { color: var(--text); }
+.why-src { color: var(--text-faint); }
+
 /* ---- print (I3e) ----
    The evidence page is the auditor's takeaway when a tar is one step too many:
    a printed page must carry the facts that make the claim checkable — digest,
@@ -366,4 +421,11 @@ pre.raw {
   /* an OPEN artifact table is content and prints; its scroll box is a screen
      affordance, and a cut-off table on paper is a withheld fact (J4) */
   .artifact-scroll { overflow: visible !important; max-height: none !important; }
+  /* K1: the plain-language paragraphs are part of the takeaway — a reader
+     holding the printout should not need this console to know what the check
+     was. The glossary is the opposite: a popover that only exists on hover
+     cannot print, and a dotted underline on paper points at nothing. */
+  .plain, .plain dd, .why-row > td { color: #000; }
+  .termtip { display: none !important; }
+  .term { border-bottom: none; }
 }

@@ -17,5 +17,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "notes": "Unevidenced when the repo has no Dockerfile — nothing container-shaped to prove.",
+  "plain": {
+    "checks": "Reads the Dockerfile and works out which account the container ends up running as: the last USER line in the final build stage, or root when the file never names one.",
+    "violation": "The container runs as root. Any code execution inside it starts with full control of the container, and a much shorter path out of it wherever a host mount or a kernel bug is available.",
+    "fix": "Create an unprivileged account in the image and add a USER line naming it near the end of the Dockerfile, then make sure the paths the process writes to are owned by that account."
+  },
   "anchor": "commit"
 }

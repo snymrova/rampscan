@@ -58,6 +58,30 @@ export const PipelineCollection = z.object({
   inputs: z.array(z.string()).optional(), // artifacts consumed (e.g. "sbom.cdx.json")
 });
 
+/**
+ * The plain-language layer (plan K1). Three short paragraphs of operator
+ * English per recipe — AUTHORED, never computed. The computed-never-typed rule
+ * governs verdicts, counts and states; an explanation of what a check means is
+ * exactly the thing a human should write, and the one thing this system has no
+ * way to derive.
+ *
+ * Three fields rather than the one paragraph K1 sketched, because each surface
+ * needs a DIFFERENT one of the three: the board answers "what is this row",
+ * the queue answers "what do I do about it", and only the evidence page wants
+ * all three. One blob would force every surface to print the other two, and
+ * would let a recipe answer one question and call itself documented — three
+ * slots make a half-written explanation fail the completeness test instead.
+ */
+export const PlainLanguage = z.object({
+  /** what this check looks at, in words an operator who has never read the recipe understands */
+  checks: z.string().min(1),
+  /** what a violation means in practice — the real-world consequence, not a restatement of the assertion */
+  violation: z.string().min(1),
+  /** what fixing it looks like: the concrete move, not "resolve the finding" */
+  fix: z.string().min(1),
+});
+export type PlainLanguage = z.infer<typeof PlainLanguage>;
+
 export const PipelineRecipe = z.object({
   id: z.string(),
   ksi_ids: z.array(z.string()).min(1),
@@ -70,6 +94,14 @@ export const PipelineRecipe = z.object({
   caveats: z.string().optional(), // sole rename: aws-evidence's `govcloud`
   automatable: Automatable,
   notes: z.string().optional(),
+  /**
+   * K1's operator English. OPTIONAL in the shape and REQUIRED in the shipped
+   * catalog: the schema mirrors aws-evidence.json's recipe form, which carries
+   * no such field, so a recipe imported from that dataset must still parse —
+   * while `plain.test.ts` fails CI on any recipe in `recipes/pipeline/` that
+   * lacks one. Shape is schema's job; completeness is policy's.
+   */
+  plain: PlainLanguage.optional(),
   anchor: z.literal("commit"),
 });
 export type PipelineRecipe = z.infer<typeof PipelineRecipe>;

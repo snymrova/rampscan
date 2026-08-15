@@ -25,5 +25,10 @@
   "cadence": "daily",
   "automatable": "full",
   "notes": "M4 posture: reachability-gated. An advisory is not_affected only when the code graph PROVES the package is beyond every entry point and declared route — that claim is emitted as OpenVEX with justification vulnerable_code_not_in_execute_path. No graph, or no detectable entry points, degrades to the M1 posture: every advisory counts, marked unknown.",
+  "plain": {
+    "checks": "Cross-references the repository's component inventory against published advisories, then walks the code to see whether the affected package can be reached at all from the places the program starts.",
+    "violation": "A dependency with a known critical or high-severity advisory sits on a path your code can execute — or the walk could not prove that it does not, which counts the same way here. This is the subset worth your attention, not the whole advisory list.",
+    "fix": "Upgrade the named package to the fixed version the finding states. Where no fix has been published, the remaining move is to remove the path that reaches it; unreachability is a claim this system will only make from the code graph, never from an assurance."
+  },
   "anchor": "commit"
 }

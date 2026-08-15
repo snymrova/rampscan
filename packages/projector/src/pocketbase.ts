@@ -149,6 +149,7 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("state", true),
       text("cadence"),
       text("collector"),
+      json("plain"),
       text("run_id"),
       text("bundle_digest"),
       text("fresh_as_of"),
@@ -393,6 +394,7 @@ export async function writeProjectionPocketBase(
       state: row.state,
       cadence: row.cadence ?? "",
       collector: row.collector ?? "",
+      plain: row.plain ?? null,
       run_id: row.runId ?? "",
       bundle_digest: row.bundleDigest ?? "",
       fresh_as_of: row.freshAsOf ?? "",
@@ -516,6 +518,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     };
     if (r.cadence) row.cadence = r.cadence;
     if (r.collector) row.collector = r.collector;
+    if (r.plain) row.plain = r.plain;
     if (r.run_id) row.runId = r.run_id;
     if (r.bundle_digest) row.bundleDigest = r.bundle_digest;
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;

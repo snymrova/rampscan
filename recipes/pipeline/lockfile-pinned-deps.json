@@ -17,5 +17,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "notes": "M1 checks the npm-family manifests at the repo root; other ecosystems join as repo-facts grows.",
+  "plain": {
+    "checks": "For every package manifest in the repository, checks that a lockfile sits beside it recording the exact version of every dependency, direct and transitive.",
+    "violation": "Two installs of the same commit can produce different code. A build that worked yesterday can pull a different version today, and evidence gathered about one install says nothing about the next.",
+    "fix": "Run the install once and commit the lockfile it writes — package-lock.json, pnpm-lock.yaml, yarn.lock. Keep it in version control: a lockfile listed in .gitignore is the same as no lockfile."
+  },
   "anchor": "commit"
 }

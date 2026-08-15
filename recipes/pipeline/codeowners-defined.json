@@ -17,5 +17,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "caveats": "Proves ownership is declared, not that branch protection enforces it — enforcement lives server-side and needs the GitHub App (appliance phase).",
+  "plain": {
+    "checks": "Looks for a CODEOWNERS file in one of the three locations the host honours: the repository root, .github/, or docs/.",
+    "violation": "Nobody is named as the required reviewer for anything. Review still happens by convention, but nothing routes a change to the people who understand that part of the code, and nothing notices when it does not.",
+    "fix": "Add a CODEOWNERS file mapping paths to the teams responsible for them, then turn on the branch protection rule that requires their review. The file is the half of this a repository can show; the protection rule is the half that enforces it."
+  },
   "anchor": "commit"
 }

@@ -3,6 +3,7 @@ dist/
 *.tsbuildinfo
 # generated fixture repos (each carries its own inner .git; built by fixtures/*.build.mjs)
 fixtures/vulnerable-app/
+fixtures/bare-app/
 # local run outputs
 scan-result.json
 rampscan-out/

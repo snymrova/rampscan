@@ -439,3 +439,112 @@ describe("sqlite round trip", () => {
     expect(readProjectionSqlite(dbPath)).toEqual(projection);
   });
 });
+
+// K1: the plain-language paragraphs ride the SAME catalog join as ksi_ids,
+// control_ids, cadence and collector. They are authored prose about the check
+// — never about the cell — so the fold's only job is to carry them, and its
+// only refusal is the one it already makes for the collector: a recipe that
+// left the catalog gets nothing rather than something invented.
+describe("the plain-language join (K1)", () => {
+  const anchors = [{ path: "f", contentHash: HASH_A }];
+
+  function withPlain(id: string, collector: string, fix: string): PipelineRecipe {
+    return {
+      ...recipe(id, collector),
+      plain: {
+        checks: `what ${id} looks at`,
+        violation: `what a failing ${id} means`,
+        fix,
+      },
+    };
+  }
+
+  it("the prose is carried per row, on evidenced and unevidenced cells alike", () => {
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "sbom", timestamp: T1, commit: C1, anchors })],
+      T2,
+      { recipes: [withPlain("sbom", "sbom", "generate one"), withPlain("secrets", "gitleaks", "rotate it")] },
+    );
+    const byId = new Map(projection.registers.map((r) => [r.recipeId, r]));
+    expect(byId.get("sbom")!.plain!.fix).toBe("generate one");
+    // the empty row needs the explanation at least as much as the full one
+    expect(byId.get("secrets")!.state).toBe("unevidenced");
+    expect(byId.get("secrets")!.plain!.checks).toBe("what secrets looks at");
+  });
+
+  it("a recipe with no prose gets no prose — the field is absent, not blank", () => {
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "bare", timestamp: T1, commit: C1, anchors })],
+      T2,
+      { recipes: [recipe("bare")] },
+    );
+    expect(projection.registers.find((r) => r.recipeId === "bare")!.plain).toBeUndefined();
+  });
+
+  it("a recipe that fell out of the catalog is explained by nothing at all", () => {
+    // the same refusal the collector makes (J3): the catalog would describe a
+    // recipe that is no longer there, and prose about the wrong check is worse
+    // than a row with no prose
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "legacy", timestamp: T1, commit: C1, anchors })],
+      T2,
+      { recipes: [] },
+    );
+    const row = projection.registers.find((r) => r.recipeId === "legacy")!;
+    expect(row.state).toBe("evidenced");
+    expect(row.plain).toBeUndefined();
+    expect(row.collector).toBeUndefined();
+  });
+
+  it("prose introduces no cell, moves no state, and is identical across repos", () => {
+    // the standing rule, from the other side: the catalog join may DESCRIBE
+    // rows, never create or change them. Same recipe, two repos, one of them
+    // with evidence — the prose is byte-identical on both rows and neither
+    // row's state came from it.
+    const recipes = [withPlain("shared", "sbom", "do the thing")];
+    const projection = foldEntries(
+      [
+        evidenceEntry({ recipe: "shared", timestamp: T1, commit: C1, anchors, repo: "fixtures/app" }),
+        evidenceEntry({ recipe: "shared", timestamp: T1, commit: C1, anchors, repo: "fixtures/other", verdict: "violated" }),
+      ],
+      T2,
+      { recipes },
+    );
+    const rows = projection.registers.filter((r) => r.recipeId === "shared");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.plain).toEqual(rows[1]!.plain);
+    expect(new Set(rows.map((r) => r.state))).toEqual(new Set(["evidenced", "violated"]));
+    // and the row count is exactly the catalog × repos it would have been
+    // without any prose in the catalog at all
+    const bare = foldEntries(
+      [
+        evidenceEntry({ recipe: "shared", timestamp: T1, commit: C1, anchors, repo: "fixtures/app" }),
+        evidenceEntry({ recipe: "shared", timestamp: T1, commit: C1, anchors, repo: "fixtures/other", verdict: "violated" }),
+      ],
+      T2,
+      { recipes: [recipe("shared", "sbom")] },
+    );
+    expect(bare.registers.map((r) => [r.repo, r.recipeId, r.state])).toEqual(
+      projection.registers.map((r) => [r.repo, r.recipeId, r.state]),
+    );
+  });
+
+  it("survives the sqlite round trip byte-for-byte, with distinct prose per row", async () => {
+    const dbPath = join(await mkdtemp(join(tmpdir(), "rampscan-plain-")), "projection.db");
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "a", timestamp: T1, commit: C1, anchors })],
+      T2,
+      {
+        recipes: [
+          withPlain("a", "sbom", "fix a"),
+          withPlain("b", "gitleaks", "fix b"),
+          recipe("c", "semgrep"),
+        ],
+      },
+    );
+    // distinct per row so a column that dropped, smeared or reordered shows
+    expect(projection.registers.map((r) => r.plain?.fix)).toEqual(["fix a", "fix b", undefined]);
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});

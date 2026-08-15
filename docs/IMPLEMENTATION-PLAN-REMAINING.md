@@ -1,6 +1,6 @@
 # rampscan — implementation plan: what remains
 
-**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens, complete — I3e landed 2026-08-15, I3f folded into and landed with J5). **Phase J is complete**: J1–J5 all landed 2026-08-15. K1 is next, and then the two held go/no-gos (K2, L). This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
+**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens, complete — I3e landed 2026-08-15, I3f folded into and landed with J5). **Phases J and K1 are complete**: J1–J5 and K1 all landed 2026-08-15. Everything committed in this plan is built; what remains are the two held go/no-gos (K2, L), each decided on its own merits. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
 **Date:** 2026-08-15
 **Reads against:** all of `docs/` — SPEC (target architecture), IMPLEMENTATION-PLAN (M0–M5, complete), COMPLIANCE-SCAN-HARNESS (founding doc §11–13 decisions), ARCHITECTURE (invariants), BRAINSTORM-DAST-OBSERVABILITY-AI-HELPER (the options analysis this plan promotes from), FRONTIER-PIPELINE (the generated self-scan record).
 
@@ -21,7 +21,7 @@ Walked across all eight documents. Nothing below is invented here; each line nam
 | J3 | Board hop: "how was this produced?" on every row | PLAN J | **landed 2026-08-15** |
 | J4 | Artifact viewers: normalized artifacts as tables + raw download | PLAN J | **landed 2026-08-15** |
 | J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | **landed 2026-08-15** |
-| K1 | Plain-language layer, no AI: `plain` on every recipe · glossary · guided empty states | PLAN K, BRAINSTORM §3.1 | **next** |
+| K1 | Plain-language layer, no AI: `plain` on every recipe · glossary · guided empty states | PLAN K, BRAINSTORM §3.1 | **landed 2026-08-15** |
 
 ### Tier 2 — held at an explicit go/no-go, analysis already written
 
@@ -59,10 +59,10 @@ Resulting order:
 
 ```
 I3e  →  J1  →  J2  →  J3  →  J4  →  J5 (+I3f folded in)  →  K1  →  [go/no-go: K2, L]
- ✓      ✓      ✓      ✓      ✓             ✓                ←next
+ ✓      ✓      ✓      ✓      ✓             ✓                 ✓         ←here
 ```
 
-Phase J is complete; Phase I closed with it, since I3f was the last unlanded item of the auditor lens.
+Phase J is complete; Phase I closed with it, since I3f was the last unlanded item of the auditor lens. K1 closed Phase K's committed half — the AI docent (would-be K2) was never part of it and stays held.
 
 Estimates, focused-work days, honest but rough: I3e 1–1.5 · J1 2.5–3 · J2 1.5 · J3 0.25 · J4 1.5 · J5+I3f 2 · K1 1.5. **Total ≈ 10–11 days** to the end of K1.
 
@@ -233,6 +233,19 @@ Three pieces, one theme: make the whole causal line visible in both directions.
 - **Guided empty states**, wired to J1's skip reasons: "this row is unevidenced because grype did not resolve — no binary on PATH, no Docker. Run `pnpm doctor`." The reason comes from the run record, not from a console-side guess.
 
 **Exit test.** Every recipe in the catalog has a `plain` paragraph (test asserts completeness — a new recipe without one fails CI). Every unevidenced row on the fixture board explains itself in a sentence that names the actual cause from the run record. Smoke asserts the flagship row renders its plain text and one glossary term resolves.
+
+### 8.1 As built (2026-08-15) — K1
+
+**The exit test could not run on the fixture that existed, and that is the finding, not a footnote.** "Every unevidenced row on the fixture board explains itself" — `vulnerable-app` is fully tooled, so all fifteen of its rows come back evidenced or violated and the board has **no empty cell at all**. J3 had already hit this from the other side and recorded it ("this fixture is fully tooled so its board has no unevidenced row to click"), then routed around it. Twice is a fixture problem, so the smoke world gained a **second repository**, `bare-app`: a library with a lockfile and nothing else — no Dockerfile, no CI, no IaC, no API description — whose collectors skip honestly and say why. Six of its rows come back empty, which is the first time the empty-cell half of this console has been exercised end to end.
+
+- **`plain` is a TRIPLE, not the one paragraph the plan sketched** — `{ checks, violation, fix }`, because each surface needs a different one: the board answers "what is this row", the queue answers "what do I do about it", and only the evidence page wants all three. One blob would force every surface to print the other two, and would let a recipe answer one question and call itself documented; three slots make a half-written explanation fail the completeness test instead. Optional in the schema (the recipe shape mirrors the AWS dataset's, which carries no such field) and **required in this repository's catalog** by `plain.test.ts` — shape is the schema's job, completeness is policy's.
+- **The prose rides the fold's existing catalog join**, exactly as `cadence` and `collector` do (J3's precedent), and carries J3's refusal with it: a recipe that fell out of the catalog gets **no prose**, because the only alternatives are prose about a different check or prose invented at render time. It is deliberately **not signed** into any bundle — it is a definition maintained in the catalog, not a fact about a scan, and signing it would re-key every bundle each time a sentence got clearer (J5 already spent that once, on purpose).
+- **J1's standing rule needed SHARPENING, not obeying as written.** The rule: the board is folded from evidence and scoping alone, and J3 honoured it by having the board fetch no run data whatsoever. K1's guided empty states need run data on the board, so the rule is restated in its precise form — *which cells exist and what state each is in* is a function of evidence and scoping only; *why an already-drawn empty cell is empty* is a function of the run log only, because it is recorded nowhere else. `lib/emptystate.ts` is structurally incapable of returning anything but sentences, and a test greps its every output for all four state words (J1's own precedent).
+- **Five absences, five sentences**, kept apart because the fixes differ: the collector that skipped (its reason quoted, never paraphrased), the collector the run never dispatched, no run record for this repo (J3's two facts again — none ever written vs aged past the cap), a recipe with no collector at all, and — **the one the plan never named** — a collector that RAN and still left the cell empty. That last one is a third of `bare-app`'s empty rows in practice, and the honest text says exactly that rather than inventing "no findings", which would be guessing at a verdict.
+- **The queue's skip-reason tier stopped needing a daemon.** It read `scan-recorded` daemon events only, so an operator running `rampscan scan` by hand got an empty queue while their toolchain was broken. It now falls back to the run record through the *same* hand the board's empty states use — the daemon event still wins where both exist, so a daemon-driven queue does not change shape underneath its operator. Honest skips remain not-tasks on both paths. Conditions with no instant (no run on file, recipe gone from the catalog) stay off the queue entirely: a queue row states when it became actionable, and inventing that time would be worse than leaving the fact on the board, where nothing has to pretend to have happened at a time.
+- **The glossary's load-bearing behaviour is the negative one**: a term with no entry renders as bare text — no wrapper, no dotted underline, no popover that opens onto nothing. `lookupTerm` normalizes camelCase (`notApplicable` off a record key), case, underscores and slashes, refuses to stem (`controller` is not `control`), and the definitions are held to the same rule as the recipes' prose: they describe the system and may not state a count or a condition of any repository.
+- **Two real bugs the second repository exposed, both fixed here.** The filter chips lied: every count above the board and the control register was computed over the whole projection while the table and the CSV honoured the filters, so "All 30" sat above 15 rows — invisible for as long as there was one repo. And the J5 basis panel was located in the smoke by the prose inside it, which K1's plain-language block (also mentioning "entry points") silently became a better match for; the panel now carries a class.
+- vitest **523/523** (47 new: 8 catalog-completeness tests including the computed-never-typed grep and the jargon↔glossary tie, 13 glossary twin tests, 14 empty-state twin tests pinned against the collectors' real `absentReason` wording, 7 queue tests for the run-record fallback, and 5 fold tests for the prose join and its sqlite round trip). Smoke **14/14 cold (5.0m)**; root + console typecheck clean.
 
 ---
 

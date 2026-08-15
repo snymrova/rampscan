@@ -5,6 +5,8 @@ import { use, useEffect, useState } from "react";
 import { ArtifactView } from "../../../components/ArtifactView";
 import { DownloadButton } from "../../../components/DownloadButton";
 import { RequireAuth } from "../../../components/guard";
+import { PlainLanguage } from "../../../components/PlainLanguage";
+import { Term } from "../../../components/Term";
 import { getPb } from "../../../lib/pb";
 import { describePointer } from "../../../lib/pointers";
 import {
@@ -21,6 +23,7 @@ import type {
   CoverageRecord,
   MetaRecord,
   OffenderPointer,
+  RegisterRecord,
   ScanRunRecord,
 } from "../../../lib/types";
 
@@ -113,7 +116,11 @@ function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
         What this claim rests on
         {strength === "weak" && <span className="run-skips"> · WEAK GROUND ⚠</span>}
       </div>
-      <div className="panel" style={{ padding: "12px 14px" }}>
+      {/* an identifying class, not decoration: a panel that can only be found
+          by the prose inside it is one paraphrase away from being a different
+          panel — K1's plain-language block, which also mentions entry points,
+          proved that the hard way */}
+      <div className="panel basis" style={{ padding: "12px 14px" }}>
         <p style={{ margin: "0 0 10px", fontSize: 13 }}>
           {basis.approximation === "over" ? (
             <>
@@ -188,6 +195,11 @@ function Evidence({ digest }: { digest: string }) {
   // it, and its absence is a fact with two different causes, both stated
   const [run, setRun] = useState<ScanRunRecord | null>(null);
   const [runCount, setRunCount] = useState<number | null>(null);
+  // the recipe's plain-language paragraphs (K1). They live in the catalog, and
+  // the catalog reaches this console on the register row's catalog join — so
+  // the page reads them from the row for this bundle's (repo, recipe), and
+  // renders nothing at all when there is none rather than paraphrasing the id.
+  const [register, setRegister] = useState<RegisterRecord | null>(null);
 
   useEffect(() => {
     const pb = getPb();
@@ -223,6 +235,23 @@ function Evidence({ digest }: { digest: string }) {
       .catch(() => setRunCount(0));
   }, [runId]);
 
+  // the catalog prose for this bundle's recipe, via its register row
+  const predicate = bundle
+    ? (bundle.statement.predicate as Record<string, unknown>)
+    : null;
+  const recipeId = String(predicate?.["recipe_id"] ?? "");
+  const repoOfBundle = String(predicate?.["repo"] ?? "");
+  useEffect(() => {
+    if (recipeId === "" || repoOfBundle === "") return;
+    getPb()
+      .collection("registers")
+      .getFirstListItem<RegisterRecord>(
+        `repo="${repoOfBundle}" && recipe_id="${recipeId}"`,
+      )
+      .then(setRegister)
+      .catch(() => setRegister(null));
+  }, [recipeId, repoOfBundle]);
+
   if (error) return <p className="error">{error}</p>;
   if (!bundle) return <p className="muted">loading…</p>;
 
@@ -248,8 +277,16 @@ function Evidence({ digest }: { digest: string }) {
       </p>
       <h1 className="mono" style={{ fontSize: 16 }}>
         {isScanRun ? p["run_id"] : p["recipe_id"]}{" "}
-        {isEvidence && <span className={`pill ${p["verdict"]}`}>{p["verdict"]}</span>}
-        {isScoping && <span className="pill notApplicable">notApplicable</span>}
+        {isEvidence && (
+          <span className={`pill ${p["verdict"]}`}>
+            <Term name={String(p["verdict"])}>{p["verdict"]}</Term>
+          </span>
+        )}
+        {isScoping && (
+          <span className="pill notApplicable">
+            <Term>notApplicable</Term>
+          </span>
+        )}
         {/* a run record states no verdict, by design — it says what RAN */}
         {isScanRun && <span className="pill">scan run · {p["trigger"]}</span>}{" "}
         {coverage && <span className={`pill ${coverage.state}`}>{coverage.state}</span>}
@@ -277,13 +314,27 @@ function Evidence({ digest }: { digest: string }) {
         )}
       </p>
 
+      {/* In plain English (K1) — expanded here, unlike the board's collapsed
+          row: an auditor who lands on a bundle from a link has no context at
+          all, and the check's meaning is the first thing they need. A run
+          record gets none: it is a record of a scan, not an answer to a
+          recipe, so there is no check to explain. */}
+      {!isScanRun && register?.plain && (
+        <>
+          <div className="section-title">In plain English</div>
+          <div className="panel" style={{ padding: "12px 14px" }}>
+            <PlainLanguage plain={register.plain} recipeId={recipeId} />
+          </div>
+        </>
+      )}
+
       <div className="panel">
         <dl className="kv">
           <dt>repo</dt>
           <dd className="mono">{p["repo"]}</dd>
           {isEvidence && (
             <>
-              <dt>commit anchor</dt>
+              <dt><Term name="anchor">commit anchor</Term></dt>
               <dd className="mono">{p["commit"]}</dd>
             </>
           )}
@@ -564,7 +615,15 @@ function Evidence({ digest }: { digest: string }) {
       <div className="panel">
         <dl className="kv">
           <dt>envelope</dt>
-          <dd>{bundle.envelope ? `DSSE / ${bundle.envelope.payloadType}` : "UNSIGNED (should not happen)"}</dd>
+          <dd>
+            {bundle.envelope ? (
+              <>
+                <Term>DSSE</Term> / {bundle.envelope.payloadType}
+              </>
+            ) : (
+              "UNSIGNED (should not happen)"
+            )}
+          </dd>
           {bundle.envelope && (
             <>
               <dt>key id</dt>

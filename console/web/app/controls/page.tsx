@@ -97,10 +97,16 @@ function Registers() {
   }, [historical, asOfData, registers.records]);
 
   const repos = useMemo(() => [...new Set(activeRows.map((r) => r.repo))].sort(), [activeRows]);
-  const filtered = activeRows.filter(
-    (r) => (state === "all" || r.state === state) && (repo === "all" || r.repo === repo),
-  );
-  const count = (s: RegisterState) => activeRows.filter((r) => r.state === s).length;
+  // Every count on this page is a count of the rows a reader can SEE: the repo
+  // filter narrows the register, so it narrows the numbers over it too. With
+  // one repo on the board the difference was invisible; the moment a second
+  // one existed (K1's bare-app), an unscoped "Controls 42" sat above 21 rows
+  // and the CSV taken from the screen disagreed with the chip above it.
+  const scoped = activeRows.filter((r) => repo === "all" || r.repo === repo);
+  const filtered = scoped.filter((r) => state === "all" || r.state === state);
+  const count = (s: RegisterState) => scoped.filter((r) => r.state === s).length;
+  const regCount = (rows: RollupRecord[]) =>
+    rows.filter((r) => repo === "all" || r.repo === repo).length;
 
   return (
     <>
@@ -116,10 +122,10 @@ function Registers() {
       <div className="filters">
         <div className="tabs">
           <button className={reg === "controls" ? "active" : ""} onClick={() => setReg("controls")}>
-            Controls<span className="count">{controlRows.length}</span>
+            Controls<span className="count">{regCount(controlRows)}</span>
           </button>
           <button className={reg === "ksis" ? "active" : ""} onClick={() => setReg("ksis")}>
-            KSIs<span className="count">{ksiRows.length}</span>
+            KSIs<span className="count">{regCount(ksiRows)}</span>
           </button>
         </div>
         <div className="tabs">
@@ -130,7 +136,7 @@ function Registers() {
               onClick={() => setState(s.key)}
             >
               {s.label}
-              <span className="count">{s.key === "all" ? activeRows.length : count(s.key)}</span>
+              <span className="count">{s.key === "all" ? scoped.length : count(s.key)}</span>
             </button>
           ))}
         </div>

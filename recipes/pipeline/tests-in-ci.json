@@ -17,5 +17,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "caveats": "Recognizes common test invocations by pattern; a bespoke test harness under an unrecognized name reads as absent.",
+  "plain": {
+    "checks": "Reads the CI workflows and looks for a step that actually runs a test suite, rather than only building, installing or linting.",
+    "violation": "Changes reach the default branch with nothing checking that they work. Every other control that rests on “the pipeline would have caught it” is resting on a pipeline that does not look.",
+    "fix": "Add a test step to the workflow that runs on pull requests, and require it to pass before merge. A suite that runs only on a developer's machine is not part of the pipeline."
+  },
   "anchor": "commit"
 }

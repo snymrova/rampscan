@@ -61,6 +61,50 @@ if (flagship?.verdict !== "violated") {
   process.exit(1);
 }
 
+// A SECOND repo, deliberately unremarkable (K1). vulnerable-app is fully
+// tooled, so every one of its rows comes back evidenced or violated and the
+// board has no empty cell at all — which left J3's "why is this empty?" hop
+// and K1's guided empty states with nothing real to render. bare-app has no
+// Dockerfile, no CI, no IaC and no API description, so the collectors that
+// look for those skip honestly and the run record carries their reasons.
+execFileSync("node", [join(root, "fixtures/build-bare-app.mjs")], {
+  cwd: root,
+  stdio: "inherit",
+});
+
+execFileSync(
+  tsx,
+  [
+    "packages/cli/src/main.ts",
+    "scan",
+    "fixtures/bare-app",
+    "--ledger", "e2e/.smoke/ledger",
+    "--keys", "e2e/.smoke/keys",
+    // a SEPARATE out dir, and not a stylistic choice: a scan overwrites its
+    // output directory, which is the fact J4's artifact viewer is built
+    // around. Sharing one would leave the flagship bundle's attested artifacts
+    // replaced by this repo's, and the serve would correctly refuse to render
+    // them — breaking the artifact smoke for a reason that has nothing to do
+    // with artifacts.
+    "--out", "e2e/.smoke/out-bare",
+  ],
+  { cwd: root, stdio: "inherit" },
+);
+
+// Same posture as the flagship check above: fail here, legibly, rather than
+// let test 14 fail confusingly. An empty-state test needs an EMPTY cell whose
+// reason a collector actually wrote — if this repo came back fully evidenced,
+// the fixture stopped being the thing K1's exit test needs.
+const bare = JSON.parse(readFileSync(join(smokeDir, "out-bare/scan-result.json"), "utf8"));
+const unevidenced = bare.recipes.filter((r) => r.verdict === "unevidenced");
+if (unevidenced.length === 0) {
+  console.error(
+    "fixtures/bare-app produced no unevidenced recipe — the guided empty states (K1) and the " +
+      "unevidenced run hop (J3) have nothing to render; check the collectors' skip conditions",
+  );
+  process.exit(1);
+}
+
 const serve = spawn(
   tsx,
   [

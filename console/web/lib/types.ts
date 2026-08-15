@@ -49,6 +49,18 @@ export interface ClaimBasisRecord {
   degraded?: string;
 }
 
+/**
+ * A recipe's operator English (K1), authored in the recipe JSON and carried
+ * onto the row by the fold's catalog join. Prose about the CHECK — identical
+ * on every repo's row for that recipe, and never about this cell's verdict.
+ * Null when the recipe left the catalog or carries none.
+ */
+export interface PlainLanguageRecord {
+  checks: string;
+  violation: string;
+  fix: string;
+}
+
 export interface RegisterRecord {
   id: string;
   repo: string;
@@ -59,6 +71,8 @@ export interface RegisterRecord {
   cadence: string;
   /** the collector the catalog says evidences this recipe (J3); "" when the recipe left the catalog */
   collector: string;
+  /** the catalog's plain-language paragraphs (K1); null when the recipe has none */
+  plain: PlainLanguageRecord | null;
   /** the run that produced the live evidence (J3); "" when the cell has no live evidence */
   run_id: string;
   bundle_digest: string;
@@ -329,6 +343,7 @@ export interface AsOfRegisterRow {
   state: RegisterState;
   cadence?: string;
   collector?: string;
+  plain?: PlainLanguageRecord;
   runId?: string;
   bundleDigest?: string;
   freshAsOf?: string;

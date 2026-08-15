@@ -17,5 +17,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "notes": "Repo-local actions (./…) move with the commit and count as pinned; unevidenced when the repo has no CI workflows at all.",
+  "plain": {
+    "checks": "Looks at every third-party step your CI workflows call and asks whether it is pinned to an exact commit rather than to a moving name like @v3.",
+    "violation": "A name can be repointed at new code by whoever owns it. Your pipeline would then run that code with your secrets, against your repository, without a single change on your side — pinning to a commit removes that possibility.",
+    "fix": "Replace each tag reference with the full 40-character commit it points at today, keeping the human-readable version in a trailing comment. Steps in your own repository (./…) move with the commit already and need no change."
+  },
   "anchor": "commit"
 }

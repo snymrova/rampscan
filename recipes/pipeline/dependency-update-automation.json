@@ -16,5 +16,10 @@
   ],
   "cadence": "weekly",
   "automatable": "full",
+  "plain": {
+    "checks": "Looks for a Dependabot or Renovate configuration — a robot whose job is to open a pull request when a dependency you use publishes a new version.",
+    "violation": "Nothing brings fixes to you. Vulnerable dependencies stay exactly where they are until a person happens to look, which in practice means until a scan like this one finds them.",
+    "fix": "Add .github/dependabot.yml or a Renovate config covering each package ecosystem in the repository, and decide who reviews what it opens — automation whose pull requests nobody merges is not automation."
+  },
   "anchor": "commit"
 }

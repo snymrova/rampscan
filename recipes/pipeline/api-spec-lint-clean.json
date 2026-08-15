@@ -21,5 +21,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "notes": "Config-plane collector, no graph involvement by design. Documents are found by name (openapi*/swagger* yaml/json) in the committed tree; none found → honest skip, recipe stays unevidenced. The ruleset is always rampscan's own (extends spectral:oas, bundled in the pinned tool — offline), never the repo's .spectral.yaml, so the claim is against a fixed baseline rather than whatever the repo chose to silence.",
+  "plain": {
+    "checks": "Reads every OpenAPI or Swagger document committed to the repository and checks it against the OpenAPI standard, using rampscan's own ruleset rather than whatever linting config the repository happens to ship.",
+    "violation": "The API description that clients, gateways and code generators read is malformed or contradicts the standard. Downstream tools quietly disagree about what the API is, and a review of a contract nobody can parse the same way proves nothing.",
+    "fix": "Open the file and line the finding names and correct the structure it reports. A repository that ships no API description at all leaves this row empty rather than passing — there is nothing here to check."
+  },
   "anchor": "commit"
 }

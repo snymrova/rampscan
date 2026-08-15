@@ -6,6 +6,7 @@ import type {
   Finding,
   LedgerStatement,
   OffenderPointer,
+  PlainLanguage,
   ScanRunTrigger,
   ToolInvocation,
   ToolResolution,
@@ -227,6 +228,19 @@ export interface RegisterRow {
    * operator follows to find out why a cell is empty.
    */
   collector?: string;
+  /**
+   * The recipe's plain-language paragraphs (K1), from the same catalog join.
+   * AUTHORED prose about the CHECK, never about this cell: it says what the
+   * recipe looks at, what a violation of it means and what fixing it looks
+   * like, and it is identical on every repo's row for that recipe. Absent when
+   * the recipe left the catalog or has not been written yet — the surfaces
+   * render nothing rather than a paraphrase of the recipe id.
+   *
+   * Deliberately NOT signed into any bundle: it is a definition maintained in
+   * the catalog, not a fact about a scan, and signing it would re-key every
+   * bundle each time a sentence got clearer (J5 already spent that once).
+   */
+  plain?: PlainLanguage;
   /**
    * The run that produced this cell's live evidence (J3) — the live bundle
    * predicate's own `run_id`, carried onto the row so the board can point at

@@ -291,6 +291,12 @@ export function foldEntries(
     // whose recipe is gone gets no collector, and the board's hop for it
     // simply does not render rather than pointing somewhere invented.
     if (recipe?.collection.collector !== undefined) row.collector = recipe.collection.collector;
+    // The catalog join's fourth field (K1): the recipe's plain-language
+    // paragraphs. Same rule as the collector — stated only when the catalog
+    // states it. A cell whose recipe is gone gets no prose, because the only
+    // alternative is prose about a different recipe or prose invented here,
+    // and this file computes; it does not write English.
+    if (recipe?.plain !== undefined) row.plain = recipe.plain;
 
     if (live) {
       // evidence outranks scoping: a recipe producing real verdicts is not N/A

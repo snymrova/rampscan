@@ -1,7 +1,16 @@
+import { classifySkip, explainUnevidenced, newestRunOf } from "./emptystate";
 import { EXPIRING_AT_FRACTION, clockState, formatDuration } from "./mvx";
 import { pointerSummary } from "./pointers";
 import { standingDivergences } from "./status";
-import type { DaemonEventRecord, DriftRecord, RegisterRecord } from "./types";
+import type { DaemonEventRecord, DriftRecord, RegisterRecord, ScanRunRecord } from "./types";
+
+// classifySkip moved to ./emptystate in K1 — the board's guided empty states
+// and this queue must classify a skip reason the same way or the two surfaces
+// would disagree about whether the same collector failure is worth doing
+// something about. Re-exported here because it is part of this module's
+// contract (and its twin test's).
+export { classifySkip } from "./emptystate";
+export type { SkipClassification } from "./emptystate";
 
 // The action queue (plan I2a): "what do I act on today", as one ranked list.
 // A pure derivation over the projection collections and the daemon's event
@@ -32,38 +41,15 @@ export interface QueueItem {
   detail: string;
   /** the concrete next move — a command, a doctor hint, a report path */
   action: string;
+  /**
+   * The recipe's authored "what fixing it looks like" sentence (K1), when the
+   * catalog carries one. It sits BESIDE `action` rather than replacing it:
+   * `action` is what to do about this item now, `plain` is what fixing this
+   * kind of finding means at all, and a queue that showed only the second
+   * would be a glossary.
+   */
+  plain?: string;
   bundleDigest?: string;
-}
-
-export interface SkipClassification {
-  actionable: boolean;
-  category: "tool-missing" | "collector-failed" | "honest-skip";
-  hint?: string;
-}
-
-/**
- * Classify a collector skip reason. The wording is pinned by test against the
- * real producers (`absentReason` in collectors, the `failed (exit …)` shape),
- * so a reworded reason breaks the test instead of silently falling off the
- * queue. Anything unrecognized counts as an honest skip — the queue never
- * invents work.
- */
-export function classifySkip(reason: string): SkipClassification {
-  if (/is not installed/.test(reason)) {
-    return {
-      actionable: true,
-      category: "tool-missing",
-      hint: "install the tool or Docker — `pnpm doctor` lists what's missing and how to get it",
-    };
-  }
-  if (/failed \(exit /.test(reason)) {
-    return {
-      actionable: true,
-      category: "collector-failed",
-      hint: "the collector crashed instead of observing — read the reason, fix the cause, re-scan",
-    };
-  }
-  return { actionable: false, category: "honest-skip" };
 }
 
 interface DivergencePayload {
@@ -81,6 +67,15 @@ export interface QueueInput {
   events: DaemonEventRecord[];
   certClass: "b" | "c";
   now?: number;
+  /**
+   * Run records (K1). The skip-reason tier used to be reachable only through
+   * the daemon's `scan-recorded` events, so an operator who runs `rampscan
+   * scan` by hand — no daemon anywhere — got an empty queue while their
+   * toolchain was broken. Every scan has signed a run record since J1, and
+   * that record carries the same reason, so the tier now falls back to it.
+   * Optional: a caller that passes none behaves exactly as before.
+   */
+  runs?: ScanRunRecord[];
 }
 
 export function deriveActionQueue(input: QueueInput): QueueItem[] {
@@ -190,6 +185,9 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
       action: "open the evidence — the assertions and artifacts name exactly what failed",
     };
     if (row.bundle_digest) item.bundleDigest = row.bundle_digest;
+    // what fixing this KIND of finding looks like, authored in the catalog
+    // (K1) — the row above already says which one and where
+    if (row.plain) item.plain = row.plain.fix;
     items.push(item);
   }
 
@@ -203,26 +201,69 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
   const unevidencedRows = input.registers
     .filter((row) => row.state === "unevidenced")
     .sort((a, b) => a.recipe_id.localeCompare(b.recipe_id) || a.repo.localeCompare(b.repo));
+  const runs = input.runs ?? [];
   for (const row of unevidencedRows) {
     const scanEvent = latestScan.get(row.repo);
     const reasons = (scanEvent?.payload as ScanRecordedPayload | undefined)?.unevidenced;
     const reasonRow = reasons?.find((u) => u.recipeId === row.recipe_id);
-    if (!scanEvent || !reasonRow) continue;
-    const classified = classifySkip(reasonRow.reason);
-    if (!classified.actionable) continue;
-    items.push({
+    if (scanEvent && reasonRow) {
+      const classified = classifySkip(reasonRow.reason);
+      if (!classified.actionable) continue;
+      const item: QueueItem = {
+        kind: "actionable-unevidenced",
+        rank: 3,
+        repo: row.repo,
+        recipeIds: [row.recipe_id],
+        at: scanEvent.at,
+        title:
+          classified.category === "tool-missing"
+            ? `collector "${reasonRow.collector}" has no tool to run`
+            : `collector "${reasonRow.collector}" failed`,
+        detail: reasonRow.reason,
+        action: classified.hint ?? "",
+      };
+      if (row.plain) item.plain = row.plain.fix;
+      items.push(item);
+      continue;
+    }
+    // no daemon event for this cell — read the run record instead (K1). The
+    // daemon event wins where both exist so a queue that has always been
+    // driven by the daemon does not change shape underneath its operator; the
+    // fallback only ever fills silence.
+    if (runs.length === 0) continue;
+    const why = explainUnevidenced({
+      row,
+      run: newestRunOf(runs, row.repo),
+      runsLoaded: true,
+      runCount: runs.length,
+    });
+    // an honest skip is not a task, exactly as with the daemon path: the
+    // board's unevidenced register still shows it, and the queue stays a list
+    // of things a person can actually do
+    if (!why || !why.actionable) continue;
+    // Every queue row states WHEN it became actionable, and the only honest
+    // instant available here is the run's own clock. "No scan of this repo has
+    // ever been recorded" and "the catalog lost this recipe" have no instant
+    // at all — they are conditions, not events — so they stay off the queue
+    // and are explained on the board's empty row instead, where nothing has to
+    // pretend to have happened at a time.
+    const runAt = runs.find((r) => r.run_id === why.runId)?.run_timestamp;
+    if (runAt === undefined) continue;
+    const item: QueueItem = {
       kind: "actionable-unevidenced",
       rank: 3,
       repo: row.repo,
       recipeIds: [row.recipe_id],
-      at: scanEvent.at,
+      at: runAt,
       title:
-        classified.category === "tool-missing"
-          ? `collector "${reasonRow.collector}" has no tool to run`
-          : `collector "${reasonRow.collector}" failed`,
-      detail: reasonRow.reason,
-      action: classified.hint ?? "",
-    });
+        why.source === "skip-reason"
+          ? `collector "${why.collector}" could not run`
+          : `collector "${why.collector}" was never dispatched`,
+      detail: why.reason,
+      action: why.action,
+    };
+    if (row.plain) item.plain = row.plain.fix;
+    items.push(item);
   }
 
   return items;

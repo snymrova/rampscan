@@ -17,6 +17,26 @@ const PASSWORD = "rampscan-demo";
 /** flagship recipe (M4): reachable lodash CRITICAL with path src/index.js » lodash/merge */
 const FLAGSHIP = "no-critical-reachable-advisories";
 
+/**
+ * The smoke's world holds TWO scanned repositories since K1, and the second
+ * one is the point: `vulnerable-app` is fully tooled, so every one of its rows
+ * comes back evidenced or violated and the board has no empty cell anywhere —
+ * which left J3's "why is this empty?" hop and K1's guided empty states with
+ * nothing real to render. `bare-app` has no Dockerfile, no CI, no IaC and no
+ * API description, so its collectors skip honestly and say why.
+ *
+ * Every test that reads a board, a register or the run timeline therefore
+ * names the repo it means, through the page's own filter — the way an operator
+ * would, and the reason those filters have finally been exercised at all.
+ * The scan records the absolute path, so both are resolved rather than typed.
+ */
+const FIXTURE_REPO = resolve("fixtures/vulnerable-app");
+const BARE_REPO = resolve("fixtures/bare-app");
+
+async function pickRepo(page: Page, repo: string = FIXTURE_REPO): Promise<void> {
+  await page.locator("select").first().selectOption(repo);
+}
+
 async function signIn(page: Page, email: string = VIEWER): Promise<void> {
   await page.goto("/");
   // signed out, every register page bounces to the login card
@@ -35,6 +55,7 @@ test("login: signed out bounces to /login; a demo identity lands on the board", 
 
 test("board: fixture scan rows render, flagship violated, no-daemon strip says so", async ({ page }) => {
   await signIn(page);
+  await pickRepo(page);
 
   // the flagship row is violated — a real verdict from the real scan
   const flagshipRow = page.getByRole("row").filter({ hasText: FLAGSHIP }).first();
@@ -53,6 +74,7 @@ test("board: fixture scan rows render, flagship violated, no-daemon strip says s
 
 test("evidence detail: assertions render with the flagship call path", async ({ page }) => {
   await signIn(page);
+  await pickRepo(page);
   // click the recipe cell, not the row: the row's trailing actions cell
   // swallows clicks (stopPropagation), and a row-center click can land there
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
@@ -69,6 +91,7 @@ test("evidence detail: assertions render with the flagship call path", async ({ 
 
 test("verify yourself: the downloads verify with standard crypto alone (I3b)", async ({ page }) => {
   await signIn(page);
+  await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
   const digest = /[0-9a-f]{64}/.exec(page.url())![0];
@@ -125,6 +148,7 @@ test("control register: rollup → recipe → evidence, and the evidence links b
   await signIn(page);
   await page.goto("/controls");
   await expect(page.getByRole("heading", { name: "Control register" })).toBeVisible();
+  await pickRepo(page);
 
   // ra-5 maps the flagship recipe — the fixture scan left the rollup violated,
   // because violated beats every other mapped verdict in the rollup precedence
@@ -171,7 +195,7 @@ test("scoping register: the two-key flow lands on the record, approved verified 
       body: JSON.stringify({ identity: APPROVER, password: PASSWORD }),
     })
   ).json()) as { token: string; record: { id: string } };
-  const repo = resolve("fixtures/vulnerable-app"); // the scan recorded the absolute path
+  const repo = FIXTURE_REPO; // the scan recorded the absolute path
   for (const [recipe, justification] of [
     [approveRecipe, approveJustification],
     [rejectRecipe, rejectJustification],
@@ -234,6 +258,7 @@ test("scoping register: the two-key flow lands on the record, approved verified 
 
 test("as-of selector: the past refolds honestly on board and control register; the clock shows the lapse record (I3d)", async ({ page }) => {
   await signIn(page);
+  await pickRepo(page);
 
   // turn the as-of view on — it defaults to now, so the refold must agree
   // with the live board: the flagship stays violated
@@ -264,6 +289,7 @@ test("as-of selector: the past refolds honestly on board and control register; t
   // as-of before the scan shows an honestly empty register
   await page.goto("/controls");
   await expect(page.getByRole("heading", { name: "Control register" })).toBeVisible();
+  await pickRepo(page);
   await page.getByRole("button", { name: "as of", exact: true }).click();
   const ra5 = page
     .locator("tr")
@@ -311,6 +337,7 @@ test("export: the auditor takes the record away — package verifies offline, CS
   await signIn(page);
   await page.goto("/controls");
   await expect(page.getByRole("heading", { name: "Control register" })).toBeVisible();
+  await pickRepo(page);
 
   // ---- the per-control evidence package -----------------------------------
   // ra-5 is the flagship's control: pick it on the register, take it away
@@ -397,6 +424,7 @@ test("export: the auditor takes the record away — package verifies offline, CS
   // the coverage board, and the filtered case — a CSV that ignored the
   // filters would still "match" an unfiltered screen, so filter first
   await page.goto("/");
+  await pickRepo(page);
   await expect(page.getByRole("row").filter({ hasText: FLAGSHIP }).first()).toBeVisible();
   const allCount = Number(await page.locator(".tabs button", { hasText: "All" }).locator(".count").innerText());
   const boardCsv = await csvRows("board");
@@ -432,6 +460,7 @@ test("runs: the machinery behind the board — the timeline's counts are a recou
   await signIn(page);
   await page.goto("/runs");
   await expect(page.getByRole("heading", { name: "Runs" })).toBeVisible();
+  await pickRepo(page);
 
   // the fixture scan appended exactly one run record, and the timeline shows
   // it: the smoke's scan is manual, so the trigger is a known fixture truth
@@ -504,6 +533,7 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   page,
 }) => {
   await signIn(page);
+  await pickRepo(page);
 
   // ── an evidenced/violated row hops to THE run that produced it ──────────
   // The flagship is violated by a real verdict from the real scan, so its hop
@@ -538,6 +568,7 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   // ── the hop does not swallow the row's own click (I3a's stopPropagation) ──
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
 
@@ -547,6 +578,7 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   // failure mode this link exists to remove.
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page);
   const producedRows = page
     .locator("table.reg tbody tr")
     .filter({ has: page.locator("td .pill.evidenced, td .pill.violated") });
@@ -582,6 +614,7 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   // (the two-key flow earlier in this file left one behind)
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page);
   const naRow = page.getByRole("row").filter({ has: page.locator(".pill.notApplicable") }).first();
   if ((await naRow.count()) > 0) {
     await expect(naRow.locator("a.runhop")).toHaveCount(0);
@@ -604,6 +637,7 @@ test("artifact viewers: the tool's own output, verified in the browser, and a ta
   page,
 }) => {
   await signIn(page);
+  await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
 
@@ -694,6 +728,7 @@ test("artifact viewers: the tool's own output, verified in the browser, and a ta
   // the value, which is the one column this viewer must not have.
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page);
   await page.getByRole("cell", { name: "no-secrets-in-history", exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
   const leakRow = page.getByRole("row").filter({ hasText: "gitleaks-report.json" }).first();
@@ -718,6 +753,7 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
   // would print "no external tool" over a verdict semgrep's output produced.
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page);
   await page.getByRole("cell", { name: "no-reachable-dangerous-code", exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
   const evidenceUrl = page.url();
@@ -768,7 +804,7 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
 
   // ── I3f: the not-affected claim shows its work ──────────────────────────
   await page.goto(evidenceUrl);
-  const basis = page.locator(".panel").filter({ hasText: "entry points" }).first();
+  const basis = page.locator(".panel.basis").first();
   await expect(basis).toBeVisible({ timeout: 30_000 });
   // the fixture's entry point is inferred from package.json — the set AND
   // where it came from, because "not affected" means "unreachable from THESE"
@@ -791,11 +827,139 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
 
   // ── and the flagship advisory's claim rests on the same stated ground ───
   await page.goto("/");
+  await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
-  const advisoryBasis = page.locator(".panel").filter({ hasText: "entry points" }).first();
+  const advisoryBasis = page.locator(".panel.basis").first();
   await expect(advisoryBasis).toContainText("src/index.js");
   await expect(advisoryBasis).toContainText("declared route");
+});
+
+test("plain language: the check explained, the jargon defined, and the empty row says why it is empty (K1)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await pickRepo(page);
+
+  // ── the board: collapsed by default, authored prose one click away ──────
+  const flagshipRow = page.getByRole("row").filter({ hasText: FLAGSHIP }).first();
+  await expect(flagshipRow).toBeVisible();
+  // collapsed means COLLAPSED: fifteen paragraphs at once would bury the row
+  // an operator came for, so nothing of the prose is on screen until asked
+  await expect(page.locator(".plain-row")).toHaveCount(0);
+  await flagshipRow.getByRole("button", { name: /plain English/ }).click();
+
+  const plain = page.locator(".plain-row .plain").first();
+  await expect(plain).toBeVisible();
+  // the three questions, each answered — the authored text from the recipe
+  // JSON itself, not a paraphrase assembled in the console
+  await expect(plain).toContainText("Cross-references the repository's component inventory");
+  await expect(plain).toContainText("known critical or high-severity advisory");
+  await expect(plain).toContainText("Upgrade the named package to the fixed version");
+  // and it says whose voice it is: prose about the CHECK, not about this repo
+  await expect(plain).toContainText("it explains the check, and states nothing about this repository");
+  await flagshipRow.getByRole("button", { name: /plain English/ }).click();
+  await expect(page.locator(".plain-row")).toHaveCount(0);
+
+  // ── the glossary: hover a term, get a definition; unknown words stay bare ──
+  const stateTerm = flagshipRow.locator(".pill.violated .term");
+  await expect(stateTerm).toBeVisible();
+  await stateTerm.click();
+  const tip = page.locator(".termtip").first();
+  await expect(tip).toBeVisible();
+  await expect(tip).toContainText("at least one assertion failed");
+  // asking what a word means is not asking to navigate: the row underneath is
+  // a link to the evidence page, and the board is still on screen
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  // the repo cell is not jargon and has no entry — no dotted underline, no
+  // popover that opens onto nothing
+  await expect(
+    page.getByRole("cell", { name: FIXTURE_REPO }).first().locator(".term"),
+  ).toHaveCount(0);
+  // Escape closes it — the definition is dismissed without touching the row
+  await stateTerm.press("Escape");
+  await expect(page.locator(".termtip")).toHaveCount(0);
+
+  // ── the guided empty state, on a REAL empty row ─────────────────────────
+  // bare-app is the fixture with honest gaps: no Dockerfile, no CI, no IaC,
+  // no API description. Its skipped collectors wrote the reasons this section
+  // reads — every sentence below came out of a signed run record.
+  // the scan records the repo by absolute path, so the option is resolved
+  // here the same way test 4 resolves it rather than typed as a literal
+  await pickRepo(page, BARE_REPO);
+  await page.locator(".tabs button", { hasText: "Unevidenced" }).click();
+
+  const emptyRows = page.locator("tr.why-row");
+  const emptyCount = await emptyRows.count();
+  expect(emptyCount).toBeGreaterThan(0);
+  // EVERY empty row explains itself: a board where some empty cells have a
+  // reason and others are silent is the state K1 exists to end
+  const unevidencedPills = await page.locator("tbody .pill.unevidenced").count();
+  expect(emptyCount).toBe(unevidencedPills);
+
+  // the honest skip, quoted from the collector that wrote it
+  const iacRow = page
+    .getByRole("row")
+    .filter({ hasText: "iac-baseline-clean" })
+    .first();
+  await expect(iacRow).toBeVisible();
+  const iacWhy = page.locator("tr.why-row").filter({ hasText: "checkov" }).first();
+  await expect(iacWhy).toContainText("no IaC in the committed tree");
+  await expect(iacWhy).toContainText("read from the run record of run-");
+  // an honest skip is explained, and explicitly NOT dressed up as a task
+  await expect(iacWhy).toContainText("not a task");
+
+  // the other real shape this fixture produces, which the plan never named: a
+  // collector that RAN and still left the cell empty. It is not a skip, so the
+  // record has no reason to quote — and the page says that rather than
+  // inventing one.
+  const ranEmpty = page.locator("tr.why-row").filter({ hasText: "repo-facts" }).first();
+  await expect(ranEmpty).toContainText("ran in the newest recorded scan");
+  await expect(ranEmpty).toContainText("came out with nothing to state");
+
+  // no empty row claims a verdict — the sentence explains the cell, it never
+  // moves it (J1's standing rule, restated for K1)
+  for (const word of ["evidenced", "violated", "notApplicable"]) {
+    expect(
+      await page.locator("tr.why-row").filter({ hasText: new RegExp(`\\b${word}\\b`) }).count(),
+      word,
+    ).toBe(0);
+  }
+
+  // ── the queue reaches the same conclusion through the same hand ─────────
+  // no daemon has ever run in this smoke, so before K1 this tier was empty
+  // while a real toolchain answer sat in the run record.
+  await page.goto("/queue");
+  await expect(page.getByRole("heading", { name: "Action queue" })).toBeVisible({ timeout: 45_000 });
+  const queueRows = page.getByRole("row").filter({ hasText: "unevidenced" });
+  // honest skips are still not tasks here either — the tier is empty of them
+  await expect(queueRows.filter({ hasText: "no IaC in the committed tree" })).toHaveCount(0);
+
+  // ── the evidence page: expanded, and a run record gets none ─────────────
+  await page.goto("/");
+  await pickRepo(page);
+  await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  await expect(page.getByText("In plain English")).toBeVisible();
+  const evidencePlain = page.locator(".plain").first();
+  await expect(evidencePlain).toContainText("Cross-references the repository's component inventory");
+  await expect(evidencePlain).toContainText("Upgrade the named package");
+  // the glossary rides the auditor's page too, on the words only it uses
+  const dsse = page.locator(".term").filter({ hasText: "DSSE" }).first();
+  await expect(dsse).toBeVisible();
+  await dsse.click();
+  await expect(page.locator(".termtip").first()).toContainText("Dead Simple Signing Envelope");
+
+  // a run record answers no recipe, so there is no check to explain and the
+  // section is absent rather than empty
+  await page.goto("/runs");
+  const runDigest = page.locator('table.reg td.mono a[href^="/evidence/"]').first();
+  await expect(runDigest).toBeVisible({ timeout: 45_000 });
+  await runDigest.click();
+  await expect(page.locator(".pill").filter({ hasText: "scan run" }).first()).toBeVisible({
+    timeout: 45_000,
+  });
+  await expect(page.getByText("In plain English")).toHaveCount(0);
 });
 
 /** the reference tar reader — the package must be readable without our writer */

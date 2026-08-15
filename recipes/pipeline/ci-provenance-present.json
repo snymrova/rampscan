@@ -24,5 +24,10 @@
   "cadence": "weekly",
   "automatable": "full",
   "caveats": "Detects the configuration, not the attestations themselves — verifying published attestations against a registry is appliance-phase work.",
+  "plain": {
+    "checks": "Checks whether any CI workflow records where a build came from — a signed attestation or provenance document tying the artifact it published back to the commit that produced it.",
+    "violation": "Nothing links a shipped artifact to the source it was built from. Anyone reviewing an incident later has to take the build's word for it, and an artifact built somewhere else looks exactly like the real one.",
+    "fix": "Add a provenance or attestation step to the workflow that publishes your artifacts — GitHub's attest-build-provenance, the SLSA generator, or cosign — so each build signs a statement naming its own source commit."
+  },
   "anchor": "commit"
 }

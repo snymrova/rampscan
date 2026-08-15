@@ -5,8 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
+import { PlainLanguage } from "../components/PlainLanguage";
 import { RunHopLink } from "../components/RunHopLink";
+import { Term } from "../components/Term";
 import { asOfRegisterRecord, toLocalInputValue, useAsOfBoard } from "../lib/asof";
+import { explainUnevidenced, newestRunOf } from "../lib/emptystate";
+import type { EmptyStateExplanation } from "../lib/emptystate";
 import { csvFilename, downloadText, registerCsv } from "../lib/export";
 import { getPb, useAuth, useCollection } from "../lib/pb";
 import { describePointer } from "../lib/pointers";
@@ -18,6 +22,7 @@ import type {
   RegisterChangeKind,
   RegisterRecord,
   RegisterState,
+  ScanRunRecord,
 } from "../lib/types";
 import { formatAge } from "../lib/mvx";
 
@@ -81,6 +86,12 @@ function Board() {
     sort: "recipe_id",
   });
   const meta = useCollection<MetaRecord>("meta");
+  // Run records (K1), read for ONE purpose: to explain why an already-drawn
+  // empty row is empty. Nothing here may decide which rows exist or what state
+  // one is in — that stays folded from evidence and scoping alone (J1's
+  // standing rule), and `explainUnevidenced` is structurally incapable of
+  // returning anything but sentences.
+  const runs = useCollection<ScanRunRecord>("scan_runs");
   const [state, setState] = useState<RegisterState | "all">("all");
   const [repo, setRepo] = useState("all");
   const [theme, setTheme] = useState("all");
@@ -147,15 +158,21 @@ function Board() {
     [rows],
   );
 
-  const filtered = rows.filter(
+  // Every count above the table counts rows a reader can SEE. The state tabs
+  // partition the register, so they count within the OTHER filters rather than
+  // over the whole projection: with a single repo on the board that difference
+  // never showed, and the moment a second one existed (K1's bare-app) an
+  // unscoped "All 30" sat above 15 rows — and the CSV, which has always
+  // exported exactly the filtered rows, disagreed with the chip above it.
+  const scoped = rows.filter(
     (r) =>
-      (state === "all" || r.state === state) &&
       (repo === "all" || r.repo === repo) &&
       (theme === "all" || r.ksi_ids.some((k) => ksiTheme(k) === theme)) &&
       (family === "all" || r.control_ids.some((c) => controlFamily(c) === family)) &&
       (!since || !changedOnly || changeByCell.has(`${r.repo} ${r.recipe_id}`)),
   );
-  const count = (s: RegisterState) => rows.filter((r) => r.state === s).length;
+  const filtered = scoped.filter((r) => state === "all" || r.state === state);
+  const count = (s: RegisterState) => scoped.filter((r) => r.state === s).length;
 
   return (
     <>
@@ -178,7 +195,7 @@ function Board() {
             >
               {s.label}
               <span className="count">
-                {s.key === "all" ? rows.length : count(s.key)}
+                {s.key === "all" ? scoped.length : count(s.key)}
               </span>
             </button>
           ))}
@@ -328,11 +345,14 @@ function Board() {
           <thead>
             <tr>
               <th>State</th>
-              <th>Recipe</th>
+              {/* glossary-on-hover (K1): the column headings are the first
+                  jargon a reader meets, and a term with no entry renders as
+                  plain text rather than an empty tooltip */}
+              <th><Term>recipe</Term></th>
               <th>Repo</th>
-              <th>KSIs</th>
-              <th>Controls</th>
-              <th>Fresh</th>
+              <th><Term name="KSI">KSIs</Term></th>
+              <th><Term name="control">Controls</Term></th>
+              <th><Term name="MVX window">Fresh</Term></th>
               <th />
             </tr>
           </thead>
@@ -343,6 +363,19 @@ function Board() {
                 row={row}
                 change={since ? changeByCell.get(`${row.repo} ${row.recipe_id}`) : undefined}
                 historical={historical}
+                why={
+                  // a historical fold is explained by the run log of TODAY,
+                  // which is not the world those rows came from — same reason
+                  // the as-of board suppresses the run hop and propose-N/A
+                  historical
+                    ? null
+                    : explainUnevidenced({
+                        row,
+                        run: newestRunOf(runs.records, row.repo),
+                        runsLoaded: !runs.loading,
+                        runCount: runs.records.length,
+                      })
+                }
               />
             ))}
             {!loading && (!historical || asOfData !== null) && filtered.length === 0 && (
@@ -414,14 +447,21 @@ function RegisterRowView({
   row,
   change,
   historical = false,
+  why = null,
 }: {
   row: RegisterRecord;
   change?: RegisterChange;
   /** an as-of row (I3d): a historical fold offers no actions to take today */
   historical?: boolean;
+  /** why this empty row is empty (K1), or null when it needs no explaining */
+  why?: EmptyStateExplanation | null;
 }) {
   const router = useRouter();
   const [proposing, setProposing] = useState(false);
+  // the plain-language paragraphs (K1) ride every row and stay COLLAPSED: the
+  // board is a scanning surface, and prose on fifteen rows at once would make
+  // the one row an operator came for harder to find, not easier
+  const [explaining, setExplaining] = useState(false);
   const open = row.bundle_digest
     ? () => router.push(`/evidence/${row.bundle_digest}`)
     : undefined;
@@ -431,7 +471,7 @@ function RegisterRowView({
       <tr className={open ? "rowlink" : ""} onClick={open}>
         <td>
           <span className={`pill ${row.state}`}>
-            {row.state === "notApplicable" ? "n/a" : row.state}
+            <Term name={row.state}>{row.state === "notApplicable" ? "n/a" : row.state}</Term>
           </span>
           {change && (
             <span
@@ -476,6 +516,23 @@ function RegisterRowView({
           {row.fresh_as_of ? `${formatAge(row.fresh_as_of)} ago` : "—"}
         </td>
         <td onClick={(e) => e.stopPropagation()}>
+          {/* K1: authored operator English about the check, one click away and
+              beside the row's other question ("how was this produced?").
+              Rendered only where the catalog carries it — a recipe that left
+              the catalog gets no button rather than an empty panel. It lives
+              in this cell rather than beside the recipe id deliberately: the
+              recipe cell is a click target and an accessible name that other
+              surfaces match on, and a button inside it would change both. */}
+          {row.plain && (
+            <button
+              className="plainbtn"
+              aria-expanded={explaining}
+              title="what this check means, in plain English"
+              onClick={() => setExplaining((v) => !v)}
+            >
+              {explaining ? "▾ plain English" : "▸ plain English"}
+            </button>
+          )}
           {/* the hop to the machinery (J3) — how this row was produced, or,
               for an empty row, which run failed to produce it */}
           <RunHopLink row={row} historical={historical} />
@@ -491,6 +548,30 @@ function RegisterRowView({
           )}
         </td>
       </tr>
+      {explaining && row.plain && (
+        <tr className="plain-row">
+          <td colSpan={7} onClick={(e) => e.stopPropagation()}>
+            <PlainLanguage plain={row.plain} recipeId={row.recipe_id} />
+          </td>
+        </tr>
+      )}
+      {/* the guided empty state (K1 over J1): an unevidenced row says why it is
+          empty, in the run record's own words. It explains the row; it never
+          changes it — this cell is unevidenced with or without the sentence. */}
+      {why && (
+        <tr className="why-row">
+          <td colSpan={7} onClick={(e) => e.stopPropagation()}>
+            <span className="why-reason">{why.reason}</span>{" "}
+            {why.action !== "" && <span className="why-action">→ {why.action}</span>}{" "}
+            <span className="why-src">
+              {why.runId
+                ? `read from the run record of ${why.runId}`
+                : "read from this projection's run records"}
+              {why.actionable ? "" : " · not a task — recorded so the empty row is not a mystery"}
+            </span>
+          </td>
+        </tr>
+      )}
       {proposing && (
         <tr>
           <td colSpan={7} onClick={(e) => e.stopPropagation()}>
