@@ -1,7 +1,7 @@
-import { randomBytes } from "node:crypto";
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { createHash, randomBytes } from "node:crypto";
+import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { OPENVEX_ARTIFACT, cacheKeySalt } from "@rampscan/collectors";
+import { OPENVEX_ARTIFACT, cacheKeySalt, createJournaledRunner } from "@rampscan/collectors";
 import {
   buildScanResult,
   createCachingRunner,
@@ -21,8 +21,20 @@ import type {
 import { loadLocalDataset } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner } from "@rampscan/signer";
-import { ScanResult, isEvidenceBundle } from "@rampscan/schema";
-import type { PipelineRecipe } from "@rampscan/schema";
+import {
+  IN_TOTO_STATEMENT_TYPE,
+  RAMPSCAN_SCAN_RUN_TYPE,
+  ScanResult,
+  ScanRun,
+  isEvidenceBundle,
+} from "@rampscan/schema";
+import type {
+  CacheRecord,
+  CollectorRun,
+  PipelineRecipe,
+  ScanRunTrigger,
+  Subject,
+} from "@rampscan/schema";
 import { loadRecipes, validateRecipeIds } from "./recipes.js";
 
 // `rampscan scan <path>` orchestration (plan C5): pin workspace → load pinned
@@ -62,6 +74,8 @@ export interface ScanOptions {
   refreshOlderThanMs?: number;
   /** the run's single clock — defaults to now */
   now?: Date;
+  /** what caused this scan (J1) — recorded in the signed run record */
+  trigger?: ScanRunTrigger;
   log?: (line: string) => void;
 }
 
@@ -83,6 +97,83 @@ export interface ScanOutcome {
   };
   /** per-collector cache outcomes, when a cache was configured */
   cache?: Record<string, CacheOutcome>;
+  /** the signed run record (J1), when a ledger was configured */
+  run?: { digest: Digest; collectors: number; skipped: number };
+}
+
+/**
+ * The run record's collector rows (J1): the runner's OWN observations of how
+ * each collector went, never re-derived from the scan result. Every collector
+ * that was dispatched appears — ran, cache-hit, skipped, or crashed alike. A
+ * manifest of "what happened" that quietly omitted the tools which did not
+ * run would be the screenshot folder this product exists to replace, and the
+ * unevidenced cells are exactly the ones an operator opens this record for.
+ */
+async function buildCollectorRuns(
+  collectors: Collector[],
+  runs: Map<string, RunResult>,
+  cacheRecords: Map<string, CacheRecord>,
+  artifactDir: string,
+): Promise<CollectorRun[]> {
+  const rows: CollectorRun[] = [];
+  for (const collector of collectors) {
+    const name = collector.manifest.name;
+    const run = runs.get(name);
+    if (!run) continue;
+    const artifacts: CollectorRun["artifacts"] = [];
+    for (const artifact of run.artifacts) {
+      const entry: CollectorRun["artifacts"][number] = {
+        name: artifact.name,
+        sha256: artifact.sha256,
+      };
+      try {
+        entry.bytes = (await stat(join(artifactDir, artifact.path))).size;
+      } catch {
+        // the file is not on disk (an out dir moved, a later run's cleanup):
+        // the digest still names it exactly, and a size is not invented
+      }
+      artifacts.push(entry);
+    }
+    const row: CollectorRun = {
+      collector: name,
+      tool_version: run.toolVersion,
+      // 0 when nothing wrapped the runner (a bare unit-test runner) — the
+      // record says zero rather than pretending to a measurement
+      duration_ms: run.telemetry?.durationMs ?? 0,
+      exit_code: run.exitCode,
+      findings: run.findings.length,
+      tools: run.telemetry?.tools ?? [],
+      invocations: run.telemetry?.invocations ?? [],
+      artifacts,
+      cache: cacheRecords.get(name) ?? { state: "none" },
+    };
+    if (run.skipped) row.skip_reason = run.skipped.reason;
+    rows.push(row);
+  }
+  return rows;
+}
+
+/**
+ * What the run record attests to: every artifact the run produced, plus
+ * scan-result.json — which also guarantees a subject exists at all when no
+ * tool resolved and the run produced nothing else. Sorted, so the same run
+ * always canonicalizes the same way.
+ */
+async function runSubjects(
+  resultPath: string,
+  runs: Map<string, RunResult>,
+): Promise<Subject[]> {
+  const byName = new Map<string, Subject>();
+  byName.set("scan-result.json", {
+    name: "scan-result.json",
+    digest: { sha256: createHash("sha256").update(await readFile(resultPath)).digest("hex") },
+  });
+  for (const run of runs.values()) {
+    for (const artifact of run.artifacts) {
+      byName.set(artifact.name, { name: artifact.name, digest: { sha256: artifact.sha256 } });
+    }
+  }
+  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function latestEntry(entries: LedgerEntry[]): LedgerEntry | undefined {
@@ -115,14 +206,25 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   await mkdir(artifactDir, { recursive: true });
 
   const inputs = new Map<string, string>();
-  const localRunner = createLocalRunner({
-    collectors: options.collectors,
-    artifactDir,
-    inputs,
-    runId,
-  });
+  // The journaling decorator sits INSIDE the cache: a cache hit spawns
+  // nothing, so it must record nothing this run — the telemetry rides the
+  // cached RunResult instead, and `cache.state` is what tells a reader which
+  // run those invocations belong to.
+  const localRunner = createJournaledRunner(
+    createLocalRunner({
+      collectors: options.collectors,
+      artifactDir,
+      inputs,
+      runId,
+    }),
+    // paths this run owns: argv tokens under them are safe to record verbatim
+    // in a permanent statement; everything else must earn its way past the
+    // allowlist. workspace.root is added per collector by the decorator.
+    { safeRoots: [outDir, artifactDir, ...(options.cache ? [options.cache.dir] : [])] },
+  );
 
   const cacheOutcomes: Record<string, CacheOutcome> = {};
+  const cacheRecords = new Map<string, CacheRecord>();
   let runner = localRunner;
   if (options.cache) {
     // the pinned tools.json content and the vendored semgrep ruleset salt
@@ -135,8 +237,12 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
       artifactDir,
       inputs,
       keySalt,
-      onOutcome: (collector, outcome) => {
+      onOutcome: (collector, outcome, detail) => {
         cacheOutcomes[collector] = outcome;
+        cacheRecords.set(collector, {
+          state: outcome,
+          ...(detail ? { key: detail.key, scope: detail.scope } : {}),
+        });
       },
       log,
     });
@@ -144,6 +250,8 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   }
 
   const runs = new Map<string, RunResult>();
+  const startedAt = new Date().toISOString();
+  const startedAtMs = Date.now();
   for (const collector of options.collectors) {
     const name = collector.manifest.name;
     log(`collector ${name} …`);
@@ -254,5 +362,41 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
       `${result.summary.unevidenced} recipe(s) unevidenced (never recorded)`,
   );
   outcome.evidence = { appended, survived, refreshed };
+
+  // The run record (J1), always appended — one per scan, never deduplicated.
+  // A run is unique by construction (its durations and clock), and the record
+  // of WHAT RAN is precisely the thing that must not be deduplicated away:
+  // two identical-looking scans a week apart are two facts, not one.
+  const collectorRuns = await buildCollectorRuns(
+    options.collectors,
+    runs,
+    cacheRecords,
+    artifactDir,
+  );
+  const runRecord = ScanRun.parse({
+    _type: IN_TOTO_STATEMENT_TYPE,
+    subject: await runSubjects(resultPath, runs),
+    predicateType: RAMPSCAN_SCAN_RUN_TYPE,
+    predicate: {
+      run_id: runId,
+      repo: workspace.repo,
+      commit: workspace.commit,
+      trigger: options.trigger ?? "manual",
+      started_at: startedAt,
+      duration_ms: Date.now() - startedAtMs,
+      dataset_version: dataset.version(),
+      collectors: collectorRuns,
+      // the same instant every bundle of this scan carries, so the fold and
+      // the as-of selector treat the run and its evidence as one event
+      timestamp: now.toISOString(),
+    },
+  });
+  const runDigest = await ledger.append(runRecord, await signer.sign(runRecord));
+  const skippedCount = collectorRuns.filter((c) => c.skip_reason !== undefined).length;
+  log(
+    `run record: ${runDigest.slice(0, 12)}… — ${collectorRuns.length} collector(s), ` +
+      `${skippedCount} skipped (verify it like any bundle: rampscan verify ${runDigest.slice(0, 12)}…)`,
+  );
+  outcome.run = { digest: runDigest, collectors: collectorRuns.length, skipped: skippedCount };
   return outcome;
 }

@@ -128,6 +128,7 @@ async function main(): Promise<void> {
         collectors: allCollectors,
         ledgerDir,
         keysDir,
+        trigger: "manual",
         log: (line) => console.error(`· ${line}`),
       });
       console.log(renderSummary(result, useColor));

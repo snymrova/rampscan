@@ -46,7 +46,17 @@ export interface CachingRunnerOptions {
   inputs: Map<string, string>;
   /** extra material folded into every key (e.g. the tools.json content hash) */
   keySalt?: string;
-  onOutcome?(collector: string, outcome: CacheOutcome): void;
+  /**
+   * `detail` carries the computed key and the manifest's DECLARED cacheScope
+   * terms (["@tree"], not the resolved file list) so the run record can say
+   * what an answer was keyed on without carrying a thousand blob hashes into
+   * a permanent statement. Absent for uncachable collectors — there is no key.
+   */
+  onOutcome?(
+    collector: string,
+    outcome: CacheOutcome,
+    detail?: { key: string; scope: string[] },
+  ): void;
   log?(line: string): void;
 }
 
@@ -175,6 +185,7 @@ export function createCachingRunner(inner: Runner, options: CachingRunnerOptions
       );
       const entryDir = join(options.dir, manifest.name, key);
       const entryPath = join(entryDir, "entry.json");
+      const detail = { key, scope: [...manifest.cacheScope] };
 
       if (options.mode === "incremental") {
         let entry: CacheEntry | undefined;
@@ -193,13 +204,13 @@ export function createCachingRunner(inner: Runner, options: CachingRunnerOptions
             await copyFile(source, target);
             options.inputs.set(artifact.name, target);
           }
-          onOutcome(manifest.name, "hit");
+          onOutcome(manifest.name, "hit", detail);
           log(`cache hit: ${manifest.name} (key ${key.slice(0, 12)})`);
           return structuredClone(entry.result);
         }
-        onOutcome(manifest.name, "miss");
+        onOutcome(manifest.name, "miss", detail);
       } else {
-        onOutcome(manifest.name, "bypass");
+        onOutcome(manifest.name, "bypass", detail);
       }
 
       const result = await inner.run(manifest, workspace);

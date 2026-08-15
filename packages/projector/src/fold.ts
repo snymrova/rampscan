@@ -9,10 +9,17 @@ import type {
   Projector,
   RegisterRow,
   RollupRow,
+  ScanRunRow,
   ScopingInfo,
 } from "@rampscan/core";
-import type { EvidenceBundle, OffenderPointer, PipelineRecipe, ScopingEvent } from "@rampscan/schema";
-import { isEvidenceBundle, isScopingEvent } from "@rampscan/schema";
+import type {
+  EvidenceBundle,
+  OffenderPointer,
+  PipelineRecipe,
+  ScanRun,
+  ScopingEvent,
+} from "@rampscan/schema";
+import { isEvidenceBundle, isScanRun, isScopingEvent } from "@rampscan/schema";
 
 // Projector v2 (plan M3): still a pure fold of the ledger — identical in
 // prototype and appliance — now producing three things:
@@ -35,6 +42,18 @@ interface EvidenceEntry extends LedgerEntry {
 interface ScopingEntry extends LedgerEntry {
   bundle: ScopingEvent;
 }
+interface ScanRunEntry extends LedgerEntry {
+  bundle: ScanRun;
+}
+
+/**
+ * How many run records the projection carries (J1 decision 6). The ledger
+ * keeps every one — the daemon appends one per cadence tick — but the
+ * projection is rebuildable and drop-and-refilled, so an unbounded copy would
+ * buy nothing and cost every refill. `/runs` reads the recent past; the
+ * ledger answers anything older.
+ */
+export const SCAN_RUN_PROJECTION_CAP = 200;
 
 function anchorKey(anchors: Array<{ path: string; contentHash: string }>): string {
   return JSON.stringify(
@@ -109,6 +128,7 @@ export function foldEntries(
   const sorted = [...inScope].sort(byTime);
   const evidence = sorted.filter((e): e is EvidenceEntry => isEvidenceBundle(e.bundle));
   const scopings = sorted.filter((e): e is ScopingEntry => isScopingEvent(e.bundle));
+  const scanRunEntries = sorted.filter((e): e is ScanRunEntry => isScanRun(e.bundle));
 
   // latest observation of every (repo, path): who saw this content last, when
   const pathObservations = new Map<
@@ -222,7 +242,14 @@ export function foldEntries(
   // The registers: every (scanned repo × catalog recipe), plus any ledger
   // cell whose recipe fell out of the catalog — nothing recorded ever hides.
   const recipeById = new Map((options.recipes ?? []).map((r) => [r.id, r]));
-  const repos = [...new Set(sorted.map((e) => e.bundle.predicate.repo))].sort();
+  // Deliberately evidence + scoping only, NOT every statement: a run record
+  // names a repo too, and letting it introduce register cells would make the
+  // board partly a function of the run log. The board is folded from evidence
+  // and scoping alone, and a scan run can never move a cell (J1's standing
+  // rule — /runs renders runs, never states).
+  const repos = [
+    ...new Set([...evidence, ...scopings].map((e) => e.bundle.predicate.repo)),
+  ].sort();
   const cells = new Set<string>();
   for (const repo of repos) {
     for (const id of recipeById.keys()) cells.add(`${repo} ${id}`);
@@ -331,6 +358,29 @@ export function foldEntries(
     );
   }
 
+  // The run records (J1), newest first and capped. Structural — every field
+  // is lifted straight off the signed predicate, nothing recomputed, because
+  // a number this page derived itself would be a second answer about a run
+  // that already stated its own.
+  const scanRuns: ScanRunRow[] = scanRunEntries
+    .slice(-SCAN_RUN_PROJECTION_CAP)
+    .reverse()
+    .map((entry) => {
+      const p = entry.bundle.predicate;
+      return {
+        digest: entry.digest,
+        runId: p.run_id,
+        repo: p.repo,
+        commit: p.commit,
+        trigger: p.trigger,
+        startedAt: p.started_at,
+        timestamp: p.timestamp,
+        durationMs: p.duration_ms,
+        datasetVersion: p.dataset_version,
+        collectors: p.collectors,
+      };
+    });
+
   const newest = sorted.at(-1);
   return {
     rows,
@@ -339,6 +389,7 @@ export function foldEntries(
     controls,
     ksis,
     gaps,
+    scanRuns,
     datasetVersion: newest?.bundle.predicate.dataset_version ?? "",
     projectedAt,
   };

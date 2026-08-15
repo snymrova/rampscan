@@ -1,6 +1,6 @@
 # rampscan — implementation plan: what remains
 
-**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3d (auditor lens, in progress). This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
+**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens; I3e landed 2026-08-15, I3f folded into J5). Phase J is underway — J1 landed 2026-08-15, J2 is next. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
 **Date:** 2026-08-15
 **Reads against:** all of `docs/` — SPEC (target architecture), IMPLEMENTATION-PLAN (M0–M5, complete), COMPLIANCE-SCAN-HARNESS (founding doc §11–13 decisions), ARCHITECTURE (invariants), BRAINSTORM-DAST-OBSERVABILITY-AI-HELPER (the options analysis this plan promotes from), FRONTIER-PIPELINE (the generated self-scan record).
 
@@ -14,10 +14,10 @@ Walked across all eight documents. Nothing below is invented here; each line nam
 
 | # | Item | Source | State |
 |---|---|---|---|
-| I3e | Export: register CSV · per-control evidence package (zip) · print-friendly evidence page | CONSOLE I3, SPEC §8.5 | not started |
+| I3e | Export: register CSV · per-control evidence package (tar) · print-friendly evidence page | CONSOLE I3, SPEC §8.5 | **landed 2026-08-15** |
 | I3f | Not-affected claims show their work (entry-point provenance, over-approximation statement, exact-vs-inferred edges) | CONSOLE I3 | not started |
-| J1 | The run record, ledger-first: `scan-run` statement kind + capture | PLAN J, BRAINSTORM §2.2/§5 | not started |
-| J2 | `/runs` console page: scan timeline → per-collector table | PLAN J, BRAINSTORM §2.3 | not started |
+| J1 | The run record, ledger-first: `scan-run` statement kind + capture | PLAN J, BRAINSTORM §2.2/§5 | **landed 2026-08-15** |
+| J2 | `/runs` console page: scan timeline → per-collector table | PLAN J, BRAINSTORM §2.3 | **next** |
 | J3 | Board hop: "how was this produced?" on every row | PLAN J | not started |
 | J4 | Artifact viewers: normalized artifacts as tables + raw download | PLAN J | not started |
 | J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | not started |
@@ -59,6 +59,7 @@ Resulting order:
 
 ```
 I3e  →  J1  →  J2  →  J3  →  J4  →  J5 (+I3f folded in)  →  K1  →  [go/no-go: K2, L]
+ ✓      ✓      ←next
 ```
 
 Estimates, focused-work days, honest but rough: I3e 1–1.5 · J1 2.5–3 · J2 1.5 · J3 0.25 · J4 1.5 · J5+I3f 2 · K1 1.5. **Total ≈ 10–11 days** to the end of K1.
@@ -131,6 +132,18 @@ Four decisions this forces, with recommendations:
 **Files.** `packages/schema/src/scan-run.ts` (+ `scoping.ts` union, `index.ts` exports) · `packages/collectors/src/tools.ts` (exec journal) · `packages/core/src/{ports.ts,local.ts}` (recorder threading, `RunResult` telemetry field) · `packages/core/src/cache.ts` (cache state + key already computed here — surface it) · `packages/cli/src/scan.ts` (assemble → sign → append, beside the existing bundle loop at lines 241–247) · `packages/cli/src/daemon.ts` (trigger label) · `packages/projector/src/{fold.ts,sqlite.ts,pocketbase.ts}` · `packages/cli/src/verify.ts`.
 
 **Exit test.** Fixture scan → exactly one `scan-run` statement appended → `rampscan verify <run-digest>` green offline → every collector that ran appears with a version, a runtime, a duration, an exit code, and its artifacts' digests matching the bundles' subjects → a scan with one tool hidden from PATH and Docker disabled records `runtime: absent` + the skip reason → `rampscan rebuild` reproduces `scan_runs` byte-for-byte → redaction test: a planted secret passed as an argument never appears in the signed payload.
+
+### 4.4 As built (2026-08-15) — where the shipped J1 differs from §4.1–4.3
+
+Three deviations, each taken for a stated reason. Read these before J2 builds on top of it.
+
+1. **One capture point, not two.** §4.1 called for the runner *plus* `tools.ts`. In fact every process a collector starts goes through `exec()` in `packages/collectors/src/support.ts` — the tool wrappers call it, and so do the collectors that shell out to `git` directly. Journaling there is structurally complete rather than merely thorough: there is no other door, so no collector can under-report by taking a shortcut, and the direct `git ls-files` calls land in the record for free. `resolveTool()` records the *resolution* (binary path / image / absent + reason) separately, so a tool that never ran still says why.
+2. **The journal is an `AsyncLocalStorage`, not a threaded parameter.** `createJournaledRunner` opens one per collector and drains it after `collect()` returns. This keeps §4.1's rule — nothing enters the collector contract — while removing the need for collectors to cooperate at all.
+3. **`tools` is an array in the predicate**, not the flat `tool / tool_version / runtime` triple §4.2 sketched. A collector resolves zero external tools (`repo-facts`, `graph`, `reachability`, `sast-reachability`) or several; a flat triple would have had to invent one for the pure collectors. Per-collector `tool_version` is still flat — it is the version the bundle already carries.
+
+Also as built: telemetry rides `RunResult`, so the scan cache persists and restores it. On a `cache: { state: "hit" }` the invocations shown are the ones of the run that *produced* the cached result — the record never claims a spawn that did not happen, and the state field is what says so.
+
+**Deferred out of J1 on purpose:** `scanInstants` ([`diff.ts:23`](../packages/projector/src/diff.ts#L23)) still enumerates **evidence** timestamps only. Folding run-record instants into it would make `--since previous` and I3d's as-of quick-picks mean "since the previous scan" rather than "since the previous scan that moved evidence" — a real improvement, and a silent redefinition of two shipped features. It belongs to J2, which renders the scan timeline anyway and can change both surfaces in one deliberate move.
 
 ---
 

@@ -1,4 +1,4 @@
-import { canonicalJson, isEvidenceBundle } from "@rampscan/schema";
+import { canonicalJson, isEvidenceBundle, isScanRun } from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
 
@@ -32,6 +32,18 @@ export async function verify(options: {
       `recipe   ${p.recipe_id} → ${p.verdict}`,
       `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
       `signed   ${p.timestamp} (run ${p.run_id})`,
+    );
+  } else if (isScanRun(entry.bundle)) {
+    // a run record verifies exactly like a bundle — same envelope, same
+    // address discipline. It says what RAN, so the summary counts collectors
+    // and skips, and deliberately quotes no verdict.
+    const p = entry.bundle.predicate;
+    const skipped = p.collectors.filter((c) => c.skip_reason !== undefined).length;
+    lines.push(
+      `scan-run ${options.digest.slice(0, 16)}…`,
+      `run      ${p.run_id} (${p.trigger}) — ${p.collectors.length} collector(s), ${skipped} skipped`,
+      `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
+      `signed   ${p.timestamp} (started ${p.started_at}, ${p.duration_ms} ms)`,
     );
   } else {
     const p = entry.bundle.predicate;

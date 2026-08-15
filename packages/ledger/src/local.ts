@@ -7,7 +7,13 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { join } from "node:path";
-import { LedgerStatement, canonicalJson } from "@rampscan/schema";
+import {
+  LedgerStatement,
+  canonicalJson,
+  isEvidenceBundle,
+  isScanRun,
+  isScopingEvent,
+} from "@rampscan/schema";
 import type {
   Digest,
   LedgerEntry,
@@ -106,16 +112,24 @@ export function createLocalLedger(dir: string): LedgerStore {
         await chmod(envPath, 0o444);
       }
 
-      // scoping events carry no commit anchor and no verdict; the index
-      // records their action so list() filters keep working uniformly
-      const evidence = parsed.predicateType === "https://rampscan.dev/evidence/v1";
+      // Each statement kind fills the index slots it honestly has: a scoping
+      // event carries no commit anchor and no verdict (its action goes in the
+      // verdict slot so list() filters keep working uniformly), and a run
+      // record (J1) is about a whole scan rather than one recipe — so its
+      // recipe_id and verdict stay EMPTY rather than being invented. That is
+      // what keeps `list({ recipeId })` from ever handing a run record to the
+      // evidence chain that asked for a recipe's bundles.
       const row: IndexRow = {
         digest,
         appended_at: new Date().toISOString(),
-        recipe_id: parsed.predicate.recipe_id,
+        recipe_id: isScanRun(parsed) ? "" : parsed.predicate.recipe_id,
         repo: parsed.predicate.repo,
-        commit: evidence ? parsed.predicate.commit : "",
-        verdict: evidence ? parsed.predicate.verdict : parsed.predicate.action,
+        commit: isScopingEvent(parsed) ? "" : parsed.predicate.commit,
+        verdict: isEvidenceBundle(parsed)
+          ? parsed.predicate.verdict
+          : isScopingEvent(parsed)
+            ? parsed.predicate.action
+            : "",
         timestamp: parsed.predicate.timestamp,
       };
       await appendFile(indexPath, JSON.stringify(row) + "\n");

@@ -8,6 +8,7 @@ import type {
   Projection,
   RegisterRow,
   RollupRow,
+  ScanRunRow,
 } from "@rampscan/core";
 
 // SQLite persistence for the projection. The database is disposable by
@@ -24,7 +25,16 @@ export async function writeProjectionSqlite(
   const db = new DatabaseSync(dbPath);
   try {
     db.exec("BEGIN");
-    for (const table of ["coverage", "registers", "drift", "controls", "ksis", "gaps", "meta"]) {
+    for (const table of [
+      "coverage",
+      "registers",
+      "drift",
+      "controls",
+      "ksis",
+      "gaps",
+      "scan_runs",
+      "meta",
+    ]) {
       db.exec(`DROP TABLE IF EXISTS ${table}`);
     }
     db.exec(`
@@ -95,6 +105,21 @@ export async function writeProjectionSqlite(
         gap_end        TEXT NOT NULL,
         duration_ms    INTEGER NOT NULL,
         ongoing        INTEGER NOT NULL -- 0 | 1
+      )
+    `);
+    // the run records (J1) — `trigger` is a SQLite keyword, hence trigger_kind
+    db.exec(`
+      CREATE TABLE scan_runs (
+        digest          TEXT NOT NULL,
+        run_id          TEXT NOT NULL,
+        repo            TEXT NOT NULL,
+        commit_sha      TEXT NOT NULL,
+        trigger_kind    TEXT NOT NULL,
+        started_at      TEXT NOT NULL,
+        run_timestamp   TEXT NOT NULL,
+        duration_ms     INTEGER NOT NULL,
+        dataset_version TEXT NOT NULL,
+        collectors      TEXT NOT NULL -- JSON array, straight off the signed predicate
       )
     `);
     db.exec(`
@@ -206,6 +231,27 @@ export async function writeProjectionSqlite(
       );
     }
 
+    const insertRun = db.prepare(
+      `INSERT INTO scan_runs
+         (digest, run_id, repo, commit_sha, trigger_kind, started_at, run_timestamp,
+          duration_ms, dataset_version, collectors)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const run of projection.scanRuns) {
+      insertRun.run(
+        run.digest,
+        run.runId,
+        run.repo,
+        run.commit,
+        run.trigger,
+        run.startedAt,
+        run.timestamp,
+        run.durationMs,
+        run.datasetVersion,
+        JSON.stringify(run.collectors),
+      );
+    }
+
     db.prepare("INSERT INTO meta (dataset_version, projected_at) VALUES (?, ?)").run(
       projection.datasetVersion,
       projection.projectedAt,
@@ -300,6 +346,20 @@ export function readProjectionSqlite(dbPath: string): Projection {
       durationMs: Number(r.duration_ms),
       ongoing: r.ongoing === 1,
     }));
+    const scanRuns: ScanRunRow[] = (db.prepare("SELECT * FROM scan_runs").all() as any[]).map(
+      (r) => ({
+        digest: r.digest,
+        runId: r.run_id,
+        repo: r.repo,
+        commit: r.commit_sha,
+        trigger: r.trigger_kind,
+        startedAt: r.started_at,
+        timestamp: r.run_timestamp,
+        durationMs: Number(r.duration_ms),
+        datasetVersion: r.dataset_version,
+        collectors: JSON.parse(r.collectors),
+      }),
+    );
     const meta = db.prepare("SELECT * FROM meta").get() as any;
     return {
       rows,
@@ -308,6 +368,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
       controls: readRollup("controls"),
       ksis: readRollup("ksis"),
       gaps,
+      scanRuns,
       datasetVersion: meta?.dataset_version ?? "",
       projectedAt: meta?.projected_at ?? "",
     };

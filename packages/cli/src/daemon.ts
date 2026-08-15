@@ -183,6 +183,10 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
       ledgerDir: options.ledgerDir,
       keysDir: options.keysDir,
       cache: { dir: options.cacheDir, mode },
+      // the run record distinguishes the daemon's two cache modes (J1): a
+      // full pass and an incremental one are different evidence about the
+      // same repo, and "why did this take 40× longer" has an answer
+      trigger: mode === "full" ? "daemon-full" : "daemon-incremental",
       refreshOlderThanMs,
       now: new Date(clock()),
       log,

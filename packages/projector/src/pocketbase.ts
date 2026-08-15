@@ -6,6 +6,7 @@ import type {
   Projection,
   RegisterRow,
   RollupRow,
+  ScanRunRow,
 } from "@rampscan/core";
 
 // PocketBase as projection store (SPEC §6, plan M3 E1). The rules that keep
@@ -239,6 +240,30 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
     deleteRule: null,
   },
   {
+    // the run records (J1) — how each scan went. `trigger` and `timestamp`
+    // get suffixed names for the same reason `rollup_id` does: avoid
+    // colliding with a store's own vocabulary.
+    name: "scan_runs",
+    type: "base",
+    fields: [
+      text("digest", true),
+      text("run_id", true),
+      text("repo", true),
+      text("commit_sha", true),
+      text("trigger_kind", true),
+      text("started_at", true),
+      text("run_timestamp", true),
+      { name: "duration_ms", type: "number", required: false },
+      text("dataset_version"),
+      json("collectors"),
+    ],
+    listRule: AUTHED,
+    viewRule: AUTHED,
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
+  },
+  {
     name: "bundles",
     type: "base",
     fields: [text("digest", true), json("statement"), json("envelope"), text("appended_at")],
@@ -426,6 +451,20 @@ export async function writeProjectionPocketBase(
       ongoing: gap.ongoing,
     });
   }
+  for (const run of projection.scanRuns) {
+    await pb.create("scan_runs", {
+      digest: run.digest,
+      run_id: run.runId,
+      repo: run.repo,
+      commit_sha: run.commit,
+      trigger_kind: run.trigger,
+      started_at: run.startedAt,
+      run_timestamp: run.timestamp,
+      duration_ms: run.durationMs,
+      dataset_version: run.datasetVersion,
+      collectors: run.collectors,
+    });
+  }
   for (const entry of entries) {
     await pb.create("bundles", {
       digest: entry.digest,
@@ -443,16 +482,25 @@ export async function writeProjectionPocketBase(
 
 /** Read the stored projection back — `rampscan rebuild` compares this against a fresh fold. */
 export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Projection> {
-  const [registerRecords, coverageRecords, driftRecords, controlRecords, ksiRecords, gapRecords, metaRecords] =
-    await Promise.all([
-      pb.listAll("registers"),
-      pb.listAll("coverage"),
-      pb.listAll("drift"),
-      pb.listAll("controls"),
-      pb.listAll("ksis"),
-      pb.listAll("gaps"),
-      pb.listAll("meta"),
-    ]);
+  const [
+    registerRecords,
+    coverageRecords,
+    driftRecords,
+    controlRecords,
+    ksiRecords,
+    gapRecords,
+    scanRunRecords,
+    metaRecords,
+  ] = await Promise.all([
+    pb.listAll("registers"),
+    pb.listAll("coverage"),
+    pb.listAll("drift"),
+    pb.listAll("controls"),
+    pb.listAll("ksis"),
+    pb.listAll("gaps"),
+    pb.listAll("scan_runs"),
+    pb.listAll("meta"),
+  ]);
 
   const registers: RegisterRow[] = registerRecords.map((r: any) => {
     const row: RegisterRow = {
@@ -518,6 +566,18 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     durationMs: r.duration_ms,
     ongoing: r.ongoing === true,
   }));
+  const scanRuns: ScanRunRow[] = scanRunRecords.map((r: any) => ({
+    digest: r.digest,
+    runId: r.run_id,
+    repo: r.repo,
+    commit: r.commit_sha,
+    trigger: r.trigger_kind,
+    startedAt: r.started_at,
+    timestamp: r.run_timestamp,
+    durationMs: r.duration_ms,
+    datasetVersion: r.dataset_version,
+    collectors: r.collectors ?? [],
+  }));
   const meta = metaRecords[0] as any;
   return {
     rows,
@@ -526,6 +586,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     controls: controlRecords.map(toRollup),
     ksis: ksiRecords.map(toRollup),
     gaps,
+    scanRuns,
     datasetVersion: meta?.dataset_version ?? "",
     projectedAt: meta?.projected_at ?? "",
   };

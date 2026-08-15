@@ -1,9 +1,13 @@
 import type {
   Cadence,
   CollectorManifest,
+  CollectorRun,
   Finding,
   LedgerStatement,
   OffenderPointer,
+  ScanRunTrigger,
+  ToolInvocation,
+  ToolResolution,
   Verdict,
 } from "@rampscan/schema";
 
@@ -67,6 +71,26 @@ export interface Workspace {
  */
 export type ObservationRows = Array<Record<string, unknown>>;
 
+/**
+ * What the runner observed about HOW a collector ran (plan J1) — never about
+ * what it concluded. Attached by the journaling Runner decorator, not by the
+ * collector: run telemetry is not part of the collector contract, precisely
+ * so no collector can under-report its own provenance.
+ *
+ * It rides RunResult deliberately, which means the scan cache persists and
+ * restores it: on a cache hit these are the recorded invocations of the run
+ * that PRODUCED the cached result, and the run record's `cache.state` is what
+ * tells a reader so.
+ */
+export interface CollectorTelemetry {
+  /** wall time the runner measured around collect() */
+  durationMs: number;
+  /** every tool the collector asked for, in resolution order — empty for pure collectors */
+  tools: ToolResolution[];
+  /** every process spawned inside the collector's journal, argv already redacted */
+  invocations: ToolInvocation[];
+}
+
 export interface RunResult {
   findings: Finding[];
   /** artifacts produced, relative to the run's artifact dir, e.g. sbom.cdx.json */
@@ -81,6 +105,8 @@ export interface RunResult {
   reproduce?: string;
   /** set when the collector could not run at all (tool missing, no Dockerfile, …) */
   skipped?: { reason: string };
+  /** how the run went (J1) — attached by the journaling runner, absent when none wrapped it */
+  telemetry?: CollectorTelemetry;
 }
 
 /** local: child process / Docker → later: Fargate task. */
@@ -313,6 +339,28 @@ export interface RegisterDiff {
   unchanged: number;
 }
 
+/**
+ * One recorded scan (I1/J1): the run record's predicate, projected. Rendered
+ * by `/runs` and nothing else — a scan run explains HOW evidence was produced
+ * and may never contribute a verdict, a register state, or a coverage number.
+ * The board is folded from evidence and scoping alone, and stays that way.
+ */
+export interface ScanRunRow {
+  /** the ledger address of the signed run record — verify it like any bundle */
+  digest: Digest;
+  runId: string;
+  repo: string;
+  commit: string;
+  trigger: ScanRunTrigger;
+  startedAt: string; // ISO 8601
+  /** the run's clock — the same instant its evidence bundles carry */
+  timestamp: string; // ISO 8601
+  durationMs: number;
+  datasetVersion: string;
+  /** structural, straight off the signed predicate — never re-derived */
+  collectors: CollectorRun[];
+}
+
 export interface Projection {
   /** every evidence bundle ever recorded, live or dead — the chain view */
   rows: CoverageRow[];
@@ -326,6 +374,13 @@ export interface Projection {
   ksis: RollupRow[];
   /** cadence-adherence history: MVX-window lapses, empty when no window was given (I1d) */
   gaps: CadenceGap[];
+  /**
+   * The run records, newest first, capped (J1): the ledger keeps every run,
+   * the projection keeps the newest N — the projection is rebuildable and the
+   * ledger is the record, so an unbounded per-tick projection would buy
+   * nothing and cost the drop-and-refill.
+   */
+  scanRuns: ScanRunRow[];
   datasetVersion: string;
   projectedAt: string;
 }

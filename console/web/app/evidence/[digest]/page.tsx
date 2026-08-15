@@ -67,7 +67,15 @@ function Evidence({ digest }: { digest: string }) {
   if (!bundle) return <p className="muted">loading…</p>;
 
   const p = bundle.statement.predicate as Record<string, any>;
-  const isEvidence = bundle.statement.predicateType === "https://rampscan.dev/evidence/v1";
+  // Three statement kinds live in the ledger now (J1), so the page branches on
+  // the kind rather than on "evidence or else scoping" — a run record landing
+  // in the `else` would have rendered as a notApplicable scoping, which is a
+  // wrong page, not a rough one.
+  const kind = bundle.statement.predicateType;
+  const isEvidence = kind === "https://rampscan.dev/evidence/v1";
+  const isScoping = kind === "https://rampscan.dev/scoping/v1";
+  const isScanRun = kind === "https://rampscan.dev/scan-run/v1";
+  const runCollectors = (p["collectors"] as Array<Record<string, any>>) ?? [];
   const assertions: AssertionResult[] = (p["assertions"] as AssertionResult[]) ?? [];
   const anchorPaths = new Set(
     ((p["anchor_paths"] as Array<{ path: string }>) ?? []).map((a) => a.path),
@@ -79,12 +87,11 @@ function Evidence({ digest }: { digest: string }) {
         <Link href="/">← board</Link>
       </p>
       <h1 className="mono" style={{ fontSize: 16 }}>
-        {p["recipe_id"]}{" "}
-        {isEvidence ? (
-          <span className={`pill ${p["verdict"]}`}>{p["verdict"]}</span>
-        ) : (
-          <span className="pill notApplicable">notApplicable</span>
-        )}{" "}
+        {isScanRun ? p["run_id"] : p["recipe_id"]}{" "}
+        {isEvidence && <span className={`pill ${p["verdict"]}`}>{p["verdict"]}</span>}
+        {isScoping && <span className="pill notApplicable">notApplicable</span>}
+        {/* a run record states no verdict, by design — it says what RAN */}
+        {isScanRun && <span className="pill">scan run · {p["trigger"]}</span>}{" "}
         {coverage && <span className={`pill ${coverage.state}`}>{coverage.state}</span>}
       </h1>
       <p className="subtitle mono">{digest}</p>
@@ -120,23 +127,30 @@ function Evidence({ digest }: { digest: string }) {
               <dd className="mono">{p["commit"]}</dd>
             </>
           )}
-          <dt>ksi</dt>
-          <dd className="mono">
-            {/* the traversal's back edge (I3a): bundle → KSI → its register rollup */}
-            {(p["ksi_ids"] as string[]).map((k) => (
-              <Link key={k} href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`} style={{ marginRight: 10 }}>
-                {k}
-              </Link>
-            ))}
-          </dd>
-          <dt>controls</dt>
-          <dd className="mono">
-            {(p["control_ids"] as string[]).map((c) => (
-              <Link key={c} href={`/controls?reg=controls&id=${encodeURIComponent(c)}`} style={{ marginRight: 10 }}>
-                {c}
-              </Link>
-            ))}
-          </dd>
+          {/* a run record maps to no KSI or control: it is about a scan, not
+              about a requirement, and inventing a mapping would be the second
+              source of truth /runs must never become */}
+          {!isScanRun && (
+            <>
+              <dt>ksi</dt>
+              <dd className="mono">
+                {/* the traversal's back edge (I3a): bundle → KSI → its register rollup */}
+                {((p["ksi_ids"] as string[]) ?? []).map((k) => (
+                  <Link key={k} href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`} style={{ marginRight: 10 }}>
+                    {k}
+                  </Link>
+                ))}
+              </dd>
+              <dt>controls</dt>
+              <dd className="mono">
+                {((p["control_ids"] as string[]) ?? []).map((c) => (
+                  <Link key={c} href={`/controls?reg=controls&id=${encodeURIComponent(c)}`} style={{ marginRight: 10 }}>
+                    {c}
+                  </Link>
+                ))}
+              </dd>
+            </>
+          )}
           <dt>timestamp</dt>
           <dd>{p["timestamp"]}</dd>
           {isEvidence && (
@@ -153,7 +167,7 @@ function Evidence({ digest }: { digest: string }) {
               <dd>{p["cadence"]}</dd>
             </>
           )}
-          {!isEvidence && (
+          {isScoping && (
             <>
               <dt>justification</dt>
               <dd>{p["justification"]}</dd>
@@ -161,6 +175,27 @@ function Evidence({ digest }: { digest: string }) {
               <dd>{p["proposed_by"]}</dd>
               <dt>approved by</dt>
               <dd>{p["approved_by"]}</dd>
+            </>
+          )}
+          {isScanRun && (
+            <>
+              <dt>commit</dt>
+              <dd className="mono">{p["commit"]}</dd>
+              <dt>trigger</dt>
+              <dd className="mono">{p["trigger"]}</dd>
+              <dt>started</dt>
+              <dd>{p["started_at"]}</dd>
+              <dt>duration</dt>
+              <dd>{Math.round(Number(p["duration_ms"]) / 100) / 10}s</dd>
+              <dt>collectors</dt>
+              {/* counted from the rows, never typed: an independent recount of
+                  the predicate's own list is the only number worth showing */}
+              <dd>
+                {runCollectors.length} dispatched ·{" "}
+                {runCollectors.filter((c) => c["skip_reason"] === undefined).length} ran ·{" "}
+                {runCollectors.filter((c) => c["cache"]?.["state"] === "hit").length} cache-hit ·{" "}
+                {runCollectors.filter((c) => c["skip_reason"] !== undefined).length} skipped
+              </dd>
             </>
           )}
           <dt>dataset</dt>
@@ -181,6 +216,49 @@ function Evidence({ digest }: { digest: string }) {
           )}
         </dl>
       </div>
+
+      {isScanRun && (
+        <>
+          <div className="section-title">Collectors</div>
+          <div className="panel">
+            <table className="reg">
+              <tbody>
+                {runCollectors.map((c) => {
+                  const tools = (c["tools"] as Array<Record<string, any>>) ?? [];
+                  const runtime = tools
+                    .map((t) => {
+                      const r = t["runtime"] as Record<string, any>;
+                      if (r["kind"] === "docker") return `${t["tool"]} @ ${r["image"]}`;
+                      if (r["kind"] === "binary") return `${t["tool"]} @ ${r["path"] ?? "PATH"}`;
+                      return `${t["tool"]} absent`;
+                    })
+                    .join(", ");
+                  return (
+                    <tr key={String(c["collector"])}>
+                      <td className="mono">{c["collector"]}</td>
+                      <td className="mono faint">{c["tool_version"]}</td>
+                      <td className="faint">{c["cache"]?.["state"]}</td>
+                      <td className="faint">{Math.round(Number(c["duration_ms"]))} ms</td>
+                      <td className="faint">
+                        {(c["invocations"] as unknown[])?.length ?? 0} invocation(s)
+                      </td>
+                      <td className="faint" style={{ overflowWrap: "anywhere" }}>
+                        {/* the named reason a tool did not run — the thing an
+                            operator staring at an unevidenced cell needs */}
+                        {c["skip_reason"] ? (
+                          <span className="assertion-fail">{c["skip_reason"]}</span>
+                        ) : (
+                          runtime
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {isEvidence && (
         <>

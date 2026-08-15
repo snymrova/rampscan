@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ToolRuntime } from "@rampscan/schema";
+import { recordResolution, resolveBinaryPath } from "./journal.js";
 import { exec, toolVersion } from "./support.js";
 import type { ExecResult } from "./support.js";
 
@@ -159,12 +161,37 @@ export async function resolveTool(
     overrides.binaryVersion === null
       ? undefined
       : (overrides.binaryVersion ?? (await toolVersion(name, probe.args, probe.parse)));
-  if (binVersion) return createBinaryTool(name, binVersion);
+  if (binVersion) {
+    // provenance the bare name does not carry: WHICH binary on PATH answered
+    const path = resolveBinaryPath(name);
+    const runtime: ToolRuntime =
+      path === undefined ? { kind: "binary" } : { kind: "binary", path };
+    recordResolution({ tool: name, version: binVersion, runtime });
+    return createBinaryTool(name, binVersion);
+  }
 
   const manifest = overrides.manifest ?? (await loadToolManifest());
   const spec = manifest[name];
   const docker = overrides.docker ?? (await dockerAvailable());
-  if (spec && docker) return createDockerTool(name, spec);
+  if (spec && docker) {
+    // digest stays null here and is filled after the run — the pinned image
+    // may only get pulled by the invocation that is about to happen
+    recordResolution({
+      tool: name,
+      version: spec.version,
+      runtime: { kind: "docker", image: spec.image, digest: null },
+    });
+    return createDockerTool(name, spec);
+  }
+  recordResolution({
+    tool: name,
+    runtime: {
+      kind: "absent",
+      reason: spec
+        ? `${name} is not on PATH and Docker is unavailable, so the pinned image ${spec.image} could not run`
+        : `${name} is not on PATH and tools.json pins no image for it`,
+    },
+  });
   return undefined;
 }
 
