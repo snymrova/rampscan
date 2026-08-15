@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RequireAuth } from "../../components/guard";
+import { csvFilename, downloadText, scopingCsv } from "../../lib/export";
 import { getPb, useCollection } from "../../lib/pb";
 import type {
   MetaRecord,
@@ -101,6 +102,19 @@ function Scoping() {
             </button>
           ))}
         </div>
+        <button
+          className="btn"
+          title="the decisions on screen, this filter included"
+          disabled={filtered.length === 0}
+          onClick={() =>
+            downloadText(
+              csvFilename("scoping", projectedAt ?? ""),
+              scopingCsv(filtered, projectedAt ?? ""),
+            )
+          }
+        >
+          export CSV
+        </button>
       </div>
 
       {register?.error && <p className="error">{register.error}</p>}

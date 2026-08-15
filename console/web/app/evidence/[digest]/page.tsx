@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
+import { DownloadButton } from "../../../components/DownloadButton";
 import { RequireAuth } from "../../../components/guard";
 import { getPb } from "../../../lib/pb";
 import { describePointer } from "../../../lib/pointers";
@@ -292,6 +293,7 @@ function Evidence({ digest }: { digest: string }) {
             url={`/api/verify/bundle?digest=${digest}`}
             filename={`${digest}.envelope.json`}
             disabled={!bundle.envelope}
+            note="appended unsigned, nothing to verify"
           />
           <DownloadButton
             label="download public key"
@@ -319,57 +321,5 @@ function Evidence({ digest }: { digest: string }) {
       <div className="section-title">Raw statement</div>
       <pre className="raw">{JSON.stringify(bundle.statement, null, 2)}</pre>
     </>
-  );
-}
-
-// The download routes are auth-gated like every read (a plain <a href> would
-// arrive without the PocketBase token), so: authorized fetch → blob → save.
-function DownloadButton({
-  label,
-  url,
-  filename,
-  disabled,
-}: {
-  label: string;
-  url: string;
-  filename: string;
-  disabled?: boolean;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function download() {
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch(url, {
-        headers: { Authorization: getPb().authStore.token },
-      });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? `${response.status} ${response.statusText}`);
-      }
-      const blob = await response.blob();
-      const href = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = href;
-      anchor.download = filename;
-      anchor.click();
-      URL.revokeObjectURL(href);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <span>
-      <button className="btn" disabled={busy || disabled} onClick={download}>
-        {label}
-      </button>
-      {disabled && <span className="faint"> — appended unsigned, nothing to verify</span>}
-      {error && <span className="error"> {error}</span>}
-    </span>
   );
 }

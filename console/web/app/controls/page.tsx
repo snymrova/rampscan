@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
+import { DownloadButton } from "../../components/DownloadButton";
 import { RequireAuth } from "../../components/guard";
 import {
   asOfRegisterRecord,
@@ -10,6 +11,7 @@ import {
   toLocalInputValue,
   useAsOfBoard,
 } from "../../lib/asof";
+import { csvFilename, downloadText, rollupCsv } from "../../lib/export";
 import { useCollection } from "../../lib/pb";
 import { formatAge } from "../../lib/mvx";
 import type { MetaRecord, RegisterRecord, RegisterState, RollupRecord } from "../../lib/types";
@@ -171,6 +173,20 @@ function Registers() {
             )}
           </>
         )}
+        <button
+          className="btn"
+          title="the rollup rows on screen, filters and as-of instant included"
+          disabled={filtered.length === 0}
+          onClick={() => {
+            const foldedAt = historical ? asOf! : (metaRow?.projected_at ?? "");
+            downloadText(
+              csvFilename(historical ? `${reg}-asof` : reg, foldedAt),
+              rollupCsv(filtered, foldedAt),
+            );
+          }}
+        >
+          export CSV
+        </button>
       </div>
 
       {historical && (
@@ -205,6 +221,7 @@ function Registers() {
               <th>Repo</th>
               <th>Coverage</th>
               <th>Recipes</th>
+              <th>Package</th>
             </tr>
           </thead>
           <tbody>
@@ -224,12 +241,14 @@ function Registers() {
                     })
                   }
                   registerByCell={registerByCell}
+                  reg={reg}
+                  historical={historical}
                 />
               );
             })}
             {!activeCol.loading && (!historical || asOfData !== null) && filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="empty">
+                <td colSpan={6} className="empty">
                   {historical
                     ? "nothing in this register as of this instant — no ledger statement at or before it"
                     : `nothing in this register${activeCol.records.length === 0 ? " — no projection yet" : ""}`}
@@ -249,12 +268,16 @@ function RollupRowView({
   open,
   toggle,
   registerByCell,
+  reg,
+  historical,
 }: {
   row: RollupRecord;
   linked: boolean;
   open: boolean;
   toggle: () => void;
   registerByCell: Map<string, RegisterRecord>;
+  reg: RegKind;
+  historical: boolean;
 }) {
   const recipeIds = row.recipe_ids ?? [];
   const c = row.counts;
@@ -282,6 +305,17 @@ function RollupRowView({
         </td>
         <td className="muted">
           {recipeIds.length} recipe{recipeIds.length === 1 ? "" : "s"} {open ? "▾" : "▸"}
+        </td>
+        <td>
+          {/* the package is assembled from the LIVE ledger; offering it under a
+              historical fold would hand back a package that doesn't match the
+              rows on screen — suppressed, and it says why (I3d's precedent) */}
+          <DownloadButton
+            label="evidence package"
+            url={`/api/export/control?reg=${reg}&id=${encodeURIComponent(row.rollup_id)}&repo=${encodeURIComponent(row.repo)}`}
+            disabled={historical}
+            note="live only"
+          />
         </td>
       </tr>
       {open &&
@@ -335,6 +369,7 @@ function RecipeSubRow({
           "no bundle"
         )}
       </td>
+      <td />
     </tr>
   );
 }

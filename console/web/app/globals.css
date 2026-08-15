@@ -239,3 +239,40 @@ pre.raw {
 .error { color: var(--violated); font-size: 13px; margin-top: 10px; }
 .empty { padding: 28px; text-align: center; color: var(--text-faint); }
 .badge-count { color: var(--text-faint); font-weight: 400; }
+
+/* ---- print (I3e) ----
+   The evidence page is the auditor's takeaway when a tar is one step too many:
+   a printed page must carry the facts that make the claim checkable — digest,
+   commit, dataset pin, tool versions, assertions and their offenders — and
+   nothing that only works on a screen. Truncation is a screen affordance;
+   on paper it is a missing fact, so overflow containers are unwrapped and
+   scroll boxes are allowed to run to as many pages as they need. CSS only,
+   deliberately: a PDF service is deferred by name. */
+@media print {
+  html, body {
+    background: #fff; color: #000;
+    font-size: 11pt;
+  }
+  /* chrome that cannot mean anything on paper */
+  .nav, .btn, button, .filters, .strip, .diff-strip, .asof-strip { display: none !important; }
+  .shell { max-width: none; margin: 0; padding: 0; }
+  a { color: #000; text-decoration: none; }
+  /* the URL behind a link is the reader's only way back */
+  a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444; }
+  .panel, pre.raw, .copycmd {
+    background: #fff; border: 1px solid #999; border-radius: 0;
+    color: #000;
+    /* every truncation on screen is a withheld fact on paper */
+    overflow: visible !important; white-space: pre-wrap !important; word-break: break-all;
+    break-inside: auto;
+  }
+  .muted, .faint, .subtitle { color: #333; }
+  .mono, code, pre { font-size: 9.5pt; }
+  .pill {
+    border: 1px solid #000; background: #fff !important; color: #000 !important;
+    padding: 0 4px;
+  }
+  table { break-inside: auto; }
+  tr { break-inside: avoid; }
+  .section-title { break-after: avoid; }
+}

@@ -163,6 +163,9 @@ export async function serve(options: ServeOptions): Promise<void> {
         RAMPSCAN_RECIPES_DIR: options.recipesDir,
         RAMPSCAN_DATASET_DIR: options.datasetDir,
         RAMPSCAN_DATASET_PIN: options.datasetPin,
+        // the artifacts an evidence package ships (I3e) live under the scan
+        // output dir; without it the export says why they are absent
+        RAMPSCAN_OUT_DIR: options.outDir,
       },
     });
     const forward = (chunk: Buffer) => {

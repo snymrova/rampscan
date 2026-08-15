@@ -304,3 +304,139 @@ test("action queue: renders ranked, with the scan's new violations", async ({ pa
     expect(rank[labels[i]!]!).toBeGreaterThanOrEqual(rank[labels[i - 1]!]!);
   }
 });
+
+test("export: the auditor takes the record away — package verifies offline, CSV matches the screen, print keeps the facts (I3e)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/controls");
+  await expect(page.getByRole("heading", { name: "Control register" })).toBeVisible();
+
+  // ---- the per-control evidence package -----------------------------------
+  // ra-5 is the flagship's control: pick it on the register, take it away
+  const row = page
+    .locator("tr")
+    .filter({ has: page.getByRole("cell", { name: "ra-5", exact: true }) });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    row.getByRole("button", { name: "evidence package" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/^rampscan-evidence-control-ra-5-\d{4}-\d{2}-\d{2}\.tar$/);
+  const files = untar(readFileSync((await download.path())!));
+
+  // the manifest speaks for every mapped recipe, gaps included
+  const manifest = JSON.parse(files.get("MANIFEST.json")!.toString("utf8")) as {
+    id: string;
+    state: string;
+    counts: { total: number };
+    verifyCommand: string;
+    rows: Array<{ recipeId: string; state: string; digest?: string; envelopePath?: string }>;
+  };
+  expect(manifest.id).toBe("ra-5");
+  expect(manifest.rows.length).toBe(manifest.counts.total);
+  expect(manifest.rows.map((r) => r.recipeId)).toContain(FLAGSHIP);
+  expect(files.has("VERIFY.md")).toBe(true);
+
+  // verification with node:crypto ONLY, against the package's own bytes —
+  // no rampscan code, and nothing read from this machine but the tar
+  const flagship = manifest.rows.find((r) => r.recipeId === FLAGSHIP)!;
+  expect(flagship.envelopePath).toBeTruthy();
+  const envelope = JSON.parse(files.get(flagship.envelopePath!)!.toString("utf8")) as {
+    payload: string;
+    payloadType: string;
+    signatures: Array<{ sig: string }>;
+  };
+  const payload = Buffer.from(envelope.payload, "base64");
+  expect(createHash("sha256").update(payload).digest("hex")).toBe(flagship.digest);
+  expect(payload.toString("utf8")).toContain(FLAGSHIP);
+  const pae = Buffer.concat([
+    Buffer.from(`DSSEv1 ${envelope.payloadType.length} ${envelope.payloadType} ${payload.length} `),
+    payload,
+  ]);
+  const publicKey = createPublicKey(files.get("rampscan.pub")!.toString("utf8"));
+  expect(
+    envelope.signatures.some((s) =>
+      cryptoVerify("sha256", pae, publicKey, Buffer.from(s.sig, "base64")),
+    ),
+  ).toBe(true);
+
+  // every artifact the package ships hashes to the digest its statement attests
+  for (const [name, bytes] of files) {
+    if (!name.startsWith("artifacts/")) continue;
+    expect(createHash("sha256").update(bytes).digest("hex")).toBe(name.split("/")[1]);
+  }
+
+  // and the package's own instructions work: run its verifyCommand verbatim
+  const args = manifest.verifyCommand
+    .replace("<digest>", flagship.digest!)
+    .trim()
+    .split(/\s+/)
+    .slice(2); // drop "pnpm rampscan"
+  const report = execFileSync("node_modules/.bin/tsx", ["packages/cli/src/main.ts", ...args], {
+    encoding: "utf8",
+  });
+  expect(report).toContain("signature ok");
+  expect(report).toContain("payload  ok");
+
+  // ---- CSV: the row count equals the screen -------------------------------
+  // compared against the count the PAGE renders, which is what "equals the
+  // on-screen register" means to the person holding both
+  const csvRows = async (name: string): Promise<string> => {
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "export CSV" }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(new RegExp(`^rampscan-${name}-`));
+    return readFileSync((await download.path())!, "utf8");
+  };
+  const dataLines = (csv: string): number => csv.trimEnd().split("\r\n").length - 1;
+
+  const controlCount = Number(await page.locator(".tabs button", { hasText: "Controls" }).locator(".count").innerText());
+  expect(dataLines(await csvRows("controls"))).toBe(controlCount);
+
+  // the coverage board, and the filtered case — a CSV that ignored the
+  // filters would still "match" an unfiltered screen, so filter first
+  await page.goto("/");
+  await expect(page.getByRole("row").filter({ hasText: FLAGSHIP }).first()).toBeVisible();
+  const allCount = Number(await page.locator(".tabs button", { hasText: "All" }).locator(".count").innerText());
+  const boardCsv = await csvRows("board");
+  expect(dataLines(boardCsv)).toBe(allCount);
+  expect(boardCsv).toContain(FLAGSHIP);
+
+  await page.locator(".tabs button", { hasText: "Violated" }).click();
+  const violatedCount = Number(await page.locator(".tabs button", { hasText: "Violated" }).locator(".count").innerText());
+  expect(violatedCount).toBeGreaterThan(0);
+  expect(violatedCount).toBeLessThan(allCount);
+  const violatedCsv = await csvRows("board");
+  expect(dataLines(violatedCsv)).toBe(violatedCount);
+  await page.locator(".tabs button", { hasText: "All" }).click();
+
+  // ---- print: the facts that make the claim checkable survive on paper ----
+  await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  const digest = /[0-9a-f]{64}/.exec(page.url())![0];
+  await page.emulateMedia({ media: "print" });
+  const printed = page.locator("body");
+  await expect(printed).toContainText(digest.slice(0, 16));
+  await expect(printed).toContainText("scanned commit");
+  await expect(printed).toContainText("dataset pin");
+  await expect(printed).toContainText("tool versions");
+  // screen-only chrome is gone; the record is not
+  await expect(page.locator(".nav")).toBeHidden();
+  await page.emulateMedia({ media: "screen" });
+});
+
+/** the reference tar reader — the package must be readable without our writer */
+function untar(bytes: Buffer): Map<string, Buffer> {
+  const out = new Map<string, Buffer>();
+  for (let offset = 0; offset + 512 <= bytes.length; ) {
+    const header = bytes.subarray(offset, offset + 512);
+    const name = header.subarray(0, 100).toString("ascii").replace(/\0.*$/, "");
+    if (name === "") break;
+    const size = parseInt(header.subarray(124, 135).toString("ascii").trim(), 8);
+    const start = offset + 512;
+    out.set(name, bytes.subarray(start, start + size));
+    offset = start + Math.ceil(size / 512) * 512;
+  }
+  return out;
+}

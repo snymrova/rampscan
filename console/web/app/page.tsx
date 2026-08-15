@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
 import { asOfRegisterRecord, toLocalInputValue, useAsOfBoard } from "../lib/asof";
+import { csvFilename, downloadText, registerCsv } from "../lib/export";
 import { getPb, useAuth, useCollection } from "../lib/pb";
 import { describePointer } from "../lib/pointers";
 import { controlFamily, ksiTheme } from "../lib/types";
@@ -261,6 +262,22 @@ function Board() {
             )}
           </>
         )}
+        <button
+          className="btn"
+          title="the rows on screen, filters and as-of instant included"
+          disabled={filtered.length === 0}
+          onClick={() => {
+            // the instant these rows were true: the chosen as-of instant in a
+            // historical view, the projection's own clock in the live one
+            const foldedAt = historical ? asOf! : (metaRow?.projected_at ?? "");
+            downloadText(
+              csvFilename(historical ? "board-asof" : "board", foldedAt),
+              registerCsv(filtered, foldedAt),
+            );
+          }}
+        >
+          export CSV
+        </button>
       </div>
 
       {historical && (

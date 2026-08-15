@@ -21,6 +21,15 @@ export type {
   ScopingProposalInput,
   ScopingSignatureStatus,
 } from "./scoping-register.js";
+export { computeEvidencePackage, tar } from "./export.js";
+export type {
+  EvidencePackage,
+  EvidencePackageManifest,
+  EvidencePackageOptions,
+  PackageArtifact,
+  PackageRow,
+  TarEntry,
+} from "./export.js";
 export { serve } from "./serve.js";
 export type { ServeOptions } from "./serve.js";
 export { startDaemon, describeDaemonEvent, DAEMON_STATUS_FILE } from "./daemon.js";
