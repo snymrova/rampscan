@@ -31,6 +31,10 @@ export interface RegisterRecord {
   control_ids: string[];
   state: RegisterState;
   cadence: string;
+  /** the collector the catalog says evidences this recipe (J3); "" when the recipe left the catalog */
+  collector: string;
+  /** the run that produced the live evidence (J3); "" when the cell has no live evidence */
+  run_id: string;
   bundle_digest: string;
   fresh_as_of: string;
   commit_sha: string;
@@ -296,6 +300,8 @@ export interface AsOfRegisterRow {
   controlIds: string[];
   state: RegisterState;
   cadence?: string;
+  collector?: string;
+  runId?: string;
   bundleDigest?: string;
   freshAsOf?: string;
   commit?: string;

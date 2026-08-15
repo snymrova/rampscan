@@ -286,6 +286,11 @@ export function foldEntries(
     };
     if (recipe?.cadence !== undefined) row.cadence = recipe.cadence;
     else if (live) row.cadence = live.bundle.predicate.cadence;
+    // The catalog join's third field (J3): which collector is supposed to
+    // evidence this recipe. Stated only when the catalog says so — a cell
+    // whose recipe is gone gets no collector, and the board's hop for it
+    // simply does not render rather than pointing somewhere invented.
+    if (recipe?.collection.collector !== undefined) row.collector = recipe.collection.collector;
 
     if (live) {
       // evidence outranks scoping: a recipe producing real verdicts is not N/A
@@ -294,6 +299,8 @@ export function foldEntries(
       row.bundleDigest = live.digest;
       row.freshAsOf = p.timestamp;
       row.commit = p.commit;
+      // the run that produced THIS evidence, from the predicate's own claim
+      row.runId = p.run_id;
       if (p.verdict === "violated") {
         // fix pointers (I2c): where the violation lives, lifted from the
         // live bundle's failing assertions — absent when the evidence

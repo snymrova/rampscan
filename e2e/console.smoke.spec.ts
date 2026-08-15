@@ -500,6 +500,106 @@ test("runs: the machinery behind the board — the timeline's counts are a recou
   await expect(page.locator("body")).toContainText("dispatched");
 });
 
+test("board hop: every row answers “how was this produced?”, and an empty row answers why not (J3)", async ({
+  page,
+}) => {
+  await signIn(page);
+
+  // ── an evidenced/violated row hops to THE run that produced it ──────────
+  // The flagship is violated by a real verdict from the real scan, so its hop
+  // is the exact case: this scan, this collector.
+  const flagshipRow = page.getByRole("row").filter({ hasText: FLAGSHIP }).first();
+  const hop = flagshipRow.getByRole("link", { name: "how was this produced?" });
+  await expect(hop).toBeVisible();
+
+  // the href is resolved from the row's own projected fields — read it before
+  // clicking so the landing can be checked against what the board claimed
+  const href = (await hop.getAttribute("href"))!;
+  const hopParams = new URLSearchParams(href.split("?")[1]);
+  const hopScan = hopParams.get("scan")!;
+  const hopCollector = hopParams.get("collector")!;
+  expect(hopScan).toBeTruthy();
+  // the flagship's verdict rests on reachability — the catalog's collector for
+  // it, not a tool name, and not a guess
+  expect(hopCollector).toBe("reachability");
+
+  await hop.click();
+  await expect(page).toHaveURL(/\/runs\?/, { timeout: 45_000 });
+  // it landed on the run the board named, expanded, with that collector
+  // highlighted — the page is not merely showing "a" run
+  const table = page.locator("table.subtable").first();
+  await expect(table).toBeVisible();
+  expect(await table.getAttribute("data-run")).toBe(hopScan);
+  await expect(page.locator("tr.hl")).toContainText(hopCollector);
+  // …and the run this hop reached is one this page actually holds: the
+  // "not in the projection" notice must NOT be showing
+  await expect(page.locator(".notice")).toHaveCount(0);
+
+  // ── the hop does not swallow the row's own click (I3a's stopPropagation) ──
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+
+  // ── no row is left without an answer ────────────────────────────────────
+  // Every evidenced/violated cell must carry the hop, not just the flagship:
+  // a board where some rows explain themselves and others do not is the
+  // failure mode this link exists to remove.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  const producedRows = page
+    .locator("table.reg tbody tr")
+    .filter({ has: page.locator("td .pill.evidenced, td .pill.violated") });
+  const producedCount = await producedRows.count();
+  expect(producedCount).toBeGreaterThan(1);
+  expect(await producedRows.locator("a.runhop").count()).toBe(producedCount);
+
+  // ── the unevidenced arrival ─────────────────────────────────────────────
+  // This fixture is fully tooled, so its board has no unevidenced row to click
+  // — the shape is pinned in the runHop twin test instead. What is pinned HERE
+  // is the landing that shape produces against the real run record: no scan
+  // named, so /runs substitutes the newest recorded scan of the repo and says
+  // out loud that it did.
+  const repo = (await producedRows.first().locator("td").nth(2).innerText()).trim();
+  expect(repo).toBeTruthy();
+  await page.goto(`/runs?repo=${encodeURIComponent(repo)}&collector=${hopCollector}`);
+  const notice = page.locator(".notice");
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("no run produced that board cell");
+  await expect(notice).toContainText("newest recorded scan");
+  // the substitution still highlights the collector the caller asked about
+  await expect(page.locator("tr.hl")).toContainText(hopCollector);
+
+  // …and when the named collector was never dispatched at all, the page says
+  // THAT instead of promising a highlight it will not draw — a different fact
+  // from "it ran and skipped", and the one an operator needs
+  await page.goto(`/runs?repo=${encodeURIComponent(repo)}&collector=not-a-collector`);
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("never dispatched");
+  await expect(page.locator("tr.hl")).toHaveCount(0);
+
+  // ── a scoped-out row gets no hop: its provenance is the scoping event ────
+  // (the two-key flow earlier in this file left one behind)
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  const naRow = page.getByRole("row").filter({ has: page.locator(".pill.notApplicable") }).first();
+  if ((await naRow.count()) > 0) {
+    await expect(naRow.locator("a.runhop")).toHaveCount(0);
+    // the row still explains itself — with the signed scoping, not a run
+    await expect(naRow.locator(".faint")).toContainText("approved by");
+  }
+
+  // ── the same hop rides the control register's recipe sub-rows ────────────
+  await page.goto("/controls");
+  await expect(page.getByRole("heading", { name: /register/i })).toBeVisible();
+  await page
+    .getByRole("row")
+    .filter({ hasText: /recipe/ })
+    .first()
+    .click();
+  await expect(page.locator("a.runhop").first()).toBeVisible();
+});
+
 /** the reference tar reader — the package must be readable without our writer */
 function untar(bytes: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();

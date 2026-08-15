@@ -108,6 +108,63 @@ export function sortRuns(runs: ScanRunRecord[]): ScanRunRecord[] {
 }
 
 /**
+ * The board's hop to the machinery (plan J3). One link per register row —
+ * "how was this produced?" — resolved from what the row already carries after
+ * the fold's catalog join, so the board needs no run data of its own and stays
+ * folded from evidence and scoping alone.
+ *
+ * Two shapes, and the difference is the whole point:
+ *
+ *   evidenced / violated  the row names the run that produced it, so the hop
+ *                         is exact: that scan, that collector.
+ *   unevidenced           NO run produced this cell — that is what unevidenced
+ *                         means. The honest target is the newest recorded run
+ *                         for the repo, because that is where the collector's
+ *                         skip reason lives, and this is precisely the row an
+ *                         operator is staring at when they need it.
+ *
+ * `notApplicable` deliberately gets NO hop: a scoped-out cell was not produced
+ * by a run and is not missing because of one — its provenance is the signed
+ * scoping event already rendered on the row, and pointing at a scan here would
+ * imply a run is why the cell reads n/a, which is false.
+ */
+export interface RunHop {
+  href: string;
+  /** the link's own text — the question this row actually raises */
+  label: string;
+  title: string;
+}
+
+export function runHop(row: {
+  repo: string;
+  state: string;
+  collector: string;
+  run_id: string;
+}): RunHop | null {
+  if (row.state === "notApplicable") return null;
+  // nothing to point at: no run produced it and the catalog names no collector
+  if (!row.run_id && !row.collector) return null;
+
+  const q = new URLSearchParams();
+  if (row.run_id) q.set("scan", row.run_id);
+  else q.set("repo", row.repo);
+  if (row.collector) q.set("collector", row.collector);
+
+  const unevidenced = !row.run_id;
+  return {
+    href: `/runs?${q.toString()}`,
+    label: unevidenced ? "why is this empty?" : "how was this produced?",
+    title: unevidenced
+      ? row.collector
+        ? `no run produced this cell — open the newest recorded scan of ${row.repo} at the ${row.collector} collector, where the reason is stated`
+        : `no run produced this cell — open the newest recorded scan of ${row.repo}`
+      : row.collector
+        ? `open run ${row.run_id} at the ${row.collector} collector — the tools, versions and argv behind this verdict`
+        : `open run ${row.run_id} — the tools, versions and argv behind this verdict`,
+  };
+}
+
+/**
  * The collectors of one run, ordered so the rows that explain an unevidenced
  * board cell come first: skipped, then everything else alphabetically. A skip
  * buried at line 9 of an 11-row table is the failure mode this page exists to

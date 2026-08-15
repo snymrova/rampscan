@@ -72,13 +72,13 @@ function scopingEntry(opts: {
   return { digest: `digest-${counter++}`, bundle, appendedAt: opts.timestamp };
 }
 
-function recipe(id: string): PipelineRecipe {
+function recipe(id: string, collector = "repo-facts"): PipelineRecipe {
   return {
     id,
     ksi_ids: ["KSI-SVC-CLS"],
     control_ids: ["sc-8.1"],
     evidence: "test recipe",
-    collection: { kind: "pipeline", collector: "repo-facts" },
+    collection: { kind: "pipeline", collector },
     expected_output: "rows",
     cadence: "weekly",
     automatable: "full",
@@ -300,6 +300,94 @@ describe("fix pointers on violated register rows (I2c)", () => {
   });
 });
 
+// J3: the board hop needs two facts on the row that the fold already has in
+// hand — which collector is SUPPOSED to evidence this recipe (the catalog
+// join, same as ksi_ids/control_ids) and which run DID (the live predicate's
+// own run_id). Both are joins, neither is a computation: the board must not
+// become a function of the run log, so nothing here may read a run record.
+describe("the run hop's two fields (J3)", () => {
+  const anchors = [{ path: "f", contentHash: HASH_A }];
+
+  it("the collector comes from the catalog and is carried per row, not per repo", () => {
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "sbom", timestamp: T1, commit: C1, anchors })],
+      T2,
+      { recipes: [recipe("sbom", "sbom"), recipe("secrets", "gitleaks")] },
+    );
+    const byId = new Map(projection.registers.map((r) => [r.recipeId, r]));
+    expect(byId.get("sbom")!.collector).toBe("sbom");
+    // the unevidenced row is exactly the one that needs the hop most, and it
+    // gets its collector from the catalog with no evidence in sight
+    expect(byId.get("secrets")!.state).toBe("unevidenced");
+    expect(byId.get("secrets")!.collector).toBe("gitleaks");
+  });
+
+  it("a recipe that fell out of the catalog names no collector — never a guess", () => {
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "legacy", timestamp: T1, commit: C1, anchors })],
+      T2,
+      { recipes: [] },
+    );
+    const row = projection.registers.find((r) => r.recipeId === "legacy")!;
+    expect(row.state).toBe("evidenced"); // still visible — nothing recorded hides
+    expect(row.collector).toBeUndefined();
+    // it still knows which run produced it: that fact lives in the bundle
+    expect(row.runId).toBe(`run-${T1}`);
+  });
+
+  it("runId is the LIVE bundle's own run — a superseded run never lingers on the row", () => {
+    const projection = foldEntries(
+      [
+        evidenceEntry({ recipe: "r", timestamp: T1, commit: C1, anchors }),
+        evidenceEntry({ recipe: "r", timestamp: T2, commit: C2, anchors }),
+      ],
+      T3,
+      { recipes: [recipe("r")] },
+    );
+    const row = projection.registers.find((x) => x.recipeId === "r")!;
+    expect(row.runId).toBe(`run-${T2}`);
+  });
+
+  it("an unevidenced cell carries NO run id — no run produced it, and the row says so", () => {
+    const projection = foldEntries(
+      [
+        evidenceEntry({ recipe: "r", timestamp: T1, commit: C1, anchors }),
+        // a later bundle saw the anchor change: r's evidence dies with no successor
+        evidenceEntry({ recipe: "other", timestamp: T2, commit: C2, anchors: [{ path: "f", contentHash: HASH_B }] }),
+      ],
+      T3,
+      { recipes: [recipe("r"), recipe("other"), recipe("never-scanned")] },
+    );
+    const byId = new Map(projection.registers.map((r) => [r.recipeId, r]));
+    expect(byId.get("r")!.state).toBe("unevidenced");
+    expect(byId.get("r")!.runId).toBeUndefined();
+    expect(byId.get("never-scanned")!.runId).toBeUndefined();
+  });
+
+  it("a scoped-out cell carries no run id either — a scoping is not a run", () => {
+    const projection = foldEntries([scopingEntry({ recipe: "na-recipe", timestamp: T1 })], T2, {
+      recipes: [recipe("na-recipe", "kubescape")],
+    });
+    const row = projection.registers.find((r) => r.recipeId === "na-recipe")!;
+    expect(row.state).toBe("notApplicable");
+    expect(row.runId).toBeUndefined();
+    expect(row.collector).toBe("kubescape"); // the catalog still knows who owns it
+  });
+
+  it("run records still introduce no register cell — the hop's fields changed nothing", () => {
+    // The standing J1 rule, re-pinned here because J3 is the first thing to
+    // put run identity on a board row: the id RIDES on evidence, it does not
+    // let the run log create or move a cell.
+    const projection = foldEntries(
+      [evidenceEntry({ recipe: "r", timestamp: T1, commit: C1, anchors })],
+      T2,
+      { recipes: [recipe("r")] },
+    );
+    expect(projection.registers).toHaveLength(1);
+    expect(projection.registers[0]!.runId).toBe(`run-${T1}`);
+  });
+});
+
 describe("sqlite round trip", () => {
   it("write → read returns the identical projection — the rebuild proof's mechanism", async () => {
     const dbPath = join(await mkdtemp(join(tmpdir(), "rampscan-proj-")), "projection.db");
@@ -327,9 +415,26 @@ describe("sqlite round trip", () => {
         scopingEntry({ recipe: "na-recipe", timestamp: T3 }),
       ],
       T3,
-      { recipes: [recipe("r"), recipe("viol"), recipe("na-recipe"), recipe("never-scanned")] },
+      {
+        recipes: [
+          recipe("r", "sbom"),
+          recipe("viol", "semgrep"),
+          recipe("na-recipe", "kubescape"),
+          recipe("never-scanned", "gitleaks"),
+        ],
+      },
     );
     expect(projection.registers.find((x) => x.recipeId === "viol")!.pointers).toBeDefined();
+    // the J3 columns must survive the trip too — a distinct collector per row
+    // so a column that dropped or smeared would show
+    // rows sort by cell key: na-recipe, never-scanned, r, viol
+    expect(projection.registers.map((x) => x.collector)).toEqual([
+      "kubescape",
+      "gitleaks",
+      "sbom",
+      "semgrep",
+    ]);
+    expect(projection.registers.find((x) => x.recipeId === "r")!.runId).toBe(`run-${T2}`);
     await writeProjectionSqlite(projection, dbPath);
     expect(readProjectionSqlite(dbPath)).toEqual(projection);
   });

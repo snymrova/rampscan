@@ -209,6 +209,23 @@ export interface RegisterRow {
   state: RegisterState;
   /** the recipe's declared cadence, when the catalog knows it */
   cadence?: Cadence;
+  /**
+   * The collector whose manifest declares this recipe (J3), from the same
+   * catalog join that supplies ksiIds and controlIds. Absent when the recipe
+   * fell out of the catalog — never inferred from the ledger, because a
+   * bundle names TOOLS, not the collector that ran them, and guessing the
+   * collector from a tool name would put a wrong name on the one hop an
+   * operator follows to find out why a cell is empty.
+   */
+  collector?: string;
+  /**
+   * The run that produced this cell's live evidence (J3) — the live bundle
+   * predicate's own `run_id`, carried onto the row so the board can point at
+   * the run record without re-reading the bundle. Absent when the cell has no
+   * live evidence, which is the honest shape: an unevidenced cell was
+   * produced by no run at all, so there is no run id to state.
+   */
+  runId?: string;
   /** set when state is evidenced/violated */
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601 — bundle timestamp, for the clock view

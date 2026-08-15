@@ -165,6 +165,23 @@ table.reg.subtable td { padding: 6px 10px; }
   overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;
 }
 
+/* ---- the board hop (J3): conclusion → the machinery that produced it ---- */
+.runhop {
+  font-size: 12px; white-space: nowrap; margin-right: 10px;
+  color: var(--text-dim); text-decoration: none;
+  border-bottom: 1px dotted var(--border);
+}
+.runhop:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* An arrival notice: what this page was asked to show, and when it cannot,
+   why. Reads as an answer, not an error — the fact is usually benign. */
+.notice {
+  padding: 9px 12px; margin: 0 0 12px; font-size: 12.5px;
+  color: var(--text-dim); background: var(--bg-raised);
+  border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 6px;
+}
+
 /* ---- state pills ---- */
 .pill {
   display: inline-block; padding: 1px 9px; border-radius: 999px;
@@ -283,7 +300,9 @@ pre.raw {
   a { color: #000; text-decoration: none; }
   /* the URL behind a link is the reader's only way back */
   a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444; }
-  .panel, pre.raw, .copycmd {
+  /* the hop's href IS the run id — on paper the link text alone says nothing,
+     and the a[href] rule above turns it into a stated fact */
+  .panel, pre.raw, .copycmd, .notice {
     background: #fff; border: 1px solid #999; border-radius: 0;
     color: #000;
     /* every truncation on screen is a withheld fact on paper */

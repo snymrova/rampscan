@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
+import { RunHopLink } from "../components/RunHopLink";
 import { asOfRegisterRecord, toLocalInputValue, useAsOfBoard } from "../lib/asof";
 import { csvFilename, downloadText, registerCsv } from "../lib/export";
 import { getPb, useAuth, useCollection } from "../lib/pb";
@@ -475,6 +476,9 @@ function RegisterRowView({
           {row.fresh_as_of ? `${formatAge(row.fresh_as_of)} ago` : "—"}
         </td>
         <td onClick={(e) => e.stopPropagation()}>
+          {/* the hop to the machinery (J3) — how this row was produced, or,
+              for an empty row, which run failed to produce it */}
+          <RunHopLink row={row} historical={historical} />
           {row.state === "unevidenced" && !historical && (
             <button className="btn" onClick={() => setProposing((p) => !p)}>
               propose N/A

@@ -46,18 +46,44 @@ export default function RunsPage() {
 
 function Runs() {
   const params = useSearchParams();
-  // the deep link J3's board hop lands on: /runs?scan=<run_id>&collector=<name>
+  // The deep links J3's board hop lands on. Two shapes, because a board row
+  // has two honest answers:
+  //   ?scan=<run_id>&collector=<name>   evidenced — THE run that produced it
+  //   ?repo=<repo>&collector=<name>     unevidenced — no run produced it, so
+  //                                     the target is the newest recorded scan
+  //                                     of that repo, which is where the
+  //                                     collector's skip reason lives
   const linkedScan = params.get("scan");
   const linkedCollector = params.get("collector");
+  const linkedRepo = params.get("repo");
   const runs = useCollection<ScanRunRecord>("scan_runs", { sort: "-run_timestamp" });
   const meta = useCollection<MetaRecord>("meta");
-  const [repo, setRepo] = useState("all");
+  const [repo, setRepo] = useState(linkedRepo ?? "all");
   const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
 
   const metaRow = meta.records[0];
   const sorted = useMemo(() => sortRuns(runs.records), [runs.records]);
   const repos = useMemo(() => [...new Set(sorted.map((r) => r.repo))].sort(), [sorted]);
   const filtered = repo === "all" ? sorted : sorted.filter((r) => r.repo === repo);
+
+  // Which run the arrival expands. A named scan wins; otherwise a hop that
+  // named only a collector resolves to the newest run on screen — sortRuns
+  // puts it first, so this is the same "newest" the page already shows.
+  const openRunId = linkedScan ?? (linkedCollector ? (filtered[0]?.run_id ?? null) : null);
+  // The projection keeps the newest N runs and the ledger keeps every one, so
+  // a hop from evidence older than the cap lands on a scan this page does not
+  // hold. Say that out loud — an unremarkable list would read as "that run
+  // does not exist", which is exactly wrong.
+  const linkedScanMissing = linkedScan !== null && !sorted.some((r) => r.run_id === linkedScan);
+  // A hop can name a collector the target run never dispatched — a recipe
+  // whose collector was removed from the run set is unevidenced for that
+  // reason, and it is a different answer than "it ran and skipped". The page
+  // must not promise a highlight it will not draw.
+  const openRun = filtered.find((r) => r.run_id === openRunId);
+  const linkedCollectorAbsent =
+    linkedCollector !== null &&
+    openRun !== undefined &&
+    !openRun.collectors.some((c) => c.collector === linkedCollector);
   // recounted from the rows on screen, never typed — the same discipline every
   // register summary on this console follows
   const skippedRuns = filtered.filter((r) => runCounts(r.collectors).skipped > 0).length;
@@ -95,6 +121,42 @@ function Runs() {
         </div>
       )}
 
+      {/* arriving from a board hop (J3): say what this page was asked to show
+          and, when it cannot show it, why — never leave the reader to infer it
+          from a list that looks ordinary */}
+      {linkedScanMissing && !runs.loading && (
+        <p className="notice">
+          the board row you came from was produced by run{" "}
+          <span className="mono">{linkedScan}</span>, which this page does not hold —{" "}
+          {sorted.length === 0
+            ? // the whole-projection case: run records began at J1, and evidence
+              // older than that names a run nothing ever recorded. Different fact
+              // from the cap, and saying "older than the newest 0 runs" would be
+              // an arithmetic sentence about a categorical absence.
+              "no scan has appended a run record here yet. Evidence recorded before run records existed names a run that was never written down, and re-scanning is what produces one."
+            : `it is older than the newest ${sorted.length} run${sorted.length === 1 ? "" : "s"} this projection keeps.`}{" "}
+          The bundle itself is unaffected: it verifies offline exactly as before.
+        </p>
+      )}
+      {linkedRepo !== null && linkedCollector !== null && !runs.loading && filtered.length > 0 && (
+        <p className="notice">
+          no run produced that board cell — showing the newest recorded scan of{" "}
+          <span className="mono">{linkedRepo}</span>
+          {linkedCollectorAbsent ? (
+            <>
+              , which never dispatched{" "}
+              <span className="mono run-skips">{linkedCollector}</span> at all. That is the reason
+              the cell is empty: the collector was not in this run&rsquo;s set, so it reported
+              nothing to skip.
+            </>
+          ) : (
+            <>
+              , where <span className="mono">{linkedCollector}</span> is highlighted below with
+              whatever it reported.
+            </>
+          )}
+        </p>
+      )}
       {runs.error && <p className="error">{runs.error}</p>}
       <div className="panel">
         <table className="reg">
@@ -115,12 +177,12 @@ function Runs() {
                 key={run.id}
                 run={run}
                 showRepo={repos.length > 1 && repo === "all"}
-                open={expanded.get(run.run_id) ?? run.run_id === linkedScan}
-                linkedCollector={run.run_id === linkedScan ? linkedCollector : null}
+                open={expanded.get(run.run_id) ?? run.run_id === openRunId}
+                linkedCollector={run.run_id === openRunId ? linkedCollector : null}
                 toggle={() =>
                   setExpanded((m) => {
                     const next = new Map(m);
-                    next.set(run.run_id, !(m.get(run.run_id) ?? run.run_id === linkedScan));
+                    next.set(run.run_id, !(m.get(run.run_id) ?? run.run_id === openRunId));
                     return next;
                   })
                 }

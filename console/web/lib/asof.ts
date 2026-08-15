@@ -65,6 +65,8 @@ export function asOfRegisterRecord(row: AsOfRegisterRow): RegisterRecord {
     control_ids: row.controlIds,
     state: row.state,
     cadence: row.cadence ?? "",
+    collector: row.collector ?? "",
+    run_id: row.runId ?? "",
     bundle_digest: row.bundleDigest ?? "",
     fresh_as_of: row.freshAsOf ?? "",
     commit_sha: row.commit ?? "",

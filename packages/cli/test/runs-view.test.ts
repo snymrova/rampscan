@@ -31,6 +31,12 @@ interface RunsModule {
   formatRunDuration(ms: number): string;
   sortRuns(runs: unknown[]): Array<{ run_id: string }>;
   sortCollectors(collectors: unknown[]): Array<{ collector: string }>;
+  runHop(row: {
+    repo: string;
+    state: string;
+    collector: string;
+    run_id: string;
+  }): { href: string; label: string; title: string } | null;
 }
 
 const consoleLib = join(dirname(fileURLToPath(import.meta.url)), "../../../console/web/lib/runs.ts");
@@ -215,5 +221,62 @@ describe("ordering", () => {
       "api-spec",
       "sbom",
     ]);
+  });
+});
+
+// J3: the board hop's href, resolved from what the register row already
+// carries after the fold's catalog join. The board fetches no run data to
+// build this — if it did, the board would become partly a function of the run
+// log, which is the one thing the fold's standing rule forbids.
+describe("runHop: the board's link to the machinery (J3)", () => {
+  function row(overrides: Record<string, unknown> = {}) {
+    return {
+      repo: "fixtures/app",
+      state: "evidenced",
+      collector: "sbom",
+      run_id: "run-2026-08-15T10:00:00.000Z",
+      ...overrides,
+    } as { repo: string; state: string; collector: string; run_id: string };
+  }
+
+  it("an evidenced row points at THE run that produced it, at its collector", () => {
+    const hop = M.runHop(row())!;
+    expect(hop.href).toBe("/runs?scan=run-2026-08-15T10%3A00%3A00.000Z&collector=sbom");
+    expect(hop.label).toBe("how was this produced?");
+  });
+
+  it("a violated row hops the same way — a verdict is still a produced answer", () => {
+    expect(M.runHop(row({ state: "violated" }))!.href).toContain("scan=run-");
+  });
+
+  it("an unevidenced row names no scan — no run produced it — and asks the repo instead", () => {
+    const hop = M.runHop(row({ state: "unevidenced", run_id: "" }))!;
+    expect(hop.href).toBe("/runs?repo=fixtures%2Fapp&collector=sbom");
+    expect(hop.href).not.toContain("scan=");
+    // the question the row actually raises, not the one an evidenced row does
+    expect(hop.label).toBe("why is this empty?");
+    expect(hop.title).toContain("no run produced this cell");
+  });
+
+  it("a scoped-out row gets NO hop — its provenance is the scoping event, not a run", () => {
+    expect(M.runHop(row({ state: "notApplicable", run_id: "" }))).toBeNull();
+    // and not even when a stale run id is somehow present
+    expect(M.runHop(row({ state: "notApplicable" }))).toBeNull();
+  });
+
+  it("a row with neither a run nor a collector gets no hop rather than a guessed one", () => {
+    expect(M.runHop(row({ state: "unevidenced", run_id: "", collector: "" }))).toBeNull();
+  });
+
+  it("a recipe that left the catalog still hops to its run, just without a collector", () => {
+    const hop = M.runHop(row({ collector: "" }))!;
+    expect(hop.href).toBe("/runs?scan=run-2026-08-15T10%3A00%3A00.000Z");
+    expect(hop.href).not.toContain("collector=");
+  });
+
+  it("repo and run id are URL-encoded — a slash in a repo name is not a path segment", () => {
+    const hop = M.runHop(row({ state: "unevidenced", run_id: "", repo: "acme/web app" }))!;
+    expect(hop.href).toBe("/runs?repo=acme%2Fweb+app&collector=sbom");
+    expect(hop.href.split("?")[1]!.split("&")[0]).toBe("repo=acme%2Fweb+app");
   });
 });

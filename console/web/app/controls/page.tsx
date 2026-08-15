@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { DownloadButton } from "../../components/DownloadButton";
 import { RequireAuth } from "../../components/guard";
+import { RunHopLink } from "../../components/RunHopLink";
 import {
   asOfRegisterRecord,
   asOfRollupRecord,
@@ -324,6 +325,7 @@ function RollupRowView({
             key={recipeId}
             recipeId={recipeId}
             register={registerByCell.get(`${row.repo} ${recipeId}`)}
+            historical={historical}
           />
         ))}
     </>
@@ -333,9 +335,12 @@ function RollupRowView({
 function RecipeSubRow({
   recipeId,
   register,
+  historical,
 }: {
   recipeId: string;
   register: RegisterRecord | undefined;
+  /** an as-of fold (I3d): /runs reads the live projection, so no hop from history */
+  historical: boolean;
 }) {
   const router = useRouter();
   const digest = register?.bundle_digest;
@@ -369,7 +374,11 @@ function RecipeSubRow({
           "no bundle"
         )}
       </td>
-      <td />
+      <td onClick={(e) => e.stopPropagation()}>
+        {/* the same hop the board carries (J3) — an unevidenced recipe under a
+            control is exactly the row whose "why" the auditor asks about */}
+        {register && <RunHopLink row={register} historical={historical} />}
+      </td>
     </tr>
   );
 }
