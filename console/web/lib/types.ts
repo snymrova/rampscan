@@ -46,6 +46,13 @@ export interface ClaimBasisRecord {
     edge_count: number;
     inferred_edge_count: number;
   };
+  /**
+   * The declared architecture rules this verdict was checked against (L1), as
+   * canonical JSON — one string per rule. Rendered as the rules themselves and
+   * never paraphrased: the reader is checking whether the verdict matches the
+   * declaration, and a summary of the declaration is not the declaration.
+   */
+  contract_rules?: string[];
   degraded?: string;
 }
 

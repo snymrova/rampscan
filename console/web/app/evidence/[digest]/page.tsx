@@ -170,6 +170,23 @@ function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
               </dd>
             </>
           )}
+          {(basis.contract_rules?.length ?? 0) > 0 && (
+            <>
+              <dt>rules checked</dt>
+              {/* the declaration itself, not a summary of it (L1): the reader is
+                  deciding whether the verdict above matches what the repository
+                  said about itself, and a paraphrase is not what was checked */}
+              <dd className="mono">
+                {basis.contract_rules!.map((rule) => (
+                  <div key={rule}>{rule}</div>
+                ))}
+                <div className="faint">
+                  declared by the scanned repository in rampscan.config.json, and signed with this
+                  claim — editing a rule re-keys this evidence
+                </div>
+              </dd>
+            </>
+          )}
           {basis.graph && (
             <>
               <dt>the graph walked</dt>

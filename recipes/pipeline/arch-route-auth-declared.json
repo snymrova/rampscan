@@ -1,0 +1,39 @@
+{
+  "id": "arch-route-auth-declared",
+  "ksi_ids": ["KSI-IAM-ELP"],
+  "control_ids": ["ac-3", "cm-2.7"],
+  "evidence": "Every route matched by a declared route-auth contract rule reaches an authentication or authorization check in its call path at the scanned commit, and every declared rule matches at least one route the code graph found",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "contract",
+    "inputs": ["graph.db"]
+  },
+  "expected_output": "One row per (declared rule, matched route): rule_id, matched, route, file, line, auth_reached, auth_symbol, call_path, call_path_resolutions — plus a matched:false row for any rule whose pattern matched no route",
+  "assertions": [
+    {
+      "field": "rule_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "auth_reached", "op": "eq", "value": false }],
+      "controls": ["ac-3", "cm-2.7"],
+      "description": "Every route matched by a declared route-auth rule reaches an authentication check in its call path (under-approximate calls/handles walk over graph.db)."
+    },
+    {
+      "field": "rule_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "matched", "op": "eq", "value": false }],
+      "controls": ["cm-2.7"],
+      "description": "Every declared route-auth rule matches at least one route the graph found — a rule that matches nothing is checking nothing, and a mistyped pattern must fail rather than pass."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "L1: the contract gate promotes route-auth-coverage's heuristic to declared intent. route-auth-coverage observes every route against a name pattern; this recipe checks only the routes the repo's own rampscan.config.json contract says MUST pass, with the same under-approximate walk (calls/handles edges only — a positive auth claim needs a real chain). The rules evaluated ride the bundle's basis as canonical JSON and are keyed into evidence identity, so editing a rule re-keys the evidence. A repo with no contract stays honestly unevidenced with a stated skip; a repo whose graph found no routes stays unevidenced too.",
+  "plain": {
+    "checks": "Reads the architecture contract the repository declares in its rampscan.config.json — which routes must require an authenticated caller — and follows each matching route's call path through the code to see whether an authentication check actually sits on the way in.",
+    "violation": "The code and the repository's own declared intent disagree: a route the contract says must check identity serves requests without checking any. A declared rule that matches no route at all also fails, because a mistyped pattern would otherwise quietly waive the very rule it meant to state.",
+    "fix": "Add the check to the route's handler or to middleware mounted in front of it — or, if the intent genuinely changed, amend the contract in rampscan.config.json, where the change is reviewed like any other. A rule that matches nothing needs its route pattern corrected."
+  },
+  "anchor": "commit"
+}

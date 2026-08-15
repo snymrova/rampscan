@@ -120,6 +120,10 @@ describe("the catalog's plain-language layer is complete (K1)", () => {
       "collector",
       "recipe",
       "bundle",
+      // L1's vocabulary: the architecture contract is a word the repository
+      // being scanned writes, so an operator meets it first on a board row
+      "contract",
+      "boundary",
     ];
     for (const recipe of recipes) {
       const prose = Object.values(recipe.plain!).join(" ");
@@ -150,6 +154,9 @@ describe("the catalog's plain-language layer is complete (K1)", () => {
       "two-key write",
       "projection",
       "ledger",
+      "architecture contract",
+      "contract rule",
+      "boundary",
     ];
     for (const term of committed) {
       expect(glossary.lookupTerm(term), `no glossary entry for "${term}"`).not.toBeNull();

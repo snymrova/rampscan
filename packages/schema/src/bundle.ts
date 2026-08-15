@@ -108,6 +108,18 @@ export const ClaimBasis = z.object({
       inferred_edge_count: z.number().int(),
     })
     .optional(),
+  /**
+   * The declared contract rules this gate evaluated (L1), as canonical JSON —
+   * one string per rule, exactly the rules of THIS recipe's kind, normalized
+   * so two spellings of the same declaration compare equal. Signed with the
+   * claim for the same reason the entry-point set is: the verdict is "the code
+   * holds to THESE rules", and a console fetching the rule text from today's
+   * config would render a contract other than the one the walk checked.
+   * Because `sameEvidence` compares the basis whole, editing a rule re-keys
+   * its recipe's evidence and kills the stale claim — the L0 identity
+   * decision, inherited rather than re-implemented.
+   */
+  contract_rules: z.array(z.string()).optional(),
   /** set when the gate ran degraded (no graph, no entry points) — the rows say so too */
   degraded: z.string().optional(),
 });

@@ -61,6 +61,21 @@ if (flagship?.verdict !== "violated") {
   process.exit(1);
 }
 
+// Same posture, for L1: the fixture declares an architecture contract in its
+// own rampscan.config.json and breaks it deliberately. The contract gate needs
+// no external tool at all — it is a pure join of the config against graph.db —
+// so unlike the check above, a failure here means the gate or the fixture is
+// broken, never a missing binary.
+const boundary = result.recipes.find((r) => r.recipe_id === "arch-boundaries-hold");
+if (boundary?.verdict !== "violated") {
+  console.error(
+    `fixture scan did not violate arch-boundaries-hold (got: ${boundary?.verdict ?? "no row"}) — ` +
+      "the fixture's declared contract, the contract gate, or the graph it reads is broken; " +
+      "no external tool is involved in this one",
+  );
+  process.exit(1);
+}
+
 // A SECOND repo, deliberately unremarkable (K1). vulnerable-app is fully
 // tooled, so every one of its rows comes back evidenced or violated and the
 // board has no empty cell at all — which left J3's "why is this empty?" hop

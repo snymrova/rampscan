@@ -94,7 +94,11 @@ describe("the real wiring holds together", () => {
     const once = renderToolMap(map, false);
     const twice = renderToolMap(await realMap(), false);
     expect(once).toBe(twice);
-    expect(once).toContain("RECIPES (15)");
+    // the header states the count it actually rendered — derived, not frozen:
+    // a hardcoded number here fails on every new recipe while proving nothing
+    // about the header, which is the thing under test
+    expect(once).toContain(`RECIPES (${map.recipes.length})`);
+    expect(map.recipes.length).toBeGreaterThanOrEqual(15);
     expect(once).toContain("pure — no external tool");
   });
 });

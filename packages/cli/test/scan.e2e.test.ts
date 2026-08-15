@@ -7,6 +7,7 @@ import { writeFile } from "node:fs/promises";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
   SEMGREP_RESULTS_ARTIFACT,
+  contract,
   gitleaks,
   graphCollector,
   osvScanner,
@@ -97,7 +98,17 @@ beforeAll(async () => {
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
     recipesDir: join(repoRoot, "recipes/pipeline"),
-    collectors: [repoFacts, gitleaks, graphCollector, stubSemgrep, syft, osvScanner, reachability, sastGate],
+    collectors: [
+      repoFacts,
+      gitleaks,
+      graphCollector,
+      contract,
+      stubSemgrep,
+      syft,
+      osvScanner,
+      reachability,
+      sastGate,
+    ],
   });
   result = outcome.result;
   resultPath = outcome.resultPath;
@@ -155,6 +166,45 @@ describe("rampscan scan on the planted-fault fixture", () => {
     expect(sastFindings[0]!.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
     // the unreachable eval: NO finding — not_affected, proven by the graph
     expect(sastFindings.some((f) => f.summary.includes("legacy-tools"))).toBe(false);
+  });
+
+  it("the architecture contract is checked against the code, and both declared rules break (L1)", () => {
+    // the fixture declares its own intent in rampscan.config.json and breaks
+    // it twice — this is the whole L1 loop through the real pipeline: config →
+    // graph → pure gate → assertions → verdict
+    const boundary = result.recipes.find((r) => r.recipe_id === "arch-boundaries-hold")!;
+    expect(boundary.verdict).toBe("violated");
+    // exactly ONE of the two importers offends: src/server.js is allowed
+    expect(boundary.assertions[0]!.detail).toContain("got 1");
+    expect(boundary.assertions[0]!.detail).toContain("src/render.js");
+    expect(boundary.assertions[0]!.detail ?? "").not.toContain('"file":"src/server.js"');
+    // the offender pointer carries the import as the call path
+    expect(boundary.assertions[0]!.offenders?.[0]?.call_path).toBe("src/render.js » src/billing.js");
+
+    const routes = result.recipes.find((r) => r.recipe_id === "arch-route-auth-declared")!;
+    expect(routes.verdict).toBe("violated");
+    expect(routes.assertions[0]!.detail).toContain("GET /health");
+    expect(routes.assertions[0]!.detail ?? "").not.toContain("GET /settings");
+    // and the second assertion of each — "the rule matched something" — passes
+    // here, because these rules do match: a mistyped rule is contract.test.ts's
+    expect(boundary.assertions[1]!.passed).toBe(true);
+    expect(routes.assertions[1]!.passed).toBe(true);
+
+    // the rules evaluated are signed with each claim, per kind
+    expect(boundary.basis!.contract_rules![0]).toContain("billing-isolated");
+    expect(routes.basis!.contract_rules![0]).toContain("all-routes-authed");
+    expect(boundary.basis!.approximation).toBe("over");
+    expect(routes.basis!.approximation).toBe("under");
+
+    const contractFindings = result.findings.filter((f) => f.variable === "contract");
+    expect(contractFindings).toHaveLength(2);
+  });
+
+  it("the contract gate spawns nothing, and the run says so rather than naming a tool", () => {
+    // a pure collector's tool version is its own, not a binary's — the J5
+    // distinction between "no external tool" and "a missing binary"
+    expect(result.tool_versions["contract"]).toMatch(/^0\.1\.0\+graph/);
+    expect(result.skipped_collectors.some((s) => s.collector === "contract")).toBe(false);
   });
 
   it.skipIf(!installed("gitleaks"))("the history-only secret violates no-secrets-in-history", () => {

@@ -59,7 +59,7 @@ describe("the tools a collector declares are the tools it actually resolves", ()
     // repo-facts, graph, reachability and sast-reachability read the repo or
     // earlier artifacts; "pure" is a fact about them, and the console prints
     // it as such instead of as a missing binary
-    for (const name of ["repo-facts", "graph", "reachability", "sast-reachability"]) {
+    for (const name of ["repo-facts", "graph", "reachability", "sast-reachability", "contract"]) {
       const collector = allCollectors.find((c) => c.manifest.name === name)!;
       expect(collector.manifest.tools ?? []).toEqual([]);
     }

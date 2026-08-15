@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { Collector } from "@rampscan/core";
 import { checkov } from "./checkov.js";
+import { contract } from "./contract.js";
 import { gitleaks } from "./gitleaks.js";
 import { graphCollector } from "./graph.js";
 import { grype } from "./grype.js";
@@ -27,6 +28,13 @@ export { graphCollector } from "./graph.js";
 export { reachability, OPENVEX_ARTIFACT, REACHABILITY_VERSION, purlOf } from "./reachability.js";
 export { semgrep, SEMGREP_RESULTS_ARTIFACT, SEMGREP_RULES_PATH, SemgrepResults, relativizeResultPath } from "./semgrep.js";
 export { sastGate, SAST_GATE_VERSION } from "./sast-gate.js";
+export {
+  contract,
+  CONTRACT_GATE_VERSION,
+  ROUTE_AUTH_RECIPE,
+  BOUNDARY_RECIPE,
+  inModulePrefix,
+} from "./contract.js";
 export { checkov, CHECKOV_RESULTS_ARTIFACT, matchIacFiles } from "./checkov.js";
 export { spectral, SPECTRAL_RESULTS_ARTIFACT, matchSpecFiles } from "./spectral.js";
 
@@ -52,6 +60,7 @@ export const allCollectors: Collector[] = [
   repoFacts,
   gitleaks,
   graphCollector,
+  contract,
   semgrep,
   syft,
   osvScanner,

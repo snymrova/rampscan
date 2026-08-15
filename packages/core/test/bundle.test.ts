@@ -121,3 +121,55 @@ describe("sameEvidence × the J5/I3f additions", () => {
     expect(sameEvidence(bundle({}), bundle({ collector: "repo-facts" }))).toBe(false);
   });
 });
+
+// L1's contract rules ride the same slot for the same reason, and this is the
+// hole they close: the contract gate anchors rampscan.config.json, so an edit
+// to the FILE already drifts the anchor — but an anchor is a content hash of
+// the whole file, and the two contract recipes share it. Without the rules in
+// the basis, editing a boundary rule would re-key BOTH recipes' evidence (the
+// config's hash moved) while telling neither which rules it was actually
+// checked against. Keyed per kind, each recipe's evidence states its own rules.
+
+const contractBasis = (rules: string[]) =>
+  ({
+    approximation: "over" as const,
+    statement: "unknowns count against the repo",
+    entrypoints: ["src/index.js"],
+    entrypoint_source: "package.json",
+    contract_rules: rules,
+  }) as EvidenceBundle["predicate"]["basis"];
+
+describe("sameEvidence × L1's contract rules", () => {
+  it("an edited rule re-keys, even when the verdict and every row hold still", () => {
+    // widening an allow-list is exactly the case: the same code, the same
+    // "evidenced" verdict — against a DIFFERENT rule. The old bundle claiming
+    // the new rule holds is the stale claim this kills.
+    const strict = bundle({
+      collector: "contract",
+      basis: contractBasis(['{"allowedImporters":["src/server.js"],"id":"billing-isolated"}']),
+    });
+    const widened = bundle({
+      collector: "contract",
+      basis: contractBasis([
+        '{"allowedImporters":["src/server.js","src/render.js"],"id":"billing-isolated"}',
+      ]),
+    });
+    expect(sameEvidence(strict, widened)).toBe(false);
+  });
+
+  it("an added rule re-keys the evidence of its own kind", () => {
+    const one = bundle({ collector: "contract", basis: contractBasis(['{"id":"a"}']) });
+    const two = bundle({ collector: "contract", basis: contractBasis(['{"id":"a"}', '{"id":"b"}']) });
+    expect(sameEvidence(one, two)).toBe(false);
+  });
+
+  it("an unchanged contract is the same evidence — a re-scan of a still-true claim survives", () => {
+    const rules = ['{"id":"billing-isolated","module":"src/billing"}'];
+    expect(
+      sameEvidence(
+        bundle({ collector: "contract", basis: contractBasis(rules) }),
+        bundle({ collector: "contract", basis: contractBasis([...rules]) }),
+      ),
+    ).toBe(true);
+  });
+});

@@ -34,6 +34,16 @@
 //   (the Dockerfile and CI workflow above double as checkov's targets:
 //    no USER, no HEALTHCHECK, unpinned action — failed baseline checks)
 //
+// The architecture-contract pair (plan L1 — rampscan.config.json declares
+// intent, the contract gate checks the code against it):
+//   10. a declared boundary broken: the contract says only src/server.js may
+//       import src/billing, and src/render.js imports it directly — the gate
+//       must name the offending import as the call path (server.js's own
+//       import of billing is the allowed contrast)
+//   11. a declared route-auth rule broken: the contract says every route must
+//       reach an auth check, and GET /health (fault 5) does not — the same
+//       unauthed route, now ALSO a violation of the repo's own declaration
+//
 // The inner repo carries its own git history, which the outer repo cannot
 // commit (nested .git); this generator is the committed artifact instead.
 // It is deterministic — fixed timestamps and identity — so the fixture's
@@ -134,8 +144,23 @@ module.exports = { handleRequest };
 `,
 );
 write(
+  "src/billing.js",
+  `// The guarded module (fault 10): the contract in rampscan.config.json says
+// only src/server.js may import this file. src/server.js does (allowed);
+// src/render.js also does (the planted violation).
+function formatInvoice(settings) {
+  return { total: 0, currency: "USD", settings };
+}
+
+module.exports = { formatInvoice };
+`,
+);
+write(
   "src/render.js",
   `const { createHash } = require("node:crypto");
+// FAULT (10): imports the guarded billing module in violation of the declared
+// boundary — the contract allows only src/server.js to do this.
+const { formatInvoice } = require("./billing");
 
 // FAULT: dynamic evaluation of a template string — code injection the moment
 // any input reaches it. Planted REACHABLE: src/index.js (the package.json
@@ -149,7 +174,12 @@ function etagFor(content) {
   return createHash("md5").update(content).digest("hex");
 }
 
-module.exports = { renderTemplate, etagFor };
+// the boundary-breaking use: rendering reaches straight into billing
+function renderInvoice(settings) {
+  return JSON.stringify(formatInvoice(settings));
+}
+
+module.exports = { renderTemplate, etagFor, renderInvoice };
 `,
 );
 write(
@@ -196,11 +226,13 @@ write(
   `const app = require("./framework");
 const { requireAuth } = require("./auth");
 const { handleRequest } = require("./index");
+// the ALLOWED importer (fault 10's contrast): the contract permits exactly this
+const { formatInvoice } = require("./billing");
 
 // Authenticated: the auth check sits in the route's call path.
 app.get("/settings", (req, res) => {
   requireAuth(req);
-  res.end(JSON.stringify(handleRequest(req.body)));
+  res.end(JSON.stringify({ page: handleRequest(req.body), invoice: formatInvoice({}) }));
 });
 
 // FAULT: no auth check anywhere in this route's call path.
@@ -250,6 +282,35 @@ paths:
         "200":
           description: ok
 `,
+);
+// The architecture contract (faults 10 and 11): the repo's OWN declared
+// intent, which the code above deliberately breaks. No `graph` block — entry
+// points stay inferred from package.json, which the J5 smoke pins on screen.
+write(
+  "rampscan.config.json",
+  JSON.stringify(
+    {
+      contract: {
+        rules: [
+          {
+            kind: "route-auth",
+            id: "all-routes-authed",
+            routes: "/*",
+            description: "every route this service registers must require an authenticated caller",
+          },
+          {
+            kind: "boundary",
+            id: "billing-isolated",
+            module: "src/billing",
+            allowedImporters: ["src/server.js"],
+            description: "billing logic may only be reached through the server layer",
+          },
+        ],
+      },
+    },
+    null,
+    2,
+  ) + "\n",
 );
 write("README.md", "# vulnerable-app\n\nPlanted-fault fixture for rampscan. Every fault here is deliberate.\n");
 git("add", "-A");

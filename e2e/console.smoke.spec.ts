@@ -962,6 +962,96 @@ test("plain language: the check explained, the jargon defined, and the empty row
   await expect(page.getByText("In plain English")).toHaveCount(0);
 });
 
+test("architecture contract: the repo's own declaration, checked against its code and signed (L1)", async ({
+  page,
+}) => {
+  const BOUNDARY = "arch-boundaries-hold";
+  await signIn(page);
+  await pickRepo(page);
+
+  // ── the board: the repo broke a rule it wrote about itself ───────────────
+  // The fixture's rampscan.config.json says only src/server.js may import
+  // src/billing; src/render.js does. Nothing external was consulted to decide
+  // this — the declaration and the code are both in the repository.
+  const boundaryRow = page.getByRole("row").filter({ hasText: BOUNDARY }).first();
+  await expect(boundaryRow).toBeVisible();
+  await expect(boundaryRow.locator(".pill.violated")).toBeVisible();
+
+  // the fix pointer rides the board row (I2c's slot, unchanged): the rule that
+  // broke and the file that broke it. The full import chain is the evidence
+  // page's job — the board names the offender, it does not draw the graph.
+  const boardPointer = page.locator("td.pointer-row").filter({ hasText: "billing-isolated" }).first();
+  await expect(boardPointer).toBeVisible();
+  await expect(boardPointer).toContainText("src/render.js");
+  // and the allowed importer is NOT an offender: src/server.js imports the same
+  // module and the declared allow-list permits exactly that
+  await expect(boardPointer).not.toContainText("src/server.js");
+
+  // ── the evidence page: the offending import chain and the rule text ──────
+  await page.getByRole("cell", { name: BOUNDARY, exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+
+  const failing = page.locator(".assertion-fail").first();
+  await expect(failing).toBeVisible();
+  // the import is drawn as a path, with its single hop marked like every other
+  // displayed edge (I3f's rule, inherited rather than re-invented)
+  const callPath = page.locator(".callpath").first();
+  await expect(callPath).toBeVisible();
+  await expect(callPath).toContainText("src/render.js");
+  await expect(callPath).toContainText("src/billing.js");
+  expect(await callPath.locator(".hop-unmarked").count()).toBe(0);
+
+  // the basis names the RULE ITSELF — not a paraphrase of it. This is what
+  // lets a reader decide whether the verdict matches the declaration.
+  const basis = page.locator(".panel.basis").first();
+  await expect(basis).toBeVisible({ timeout: 30_000 });
+  await expect(basis).toContainText("billing-isolated");
+  await expect(basis).toContainText("src/server.js"); // the declared allow-list
+  await expect(basis).toContainText("over-approximate"); // holding a boundary is a claim of absence
+  await expect(basis).toContainText("editing a rule re-keys this evidence");
+
+  // the contract file is an anchor: this evidence is about a commit AND a
+  // declaration, and drift in either kills it
+  await expect(page.locator("body")).toContainText("rampscan.config.json");
+
+  // ── the route half, whose walk errs the other way ────────────────────────
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page);
+  await page.getByRole("cell", { name: "arch-route-auth-declared", exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  const routeBasis = page.locator(".panel.basis").first();
+  await expect(routeBasis).toBeVisible({ timeout: 30_000 });
+  // two contract claims from one scan, and they must NOT read alike: reaching
+  // auth is a positive claim (under), holding a boundary is one of absence (over)
+  await expect(routeBasis).toContainText("under-approximate");
+  await expect(routeBasis).toContainText("all-routes-authed");
+  // the failing assertion's own row: the unauthenticated route is named, and
+  // the authed one is not among the offenders (`.assertion-fail` is the FAIL
+  // cell — the detail sits beside it, the way J4 reads it)
+  const routeFail = page.locator(".assertion-fail").first().locator("..");
+  await expect(routeFail).toContainText("/health");
+  await expect(routeFail).not.toContainText("/settings");
+
+  // ── the contract-less repo: an honest skip, in the collector's own words ──
+  // bare-app declares nothing, so the gate has nothing of its kind to check —
+  // which must read as an explained empty cell, never as a pass.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await pickRepo(page, BARE_REPO);
+  await page.locator(".tabs button", { hasText: "Unevidenced" }).click();
+
+  const why = page.locator("tr.why-row").filter({ hasText: "contract" }).first();
+  await expect(why).toBeVisible();
+  await expect(why).toContainText("no architecture contract declared");
+  // an honest skip is explained and explicitly not dressed up as work
+  await expect(why).toContainText("not a task");
+  // and the empty cell is an empty cell: no verdict was invented for it
+  await expect(
+    page.getByRole("row").filter({ hasText: BOUNDARY }).first().locator(".pill.unevidenced"),
+  ).toBeVisible();
+});
+
 /** the reference tar reader — the package must be readable without our writer */
 function untar(bytes: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();

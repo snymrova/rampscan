@@ -150,6 +150,21 @@ const ENTRIES: GlossaryEntry[] = [
     definition:
       "One machine-checked clause of a recipe: a field, a comparison, a value. A verdict is what the assertions came out as — never a judgement someone typed.",
   },
+  {
+    term: "architecture contract",
+    definition:
+      "Architecture intent a repository declares about itself in its own rampscan.config.json — which routes must require an authenticated caller, which modules only named importers may reach. Rampscan checks the code against the declaration and signs the result, the same way it checks a security rule.",
+  },
+  {
+    term: "contract rule",
+    definition:
+      "One clause of an architecture contract, with an id the repository chose. A rule that matches nothing in the code fails rather than passes, so a mistyped route pattern or module path cannot quietly waive the rule it was meant to state.",
+  },
+  {
+    term: "boundary",
+    definition:
+      "A module a repository declared isolated, together with the list of importers allowed to reach it. Holding the boundary is a claim of absence, so it is only made when even a loose reading of the code's imports finds no importer outside that list.",
+  },
 ];
 
 /**
@@ -183,6 +198,12 @@ const ALIASES: Record<string, string> = {
   assertions: "assertion",
   collectors: "collector",
   bundles: "bundle",
+  contract: "architecture contract",
+  contracts: "architecture contract",
+  "contract rules": "contract rule",
+  "declared rule": "contract rule",
+  boundaries: "boundary",
+  "module boundary": "boundary",
 };
 
 const BY_TERM = new Map<string, GlossaryEntry>(

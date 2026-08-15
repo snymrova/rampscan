@@ -1,0 +1,39 @@
+{
+  "id": "arch-boundaries-hold",
+  "ksi_ids": ["KSI-CNA-DFP", "KSI-SVC-ACM"],
+  "control_ids": ["cm-2", "cm-6"],
+  "evidence": "No file outside a declared boundary's allow-list imports the guarded module at the scanned commit, and every declared boundary guards at least one file the code graph found",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "contract",
+    "inputs": ["graph.db"]
+  },
+  "expected_output": "One row per (declared rule, importing file): rule_id, matched, module, file (the importer), imported, allowed, call_path (importer » imported), call_path_resolutions — plus a matched:false row for any rule whose module matched no file",
+  "assertions": [
+    {
+      "field": "rule_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "allowed", "op": "eq", "value": false }],
+      "controls": ["cm-2", "cm-6"],
+      "description": "No file outside a declared boundary's allow-list imports the guarded module (over-approximate read of graph.db's import edges — name-inferred imports count)."
+    },
+    {
+      "field": "rule_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "matched", "op": "eq", "value": false }],
+      "controls": ["cm-2"],
+      "description": "Every declared boundary matches at least one file the graph found — a module path that matches nothing is guarding nothing, and a mistyped path must fail rather than pass."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "full",
+  "notes": "L1: the boundary half of the architecture contract. The gate walks graph.db's import edges into each guarded module; any importing file outside the rule's allowedImporters is an offender, with the import itself as the call path. Over-approximate on purpose: an edge counts however it was resolved, so the boundary is only called held when even the loose reading finds no outside importer — the opposite direction from the route-auth walk, because holding a boundary is a claim of absence. The rules evaluated ride the bundle's basis as canonical JSON and are keyed into evidence identity, so editing a rule re-keys the evidence.",
+  "plain": {
+    "checks": "Reads the module boundaries the repository declares in its rampscan.config.json — which modules are guarded and who is allowed to import them — and walks the code's import edges to find every file that actually imports into a guarded module.",
+    "violation": "A module the architecture declares isolated is imported by code outside its allow-list, so the isolation exists on paper only. Changes inside the boundary can now break callers the design says must not exist, and that coupling grows quietly until it is expensive to undo.",
+    "fix": "Route the access through an allowed importer, move the offending code inside the boundary, or — if the design genuinely changed — widen the allow-list in rampscan.config.json, where the change is reviewed like any other. A rule whose module path matches nothing needs the path corrected."
+  },
+  "anchor": "commit"
+}
