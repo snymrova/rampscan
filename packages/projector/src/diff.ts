@@ -6,7 +6,7 @@ import type {
   RegisterRow,
   RegisterState,
 } from "@rampscan/core";
-import { isEvidenceBundle } from "@rampscan/schema";
+import { isEvidenceBundle, isScanRun } from "@rampscan/schema";
 
 // "Since baseline" (plan I2d): the board diffed against a prior scan. Both
 // sides are as-of folds of the same append-only ledger (I1b), so the diff is
@@ -19,11 +19,21 @@ import { isEvidenceBundle } from "@rampscan/schema";
  * timestamps ARE the scans — no run id bookkeeping, no heuristic grouping.
  * Scoping events are not scans; they move the board between instants and the
  * as-of fold picks them up on whichever side of the baseline they landed.
+ *
+ * Run records (J1) count too, deliberately and as of J2. A scan record carries
+ * the same clock as the bundles it produced, so for a scan that moved evidence
+ * this adds nothing — the set already held that instant. What it adds is the
+ * scan that moved NOTHING: before this, a run whose every recipe was already
+ * evidenced left no trace here, and `--since previous` therefore meant "since
+ * the previous scan that moved evidence" while calling itself "the previous
+ * scan". The honest reading is the literal one, and a diff that comes back
+ * empty because nothing changed is a true answer, not a missing one.
  */
 export function scanInstants(entries: LedgerEntry[]): string[] {
   const instants = new Set<string>();
   for (const entry of entries) {
     if (isEvidenceBundle(entry.bundle)) instants.add(entry.bundle.predicate.timestamp);
+    else if (isScanRun(entry.bundle)) instants.add(entry.bundle.predicate.timestamp);
   }
   return [...instants].sort();
 }

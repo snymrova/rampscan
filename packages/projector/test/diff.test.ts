@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LedgerEntry, RegisterState } from "@rampscan/core";
-import type { EvidenceBundle, PipelineRecipe, ScopingEvent } from "@rampscan/schema";
+import type { EvidenceBundle, PipelineRecipe, ScanRun, ScopingEvent } from "@rampscan/schema";
 import {
   classifyChange,
   diffRegisters,
@@ -64,6 +64,27 @@ function scopingEntry(opts: { recipe: string; timestamp: string; repo?: string }
       proposed_by: "viewer@rampscan.local (pb:u1)",
       approved_by: "approver@rampscan.local (pb:u2)",
       dataset_version: "2026.07.14.01",
+      timestamp: opts.timestamp,
+    },
+  };
+  return { digest: `digest-${counter++}`, bundle, appendedAt: opts.timestamp };
+}
+
+/** A scan that recorded how it went (J1) — with or without evidence beside it. */
+function scanRunEntry(opts: { timestamp: string; commit: string; repo?: string }): LedgerEntry {
+  const bundle: ScanRun = {
+    _type: "https://in-toto.io/Statement/v1",
+    subject: [{ name: "scan-result.json", digest: { sha256: "c".repeat(64) } }],
+    predicateType: "https://rampscan.dev/scan-run/v1",
+    predicate: {
+      run_id: `run-${counter++}`,
+      repo: opts.repo ?? "fixtures/app",
+      commit: opts.commit,
+      trigger: "manual",
+      started_at: opts.timestamp,
+      duration_ms: 1200,
+      dataset_version: "2026.07.14.01",
+      collectors: [],
       timestamp: opts.timestamp,
     },
   };
@@ -150,6 +171,29 @@ describe("scanInstants: the ledger's scans, from the join's single clock", () =>
       scopingEntry({ recipe: "c", timestamp: T15 }),
     ];
     expect(scanInstants(entries)).toEqual([T1, T2]);
+  });
+
+  // J2's deliberate redefinition of what "a scan" is. A run record carries the
+  // same clock as the bundles it produced, so an evidence-moving scan is
+  // unchanged — the instant was already in the set.
+  it("a run record beside its own evidence adds no second instant", () => {
+    const entries = [
+      evidenceEntry({ recipe: "a", timestamp: T1, commit: C1, anchors: [] }),
+      scanRunEntry({ timestamp: T1, commit: C1 }),
+    ];
+    expect(scanInstants(entries)).toEqual([T1]);
+  });
+
+  // ...and this is what it buys: the scan that moved nothing used to leave no
+  // trace, so "the previous scan" silently meant "the previous scan that moved
+  // evidence". Now it means what it says.
+  it("a scan that produced no evidence is still a scan", () => {
+    const entries = [
+      evidenceEntry({ recipe: "a", timestamp: T1, commit: C1, anchors: [] }),
+      scanRunEntry({ timestamp: T2, commit: C2 }),
+    ];
+    expect(scanInstants(entries)).toEqual([T1, T2]);
+    expect(resolveBaseline(entries, "previous")).toBe(T1);
   });
 });
 

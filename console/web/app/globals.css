@@ -149,6 +149,22 @@ input[type="datetime-local"] {
   );
 }
 
+/* ---- the run view (J2): what ran, and how it went ---- */
+.run-skips { color: var(--unevidenced); font-weight: 700; letter-spacing: 0.03em; }
+table.reg.subtable {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  margin-bottom: 6px;
+}
+table.reg.subtable th { padding: 6px 10px; }
+table.reg.subtable td { padding: 6px 10px; }
+.run-artifact { display: inline-block; margin-right: 12px; }
+.run-digest { color: var(--text-faint); opacity: 0.8; }
+.run-argv {
+  background: #0a0e13; border: 1px solid var(--border); border-radius: 5px;
+  padding: 5px 9px; margin-top: 4px; font-size: 11.5px;
+  overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
 /* ---- state pills ---- */
 .pill {
   display: inline-block; padding: 1px 9px; border-radius: 999px;
@@ -161,6 +177,14 @@ input[type="datetime-local"] {
 .pill.notApplicable { color: var(--na); border-color: color-mix(in srgb, var(--na) 45%, transparent); background: color-mix(in srgb, var(--na) 12%, transparent); }
 .pill.live { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 45%, transparent); }
 .pill.dead { color: var(--text-dim); border-color: var(--border); }
+
+/* ---- collector runtime pills (J2): a skip is the loudest fact ---- */
+.pill.runtime-skipped { color: var(--unevidenced); font-weight: 700; border-color: var(--unevidenced); background: color-mix(in srgb, var(--unevidenced) 16%, transparent); }
+.pill.runtime-cache-hit { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.pill.runtime-docker { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+.pill.runtime-binary { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 35%, transparent); }
+.pill.runtime-absent { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 45%, transparent); }
+.pill.runtime-pure { color: var(--text-dim); border-color: var(--border); }
 
 /* ---- action queue tiers (I2a): divergence loudest, then down the ranks ---- */
 .pill.qkind-divergence { color: var(--violated); font-weight: 700; border-color: var(--violated); background: color-mix(in srgb, var(--violated) 18%, transparent); }

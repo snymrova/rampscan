@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/scoping", label: "Scoping" },
   { href: "/clock", label: "Clock" },
   { href: "/drift", label: "Drift" },
+  { href: "/runs", label: "Runs" },
   { href: "/approvals", label: "Approvals" },
 ];
 

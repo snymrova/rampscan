@@ -6,7 +6,14 @@ import { DownloadButton } from "../../../components/DownloadButton";
 import { RequireAuth } from "../../../components/guard";
 import { getPb } from "../../../lib/pb";
 import { describePointer } from "../../../lib/pointers";
-import type { BundleRecord, CoverageRecord, MetaRecord, OffenderPointer } from "../../../lib/types";
+import { runCounts } from "../../../lib/runs";
+import type {
+  BundleRecord,
+  CollectorRunRecord,
+  CoverageRecord,
+  MetaRecord,
+  OffenderPointer,
+} from "../../../lib/types";
 
 // Evidence detail (SPEC §8.1): each row opens the evidence — artifacts,
 // assertions, commit, signature, reproduce command. Everything shown here is
@@ -188,13 +195,15 @@ function Evidence({ digest }: { digest: string }) {
               <dt>duration</dt>
               <dd>{Math.round(Number(p["duration_ms"]) / 100) / 10}s</dd>
               <dt>collectors</dt>
-              {/* counted from the rows, never typed: an independent recount of
-                  the predicate's own list is the only number worth showing */}
+              {/* counted from the rows, never typed — and counted by the SAME
+                  hand /runs counts with (J2), so the two pages cannot disagree
+                  about one run. The buckets partition: ran + cache-hit +
+                  skipped is exactly the number dispatched. */}
               <dd>
-                {runCollectors.length} dispatched ·{" "}
-                {runCollectors.filter((c) => c["skip_reason"] === undefined).length} ran ·{" "}
-                {runCollectors.filter((c) => c["cache"]?.["state"] === "hit").length} cache-hit ·{" "}
-                {runCollectors.filter((c) => c["skip_reason"] !== undefined).length} skipped
+                {(() => {
+                  const counts = runCounts(runCollectors as unknown as CollectorRunRecord[]);
+                  return `${counts.dispatched} dispatched · ${counts.ran} ran · ${counts.cacheHit} cache-hit · ${counts.skipped} skipped`;
+                })()}
               </dd>
             </>
           )}

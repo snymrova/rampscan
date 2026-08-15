@@ -426,6 +426,80 @@ test("export: the auditor takes the record away — package verifies offline, CS
   await page.emulateMedia({ media: "screen" });
 });
 
+test("runs: the machinery behind the board — the timeline's counts are a recount of its own table (J2)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/runs");
+  await expect(page.getByRole("heading", { name: "Runs" })).toBeVisible();
+
+  // the fixture scan appended exactly one run record, and the timeline shows
+  // it: the smoke's scan is manual, so the trigger is a known fixture truth
+  const row = page.locator("tr.rowlink");
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText("manual");
+  // a fully-tooled scan skips nothing, and the page says the zero out loud
+  // rather than leaving the reader to infer it from silence
+  await expect(row).toContainText("0 skipped");
+
+  // the summary is a RECOUNT, not a stored number: parse what the row claims,
+  // expand, and count the collector rows the expansion renders. This is the
+  // property the page exists to keep — a reader recounting the table must
+  // reproduce the timeline row exactly.
+  const summary = await row.locator("td").nth(5).innerText();
+  const claimed = {
+    dispatched: Number(/(\d+) collector/.exec(summary)![1]),
+    ran: Number(/(\d+) ran/.exec(summary)![1]),
+    cacheHit: Number(/(\d+) cache-hit/.exec(summary)?.[1] ?? 0),
+    skipped: Number(/(\d+) (?:skipped|SKIPPED)/.exec(summary)![1]),
+  };
+  expect(claimed.ran + claimed.cacheHit + claimed.skipped).toBe(claimed.dispatched);
+
+  await row.click();
+  const collectorRows = page.locator("table.subtable tbody tr");
+  await expect(collectorRows.first()).toBeVisible();
+  expect(await collectorRows.count()).toBe(claimed.dispatched);
+  expect(await page.locator("table.subtable .pill.runtime-skipped").count()).toBe(claimed.skipped);
+  expect(await page.locator("table.subtable .pill.runtime-cache-hit").count()).toBe(
+    claimed.cacheHit,
+  );
+
+  // every collector carries the facts an auditor asked the run record for.
+  // repo-facts spawns nothing — it says so as a fact about the collector,
+  // never as a missing tool
+  const facts = page
+    .locator("table.subtable tr")
+    .filter({ has: page.getByRole("cell", { name: "repo-facts", exact: true }) });
+  await expect(facts.locator(".pill.runtime-pure")).toBeVisible();
+  await expect(facts).toContainText("repo-facts.json");
+  await expect(facts).toContainText("no external tool");
+
+  // syft resolved a real tool: version, runtime and artifact digest are the
+  // record's own claims, and the artifact it produced is named beside them
+  const sbom = page
+    .locator("table.subtable tr")
+    .filter({ has: page.getByRole("cell", { name: "syft", exact: true }) });
+  await expect(sbom.locator(".pill.runtime-binary, .pill.runtime-docker")).toBeVisible();
+  await expect(sbom).toContainText("sbom.cdx.json");
+  await expect(sbom).toContainText("invocation");
+
+  // deep link (the address J3's board hop will use): arrives expanded, with
+  // the named collector highlighted and its argv already open — the command
+  // line that produced the evidence, redaction markers included
+  const runId = (await page.locator("table.subtable").first().getAttribute("data-run"))!;
+  expect(runId).toBeTruthy();
+  await page.goto(`/runs?scan=${encodeURIComponent(runId)}&collector=syft`);
+  await expect(page.locator("tr.hl")).toContainText("syft");
+  await expect(page.locator(".run-argv").first()).toContainText("syft");
+
+  // and the record itself is a signed statement like any other: the hop lands
+  // on its evidence page, which says what it is and carries no verdict
+  await page.locator("tr.rowlink td a").first().click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  await expect(page.locator("h1 .pill").first()).toContainText("scan run");
+  await expect(page.locator("body")).toContainText("dispatched");
+});
+
 /** the reference tar reader — the package must be readable without our writer */
 function untar(bytes: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();

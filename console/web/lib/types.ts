@@ -161,6 +161,80 @@ export interface ProposalRecord {
 }
 
 /**
+ * One recorded scan (J1) as the projector writes the `scan_runs` collection.
+ * `trigger` and `timestamp` carry suffixed field names for the same reason
+ * `rollup_id` does — a store's own vocabulary claims the short ones.
+ *
+ * What a run record is NOT: a source of truth about verdicts. It carries no
+ * verdict, no register state and no coverage number, and `/runs` may not
+ * compute one — the board is folded from evidence and scoping alone.
+ */
+export type ToolRuntimeRecord =
+  | { kind: "binary"; path?: string }
+  | { kind: "docker"; image: string; digest: string | null; digest_reason?: string }
+  | { kind: "absent"; reason: string };
+
+export interface ToolResolutionRecord {
+  tool: string;
+  /** the version the resolution reported; absent when nothing resolved */
+  version?: string;
+  runtime: ToolRuntimeRecord;
+}
+
+/**
+ * One process the collector spawned. `argv` was ALLOWLIST-redacted before the
+ * statement was signed — anything that did not match a known-safe shape reads
+ * `<redacted:N bytes>`, and the page renders that token rather than hiding it.
+ */
+export interface ToolInvocationRecord {
+  command: string;
+  argv: string[];
+  duration_ms: number;
+  exit_code: number;
+}
+
+/**
+ * The scan cache's answer for this collector. `hit` means nothing was spawned
+ * this run: the invocations recorded are the ones of the run that PRODUCED the
+ * cached result, replayed with it, and this field is what says so.
+ */
+export interface CacheStateRecord {
+  state: "hit" | "miss" | "bypass" | "uncachable" | "none";
+  key?: string;
+  scope?: string[];
+}
+
+export interface CollectorRunRecord {
+  collector: string;
+  tool_version: string;
+  duration_ms: number;
+  exit_code: number;
+  findings: number;
+  /** every tool this collector asked for, in resolution order; empty for pure collectors */
+  tools: ToolResolutionRecord[];
+  invocations: ToolInvocationRecord[];
+  artifacts: Array<{ name: string; sha256: string; bytes?: number }>;
+  cache: CacheStateRecord;
+  /** set when the collector could not run at all — the reason an operator needs */
+  skip_reason?: string;
+}
+
+export interface ScanRunRecord {
+  id: string;
+  /** the ledger address of the signed run record — verifiable like any bundle */
+  digest: string;
+  run_id: string;
+  repo: string;
+  commit_sha: string;
+  trigger_kind: "manual" | "daemon-incremental" | "daemon-full" | "serve" | "test";
+  started_at: string;
+  run_timestamp: string;
+  duration_ms: number;
+  dataset_version: string;
+  collectors: CollectorRunRecord[];
+}
+
+/**
  * The "since baseline" diff (I2d) as /api/board/diff returns it — the exact
  * shape `computeBoardDiff` in @rampscan/cli produces (camelCase: this is the
  * projector's own output serialized, not a PocketBase record). Mirror, never

@@ -1,6 +1,6 @@
 # rampscan — implementation plan: what remains
 
-**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens; I3e landed 2026-08-15, I3f folded into J5). Phase J is underway — J1 landed 2026-08-15, J2 is next. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
+**Status:** committed plan for the work after Phase H (engine expansion, complete) and Phase I3 (auditor lens; I3e landed 2026-08-15, I3f folded into J5). Phase J is underway — J1 and J2 landed 2026-08-15, J3 is next. This document owns **scope and task breakdown** for everything not yet built; `docs/PLAN-OF-ACTION.md` and `docs/PLAN-OF-ACTION-CONSOLE.md` own **task status** and get ticked as work lands. On any scope dispute this document wins over the checklists; on any architecture dispute `docs/SPEC.md` wins over this document.
 **Date:** 2026-08-15
 **Reads against:** all of `docs/` — SPEC (target architecture), IMPLEMENTATION-PLAN (M0–M5, complete), COMPLIANCE-SCAN-HARNESS (founding doc §11–13 decisions), ARCHITECTURE (invariants), BRAINSTORM-DAST-OBSERVABILITY-AI-HELPER (the options analysis this plan promotes from), FRONTIER-PIPELINE (the generated self-scan record).
 
@@ -17,8 +17,8 @@ Walked across all eight documents. Nothing below is invented here; each line nam
 | I3e | Export: register CSV · per-control evidence package (tar) · print-friendly evidence page | CONSOLE I3, SPEC §8.5 | **landed 2026-08-15** |
 | I3f | Not-affected claims show their work (entry-point provenance, over-approximation statement, exact-vs-inferred edges) | CONSOLE I3 | not started |
 | J1 | The run record, ledger-first: `scan-run` statement kind + capture | PLAN J, BRAINSTORM §2.2/§5 | **landed 2026-08-15** |
-| J2 | `/runs` console page: scan timeline → per-collector table | PLAN J, BRAINSTORM §2.3 | **next** |
-| J3 | Board hop: "how was this produced?" on every row | PLAN J | not started |
+| J2 | `/runs` console page: scan timeline → per-collector table | PLAN J, BRAINSTORM §2.3 | **landed 2026-08-15** |
+| J3 | Board hop: "how was this produced?" on every row | PLAN J | **next** |
 | J4 | Artifact viewers: normalized artifacts as tables + raw download | PLAN J | not started |
 | J5 | Provenance chain end-to-end · tooling-health card · `rampscan tools` | PLAN J | not started |
 | K1 | Plain-language layer, no AI: `plain` on every recipe · glossary · guided empty states | PLAN K, BRAINSTORM §3.1 | not started |
@@ -59,7 +59,7 @@ Resulting order:
 
 ```
 I3e  →  J1  →  J2  →  J3  →  J4  →  J5 (+I3f folded in)  →  K1  →  [go/no-go: K2, L]
- ✓      ✓      ←next
+ ✓      ✓      ✓     ←next
 ```
 
 Estimates, focused-work days, honest but rough: I3e 1–1.5 · J1 2.5–3 · J2 1.5 · J3 0.25 · J4 1.5 · J5+I3f 2 · K1 1.5. **Total ≈ 10–11 days** to the end of K1.
@@ -154,6 +154,13 @@ Also as built: telemetry rides `RunResult`, so the scan cache persists and resto
 **J3.** One link per board row — "how was this produced?" → `/runs?scan=…&collector=…`, resolved from the row's live bundle's `run_id`, or from the newest run when the cell is unevidenced (which is exactly the case that needs it most). `stopPropagation` so the row's evidence click survives, same as I3a's cell links. Ship the moment J2 renders; it is an afternoon and it is the highest-leverage piece in the phase.
 
 **Exit test.** Fixture scan → `/runs` lists the run with correct counts recomputed from the rows (never typed) → expand → every collector present with runtime/version/duration/exit/artifacts → hide one tool → the timeline row counts the skip loudly → an unevidenced board cell's hop lands on that collector's row with the named reason visible. Smoke test 10.
+
+### 5.1 As built (2026-08-15) — J2
+
+- **The counts partition, and that is the whole point.** `ran + cacheHit + skipped === dispatched`, always: a cache hit is not counted as having run, because nothing was spawned. The timeline row's summary is therefore reproducible by recounting the table it expands into — which is exactly what smoke 10 does, parsing the row's own claim and then counting collector rows and runtime pills against it. The evidence page's run-record summary (shipped in J1 with overlapping buckets) now calls the same `runCounts`, so the two surfaces cannot disagree about one run.
+- **`scanInstants` folds run-record instants** ([`diff.ts`](../packages/projector/src/diff.ts)) — the redefinition J1 deferred to here. A run record carries the same clock as the bundles it produced, so an evidence-moving scan is untouched; what changes is the scan that moved *nothing*, which used to leave no trace at all. `--since previous` and I3d's as-of quick-picks now mean the literal thing they say.
+- **Deliberately NOT on this page:** no verdict, no register state, no coverage number. `lib/runs.ts` has no way to compute one, which is the enforcement — /runs renders runs, and the board stays folded from evidence and scoping alone.
+- **Deferred to J3, by its own plan:** the board hop. The deep link `/runs?scan=…&collector=…` is built and pinned by smoke 10 (arrives expanded, the named collector highlighted, its argv open); J3 is the one link on the board row that points at it.
 
 ---
 
