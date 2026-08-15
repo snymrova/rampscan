@@ -1,6 +1,6 @@
 # rampscan — plan of action: console personas (operator + auditor)
 
-**Status:** working checklist — the executable layer for the post-H console track. `docs/PLAN-OF-ACTION.md` owns the prototype's history (Phases A–H, complete); this document owns the console persona work: task order, exit tests, current status. On any architecture dispute, `docs/SPEC.md` wins.
+**Status:** working checklist — the executable layer for the post-H console track. `docs/PLAN-OF-ACTION.md` owns the prototype's history (Phases A–H, complete); this document owns the console persona work: task order, exit tests, current status. The remaining items here (I3e, I3f) have their task breakdown in `docs/IMPLEMENTATION-PLAN-REMAINING.md` §3 and §7. On any architecture dispute, `docs/SPEC.md` wins.
 **Date started:** 2026-08-14
 **Decision of record (2026-08-14):** one console, two lenses — not two products. The operator lens answers "what do I act on today"; the auditor lens answers "prove it, trace it, let me take it with me." Both are projections over the same ledger, role-gated in the existing console (`users.role`), never forked.
 
