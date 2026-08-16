@@ -10,7 +10,6 @@
     { "path": "packages/scheduler" },
     { "path": "packages/graph" },
     { "path": "packages/collectors" },
-    { "path": "packages/model" },
     { "path": "packages/cli" }
   ]
 }

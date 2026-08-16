@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@rampscan/cli": "workspace:*",
-    "@rampscan/model": "workspace:*",
     "@rampscan/projector": "workspace:*",
     "next": "^15.4.0",
     "pocketbase": "^0.26.2",
