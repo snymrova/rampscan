@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { posix } from "node:path";
 import { promisify } from "node:util";
@@ -99,26 +99,61 @@ function inWalkableDir(rel: string): boolean {
 }
 
 /**
- * Repo-relative committed paths matching `keep`, sorted. The graph anchors to
- * a commit, so the walk is over the COMMITTED tree (`git ls-tree`) — a
+ * Which tree a walk is over. `committed` is the only one evidence may rest on;
+ * `worktree` exists for the L3a dry run and is why that dry run can never be
+ * evidence — see listPaths.
+ */
+export type TreeMode = "committed" | "worktree";
+
+/**
+ * Repo-relative paths matching `keep`, sorted.
+ *
+ * `committed` (the default everywhere evidence is produced): the graph anchors
+ * to a commit, so the walk is over the COMMITTED tree (`git ls-tree`) — a
  * generated or gitignored file on disk must never leak routes or call edges
  * into commit-anchored evidence (the rampscan self-scan caught exactly that:
- * its generated test fixture's routes showed up on its own board). Non-git
- * roots (unit tests) fall back to a filesystem walk with the same skip rules.
+ * its generated test fixture's routes showed up on its own board).
+ *
+ * `worktree`: the index plus untracked-but-not-ignored files, minus anything
+ * deleted from disk — what git would consider part of the repo right now. This
+ * is deliberately NOT anchorable: the files it adds have no content hash any
+ * commit can name, which is precisely why every caller of this mode labels its
+ * output a dry run rather than a verdict.
+ *
+ * Non-git roots (unit tests) fall back to a filesystem walk with the same skip
+ * rules under either mode — there is no index to differ from.
  */
-async function listCommittedPaths(
+async function listPaths(
   root: string,
   keep: (rel: string) => boolean,
+  mode: TreeMode = "committed",
 ): Promise<string[]> {
   try {
-    const { stdout } = await execFileAsync("git", ["ls-tree", "-r", "--name-only", "HEAD"], {
+    const args =
+      mode === "worktree"
+        ? ["ls-files", "--cached", "--others", "--exclude-standard", "--deduplicate"]
+        : ["ls-tree", "-r", "--name-only", "HEAD"];
+    const { stdout } = await execFileAsync("git", args, {
       cwd: root,
       maxBuffer: 64 * 1024 * 1024,
     });
-    return stdout
+    const rels = stdout
       .split("\n")
       .filter((rel) => rel !== "" && keep(rel) && inWalkableDir(rel))
       .sort();
+    if (mode !== "worktree") return rels;
+    // `--cached` lists index entries, including ones deleted from disk; a file
+    // the developer just removed must not still contribute edges to a dry run
+    const present: string[] = [];
+    for (const rel of rels) {
+      try {
+        if ((await stat(join(root, rel))).isFile()) present.push(rel);
+      } catch {
+        // gone from disk — dropped, deliberately and silently: its absence IS
+        // the change being dry-run
+      }
+    }
+    return present;
   } catch {
     // not a git checkout (or no commits yet) — walk the filesystem
   }
@@ -142,9 +177,9 @@ async function listCommittedPaths(
   return files.sort();
 }
 
-/** repo-relative source files, sorted — committed tree only (see above) */
-export function listSourceFiles(root: string): Promise<string[]> {
-  return listCommittedPaths(root, isSourceFile);
+/** repo-relative source files, sorted — the committed tree unless a mode says otherwise (see listPaths) */
+export function listSourceFiles(root: string, mode: TreeMode = "committed"): Promise<string[]> {
+  return listPaths(root, isSourceFile, mode);
 }
 
 /**
@@ -159,10 +194,12 @@ export function listSourceFiles(root: string): Promise<string[]> {
 export async function workspacePackageMap(
   root: string,
   fileSet: ReadonlySet<string>,
+  mode: TreeMode = "committed",
 ): Promise<Map<string, string>> {
-  const manifests = await listCommittedPaths(
+  const manifests = await listPaths(
     root,
     (rel) => rel === "package.json" || rel.endsWith("/package.json"),
+    mode,
   );
   const map = new Map<string, string>();
   for (const rel of manifests) {
@@ -297,10 +334,17 @@ function depTarget(b: GraphBuilder, pkg: string, member?: string): string {
   return memberId;
 }
 
-export async function extractGraph(root: string, files?: string[]): Promise<ExtractedGraph> {
-  const rels = files ?? (await listSourceFiles(root));
+export async function extractGraph(
+  root: string,
+  files?: string[],
+  mode: TreeMode = "committed",
+): Promise<ExtractedGraph> {
+  const rels = files ?? (await listSourceFiles(root, mode));
   const fileSet = new Set(rels);
-  const workspace = await workspacePackageMap(root, fileSet);
+  // the manifest walk follows the source walk: a dry run over the worktree that
+  // read package.json from HEAD would resolve workspace imports against a
+  // package layout the developer may have just changed
+  const workspace = await workspacePackageMap(root, fileSet, mode);
   const b = new GraphBuilder();
   const infos = new Map<string, FileInfo>();
 

@@ -1,5 +1,23 @@
 {
   "graph": {
     "entrypoints": ["packages/cli/src/main.ts"]
+  },
+  "contract": {
+    "rules": [
+      {
+        "kind": "boundary",
+        "id": "signer-only-through-the-cli",
+        "module": "packages/signer",
+        "allowedImporters": ["packages/cli"],
+        "description": "only the CLI holds a signing key; every other surface reaches signing through it, and the console and the projector must never import the signer directly"
+      },
+      {
+        "kind": "boundary",
+        "id": "console-twins-stay-in-the-console",
+        "module": "console/web/lib",
+        "allowedImporters": ["console/web"],
+        "description": "the console's re-implementations of engine logic are the console's own, kept honest by twin tests; an engine package importing one would make the twin a cycle instead of a check"
+      }
+    ]
   }
 }

@@ -1167,6 +1167,101 @@ test("repo model: the scan's own derivation, attested by its run record and read
   ).toBe(json);
 });
 
+test("dry run: the working tree checked before a commit, against the board it must not touch (L3a/L3c)", async ({
+  page,
+}) => {
+  const BOUNDARY = "arch-boundaries-hold";
+  const PLANTED = "fixtures/vulnerable-app/src/sneaked-in.js";
+  const ledgerArgs = ["--ledger", "e2e/.smoke/ledger"];
+
+  const cli = (args: string[]): { out: string; status: number } => {
+    try {
+      return {
+        out: execFileSync("node_modules/.bin/tsx", ["packages/cli/src/main.ts", ...args], {
+          encoding: "utf8",
+        }),
+        status: 0,
+      };
+    } catch (error) {
+      // `check` exits 1 on a would-be violation BY DESIGN — that exit code is
+      // the answer a pre-commit hook reads, so a throwing spawn is a result here
+      const e = error as { status: number; stdout: string };
+      return { out: e.stdout, status: e.status };
+    }
+  };
+
+  // ── the board, as JSON (L3c) ─────────────────────────────────────────────
+  // the same fold the browser renders and the terminal prints — one ledger,
+  // three renderings, and a script no longer has to scrape a text table
+  const boardJson = cli(["board", ...ledgerArgs, "--json"]);
+  expect(boardJson.status).toBe(0);
+  const projection = JSON.parse(boardJson.out) as {
+    registers: Array<{ repo: string; recipeId: string; state: string }>;
+    datasetVersion: string;
+  };
+  const boardCell = (repo: string, recipeId: string) =>
+    projection.registers.find((r) => r.repo === repo && r.recipeId === recipeId)?.state;
+  expect(boardCell(FIXTURE_REPO, FLAGSHIP)).toBe("violated");
+  expect(boardCell(FIXTURE_REPO, BOUNDARY)).toBe("violated");
+  // and it agrees with the browser, which is the point of it being one fold
+  await signIn(page);
+  await pickRepo(page);
+  const flagshipRow = page.getByRole("row").filter({ hasText: FLAGSHIP }).first();
+  await expect(flagshipRow).toContainText("violated");
+
+  // ── the dry run over the committed tree ──────────────────────────────────
+  const clean = cli(["check", "fixtures/vulnerable-app", ...ledgerArgs, "--no-color"]);
+  // the fixture is planted broken, so the honest answer is a would-be violation
+  expect(clean.status).toBe(1);
+  expect(clean.out).toContain("DRY RUN");
+  expect(clean.out).toContain("not evidence, nothing signed, nothing appended");
+  // the tree is clean, and it says so rather than implying an edit it cannot see
+  expect(clean.out).toContain("clean");
+  // the refusals are stated per collector, with the recipes they leave unanswered
+  expect(clean.out).toContain("NOT DRY-RUN");
+  expect(clean.out).toContain("sast-reachability");
+  expect(clean.out).toContain(FLAGSHIP);
+  // the board's own answer rides each row, so "I broke this" is distinguishable
+  // from "this was already broken"
+  expect(clean.out).toMatch(new RegExp(`${BOUNDARY}\\s+\\(board: violated — unchanged\\)`));
+
+  // ── now break the contract in the WORKING TREE only ──────────────────────
+  // an UNTRACKED file: no commit names it, so no scan can see it and no
+  // evidence could ever anchor to it. This is the one question a dry run
+  // answers that nothing else in this system can.
+  writeFileSync(
+    PLANTED,
+    'const { formatInvoice } = require("./billing");\nmodule.exports = { sneak: (x) => formatInvoice(x) };\n',
+  );
+  try {
+    const dirty = cli(["check", "fixtures/vulnerable-app", ...ledgerArgs, "--no-color"]);
+    expect(dirty.status).toBe(1);
+    expect(dirty.out).toContain("1 untracked");
+    expect(dirty.out).toContain("src/sneaked-in.js");
+    // the breach is named, on the boundary row, with the import as the path
+    expect(dirty.out).toMatch(/src\/sneaked-in\.js » src\/billing\.js/);
+
+    // ── and the board did not move ─────────────────────────────────────────
+    // read again through the SAME hand as before: a dry run that could shift a
+    // register would be evidence, and it is not
+    const after = JSON.parse(cli(["board", ...ledgerArgs, "--json"]).out) as typeof projection;
+    expect(after.registers).toEqual(projection.registers);
+    // nor did the browser's board, which is folded from the same ledger
+    await page.reload();
+    await pickRepo(page);
+    await expect(flagshipRow).toContainText("violated");
+    // the planted file appears nowhere in the projection the console renders
+    expect(JSON.stringify(after)).not.toContain("sneaked-in");
+  } finally {
+    execFileSync("rm", ["-f", PLANTED]);
+  }
+
+  // and with the plant gone, the dry run returns to the committed answer
+  const restored = cli(["check", "fixtures/vulnerable-app", ...ledgerArgs, "--no-color"]);
+  expect(restored.out).not.toContain("sneaked-in");
+  expect(restored.out).toContain("clean");
+});
+
 /** the reference tar reader — the package must be readable without our writer */
 function untar(bytes: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();

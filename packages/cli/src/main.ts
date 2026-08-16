@@ -11,6 +11,7 @@ import { windowMsFor } from "@rampscan/scheduler";
 import { renderBoard, renderBoardDiff } from "./board.js";
 import { computeBoardAsOf } from "./board-asof.js";
 import { computeBoardDiff } from "./board-diff.js";
+import { check, renderCheck } from "./check.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
 import { rebuild } from "./rebuild.js";
@@ -24,6 +25,10 @@ import { verify } from "./verify.js";
 
 // rampscan CLI — M5 surface:
 //   rampscan scan <path>     scan, join, sign, append to the ledger
+//   rampscan check <path>    the working-tree DRY RUN (L3a): what a scan would
+//                            conclude before you commit — nothing signed,
+//                            nothing appended, exits nonzero on a would-be
+//                            violation so a hook or CI job can gate on it
 //   rampscan verify <digest> offline check of one bundle
 //   rampscan board           the projection as text: registers + graveyard
 //   rampscan rebuild         projection stores from the ledger, with proof
@@ -45,8 +50,11 @@ function usage(): never {
       "",
       "commands:",
       "  scan <path>       scan a checkout; sign and record evidence",
+      "  check <path>      DRY RUN over the WORKING TREE: what a scan would conclude if you",
+      "                    committed now — the pure gates only, nothing signed, nothing appended,",
+      "                    no artifact kept. Exits 1 on a would-be violation (pre-commit / CI gate)",
       "  verify <digest>   verify one ledger bundle offline (content + signature)",
-      "  board             show the projection: registers, live evidence, graveyard",
+      "  board             show the projection: registers, live evidence, graveyard (--json for the fold)",
       "  board --as-of <iso>  the same projection at a past instant, refolded from the ledger",
       "  board --since previous|<iso>  what moved since a prior scan's board (I2d)",
       "  rebuild           rebuild projection stores from the ledger and PROVE projection ≡ ledger",
@@ -82,7 +90,7 @@ function usage(): never {
       "  --full-every <n>  daemon: every Nth scan bypasses the cache and verifies it (default: 6)",
       "  --result <path>   report: scan result to report from (default: ./rampscan-out/scan-result.json)",
       "  --report-out <path>  report: output file (default: docs/FRONTIER-PIPELINE.md)",
-      "  --json            tools/model: the JSON instead of the text reading (for `model`,",
+      "  --json            board/check/tools/model: the JSON instead of the text reading (for `model`,",
       "                    the canonical bytes a scan's run record attests)",
       "  --no-color        plain output",
     ].join("\n"),
@@ -150,6 +158,32 @@ async function main(): Promise<void> {
       return;
     }
 
+    case "check": {
+      if (!target) usage();
+      // The dry run (L3a). The ledger is passed READ-ONLY, for the board
+      // comparison that tells "I broke this" from "this was already broken";
+      // no signer is constructed here at all, because there is nothing to sign.
+      const outcome = await check({
+        path: target,
+        datasetDir,
+        datasetPin,
+        recipesDir,
+        collectors: allCollectors,
+        ledgerDir,
+        certClass,
+        log: (line) => console.error(`· ${line}`),
+      });
+      if (values.json) console.log(JSON.stringify(outcome, null, 2));
+      else console.log(renderCheck(outcome, useColor));
+      // The one place in this CLI where a violation IS a nonzero exit, and the
+      // difference from `scan` is deliberate: a scan RECORDS a fact, so a
+      // violation is a true result and not a failure, while `check` is a
+      // question the caller asked before committing — its exit code is the
+      // answer, which is what makes it usable as a pre-commit hook or a CI gate.
+      if (outcome.wouldViolate) process.exit(1);
+      return;
+    }
+
     case "verify": {
       if (!target) usage();
       const report = await verify({ digest: target, ledgerDir, keysDir });
@@ -186,6 +220,13 @@ async function main(): Promise<void> {
         // the same hand the console's as-of route calls (I3d) — terminal and
         // browser can never disagree about what the past board looked like
         const outcome = await computeBoardAsOf({ ledgerDir, recipesDir, asOf: asOfIso });
+        // `--json` emits the PROJECTION, not a summary of it (L3c): the text
+        // reading and the JSON are two renderings of one fold, so a script and
+        // an operator cannot come to different conclusions about the same board
+        if (values.json) {
+          console.log(JSON.stringify(outcome.projection, null, 2));
+          return;
+        }
         console.log(
           `AS OF ${asOfIso} — refolded from ledger statements at or before this instant` +
             `${outcome.asOfIsScan ? " (a scan instant)" : ""}\n`,
@@ -195,7 +236,8 @@ async function main(): Promise<void> {
       }
       const projector = createProjector({ recipes, windowMs: windowMsFor(certClass) });
       const projection = await projector.fold(createLocalLedger(ledgerDir));
-      console.log(renderBoard(projection, useColor));
+      if (values.json) console.log(JSON.stringify(projection, null, 2));
+      else console.log(renderBoard(projection, useColor));
       return;
     }
 

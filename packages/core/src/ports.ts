@@ -62,6 +62,17 @@ export interface Workspace {
   root: string; // absolute path of the checkout
   repo: string; // identifier, e.g. "ramprules.com/fedramp-rules-hub"
   commit: string; // full sha the workspace is pinned to
+  /**
+   * Which tree of that checkout the collectors should read. Absent (=
+   * "committed") everywhere evidence is produced: a signed claim is about a
+   * commit, and a collector reading a gitignored or uncommitted file would
+   * anchor evidence to bytes no commit can name.
+   *
+   * `"worktree"` is set ONLY by the L3a dry run (`rampscan check`), whose
+   * output is structurally labeled as not-evidence for exactly this reason.
+   * Mirrors @rampscan/graph's `TreeMode` (core does not depend on graph).
+   */
+  tree?: "committed" | "worktree";
 }
 
 /**

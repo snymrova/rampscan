@@ -28,9 +28,14 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureRoot = join(repoRoot, "fixtures/vulnerable-app");
 const bareRoot = join(repoRoot, "fixtures/bare-app");
 
-function ctx(root: string, artifactDir: string, inputs: Map<string, string>): CollectContext {
+function ctx(
+  root: string,
+  artifactDir: string,
+  inputs: Map<string, string>,
+  tree?: "committed" | "worktree",
+): CollectContext {
   return {
-    workspace: { root, repo: root, commit: "f".repeat(40) },
+    workspace: { root, repo: root, commit: "f".repeat(40), ...(tree ? { tree } : {}) },
     artifactDir,
     inputs,
     runId: "run-test",
@@ -38,9 +43,9 @@ function ctx(root: string, artifactDir: string, inputs: Map<string, string>): Co
 }
 
 /** build a real graph.db for a repo, the way the pipeline does */
-async function graphFor(root: string): Promise<string> {
+async function graphFor(root: string, tree?: "committed" | "worktree"): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "rampscan-contract-graph-"));
-  const out = await graphCollector.collect(ctx(root, dir, new Map()));
+  const out = await graphCollector.collect(ctx(root, dir, new Map(), tree));
   return out.artifacts.find((a) => a.name === GRAPH_DB_ARTIFACT)!.path;
 }
 
@@ -228,6 +233,49 @@ describe("the refusals — an absent or broken contract may never read as a pass
     // and the recipes' `matched` assertions are what turn these into violations
     // — pinned here as rows, and end to end by the scan e2e
   });
+
+  it("an UNRESOLVABLE import into the guarded module counts against the repo, and does not crash the gate", async () => {
+    // A relative import the extractor cannot resolve to a walked file still gets
+    // a `file:` node — a PHANTOM, with no `path` and an `inferred` import edge.
+    // Reading the path column unguarded threw `Cannot read properties of null`,
+    // which is how this gate CRASHED on rampscan's own repository until L3b
+    // dogfooded the contract there: both contract recipes read unevidenced with
+    // a stack trace as the reason.
+    //
+    // The fix is not a null guard for its own sake. This walk is
+    // OVER-approximate by declaration — its signed statement says unknowns count
+    // against the repo — so an import that NAMES the guarded module must count
+    // even when nobody can say which file it lands on. Dropping it would waive
+    // the rule on exactly the imports the graph understands least.
+    const root = await withContract({
+      rules: [
+        {
+          kind: "boundary",
+          id: "billing-isolated",
+          module: "src/billing",
+          allowedImporters: ["src/server.js"],
+          description: "billing is reached only through the server layer",
+        },
+      ],
+    });
+    // an importer whose target is NOT in the walked set: the fixture has no
+    // src/billing/secret-ledger.js, so this import phantoms
+    await writeFile(
+      join(root, "src", "sneaky.js"),
+      'const x = require("./billing/secret-ledger");\nmodule.exports = { x };\n',
+    );
+    // walked as a WORKTREE so the new importer is in the graph at all — the
+    // committed walk would not see an uncommitted file, which is L3a's whole point
+    const out2 = await runGate(root, await graphFor(root, "worktree"));
+    const rows = out2.observations[BOUNDARY_RECIPE]!;
+    const phantom = rows.find((r) => r["file"] === "src/sneaky.js");
+    expect(phantom).toBeDefined();
+    expect(phantom!["allowed"]).toBe(false);
+    // and the row says the hop was inferred, so the reader knows how weak it is
+    expect(phantom!["call_path_resolutions"]).toEqual(["inferred"]);
+    // the rule still matched real files too — the phantom did not replace them
+    expect(rows.some((r) => r["file"] === "src/render.js")).toBe(true);
+  }, 60_000);
 
   it("without graph.db the gate skips rather than clearing the contract", async () => {
     const nograph = await runGate(fixtureRoot);

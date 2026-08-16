@@ -44,7 +44,11 @@ export const graphCollector: Collector = {
 
   async collect(ctx): Promise<CollectOutput> {
     const version = graphToolVersion();
-    const files = await listSourceFiles(ctx.workspace.root);
+    // the workspace states which tree it is (committed for every scan; the
+    // worktree only under the `rampscan check` dry run, whose output cannot
+    // become evidence)
+    const tree = ctx.workspace.tree ?? "committed";
+    const files = await listSourceFiles(ctx.workspace.root, tree);
     if (files.length === 0) {
       return {
         findings: [],
@@ -59,7 +63,7 @@ export const graphCollector: Collector = {
     }
 
     const config = await loadGraphConfig(ctx.workspace.root);
-    const graph = await extractGraph(ctx.workspace.root, files);
+    const graph = await extractGraph(ctx.workspace.root, files, tree);
     const entry = await detectEntrypoints(ctx.workspace.root, new Set(files), config.entrypoints);
     const authPatterns = config.authPatterns ?? DEFAULT_AUTH_PATTERNS;
 

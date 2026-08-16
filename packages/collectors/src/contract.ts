@@ -300,9 +300,31 @@ export const contract: Collector = {
 
       // ── boundary: declared allow-lists over the over-approximate import read ──
       if (declared.boundary.length > 0) {
+        // File nodes include PHANTOMS: an import the extractor could not resolve
+        // to a walked file still gets a `file:` node, and that node has NO
+        // `path` (extract.ts's importTarget — the id carries the path the import
+        // named, and the edge is marked `inferred`).
+        //
+        // Reading `path` alone threw on rampscan's own repository, where
+        // phantoms exist — the gate CRASHED instead of answering, so both
+        // contract recipes read unevidenced with a stack trace for a reason.
+        // Found by dogfooding this contract on this repository (L3b), which is
+        // the only way it could have been found: no fixture had an unresolvable
+        // import.
+        //
+        // Falling back to the id is not merely crash-avoidance, it is the
+        // reading this rule kind already promises: the boundary walk is
+        // OVER-approximate and its signed statement says unknowns count against
+        // the repo, so an import that NAMES the guarded module must count even
+        // when the extractor could not resolve where it lands. Dropping the row
+        // would waive the rule on exactly the imports the graph understands
+        // least.
         const allFiles = (
-          db.prepare("SELECT path FROM nodes WHERE kind = 'file'").all() as Array<{ path: string }>
-        ).map((n) => n.path);
+          db.prepare("SELECT id, path FROM nodes WHERE kind = 'file'").all() as Array<{
+            id: string;
+            path: string | null;
+          }>
+        ).map((n) => n.path ?? n.id.slice("file:".length));
         const rows: ObservationRows = [];
         for (const rule of declared.boundary) {
           const moduleFiles = allFiles.filter((rel) => inModulePrefix(rel, rule.module));
