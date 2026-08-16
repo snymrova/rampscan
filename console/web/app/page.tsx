@@ -611,6 +611,90 @@ function RegisterRowView({
   );
 }
 
+/**
+ * The drafting affordance (plan L4b). Two rules it exists to hold:
+ *
+ *  1. A model that is not ready produces NO BUTTON — just its reason. A
+ *     disabled control is a mystery the operator has to click to solve, and
+ *     I15 says an absence states why it is absent.
+ *  2. What the model writes is a DRAFT and the operator owns it. The text
+ *     lands in the same textarea they would have typed into, and the approver
+ *     signs whatever is there at the end — the model's output is never the
+ *     signed subject, only a starting point someone rewrote or kept.
+ */
+function DraftAffordance({
+  row,
+  onDraft,
+  disabled,
+}: {
+  row: RegisterRecord;
+  onDraft: (text: string) => void;
+  disabled: boolean;
+}) {
+  const [state, setState] = useState<{ state: string; reason?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetch("/api/model/draft", { headers: { Authorization: getPb().authStore.token } })
+      .then((r) => r.json())
+      .then((r) => live && setState(r))
+      .catch(() => live && setState({ state: "absent", reason: "the console could not reach the model route" }));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  if (!state) return null;
+  if (state.state !== "ready") {
+    return (
+      <p className="muted model-absent" style={{ margin: "6px 0 0", fontSize: "0.85em" }}>
+        no local draft: {state.reason ?? "the model runner is not ready"}
+      </p>
+    );
+  }
+
+  async function draft() {
+    setBusy(true);
+    setFailed(null);
+    try {
+      const res = await fetch("/api/model/draft", {
+        method: "POST",
+        headers: { Authorization: getPb().authStore.token, "content-type": "application/json" },
+        body: JSON.stringify({
+          // Catalog and board facts only — the route reads nothing itself, so
+          // what a draft can be about is visible right here.
+          context: {
+            repository: row.repo,
+            check: row.recipe_id,
+            "what the check looks for": row.plain?.checks ?? "(not documented in the catalog)",
+          },
+        }),
+      });
+      const body = (await res.json()) as { text?: string; error?: string };
+      if (!res.ok || body.text === undefined) throw new Error(body.error ?? `HTTP ${res.status}`);
+      onDraft(body.text);
+    } catch (e) {
+      setFailed(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ margin: "6px 0 0" }}>
+      <button className="btn model-draft" disabled={busy || disabled} onClick={draft}>
+        {busy ? "drafting locally…" : "draft with local model"}
+      </button>
+      <span className="muted" style={{ marginLeft: 8, fontSize: "0.85em" }}>
+        a starting point you edit — the approver signs what you leave here
+      </span>
+      {failed && <p className="error">{failed}</p>}
+    </div>
+  );
+}
+
 function ProposeForm({ row, done }: { row: RegisterRecord; done: () => void }) {
   const { user } = useAuth();
   const [justification, setJustification] = useState("");
@@ -652,6 +736,7 @@ function ProposeForm({ row, done }: { row: RegisterRecord; done: () => void }) {
         value={justification}
         onChange={(e) => setJustification(e.target.value)}
       />
+      <DraftAffordance row={row} onDraft={setJustification} disabled={busy} />
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
         <button
           className="btn primary"
