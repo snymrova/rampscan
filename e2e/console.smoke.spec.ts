@@ -1276,3 +1276,49 @@ function untar(bytes: Buffer): Map<string, Buffer> {
   }
   return out;
 }
+
+test("local drafting: the affordance is there or its absence says why, and the human still owns the text (L4b)", async ({
+  page,
+}) => {
+  await signIn(page);
+  // `propose N/A` renders only on an UNEVIDENCED row, and vulnerable-app is
+  // fully tooled — the same fixture fact K1 hit from the other side. The bare
+  // repo is where a proposal can actually be filed.
+  await pickRepo(page, BARE_REPO);
+
+  const emptyRow = page.getByRole("row").filter({ hasText: "unevidenced" }).first();
+  await expect(emptyRow).toBeVisible({ timeout: 30_000 });
+  await emptyRow.getByRole("button", { name: "propose N/A" }).click();
+
+  // the human path exists first and is unconditional — drafting is an
+  // affordance ON this form, never the way into it
+  const textarea = page.locator("textarea");
+  await expect(textarea).toBeVisible();
+
+  // the drafting affordance resolves to exactly one of two shapes, and the
+  // forbidden third shape is a disabled button that explains nothing
+  const button = page.locator("button.model-draft");
+  const absence = page.locator("p.model-absent");
+  await expect(button.or(absence).first()).toBeVisible({ timeout: 30_000 });
+
+  if (await button.isVisible()) {
+    // a provisioned machine: the button says whose text this is
+    await expect(button).toBeEnabled();
+    await expect(page.getByText("the approver signs what you leave here")).toBeVisible();
+  } else {
+    // CI's reality, and this developer machine's: the runtime is missing or
+    // the pinned weights are not pulled. Either way the sentence names which,
+    // and NO button was drawn to be clicked at nothing.
+    await expect(absence).toContainText("no local draft:");
+    expect((await absence.textContent())?.length ?? 0).toBeGreaterThan("no local draft:".length + 10);
+    await expect(button).toHaveCount(0);
+  }
+
+  // whatever the model's state, the operator can still type and file — the
+  // signed subject is the human's text and drafting was never on that path
+  await textarea.fill("this repository has no container images, so the base-image scan has nothing to read");
+  await expect(page.getByRole("button", { name: "file proposal" })).toBeEnabled();
+
+  // and the board behind the drawer is unmoved: a draft is not an event
+  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+});
