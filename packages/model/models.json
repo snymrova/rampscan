@@ -1,0 +1,6 @@
+{
+  "comment": "Pinned drafting model and the runtime that serves it. Resolution order at run time: probe the runtime → pinned model present on this machine → else an honest skip with WHICH of the two is missing. Nothing is ever downloaded by rampscan: pulling weights is a network operation and I8 keeps the network out, so absent weights are a stated skip and never a fetch. The pin is a name:tag, exactly as tools.json pins an image tag — content-digest pinning is appliance-level hardening in both files, and here it would be closer to theatre than hardening: the daemon's blob store is owned by its own service user and unreadable by the calling uid, so rampscan RELAYS the digest the runtime reports and cannot verify it. A drafted paragraph a human rewrites before signing does not need an enforced supply chain; a signed narrative (L5) does, and that is where this decision gets re-taken.",
+  "runtime": "ollama",
+  "endpoint": "http://127.0.0.1:11434",
+  "model": "llama3.2:3b"
+}

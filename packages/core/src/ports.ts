@@ -187,6 +187,67 @@ export interface RepoSource {
   fetch(target: ScanTarget): Promise<Workspace>;
 }
 
+// The seventh port (plan L4a). A local model DRAFTS text a human edits and
+// signs; it has no standing in the verdict path, and nothing here is ever
+// called by a collector, a gate, or the fold.
+//
+// Resolution does NOT follow the `tools.ts` binary → Docker ladder, and the
+// difference is worth reading before assuming it does: what serves inference
+// is a DAEMON, not the binary on PATH. It may be stopped, may run as another
+// user, may be remote (OLLAMA_HOST). So the ladder is:
+//
+//   1. probe the runtime  → not answering            → "absent"
+//   2. pinned weights present per models.json?  no   → "unprovisioned"
+//   3. both                                          → "ready"
+//
+// Two absences, not one, because the operator's fix differs: install the
+// runtime vs pull the pinned weights. I15 says an absence states its reason;
+// collapsing these would state the wrong one.
+
+export type ModelResolution =
+  | { state: "ready"; runtime: string; runtimeVersion: string; model: string; weightsDigest: string }
+  /** the runtime answers but the pinned weights are not on this machine */
+  | { state: "unprovisioned"; runtime: string; runtimeVersion: string; reason: string }
+  /** no runtime answered at all */
+  | { state: "absent"; reason: string };
+
+/** What a draft is FOR. Each task owns a prompt whose text is grep-tested (I1). */
+export type DraftTask = "scoping-justification";
+
+export interface DraftRequest {
+  task: DraftTask;
+  /**
+   * Facts already on some signed statement or in the catalog. The adapter
+   * renders these; it never reads the repo, the ledger or the network itself,
+   * so what a draft can be about is decided by the caller and is auditable.
+   */
+  context: Record<string, string>;
+}
+
+export interface Draft {
+  text: string;
+  model: string;
+  /**
+   * The digest the RUNTIME REPORTS for its weights — deliberately not named
+   * `weights_sha256`. rampscan cannot verify it: ollama's blob store is owned
+   * by the daemon's service user and is unreadable by the calling uid, so this
+   * is a claim rampscan relays and not one it checked. Fine while drafts are
+   * advisory; re-decide before any drafted text becomes a signed subject (L5).
+   */
+  weightsDigest: string;
+  costTokens?: number;
+}
+
+/**
+ * local: a model daemon on this machine → later: the same, deliberately. There
+ * is no cloud adapter behind this port; I8 makes the offline path the only one.
+ */
+export interface ModelRunner {
+  resolve(): Promise<ModelResolution>;
+  /** Only callable when `resolve()` said "ready"; adapters throw otherwise. */
+  draft(req: DraftRequest): Promise<Draft>;
+}
+
 export type EvidenceStatus =
   | { state: "live" }
   | { state: "dead"; cause: "anchor-drift" | "superseded"; killingCommit?: string };
