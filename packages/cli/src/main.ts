@@ -3,7 +3,7 @@ import { parseArgs } from "node:util";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { allCollectors, loadToolManifest } from "@rampscan/collectors";
-import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
+import { DEFAULT_DATASET_PIN, loadLocalDataset } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
@@ -12,6 +12,7 @@ import { renderBoard, renderBoardDiff } from "./board.js";
 import { computeBoardAsOf } from "./board-asof.js";
 import { computeBoardDiff } from "./board-diff.js";
 import { startDaemon } from "./daemon.js";
+import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
 import { rebuild } from "./rebuild.js";
 import { loadRecipes } from "./recipes.js";
 import { report } from "./report.js";
@@ -31,6 +32,8 @@ import { verify } from "./verify.js";
 //                            near-expiry warnings, cache self-verification
 //   rampscan report          FRONTIER-PIPELINE.md from a real run
 //   rampscan tools           the static map: recipe ↔ collector ↔ tool ↔ image
+//   rampscan model           the repo model: the ledger's world as typed nodes
+//                            and links (`--json` reproduces the scan artifact)
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -53,6 +56,9 @@ function usage(): never {
       "  report            generate docs/FRONTIER-PIPELINE.md from the last scan result",
       "  tools             the static map: which collector answers which recipe, with which",
       "                    tool and pinned image (doctor: can it run · tools: who feeds whom)",
+      "  model             the repo model: repos, recipes, controls, KSIs, collectors, tools,",
+      "                    contract rules and the walked graph, as typed nodes and links.",
+      "                    `--json` prints the artifact a scan attests, byte-for-byte",
       "",
       "options:",
       "  --out <dir>       scan/daemon output directory (default: ./rampscan-out);",
@@ -76,7 +82,8 @@ function usage(): never {
       "  --full-every <n>  daemon: every Nth scan bypasses the cache and verifies it (default: 6)",
       "  --result <path>   report: scan result to report from (default: ./rampscan-out/scan-result.json)",
       "  --report-out <path>  report: output file (default: docs/FRONTIER-PIPELINE.md)",
-      "  --json            tools: the map as JSON instead of text",
+      "  --json            tools/model: the JSON instead of the text reading (for `model`,",
+      "                    the canonical bytes a scan's run record attests)",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -263,6 +270,33 @@ async function main(): Promise<void> {
         console.error(
           `\n${problems.length} broken link(s) in the map:\n` +
             problems.map((p) => `  - ${p}`).join("\n"),
+        );
+        process.exit(1);
+      }
+      return;
+    }
+
+    case "model": {
+      // a derivation, like `tools` — no scan needed, nothing probed, nothing
+      // written. `--json` emits the artifact's exact bytes, so
+      // `rampscan model --json` and the repo-model.json a scan attested are
+      // the same file whenever the ledger has not moved.
+      const model = await computeRepoModel({
+        ledgerDir,
+        recipesDir,
+        dataset: await loadLocalDataset(datasetDir, datasetPin),
+        toolMap: buildToolMap({
+          recipes: await loadRecipes(recipesDir),
+          collectors: allCollectors,
+          toolManifest: await loadToolManifest(),
+        }),
+      });
+      if (values.json) process.stdout.write(serializeRepoModel(model));
+      else console.log(renderRepoModel(model, useColor));
+      if (model.problems.length > 0) {
+        console.error(
+          `\n${model.problems.length} problem(s) the model could not state:\n` +
+            model.problems.map((p) => `  - ${p}`).join("\n"),
         );
         process.exit(1);
       }

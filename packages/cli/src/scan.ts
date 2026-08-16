@@ -1,7 +1,12 @@
 import { createHash, randomBytes } from "node:crypto";
 import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { OPENVEX_ARTIFACT, cacheKeySalt, createJournaledRunner } from "@rampscan/collectors";
+import {
+  OPENVEX_ARTIFACT,
+  cacheKeySalt,
+  createJournaledRunner,
+  loadToolManifest,
+} from "@rampscan/collectors";
 import {
   buildScanResult,
   createCachingRunner,
@@ -35,7 +40,9 @@ import type {
   ScanRunTrigger,
   Subject,
 } from "@rampscan/schema";
+import { buildRepoModel, REPO_MODEL_ARTIFACT, serializeRepoModel } from "./model.js";
 import { loadRecipes, validateRecipeIds } from "./recipes.js";
+import { buildToolMap } from "./tools.js";
 
 // `rampscan scan <path>` orchestration (plan C5): pin workspace → load pinned
 // dataset + recipes → run collectors in order → join → scan-result.json.
@@ -99,6 +106,13 @@ export interface ScanOutcome {
   cache?: Record<string, CacheOutcome>;
   /** the signed run record (J1), when a ledger was configured */
   run?: { digest: Digest; collectors: number; skipped: number };
+  /**
+   * The repo model (L2), when a ledger was configured — a derivation of the
+   * ledger AFTER this scan's evidence landed, written as a run artifact and
+   * attested by the run record's subject list. Absent with no ledger, because
+   * there is nothing to derive it from.
+   */
+  model?: { path: string; sha256: string; nodes: number; links: number };
 }
 
 /**
@@ -163,10 +177,15 @@ async function buildCollectorRuns(
  * scan-result.json — which also guarantees a subject exists at all when no
  * tool resolved and the run produced nothing else. Sorted, so the same run
  * always canonicalizes the same way.
+ *
+ * `extra` carries the run's OWN derivations (L2's repo-model.json): artifacts
+ * of the scan rather than of any one collector, which is why they arrive here
+ * rather than through a collector row.
  */
 async function runSubjects(
   resultPath: string,
   runs: Map<string, RunResult>,
+  extra: Subject[] = [],
 ): Promise<Subject[]> {
   const byName = new Map<string, Subject>();
   byName.set("scan-result.json", {
@@ -178,6 +197,7 @@ async function runSubjects(
       byName.set(artifact.name, { name: artifact.name, digest: { sha256: artifact.sha256 } });
     }
   }
+  for (const subject of extra) byName.set(subject.name, subject);
   return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -368,6 +388,39 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   );
   outcome.evidence = { appended, survived, refreshed };
 
+  // The repo model (L2), derived HERE — after this scan's evidence is in the
+  // ledger and before the run record is written. The order is the whole point:
+  // the model is a fold derivative, so it must see this scan's bundles, and
+  // the run record must be able to attest the bytes by digest. (The run record
+  // itself is appended after, so the model never describes the statement that
+  // names it — which is fine: runs are not nodes in this model.)
+  const model = buildRepoModel({
+    entries: await ledger.list(),
+    recipes,
+    dataset,
+    toolMap: buildToolMap({
+      recipes,
+      collectors: options.collectors,
+      toolManifest: await loadToolManifest(),
+    }),
+  });
+  const modelBytes = serializeRepoModel(model);
+  const modelDir = join(artifactDir, "model");
+  await mkdir(modelDir, { recursive: true });
+  const modelPath = join(modelDir, REPO_MODEL_ARTIFACT);
+  await writeFile(modelPath, modelBytes);
+  const modelSha256 = createHash("sha256").update(modelBytes).digest("hex");
+  outcome.model = {
+    path: modelPath,
+    sha256: modelSha256,
+    nodes: model.nodes.length,
+    links: model.links.length,
+  };
+  log(
+    `repo model: ${model.nodes.length} node(s), ${model.links.length} link(s)` +
+      `${model.problems.length > 0 ? `, ${model.problems.length} problem(s)` : ""} → ${modelPath}`,
+  );
+
   // The run record (J1), always appended — one per scan, never deduplicated.
   // A run is unique by construction (its durations and clock), and the record
   // of WHAT RAN is precisely the thing that must not be deduplicated away:
@@ -380,7 +433,9 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
   );
   const runRecord = ScanRun.parse({
     _type: IN_TOTO_STATEMENT_TYPE,
-    subject: await runSubjects(resultPath, runs),
+    subject: await runSubjects(resultPath, runs, [
+      { name: REPO_MODEL_ARTIFACT, digest: { sha256: modelSha256 } },
+    ]),
     predicateType: RAMPSCAN_SCAN_RUN_TYPE,
     predicate: {
       run_id: runId,

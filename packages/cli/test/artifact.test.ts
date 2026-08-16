@@ -8,8 +8,13 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { repoFacts } from "@rampscan/collectors";
 import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
-import { isEvidenceBundle } from "@rampscan/schema";
-import { ArtifactNotAttestedError, resolveArtifact, scan } from "../src/index.js";
+import { isEvidenceBundle, isScanRun } from "@rampscan/schema";
+import {
+  ArtifactNotAttestedError,
+  REPO_MODEL_ARTIFACT,
+  resolveArtifact,
+  scan,
+} from "../src/index.js";
 
 // Artifact resolution (plan J4), over a REAL scanned world — repo-facts only,
 // no external tools, CI-safe — because the thing under test is whether the
@@ -168,6 +173,46 @@ describe("resolveArtifact", () => {
     expect(resolution.bytes).toBeUndefined();
     expect(resolution.reason).toMatch(/^repo content at commit [0-9a-f]{40}/);
     expect(resolution.reason).toMatch(new RegExp(`git show [0-9a-f]{12}:${anchor.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  });
+
+  // A run record's subjects are the RUN's artifacts. Before L2 nothing was
+  // attested by a run record alone — every artifact was also an evidence
+  // bundle's subject — so the resolver's "not an evidence bundle → a scoping
+  // justification" shortcut had never been wrong out loud. repo-model.json is
+  // the first artifact only the run record names, and under that shortcut it
+  // refused to serve with a sentence about a scoping event that does not exist.
+  it("serves an artifact only the run record attests — a run's own derivation is not a justification", async () => {
+    const entries = await createLocalLedger(ledgerDir).list();
+    const run = entries.find((e) => isScanRun(e.bundle))!;
+    const subject = run.bundle.subject.find((s) => s.name === REPO_MODEL_ARTIFACT)!;
+    const digest = subject.digest["sha256"]!;
+    // the premise: no evidence bundle names these bytes, so the classification
+    // rests entirely on the statement kind
+    expect(
+      entries.filter((e) => e.bundle.subject.some((s) => s.digest["sha256"] === digest)),
+    ).toHaveLength(1);
+
+    const resolution = await resolveArtifact({ ledgerDir, artifactsDir, digest });
+    expect(resolution.kind).toBe("artifact");
+    expect(resolution.name).toBe(REPO_MODEL_ARTIFACT);
+    expect(resolution.attestedBy).toEqual([run.digest]);
+    expect(resolution.bytes).toBeDefined();
+    expect(createHash("sha256").update(resolution.bytes!).digest("hex")).toBe(digest);
+  });
+
+  it("classifies scan-result.json as an artifact too, and says it was not retained", async () => {
+    // it lives beside the artifacts dir rather than inside it, so the honest
+    // answer is "no file of that name here" — not a sentence about scoping
+    const entries = await createLocalLedger(ledgerDir).list();
+    const run = entries.find((e) => isScanRun(e.bundle))!;
+    const subject = run.bundle.subject.find((s) => s.name === "scan-result.json")!;
+    const resolution = await resolveArtifact({
+      ledgerDir,
+      artifactsDir,
+      digest: subject.digest["sha256"]!,
+    });
+    expect(resolution.kind).toBe("artifact");
+    expect(resolution.reason).toMatch(/not retained — no file named scan-result\.json/);
   });
 
   it("refuses a digest no signed statement attests — this serves artifacts, not files", async () => {

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { isEvidenceBundle } from "@rampscan/schema";
+import { isEvidenceBundle, isScopingEvent } from "@rampscan/schema";
 import { createLocalLedger } from "@rampscan/ledger";
 
 // Artifact resolution (plan J4): the operator finally SEES what a tool said,
@@ -150,11 +150,17 @@ export async function resolveArtifact(
       if (subject.digest.sha256 !== digest) continue;
       attestedBy.push(entry.digest);
       name ??= subject.name;
-      // an evidence bundle's classification wins over a scoping event's: the
-      // same bytes seen as an artifact somewhere are an artifact
-      const thisKind: SubjectKind = !isEvidence
+      // Classified by the STATEMENT KIND that named these bytes, not by
+      // "is it evidence or isn't it". A run record's subjects are the run's
+      // artifacts (L2's repo-model.json is attested by nothing else), and
+      // calling them justifications would refuse to serve them with a sentence
+      // about a scoping event that does not exist.
+      //
+      // A scoping event's justification loses to any other classification: the
+      // same bytes seen as an artifact somewhere are an artifact.
+      const thisKind: SubjectKind = isScopingEvent(statement)
         ? "justification"
-        : anchorNames.has(subject.name)
+        : isEvidence && anchorNames.has(subject.name)
           ? "anchor"
           : "artifact";
       if (kind === undefined || (kind === "justification" && thisKind !== "justification")) {

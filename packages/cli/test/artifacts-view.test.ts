@@ -63,6 +63,7 @@ describe("artifactFamily: decided by the attested name, never by the content", (
     expect(M.artifactFamily("openvex.json")).toBe("openvex");
     expect(M.artifactFamily("repo-facts.json")).toBe("repo-facts");
     expect(M.artifactFamily("sbom.cdx.json")).toBe("cyclonedx sbom");
+    expect(M.artifactFamily("repo-model.json")).toBe("repo model");
   });
 
   it("gives an unknown artifact NO family rather than a guessed one", () => {
@@ -259,6 +260,160 @@ describe("the findings tables", () => {
   });
 });
 
+describe("repo model (L2): nodes AND links, and no second coverage number", () => {
+  // the shape the artifact really has — one node of each kind that renders a
+  // detail, and one link of each kind that renders differently
+  const model = {
+    version: 1,
+    dataset_version: "2026.07.14.01",
+    nodes: [
+      { kind: "repo", id: "repo:/app", repo: "/app" },
+      {
+        kind: "recipe",
+        id: "recipe:arch-boundaries-hold",
+        recipeId: "arch-boundaries-hold",
+        inCatalog: true,
+        cadence: "weekly",
+        automatable: "full",
+      },
+      { kind: "recipe", id: "recipe:gone", recipeId: "gone", inCatalog: false },
+      { kind: "collector", id: "collector:contract", collector: "contract", pure: true },
+      { kind: "collector", id: "collector:graph", collector: "graph", pure: true },
+      { kind: "collector", id: "collector:semgrep", collector: "semgrep", pure: false },
+      { kind: "tool", id: "tool:semgrep", tool: "semgrep", pinnedVersion: "1.2.3", image: "img:1.2.3" },
+      { kind: "tool", id: "tool:unpinned", tool: "unpinned" },
+      {
+        kind: "contract-rule",
+        id: "rule:/app:billing-isolated",
+        ruleId: "billing-isolated",
+        ruleKind: "boundary",
+        repo: "/app",
+        declaration:
+          '{"allowedImporters":["src/server.js"],"description":"billing is reached only through the server layer","id":"billing-isolated","kind":"boundary","module":"src/billing"}',
+      },
+      {
+        kind: "graph",
+        id: "graph:/app",
+        repo: "/app",
+        commit: "abcdef0123456789abcdef",
+        extractorVersion: "1",
+        nodeCount: 12,
+        edgeCount: 9,
+        inferredEdgeCount: 2,
+        entrypoints: ["src/index.js"],
+        entrypointSource: "package.json",
+        routeRoots: 2,
+        from: { recipeId: "arch-boundaries-hold", bundleDigest: "dead" },
+      },
+    ],
+    links: [
+      { kind: "state", from: "repo:/app", to: "recipe:arch-boundaries-hold", state: "violated", bundleDigest: "dead" },
+      { kind: "state", from: "repo:/app", to: "recipe:gone", state: "unevidenced" },
+      { kind: "consumes", from: "collector:contract", to: "collector:graph", artifact: "graph.db" },
+      { kind: "spawns", from: "collector:semgrep", to: "tool:semgrep" },
+      { kind: "declares", from: "repo:/app", to: "rule:/app:billing-isolated" },
+      { kind: "checked-by", from: "rule:/app:billing-isolated", to: "recipe:arch-boundaries-hold" },
+      { kind: "walked", from: "repo:/app", to: "graph:/app" },
+    ],
+    problems: [] as string[],
+  };
+
+  it("puts every node on a row and every link on the row of the node it leaves", () => {
+    const table = M.artifactTable("repo-model.json", model)!;
+    expect(table.family).toBe("repo model");
+    expect(table.columns).toEqual(["kind", "id", "detail", "links out"]);
+    expect(table.total).toBe(model.nodes.length);
+    const repo = table.rows.find((r) => r[1] === "repo:/app")!;
+    // the state link carries its verdict INTO the label — a link column that
+    // said only "state→recipe:x" would render the board as a shrug
+    expect(repo[3]).toContain("state:violated→recipe:arch-boundaries-hold");
+    expect(repo[3]).toContain("state:unevidenced→recipe:gone");
+    expect(repo[3]).toContain("declares→rule:/app:billing-isolated");
+    expect(repo[3]).toContain("walked→graph:/app");
+    // the consumed artifact is named on the link, not left to be guessed
+    const consumer = table.rows.find((r) => r[1] === "collector:contract")!;
+    expect(consumer[3]).toBe("consumes:graph.db→collector:graph");
+  });
+
+  it("shows the signed declaration itself, never a paraphrase of it", () => {
+    const table = M.artifactTable("repo-model.json", model)!;
+    const rule = table.rows.find((r) => r[0] === "contract-rule")!;
+    expect(rule[2]).toContain("boundary");
+    expect(rule[2]).toContain('"module":"src/billing"');
+    expect(rule[2]).toContain("billing is reached only through the server layer");
+  });
+
+  it("says what each node kind knows about itself, and nothing it does not", () => {
+    const table = M.artifactTable("repo-model.json", model)!;
+    const by = (id: string) => table.rows.find((r) => r[1] === id)!;
+    expect(by("recipe:arch-boundaries-hold")[2]).toBe("cadence weekly · automatable full");
+    expect(by("recipe:gone")[2]).toContain("not in the catalog");
+    expect(by("collector:contract")[2]).toContain("pure");
+    expect(by("collector:semgrep")[2]).toBe("");
+    expect(by("tool:semgrep")[2]).toBe("pinned 1.2.3 · img:1.2.3");
+    expect(by("tool:unpinned")[2]).toBe("no pin in tools.json");
+    expect(by("graph:/app")[2]).toContain("12 nodes, 9 edges (2 name-inferred)");
+    expect(by("graph:/app")[2]).toContain("roots: src/index.js (package.json)");
+    expect(by("graph:/app")[2]).toContain("from arch-boundaries-hold");
+  });
+
+  it("leads the note with the model's own problems, and computes no coverage", () => {
+    const clean = M.artifactTable("repo-model.json", model)!;
+    expect(clean.note).toContain("model v1 over crosswalk 2026.07.14.01");
+    expect(clean.note).toContain(`${model.links.length} link(s)`);
+    expect(clean.note).toContain("the board owns the counts");
+    expect(clean.note).not.toContain("problem(s)");
+
+    const broken = M.artifactTable("repo-model.json", {
+      ...model,
+      problems: ['recipe "x" names collector "y", which is not registered'],
+    })!;
+    expect(broken.note!.startsWith("1 problem(s)")).toBe(true);
+    expect(broken.note).toContain('recipe "x" names collector "y"');
+
+    // no percentage, no "N of M" — the board computes coverage, and a second
+    // count here is a second answer that merely looks like the same one
+    expect(allText(clean)).not.toMatch(/\d+\s*%/);
+    expect(allText(clean)).not.toMatch(/\d+ of \d+/);
+  });
+
+  it("renders a REAL model — the catalog, the crosswalk and the whole registry", async () => {
+    // no ledger: the world is empty of scans, so this is the catalog half of a
+    // real artifact, built by the real hand rather than typed above
+    const { allCollectors, loadToolManifest } = await import("@rampscan/collectors");
+    const { DEFAULT_DATASET_PIN, loadLocalDataset } = await import("@rampscan/dataset");
+    const { buildRepoModel, buildToolMap, loadRecipes } = await import("../src/index.js");
+    const recipes = await loadRecipes(join(repoRoot, "recipes/pipeline"));
+    const real = buildRepoModel({
+      entries: [],
+      recipes,
+      dataset: await loadLocalDataset(
+        join(repoRoot, "docs/context/ramprules/derived"),
+        DEFAULT_DATASET_PIN,
+      ),
+      toolMap: buildToolMap({
+        recipes,
+        collectors: allCollectors,
+        toolManifest: await loadToolManifest(),
+      }),
+    });
+    const table = M.artifactTable("repo-model.json", JSON.parse(JSON.stringify(real)))!;
+    expect(table.family).toBe("repo model");
+    expect(table.total).toBe(real.nodes.length);
+    expect(table.total).toBeGreaterThan(recipes.length);
+    for (const row of table.rows) expect(row.length).toBe(table.columns.length);
+    // a scan-less world has no repo, no state and no contract — and the table
+    // says so by having none, not by inventing an empty one
+    expect(table.rows.some((r) => r[0] === "repo")).toBe(false);
+    expect(table.rows.some((r) => r[0] === "recipe")).toBe(true);
+    expect(allText(table)).not.toContain("state:");
+    // the crosswalk pin is stated, because every ksi-control link came from it
+    expect(table.note).toContain(DEFAULT_DATASET_PIN);
+    // this is the only test in this file that loads the real catalog, the real
+    // crosswalk and the whole collector registry — hence the wider budget
+  }, 60_000);
+});
+
 describe("the row cap says what it cut", () => {
   it("caps the rows and states the TRUE total", () => {
     const results = Array.from({ length: M.ROW_CAP + 31 }, (_, i) => ({
@@ -287,6 +442,7 @@ describe("against the real artifacts this repo's own scans wrote", () => {
     ["reachability/openvex.json", "openvex"],
     ["semgrep/semgrep-results.json", "semgrep"],
     ["syft/sbom.cdx.json", "cyclonedx sbom"],
+    ["model/repo-model.json", "repo model"],
   ];
 
   for (const [path, family] of cases) {

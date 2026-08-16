@@ -1052,6 +1052,121 @@ test("architecture contract: the repo's own declaration, checked against its cod
   ).toBeVisible();
 });
 
+test("repo model: the scan's own derivation, attested by its run record and readable in the browser (L2)", async ({
+  page,
+}) => {
+  const BOUNDARY = "arch-boundaries-hold";
+  await signIn(page);
+
+  // the model is a subject of the RUN RECORD, not of any evidence bundle —
+  // the first artifact in this system attested by a run alone — so the hop to
+  // it is the one J2 built: the run timeline's own statement.
+  await page.goto("/runs");
+  await pickRepo(page);
+  await expect(page.locator("tr.rowlink")).toHaveCount(1);
+  await page.locator("tr.rowlink td a").first().click();
+  await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
+  await expect(page.locator("h1 .pill").first()).toContainText("scan run");
+
+  const modelRow = page
+    .getByRole("row")
+    .filter({ has: page.getByRole("cell", { name: "repo-model.json", exact: true }) });
+  await expect(modelRow).toHaveCount(1);
+  // it is an ARTIFACT, not an anchor and not a justification: the row offers
+  // bytes rather than a `git show` line
+  await expect(modelRow).toContainText("artifact");
+  await modelRow.getByRole("button", { name: "view", exact: true }).click();
+
+  // the browser re-hashed the bytes against the digest the run record signed
+  // before a single row was drawn — J4's rule, on J4's hand
+  await expect(modelRow.locator(".artifact-verified")).toBeVisible({ timeout: 30_000 });
+  const table = modelRow.locator(".artifact-scroll table");
+  await expect(table).toBeVisible();
+
+  // Rows are located by their ID CELL, exactly — never by substring. A node's
+  // links column names other nodes, so the repo row contains the text
+  // "…:billing-isolated" and a hasText filter would hand back the repo row
+  // when asked for the rule (which is exactly what it did the first time).
+  const nodeRow = (id: string) =>
+    table.locator("tr").filter({ has: page.getByRole("cell", { name: id, exact: true }) });
+
+  // the fixture's own world, read off the model: the repo, its contract, its
+  // graph. Each of these is a known fixture truth, not "something rendered".
+  const repoRow = nodeRow(`repo:${FIXTURE_REPO}`);
+  await expect(repoRow).toHaveCount(1);
+  // the board's verdicts ride the links, so a reader can see WHICH cell is bad
+  await expect(repoRow).toContainText(`state:violated→recipe:${FLAGSHIP}`);
+  await expect(repoRow).toContainText(`declares→rule:${FIXTURE_REPO}:billing-isolated`);
+  await expect(repoRow).toContainText(`walked→graph:${FIXTURE_REPO}`);
+
+  // the contract rule is the DECLARATION the gate signed, not a paraphrase —
+  // the same posture L1 gave the basis panel, for the same reader
+  const ruleRow = nodeRow(`rule:${FIXTURE_REPO}:billing-isolated`);
+  await expect(ruleRow).toHaveCount(1);
+  await expect(ruleRow).toContainText("boundary");
+  await expect(ruleRow).toContainText('"module":"src/billing"');
+  await expect(ruleRow).toContainText(`checked-by→recipe:${BOUNDARY}`);
+
+  // the walk the gated verdicts rest on, with I3f's marking carried through
+  const graphRow = nodeRow(`graph:${FIXTURE_REPO}`);
+  await expect(graphRow).toContainText("name-inferred");
+  await expect(graphRow).toContainText("roots:");
+
+  // and the provenance half: a pure gate still reaches its tool through the
+  // artifact it eats (J5's transitive truth, as a link)
+  await expect(nodeRow("collector:reachability")).toContainText(
+    "consumes:graph.db→collector:graph",
+  );
+
+  // what the table refuses to do: compute a second coverage number. The board
+  // owns the counts, and a percentage here would be a second answer that
+  // merely looks like the same one.
+  const rendered = (await table.innerText()) + ((await modelRow.locator(".muted").allInnerTexts()).join(" "));
+  expect(rendered).not.toMatch(/\d+\s*%/);
+  expect(rendered).not.toMatch(/\d+ of \d+/);
+
+  // ── the command, standalone from the ledger ──────────────────────────────
+  // `rampscan model` needs no scan: it derives from the ledger as it stands
+  // NOW, which is two scans deep by this point. That the artifact above shows
+  // one repo and the command below shows two is the honest reading of both:
+  // the artifact is a point-in-time derivation, attested and dated by the run
+  // that emitted it; the command is the live one.
+  const text = execFileSync(
+    "node_modules/.bin/tsx",
+    ["packages/cli/src/main.ts", "model", "--ledger", "e2e/.smoke/ledger", "--no-color"],
+    { encoding: "utf8" },
+  );
+  expect(text).toContain(FIXTURE_REPO);
+  expect(text).toContain(BARE_REPO);
+  expect(text).toContain("billing-isolated (boundary)");
+  // the bare repo declares no contract, and the model says that rather than
+  // rendering an empty line (K1's rule, in a terminal)
+  expect(text).toMatch(/contract {2}none declared in any live claim's basis/);
+  // the whole registry is registered, so nothing in this world is unlinkable
+  expect(text).not.toContain("PROBLEMS");
+
+  // the JSON is the artifact's own serialization: canonical, newline-ended,
+  // and carrying no instant anywhere — which is what makes it reproducible
+  const json = execFileSync(
+    "node_modules/.bin/tsx",
+    ["packages/cli/src/main.ts", "model", "--ledger", "e2e/.smoke/ledger", "--json"],
+    { encoding: "utf8" },
+  );
+  expect(json.endsWith("\n")).toBe(true);
+  expect(json).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+  const model = JSON.parse(json) as { nodes: unknown[]; links: unknown[]; problems: string[] };
+  expect(model.problems).toEqual([]);
+  expect(model.nodes.length).toBeGreaterThan(0);
+  // and it really is stable: a second run of the same command, same bytes
+  expect(
+    execFileSync(
+      "node_modules/.bin/tsx",
+      ["packages/cli/src/main.ts", "model", "--ledger", "e2e/.smoke/ledger", "--json"],
+      { encoding: "utf8" },
+    ),
+  ).toBe(json);
+});
+
 /** the reference tar reader — the package must be readable without our writer */
 function untar(bytes: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();

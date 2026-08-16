@@ -233,6 +233,92 @@ function repoFactsTable(content: Json): ArtifactTable {
   return capped("repo-facts", ["fact", "observed"], rows);
 }
 
+/**
+ * The repo model (L2). One row per NODE, with that node's outgoing links in
+ * its own column — the artifact is nodes AND links, and a table that showed
+ * only the nodes would render half a model while looking like a whole one.
+ *
+ * Two things this table deliberately does NOT do. It does not roll the states
+ * up into a coverage number: the board computes coverage, and a second count
+ * here could disagree with the one the operator is looking at. And it does not
+ * hide `problems` in a footnote — they lead the note, because a model that
+ * could not draw a link is exactly the thing a reader of this table is
+ * entitled to know before reading any row of it.
+ */
+function repoModelTable(content: Json): ArtifactTable {
+  const nodes = arr(content["nodes"]).map(obj);
+  const links = arr(content["links"]).map(obj);
+  const problems = arr(content["problems"]).map(str);
+
+  const outgoing = new Map<string, string[]>();
+  for (const link of links) {
+    const from = str(link["from"]);
+    const label =
+      link["kind"] === "state"
+        ? `state:${str(link["state"])}→${str(link["to"])}`
+        : link["kind"] === "consumes"
+          ? `consumes:${str(link["artifact"])}→${str(link["to"])}`
+          : `${str(link["kind"])}→${str(link["to"])}`;
+    outgoing.set(from, [...(outgoing.get(from) ?? []), label]);
+  }
+
+  // what each node kind says about itself, in its own terms — never a shared
+  // "label" field the artifact does not carry
+  const detail = (n: Json): string => {
+    switch (str(n["kind"])) {
+      case "repo":
+        return str(n["repo"]);
+      case "recipe":
+        return [
+          n["inCatalog"] === false ? "not in the catalog — its evidence outlived it" : "",
+          n["cadence"] ? `cadence ${str(n["cadence"])}` : "",
+          n["automatable"] ? `automatable ${str(n["automatable"])}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+      case "collector":
+        return n["pure"] === true ? "pure — spawns no external tool" : "";
+      case "tool":
+        return [
+          n["pinnedVersion"] ? `pinned ${str(n["pinnedVersion"])}` : "no pin in tools.json",
+          str(n["image"]),
+        ]
+          .filter(Boolean)
+          .join(" · ");
+      case "contract-rule":
+        return `${str(n["ruleKind"])} · ${str(n["declaration"])}`;
+      case "graph":
+        return [
+          `${str(n["nodeCount"])} nodes, ${str(n["edgeCount"])} edges (${str(n["inferredEdgeCount"])} name-inferred)`,
+          `@ ${str(n["commit"]).slice(0, 12)}`,
+          `roots: ${arr(n["entrypoints"]).map(str).join(", ") || "none"} (${str(n["entrypointSource"])})`,
+          `from ${str(obj(n["from"])["recipeId"])}`,
+        ].join(" · ");
+      default:
+        return "";
+    }
+  };
+
+  const rows = nodes.map((n) => [
+    str(n["kind"]),
+    str(n["id"]),
+    detail(n),
+    (outgoing.get(str(n["id"])) ?? []).join(" · "),
+  ]);
+
+  const note = [
+    problems.length > 0
+      ? `${problems.length} problem(s) the model states about itself: ${problems.join(" · ")}`
+      : "",
+    `model v${str(content["version"])} over crosswalk ${str(content["dataset_version"])} · ${links.length} link(s), each shown on the row of the node it leaves`,
+    "no clock and no coverage number: the same ledger yields the same bytes, and the board owns the counts",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return capped("repo model", ["kind", "id", "detail", "links out"], rows, note);
+}
+
 function cyclonedxTable(content: Json): ArtifactTable {
   const rows = arr(content["components"]).map((c) => {
     const x = obj(c);
@@ -262,6 +348,7 @@ export function artifactFamily(name: string): string | null {
   if (base === "openvex.json") return "openvex";
   if (base === "repo-facts.json") return "repo-facts";
   if (base === "sbom.cdx.json") return "cyclonedx sbom";
+  if (base === "repo-model.json") return "repo model";
   return null;
 }
 
@@ -293,6 +380,8 @@ export function artifactTable(name: string, content: unknown): ArtifactTable | n
       return repoFactsTable(c);
     case "cyclonedx sbom":
       return cyclonedxTable(c);
+    case "repo model":
+      return repoModelTable(c);
     default:
       return null;
   }

@@ -38,6 +38,34 @@ export { startDaemon, describeDaemonEvent, DAEMON_STATUS_FILE } from "./daemon.j
 export type { DaemonOptions, DaemonHandle, DaemonEvent } from "./daemon.js";
 export { buildToolMap, renderToolMap, toolMapProblems } from "./tools.js";
 export type { ToolMap, ToolMapCollector, ToolMapRecipe, ToolMapTool } from "./tools.js";
+export {
+  buildRepoModel,
+  computeRepoModel,
+  renderRepoModel,
+  serializeRepoModel,
+  REPO_MODEL_ARTIFACT,
+  REPO_MODEL_VERSION,
+} from "./model.js";
+export type {
+  CollectorNode,
+  ConsumesLink,
+  ContractRuleNode,
+  ControlNode,
+  GraphNode,
+  KsiNode,
+  RecipeNode,
+  RepoModel,
+  RepoModelEdge,
+  RepoModelInput,
+  RepoModelLink,
+  RepoModelLinkKind,
+  RepoModelNode,
+  RepoModelNodeKind,
+  RepoModelOptions,
+  RepoNode,
+  StateLink,
+  ToolNode,
+} from "./model.js";
 export { report, generateFrontierReport } from "./report.js";
 export type { ReportOptions } from "./report.js";
 export { startPocketBase, bootstrapConsole, DEMO_USERS, DEMO_PASSWORD } from "./pocketbase.js";
