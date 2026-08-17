@@ -68,9 +68,14 @@ async function mapWith(adjudications: PipelineAdjudication[]) {
 }
 
 describe("the overlay as it stands", () => {
-  it("reads the frontier under the pin, and it is the 121", async () => {
+  it("reads the frontier under the pin, and it is the 119", async () => {
+    // 121 until the re-pin to overlay 0.7.2 (N1a′-T1's second half). Upstream
+    // authored two pipeline recipes and `sr-6` and `sr-8` left the uncovered
+    // set — the frontier is upstream's file and it shrinks when upstream
+    // answers something, which is the whole reason the number is read here
+    // rather than typed anywhere.
     const map = await realMap();
-    expect(map.rollup.frontierTotal).toBe(121);
+    expect(map.rollup.frontierTotal).toBe(119);
     expect(map.datasetVersion).toBe(DEFAULT_DATASET_PIN);
     // upstream's denominator, read rather than typed — every ceiling figure
     // this repository publishes divides by this number
@@ -134,7 +139,7 @@ describe("the overlay as it stands", () => {
     const a = renderFrontier(await realMap(), false);
     const b = renderFrontier(await realMap(), false);
     expect(a).toBe(b);
-    expect(a).toContain("frontier 121 uncovered controls");
+    expect(a).toContain("frontier 119 uncovered controls");
   });
 });
 
@@ -235,6 +240,77 @@ describe("upstream's dispositions are filed by the source that wrote them", () =
       expect(map.rollup.upstreamAdjudicatedBySource[source] ?? 0, source).toBe(expected);
     }
     expect(dataset.frontierOverlayVersion()).toBeDefined();
+  });
+});
+
+// N1a′-T1's second half. The frontier is the UNCOVERED set and it is upstream's
+// file, so it shrinks whenever upstream answers something: the re-pin from
+// overlay 0.6.0 to 0.7.2 took `sr-6` and `sr-8` off it, and `sr-8` was one of
+// the seven records this overlay had already written. Deleting the record would
+// have been the silent drop ground rule 10 forbids — a reader holding both
+// overlays would find upstream's paragraph standing and ours simply gone, with
+// no way to tell whether we agreed, disagreed, or never looked.
+describe("a record whose control leaves the frontier is retired, not deleted", () => {
+  const retirement = {
+    at: "2026-08-17",
+    overlayVersion: "0.7.2",
+    reason: "upstream answered it and argued the route; conceded",
+    upstreamRecipeIds: ["some-upstream-recipe"],
+  };
+
+  it("a retired record off the frontier is not a broken link, and it still prints", async () => {
+    const map = await mapWith([
+      record({ controlId: "not-a-control", displayId: "ZZ-99", retired: retirement }),
+    ]);
+    expect(map.problems).toEqual([]);
+    expect(map.retired.map((r) => r.displayId)).toEqual(["ZZ-99"]);
+    // the reasoning survives the retirement — that is the entire point of it
+    expect(renderFrontier(map, false)).toContain(retirement.reason);
+  });
+
+  it("the same record WITHOUT the retirement is still a broken link", async () => {
+    // The pair is the test: `retired` must be the declaration that closes it,
+    // never a field whose presence or absence changes nothing.
+    const map = await mapWith([record({ controlId: "not-a-control", displayId: "ZZ-99" })]);
+    expect(map.problems.join(" ")).toContain("not on the frontier");
+    expect(map.retired).toEqual([]);
+  });
+
+  it("retiring a record whose control is STILL on the frontier is a broken link", async () => {
+    // The mirror, and the one that catches us rather than upstream: closing a
+    // record upstream still lists as uncovered is work dropped under cover of
+    // a re-pin, and it would otherwise look identical to work finished.
+    const map = await mapWith([record({ controlId: "sa-2", retired: retirement })]);
+    expect(map.problems.join(" ")).toContain("still on the frontier");
+  });
+
+  it("a retired record is counted nowhere — it has no row and moves no number", async () => {
+    const live = await mapWith([record({ controlId: "sa-2", disposition: "narrative" })]);
+    const dead = await mapWith([
+      record({ controlId: "not-a-control", displayId: "ZZ-99", retired: retirement }),
+    ]);
+    expect(dead.rollup.narrative).toBe(live.rollup.narrative - 1);
+    expect(dead.rollup.frontierTotal).toBe(live.rollup.frontierTotal);
+  });
+
+  it("sr-8 is the real one, and it cites the upstream recipe that took it", async () => {
+    const map = await realMap();
+    const [sr8, ...rest] = map.retired;
+    expect(rest).toEqual([]);
+    expect(sr8?.controlId).toBe("sr-8");
+    expect(sr8?.disposition).toBe("partial");
+    expect(sr8?.overlayVersion).toBe("0.7.2");
+    // ground rule 10: agreement and disagreement are both DECLARED, and this
+    // one is a concession, so the reason has to name what upstream authored
+    expect(sr8?.upstreamRecipeIds).toEqual(["supply-chain-alert-notification-routing"]);
+    // and the record it closes is unedited — a retired claim is a historical
+    // claim, and rewriting one to look better in hindsight is how an overlay
+    // stops being evidence
+    const raw = JSON.parse(
+      await readFile(join(REPO_ROOT, "recipes/adjudications/sr-8.json"), "utf8"),
+    ) as { disposition: string; remainder: string };
+    expect(raw.disposition).toBe("partial");
+    expect(raw.remainder).toContain("The agreements.");
   });
 });
 

@@ -6,8 +6,8 @@ import { PipelineAdjudication } from "@rampscan/schema";
 // one file per control, parsed through the zod schema, refused on a duplicate.
 //
 // The directory may not exist — a checkout that carries no adjudications is a
-// valid checkout, and `rampscan frontier` should say "121 unreviewed" rather
-// than crash. What is NOT tolerated is a file that fails the schema: a
+// valid checkout, and `rampscan frontier` should report the whole frontier as
+// unreviewed rather than crash. What is NOT tolerated is a file that fails the schema: a
 // disposition without its reasoning, or a `partial` without its remainder, is
 // exactly the failure ground rule 8 exists to catch, and it fails loudly here
 // rather than rendering as a coverage number nobody can defend.

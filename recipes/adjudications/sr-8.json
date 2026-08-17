@@ -8,6 +8,12 @@
   "recipeIds": [],
   "candidateCollectors": ["repo-facts", "syft", "reachability"],
   "remainder": "The agreements. Contractual notification terms with suppliers, and the procedures for acting on a notification once received, are documents held between organizations; a repository shows the automated channel is configured, never that a supplier is obliged to tell you anything.",
+  "retired": {
+    "at": "2026-08-17",
+    "overlayVersion": "0.7.2",
+    "reason": "Retired on the re-pin to overlay 0.7.2, and the route is conceded rather than merely superseded. Upstream authored supply-chain-alert-notification-routing over the same control and argued the reading this record took: a public advisory feed is not an entity in the supply chain, so an alert stream cannot evidence SR-08 on its own — the feed is SI-05's artifact, and the limb SR-08 actually asks about is that a notification, once it arrives, is delivered to a named destination rather than into nothing. That is the better reading of the control and this record does not contest it. What failed here was the monitoring half: a committed dependabot configuration subscribes a repository to GitHub's advisory database, which is a vendor's aggregation of public advisories and not a supplier undertaking to tell you anything, so it answers monitoring under SR-06 and SI-05 and was never the notification agreement SR-08 establishes. The remainder this record named was right and was not the part that failed — the agreements limb is untouched by upstream's recipe too, which rates itself partial for the same reason. This is the second over-claim caught on this one control: rampscan frontier's link check caught the first before it shipped, when the record named a recipe that does not claim the control. Both were the same mistake made twice — reasoning from an artifact that is nearby to a control it does not settle — and it is recorded here rather than smoothed over because a plane that cannot say where it over-reached has no standing to say where it did not.",
+    "upstreamRecipeIds": ["supply-chain-alert-notification-routing"]
+  },
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"
 }

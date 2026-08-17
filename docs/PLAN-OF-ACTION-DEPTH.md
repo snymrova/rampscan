@@ -72,6 +72,8 @@ Read side by side, the two copies of the same file disagree about the one column
 
 **Both files carry `dataset_version: 2026.07.14.01`.** The adjudications are versioned by `overlay_version`, which this repo does not read — see risk 8.
 
+> **Overtaken 2026-08-17, later the same day.** This section was written against upstream at **0.7.1**; the re-pin (N1a′-T1) landed at **0.7.2**, and two of the numbers above have moved. The frontier is now **119**, not 121 — `sr-6` and `sr-8` left the uncovered set because upstream authored two pipeline recipes over them. So the four overlaps below are now **three**: `SA-08`, `SA-22` and `SR-02 (01)` still agree independently, and `SR-08` is no longer an overlap because upstream answered it and **argued our route**, which this overlay conceded rather than contested. The retired record carries that reasoning; `rampscan frontier` prints it. The section stands as the argument that produced N1a′ and is not rewritten to match its own outcome — see the implementation plan's N1a′ changelog for what the reconciliation actually cost.
+
 ### The four overlaps agree, and that is the most valuable fact in this section
 
 Four controls are now adjudicated by both projects, independently, from different evidence. All four match:

@@ -63,16 +63,20 @@ describe("loadLocalDataset", () => {
 // controls off the frontier entirely, while dataset_version stayed identical.
 describe("overlay_version pinning", () => {
   it("refuses a slice whose overlay_version differs from its pin, naming the slice", async () => {
+    // 0.6.0 is the pin this checkout moved OFF, and it is the right fixture for
+    // the same reason it was the right bug: it is the version the tree held
+    // while upstream published 0.7.2, and holding it again must fail rather
+    // than quietly re-base the adjudications keyed to the newer file.
     await expect(
       loadLocalDataset(derivedDir, PIN, {
         ...DEFAULT_OVERLAY_PINS,
-        "automation-frontier.json": "0.7.2",
+        "automation-frontier.json": "0.6.0",
       }),
     ).rejects.toThrow(OverlayVersionMismatchError);
     await expect(
       loadLocalDataset(derivedDir, PIN, {
         ...DEFAULT_OVERLAY_PINS,
-        "automation-frontier.json": "0.7.2",
+        "automation-frontier.json": "0.6.0",
       }),
     ).rejects.toThrow(/automation-frontier\.json/);
   });

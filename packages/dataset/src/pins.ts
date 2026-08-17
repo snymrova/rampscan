@@ -30,6 +30,6 @@ export const DEFAULT_DATASET_PIN = "2026.07.14.01";
  * bug this map exists to fix, so the loader refuses rather than passes.
  */
 export const DEFAULT_OVERLAY_PINS: Readonly<Record<string, string>> = {
-  "automation-frontier.json": "0.6.0",
+  "automation-frontier.json": "0.7.2",
   "aws-evidence.json": "1.6.1",
 };

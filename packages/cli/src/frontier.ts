@@ -91,7 +91,7 @@ export interface FrontierRollup {
   frontierTotal: number;
   /** upstream's denominator: controls any KSI reaches at all */
   ksiReachedControls: number;
-  /** of the 121, by our disposition */
+  /** of the frontier, by our disposition */
   automatable: number;
   partial: number;
   narrative: number;
@@ -114,12 +114,34 @@ export interface FrontierRollup {
   upstreamAdjudicatedBySource: Record<string, number>;
 }
 
+/**
+ * A record whose control has left the frontier. It has no row — rows are built
+ * FROM the frontier and the control is no longer on it — so without this it
+ * would disappear from every surface the moment upstream answered, taking its
+ * reasoning with it. That is the outcome ground rule 10 forbids, and the only
+ * thing separating a declared retirement from a quiet delete is that this list
+ * prints.
+ */
+export interface RetiredAdjudication {
+  controlId: string;
+  displayId: string;
+  family: string;
+  /** the disposition it held while it was live, unedited */
+  disposition: Disposition;
+  at: string;
+  overlayVersion: string;
+  reason: string;
+  upstreamRecipeIds: string[];
+}
+
 export interface FrontierMap {
   datasetVersion: string;
   rows: FrontierRow[];
   rollup: FrontierRollup;
   /** families the pipeline source cannot answer, with the count it cannot answer (N1d) */
   ceilingByFamily: Array<{ family: string; narrative: number; unreviewed: number; total: number }>;
+  /** records closed because upstream took the control off the frontier */
+  retired: RetiredAdjudication[];
   problems: string[];
 }
 
@@ -265,6 +287,24 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
     ceilingByFamily: [...families.entries()]
       .map(([family, e]) => ({ family, ...e }))
       .sort((a, b) => b.narrative + b.unreviewed - (a.narrative + a.unreviewed) || a.family.localeCompare(b.family)),
+    retired: input.adjudications
+      .flatMap((record) =>
+        record.retired === undefined
+          ? []
+          : [
+              {
+                controlId: record.controlId,
+                displayId: record.displayId,
+                family: record.family,
+                disposition: record.disposition,
+                at: record.retired.at,
+                overlayVersion: record.retired.overlayVersion,
+                reason: record.retired.reason,
+                upstreamRecipeIds: [...record.retired.upstreamRecipeIds].sort(),
+              },
+            ],
+      )
+      .sort((a, b) => a.displayId.localeCompare(b.displayId)),
     problems: frontierProblems({
       rows,
       adjudications: input.adjudications,
@@ -312,10 +352,24 @@ function frontierProblems(input: {
           `but the pinned dataset is ${input.datasetVersion} — re-read the control before trusting the disposition`,
       );
     }
-    if (!input.onFrontier.has(record.controlId)) {
+    // The frontier is the UNCOVERED set and it is upstream's, so it shrinks
+    // whenever upstream answers something. A live record pointing off it is
+    // either drift nobody read or a typo; a retired one is that drift already
+    // read and declared, which is the only difference between the two and the
+    // whole reason `retired` exists rather than a delete.
+    if (!input.onFrontier.has(record.controlId) && record.retired === undefined) {
       problems.push(
         `adjudication "${record.controlId}" names a control that is not on the frontier — ` +
           "either it was covered upstream since, or the id is wrong",
+      );
+    }
+    // The mirror, and it is the one that catches us rather than upstream:
+    // retiring a record whose control upstream STILL lists as uncovered is
+    // work dropped under cover of a re-pin.
+    if (input.onFrontier.has(record.controlId) && record.retired !== undefined) {
+      problems.push(
+        `adjudication "${record.controlId}" is retired, but the control is still on the frontier — ` +
+          "upstream lists it as uncovered, so the reasoning is still owed rather than closed",
       );
     }
     for (const id of record.recipeIds) {
@@ -419,6 +473,25 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
       ...bySource.map(([source, n]) => `  ${source.padEnd(14)} ${String(n).padStart(3)} adjudicated`),
       dim("  filed by the source that wrote each one, never conflated — a control both planes"),
       dim("  reasoned about is the interesting case, and one column would hide it"),
+      "",
+    );
+  }
+
+  if (map.retired.length > 0) {
+    lines.push(bold("retired — upstream took the control off the frontier"), "");
+    for (const rec of map.retired) {
+      lines.push(
+        `  ${rec.displayId.padEnd(12)} ${rec.family.padEnd(3)} was ${rec.disposition}` +
+          dim(`  · retired ${rec.at} at overlay ${rec.overlayVersion}`),
+      );
+      lines.push(dim(`      ${rec.reason}`));
+      if (rec.upstreamRecipeIds.length > 0) {
+        lines.push(dim(`      upstream recipes: ${rec.upstreamRecipeIds.join(", ")}`));
+      }
+    }
+    lines.push(
+      dim("  kept rather than deleted — a paragraph that vanishes at a re-pin leaves a reader"),
+      dim("  holding two overlays unable to tell agreement from absence (ground rule 10)"),
       "",
     );
   }

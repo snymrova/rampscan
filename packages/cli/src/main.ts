@@ -42,7 +42,7 @@ import { verify } from "./verify.js";
 //   rampscan model           the repo model: the ledger's world as typed nodes
 //                            and links (`--json` reproduces the scan artifact)
 //   rampscan frontier        the pipeline source's answer to ramprules' automation
-//                            frontier: catalog × adjudications × the pinned 121
+//                            frontier: catalog × adjudications × the pinned frontier
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -71,7 +71,7 @@ function usage(): never {
       "  model             the repo model: repos, recipes, controls, KSIs, collectors, tools,",
       "                    contract rules and the walked graph, as typed nodes and links.",
       "                    `--json` prints the artifact a scan attests, byte-for-byte",
-      "  frontier          the pipeline source's coverage of ramprules' 121 uncovered controls:",
+      "  frontier          the pipeline source's coverage of ramprules' uncovered controls:",
       "                    catalog × adjudications × the pinned frontier, nothing probed. Exits 1",
       "                    on a broken link; --strict also exits 1 on any unreviewed control",
       "",
@@ -353,7 +353,7 @@ async function main(): Promise<void> {
         );
         process.exit(1);
       }
-      // The strict gate (N0 decision 3): once N1a has adjudicated all 121,
+      // The strict gate (N0 decision 3): once N1a has adjudicated the frontier,
       // this becomes the CI invocation, so the set cannot silently regrow. It
       // is a flag rather than the default only until that day — a command red
       // from its first run teaches people to ignore it.

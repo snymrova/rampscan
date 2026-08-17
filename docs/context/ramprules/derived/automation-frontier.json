@@ -3,25 +3,25 @@
   "last_updated": "2026-07-14",
   "slice": "automation-frontier",
   "data": {
-    "overlay_version": "0.6.0",
+    "overlay_version": "0.7.2",
     "dataset_version_tested_against": "2026.07.14.01",
     "liveDatasetVersion": "2026.07.14.01",
     "versionMatch": true,
     "rollup": {
       "ksiReachedControls": 209,
-      "covered": 88,
+      "covered": 90,
       "controlsWithFullRecipe": 22,
       "fullRecipes": 12,
-      "recipes": 49,
-      "uncovered": 121,
-      "reachable": 109,
-      "ceiling": 0.5215311004784688,
-      "unreviewed": 73,
-      "adjudicated": 136,
+      "recipes": 51,
+      "uncovered": 119,
+      "reachable": 122,
+      "ceiling": 0.583732057416268,
+      "unreviewed": 58,
+      "adjudicated": 151,
       "byDisposition": {
         "automatable": 0,
-        "partial": 21,
-        "narrative": 27
+        "partial": 32,
+        "narrative": 29
       },
       "bySource": {
         "aws": {
@@ -29,22 +29,183 @@
           "automatable": 0,
           "partial": 21,
           "narrative": 27,
-          "unreviewed": 73,
+          "unreviewed": 71,
           "reachable": 109,
           "ceiling": 0.5215311004784688
         },
         "pipeline": {
-          "covered": 0,
+          "covered": 2,
           "automatable": 0,
-          "partial": 0,
-          "narrative": 0,
-          "unreviewed": 121,
-          "reachable": 0,
-          "ceiling": 0
+          "partial": 11,
+          "narrative": 2,
+          "unreviewed": 106,
+          "reachable": 13,
+          "ceiling": 0.06220095693779904
         }
       }
     },
     "queue": [
+      {
+        "controlId": "ps-6",
+        "displayId": "PS-06",
+        "family": "PS",
+        "ksis": [
+          "KSI-CED-RAT",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A signed access agreement is a document a 3PAO reads; AWS holds no signature and no acknowledgement.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 9
+      },
+      {
+        "controlId": "sc-39",
+        "displayId": "SC-39",
+        "family": "SC",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A separate execution domain per process is a property of the Nitro hypervisor and the guest operating system, not a setting anyone can query. A 3PAO reads AWS's own FedRAMP authorization package for the hypervisor boundary and your architecture description for the guest side; no customer-invocable API reports process isolation.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 9
+      },
+      {
+        "controlId": "sr-10",
+        "displayId": "SR-10",
+        "family": "SR",
+        "ksis": [
+          "KSI-SVC-ACM",
+          "KSI-SVC-EIS",
+          "KSI-SVC-VRI"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Inspecting hardware for tampering is AWS's responsibility under the shared model, evidenced by its own authorization package rather than by anything you can call. The customer-side inspection — when components are examined, by whom, and what indication of need triggered it — is a documented procedure and its records, which is what a 3PAO reads.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 9
+      },
+      {
+        "controlId": "ac-20.1",
+        "displayId": "AC-20 (01)",
+        "family": "AC",
+        "ksis": [
+          "KSI-CNA-MAT",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT",
+          "KSI-MLA-LET",
+          "KSI-MLA-OSM"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The enhancement asks for verification that the EXTERNAL system implements the required controls, or a retained agreement saying so — a statement about somebody else's estate that no call against this one can make.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "ps-2",
+        "displayId": "PS-02",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Risk designations are assigned to positions in an HR system and reviewed against screening criteria; no AWS API knows what a position is.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "ps-3",
+        "displayId": "PS-03",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Background screening happens before access is granted, in an HR or vendor system; AWS sees only the principal that results.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 8
+      },
       {
         "controlId": "ps-5",
         "displayId": "PS-05",
@@ -63,6 +224,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS CloudTrail",
@@ -71,6 +235,61 @@
         ],
         "reviewed": "2026-08-04",
         "leverage": 8
+      },
+      {
+        "controlId": "sr-5",
+        "displayId": "SR-05",
+        "family": "SR",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The tooling half is real and continuous: Inspector monitors third-party packages for upstream vulnerabilities and exports a CycloneDX 1.4 or SPDX 2.3 SBOM per resource, and ECR scan-on-push gates an image at the moment of acquisition. The acquisition STRATEGY the control names — the contract clauses, the approved-supplier list, the delivery method — is procurement, and no scanner stands in for it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "Amazon Inspector",
+          "Amazon ECR",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
+        "leverage": 8
+      },
+      {
+        "controlId": "ac-1",
+        "displayId": "AC-01",
+        "family": "AC",
+        "ksis": [
+          "KSI-SVC-SIN"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "An access control policy and its procedures are documents developed, disseminated and reviewed on a stated cycle; no API reports that a document exists or that anyone read it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
       },
       {
         "controlId": "ac-14",
@@ -88,6 +307,9 @@
         "rationale": "Access Analyzer and the public-access Config rules enumerate every path that reaches a resource without authentication; the rationale for each path that is deliberately permitted is documented.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -115,12 +337,40 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Security Hub",
           "AWS Config",
           "Amazon Inspector"
         ],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "ca-2.1",
+        "displayId": "CA-02 (01)",
+        "family": "CA",
+        "ksis": [
+          "KSI-CNA-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Independence is a property of the assessor, not of the assessment: who performed it, who they report to, and whether they had any hand in developing or operating the system. A 3PAO reads the independence attestation and the engagement letter; no account state distinguishes an independent assessor from an employee holding the same IAM role.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
         "reviewed": "2026-08-11",
         "leverage": 7
       },
@@ -140,6 +390,9 @@
         "rationale": "Every external interface is enumerable — VPC peering connections, Transit Gateway attachments, PrivateLink endpoints, Direct Connect virtual interfaces and the resource policies that admit another account — so the interface characteristics the control asks to be documented are telemetry. The agreement that APPROVES each exchange is not, and the dataset's own AC-20 guidance says exactly this, differentiating CA-3 as the documented agreement between the two system owners.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -169,6 +422,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Config",
@@ -196,6 +452,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Security Hub",
@@ -203,6 +462,56 @@
           "AWS CloudTrail"
         ],
         "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "cp-2",
+        "displayId": "CP-02",
+        "family": "CP",
+        "ksis": [
+          "KSI-RPL-ARP"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A contingency plan is a document: developed, distributed to named roles, coordinated with related plans, reviewed on a cycle and updated after changes. A 3PAO reads the plan, its distribution list and its revision history; no API reports that a plan exists or that anyone maintains it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "cp-3",
+        "displayId": "CP-03",
+        "family": "CP",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Contingency training is delivered to people on a schedule and recorded in a training system. A 3PAO reads the curriculum, the roster and the completion dates; nothing in an AWS account changes when someone is trained.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
         "leverage": 7
       },
       {
@@ -221,6 +530,9 @@
         "rationale": "AWS Backup restore-testing plans and their job history genuinely evidence that a technical recovery test ran on a schedule, completed, and how long it took — that is more than nothing and should not be closed as narrative. What it does not cover is CP-04's subject: exercising the contingency PLAN, reviewing the results with the participants and initiating corrective actions, which is an exercise report and a remediation record.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -247,6 +559,9 @@
         "rationale": "The credential report and STS usage prove authentication runs on signed, time-bounded temporary credentials rather than long-lived secrets; replay resistance itself is a property of the SigV4 protocol, cited from AWS documentation rather than measured.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -276,6 +591,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Certificate Manager",
@@ -283,6 +601,31 @@
           "AWS KMS",
           "AWS IAM"
         ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ia-6",
+        "displayId": "IA-06",
+        "family": "IA",
+        "ksis": [
+          "KSI-IAM-APM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Obscuring authentication feedback is a property of what a login interface renders; no API reports what a form displayed while someone typed into it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
         "reviewed": "2026-08-04",
         "leverage": 7
       },
@@ -303,12 +646,40 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS KMS",
           "AWS CloudHSM",
           "AWS Config"
         ],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ir-2",
+        "displayId": "IR-02",
+        "family": "IR",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Incident response training is delivered to responders and refreshed on a cycle. A 3PAO reads the training content, the roster of who took it and when, and any simulated-event exercise records; no AWS call reports a trained responder.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
         "reviewed": "2026-08-04",
         "leverage": 7
       },
@@ -330,6 +701,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Systems Manager",
@@ -337,6 +711,209 @@
           "AWS CloudTrail"
         ],
         "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "pl-8",
+        "displayId": "PL-08",
+        "family": "PL",
+        "ksis": [
+          "KSI-PIY-RSD",
+          "KSI-SVC-EIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The security and privacy architecture description is a written artifact reviewed for coherence with the SSP; a resource inventory is evidence about the deployment, not about the document.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "pl-10",
+        "displayId": "PL-10",
+        "family": "PL",
+        "ksis": [
+          "KSI-CNA-IBP",
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Selecting a control baseline is a documented decision recorded in the SSP; no API states which baseline an authorization boundary claims.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ps-7",
+        "displayId": "PS-07",
+        "family": "PS",
+        "ksis": [
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Requirements on third-party personnel live in contracts and in provider notifications of personnel changes, not in any AWS resource.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ps-8",
+        "displayId": "PS-08",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-SUS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A sanctions process is an HR procedure invoked after a violation; nothing in an AWS account records that it ran.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ps-9",
+        "displayId": "PS-09",
+        "family": "PS",
+        "ksis": [
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Security roles and responsibilities are stated in position descriptions maintained entirely outside the system.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ra-3.1",
+        "displayId": "RA-03 (01)",
+        "family": "RA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A supply chain risk assessment is an analysis someone writes about suppliers, components and services and then updates as the supply chain changes. AWS Artifact supplies inputs to it — third-party attestations and audit reports — but the assessment itself is the document a 3PAO reads, and no API produces one.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 7
+      },
+      {
+        "controlId": "ra-5.11",
+        "displayId": "RA-05 (11)",
+        "family": "RA",
+        "ksis": [
+          "KSI-PIY-RVD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A public disclosure program is a published intake channel and a commitment to act on what arrives through it. A 3PAO reads the published policy, the disclosure page or security.txt, and the history of reports received and resolved; no AWS call reports that a reporting channel exists, let alone that anyone answered it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-3",
+        "displayId": "SA-03",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The control asks that the system be acquired and built under a documented lifecycle, with security roles assigned and risk management integrated into each phase. None of those three is a property of the estate: a pipeline execution record names no lifecycle, assigns no role and integrates no risk decision, so it is not partial evidence of any limb — it is evidence of a different thing that happens to run alongside. The lifecycle definition, the role assignments and the phase gates live in the SSP and the acquisition record, and a 3PAO reads them there.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
         "leverage": 7
       },
       {
@@ -356,6 +933,9 @@
         "rationale": "The inventory half is already collected by this overlay — Access Analyzer enumerates every external principal trusted by the estate, and that is the same enumeration the AC-20 recipe performs. That each external provider MEETS the security requirements imposed on it is a statement about somebody else's estate, captured in the agreement CA-3 names, which is why the dataset's AC-20 guidance separates the three controls in the first place.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -386,6 +966,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "Amazon EBS",
@@ -411,6 +994,9 @@
         "rationale": "Generation and rotation are fields: GetKeyRotationStatus returns whether automatic rotation is enabled and its period, DescribeKey returns the origin — AWS_KMS meaning material generated inside the HSM that never leaves it — and the key policy is the access scoping written down. Destruction is not. DeletionDate is present only when a key is already scheduled for deletion and PendingDeletionWindowInDays only for a pending replica, so on an estate of healthy keys the fields an assertion would read are absent from the response and any claim about the destruction window is vacuously true; the window is a ScheduleKeyDeletion request parameter, not a key attribute. The deeper gap is the control's own wording — generation, distribution, storage, access and destruction are measured against organization-defined requirements, and this dataset carries no SC-12 parameter value, so the check compares KMS state to the SSP rather than to something in the output.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -440,6 +1026,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "Amazon CloudWatch Logs",
@@ -451,30 +1040,52 @@
         "leverage": 7
       },
       {
-        "controlId": "sr-5",
-        "displayId": "SR-05",
+        "controlId": "sr-2.1",
+        "displayId": "SR-02 (01)",
         "family": "SR",
         "ksis": [
-          "KSI-SCR-MIT",
-          "KSI-SCR-MON"
+          "KSI-PIY-RIS"
         ],
         "classes": [
           "b",
           "c",
           "d"
         ],
-        "disposition": "partial",
-        "rationale": "The tooling half is real and continuous: Inspector monitors third-party packages for upstream vulnerabilities and exports a CycloneDX 1.4 or SPDX 2.3 SBOM per resource, and ECR scan-on-push gates an image at the moment of acquisition. The acquisition STRATEGY the control names — the contract clauses, the approved-supplier list, the delivery method — is procurement, and no scanner stands in for it.",
+        "disposition": "narrative",
+        "rationale": "The control establishes a supply chain risk management team — organization-defined personnel, roles and responsibilities, leading defined SCRM activities. Nothing a pipeline emits evidences a team's existence or its charter. Recorded against the plan rather than silently: `docs/automation-beyond-aws.md` §P5 lists SR-02 (01) among the controls build attestation bears on, and `docs/code-scanning-overlay-plan.md` step 8 carries that into the attestation authoring batch. The control text does not support it. The attestation argument belongs to si-7.7 on its detection limb; KSI-SVC-VRI, which asks for cryptographic validation of integrity, reaches si-7 and si-7.1 instead — both already covered by an AWS partial recipe, which is where a pipeline attestation recipe would sit beside rather than replace one. A 3PAO reads the SCRM plan and the team's charter.",
         "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
           "aws"
         ],
         "coveredBy": [],
-        "candidateServices": [
-          "Amazon Inspector",
-          "Amazon ECR",
-          "AWS Config"
+        "candidateServices": [],
+        "reviewed": "2026-08-13",
+        "leverage": 7
+      },
+      {
+        "controlId": "sr-11.1",
+        "displayId": "SR-11 (01)",
+        "family": "SR",
+        "ksis": [
+          "KSI-CED-RAT"
         ],
-        "reviewed": "2026-08-11",
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
         "leverage": 7
       },
       {
@@ -494,6 +1105,9 @@
         "rationale": "Security groups, network ACLs, route tables, VPC endpoint policies and Network Firewall rules enumerate every flow the deployment actually permits; which flows were APPROVED is a document the enumeration is compared against.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -523,6 +1137,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS IAM",
@@ -550,6 +1167,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS CloudTrail",
@@ -558,6 +1178,106 @@
           "AWS Config"
         ],
         "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-2",
+        "displayId": "AT-02",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Training delivery and completion live in a learning management system; AWS has no notion of a trained person.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-2.2",
+        "displayId": "AT-02 (02)",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The requirement is that awareness training covers insider threat — a property of the course content, not of any system state.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-3",
+        "displayId": "AT-03",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Role-based training records map people to courses in an LMS; the AWS role a principal assumes says nothing about what they were taught.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 6
+      },
+      {
+        "controlId": "at-4",
+        "displayId": "AT-04",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Retention of individual training records is an LMS retention setting; where those records are stored could be an AWS fact, but their content and completeness never are.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
         "leverage": 6
       },
       {
@@ -578,12 +1298,41 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS CloudFormation",
           "AWS CodePipeline",
           "AWS Config"
         ],
+        "reviewed": "2026-08-11",
+        "leverage": 6
+      },
+      {
+        "controlId": "cm-9",
+        "displayId": "CM-09",
+        "family": "CM",
+        "ksis": [
+          "KSI-CMT-RVP",
+          "KSI-IAM-ELP",
+          "KSI-IAM-JIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "A configuration management plan is a document: it names the roles, defines what counts as a configuration item, and states how the baseline is protected from unauthorised change. AWS enforces whatever baseline it is given and reports drift from it, but the plan that decided what the baseline should be is read, never queried.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
         "reviewed": "2026-08-11",
         "leverage": 6
       },
@@ -603,6 +1352,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -624,6 +1377,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -645,6 +1402,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -666,6 +1427,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -687,6 +1452,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -705,12 +1474,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Secret scanning and push protection give a narrow but real slice: credentials committed to, or blocked from, the repositories in scope, with alert and block records. The control is broader in two directions this plane cannot see. Authenticators also live in secret stores, images, CI variables and operator laptops, and commensurate with the security category of the information the authenticator permits access to is a judgement that requires knowing what the credential opens. KSI-SVC-ASM's rotation limb is likewise not a scanning result. The scanning platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -728,6 +1502,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -748,6 +1526,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -765,12 +1547,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "SA-8 requires the principles to be applied in specification, design, development, implementation and modification, and the implementation limb is the one a pipeline can see: an IaC policy rule that fails a world-readable bucket or an over-broad role is telemetry about a layered-protection or least-privilege principle actually holding in the artifact being deployed. Rated partial rather than narrative for that limb alone. The gap is the rest of the control and it is most of it — which organization-defined principles were selected, and how they were applied in specification and design, is an SDLC document, and a passing rule evidences a principle without naming the one that was chosen. KSI-PIY-RSD asks whether the effectiveness of that selection is persistently reviewed, which is a review record. The platform running the policy pack is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -785,12 +1572,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Dependency and base-image scanning identifies components past end of support, which is the control's detection half and the half that rots fastest. The decision half — that an unsupported component is replaced, or that continued use carries documented justification and approval — is a human record. The scanned population is also narrower than the control's: firmware, appliances and managed-service versions that never appear in a manifest are outside it. The scanning platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -809,6 +1601,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -827,12 +1623,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Attestation verification detects the unauthorized change: `gh attestation verify` over a named artifact is a command with an exit status, and it is the strongest signal this plane has. The control asks for something on top of detection — that it be incorporated into the organizational incident response capability — and an exit status does not show that a failure raises an incident, is triaged, or reaches anyone. The gap is the integration, not the detection, and the authoring batch should not read the strength of the command as covering the clause it does not touch. Note for that batch: this control is reached by KSI-MLA-EVC, KSI-MLA-LET and KSI-MLA-OSM, NOT by KSI-SVC-VRI. The build platform issuing the attestation is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -848,72 +1649,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "SAST rules for information exposure through error messages and stack traces give real telemetry on the first limb, that errors do not reveal exploitable information, and a CI record proves the rules ran. Whether a particular message reveals exploitable information is a judgement no rule settles. The second limb — that error messages are revealed only to defined personnel — is a runtime access decision no code scan observes at all, and this plane should not be credited with it. The platform running the scan is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
-      },
-      {
-        "controlId": "sr-2.1",
-        "displayId": "SR-02 (01)",
-        "family": "SR",
-        "ksis": [
-          "KSI-PIY-RIS"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
-      },
-      {
-        "controlId": "sr-8",
-        "displayId": "SR-08",
-        "family": "SR",
-        "ksis": [
-          "KSI-SCR-MON"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
-      },
-      {
-        "controlId": "sr-11.1",
-        "displayId": "SR-11 (01)",
-        "family": "SR",
-        "ksis": [
-          "KSI-CED-RAT"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -931,6 +1677,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -951,6 +1701,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -968,12 +1722,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "This is the closest the plane comes to a membership claim it can check: CODEOWNERS, required-reviewer branch protection and per-PR approval records show that a designated reviewer approved each change, with identities and timestamps. What the telemetry cannot establish is that those identities are the security and privacy representatives the control requires on the change control element — that mapping lives in the CCB charter, and a repository team named security is an assertion about a name. The gap is an identity mapping rather than a missing signal. The platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -988,12 +1747,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "KSI-CMT-VTD asks for automated testing and validation of changes throughout deployment, and a pipeline run record is exactly that: post-change test and policy-gate outcomes, per change. The control's own words keep it partial — the impacted controls, operating as intended, producing the desired outcome — because which controls a change impacts, and whether a passing test verifies one, is a human mapping from test to control. A pipeline that publishes such a mapping is publishing an authored artifact, not a measurement. The CI platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -1011,6 +1775,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1031,6 +1799,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1051,6 +1823,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1071,6 +1847,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1091,6 +1871,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1111,6 +1895,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1128,12 +1916,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "The control has a definition limb — establishing which mobile code technologies are acceptable — and an enforcement limb, authorizing, monitoring and controlling their use, and the discussion names requiring mobile code to be digitally signed by a trusted source. That second limb is a pipeline check, and for any CSO shipping a browser bundle the mobile code in question is built by the pipeline that would evidence it: signing and provenance over the delivered artifact, and a dependency gate over what is allowed into it. Partial on the same shape this batch gives cm-3.4 and sa-22 — a document limb the plane cannot reach and an enforcement limb it can. The definition is the gap: a gate enforces an acceptability list and does not establish one. The platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -1151,6 +1944,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1168,12 +1965,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Taint-tracking SAST is genuine telemetry about input validation: injection sinks reachable from untrusted sources are what the control is about, and a scan record names the rules that ran. Two things keep it short of full. The control is scoped to organization-defined information inputs and that list is human, so a clean scan says no sink the ruleset knows about rather than every defined input is checked. And a clean result means nothing until the scan is shown to have run, recently, over the repositories inside the boundary — an empty alert list is equally consistent with a scanner that never ran. The platform running it is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -1191,6 +1993,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1210,6 +2016,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1229,6 +2039,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1248,6 +2062,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1267,6 +2085,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1286,6 +2108,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1305,6 +2131,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1324,6 +2154,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1343,6 +2177,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1362,6 +2200,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1381,6 +2223,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1400,6 +2246,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1419,6 +2269,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1438,6 +2292,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1457,6 +2315,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1476,6 +2338,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1495,6 +2361,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1514,6 +2384,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1533,6 +2407,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1552,6 +2430,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1571,6 +2453,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1590,6 +2476,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1609,6 +2499,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1628,6 +2522,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1647,6 +2545,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1666,6 +2568,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1685,6 +2591,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1704,6 +2614,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1723,6 +2637,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1742,6 +2660,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1761,6 +2683,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1780,6 +2706,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1799,26 +2729,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 4
-      },
-      {
-        "controlId": "sr-6",
-        "displayId": "SR-06",
-        "family": "SR",
-        "ksis": [
-          "KSI-SCR-MIT",
-          "KSI-SCR-MON"
+        "openFor": [
+          "aws",
+          "pipeline"
         ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1836,9 +2750,37 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
+        "leverage": 3
+      },
+      {
+        "controlId": "at-2.3",
+        "displayId": "AT-02 (03)",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "Same shape as the sibling enhancement: what the training covers is a property of the curriculum, which no API enumerates.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
         "leverage": 3
       },
       {
@@ -1852,12 +2794,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Version control is where developer configuration management actually happens: branch protection, required reviews, signed commits and merge records show that only approved changes reached the mainline and that the integrity of each change was tracked, which is most of the control's document-manage-and-control limb. The gap is what counts as organization-approved — the CM plan naming the approving authority and the change classes it covers is a document, and a merge record cannot show that the approver held that authority. The platform holding those records is itself an external system, so adopting it to collect this raises SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -1871,12 +2818,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "SAST and dependency scan records in CI evidence that testing ran, with what ruleset, and what it found, and KSI-SCR-MIT's identify-review-mitigate reads directly onto that. What no scanner emits is the developer's security assessment plan, the depth-and-coverage determination the control requires that plan to state, or the judgement that a flaw was remediated rather than dismissed; a 3PAO reads those in the plan and the flaw remediation record. The scanning platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -1890,12 +2842,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "narrative",
+        "rationale": "The control asks the developer to perform a criticality analysis at defined decision points and at a defined level of rigor. No pipeline emits one: the analysis names which components are critical to mission function, which is a judgement about the mission rather than a property of the build. A dependency graph enumerates components and ranks none of them. A 3PAO reads the criticality analysis itself and the decision points recorded in the SDLC documentation.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -1909,6 +2866,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1925,10 +2886,35 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
         "leverage": 2
+      },
+      {
+        "controlId": "at-3.5",
+        "displayId": "AT-03 (05)",
+        "family": "AT",
+        "ksis": [
+          "KSI-CED-RAT"
+        ],
+        "classes": [],
+        "disposition": "narrative",
+        "rationale": "Whether PII-handling training was delivered is an LMS record; AWS can show where PII sits, never who was trained on it.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-04",
+        "leverage": 1
       },
       {
         "controlId": "pl-9",
@@ -1942,6 +2928,9 @@
         "rationale": "Organizations SCPs, a Config aggregator and Security Hub central configuration prove that management IS centralized; which controls the organization chose to manage centrally is an ODP a human states.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -1964,6 +2953,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1980,6 +2973,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -1994,6 +2991,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2008,6 +3009,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2032,6 +3037,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2051,6 +3059,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2068,6 +3080,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2090,6 +3106,9 @@
         "rationale": "Security groups, network ACLs, route tables, VPC endpoint policies and Network Firewall rules enumerate every flow the deployment actually permits; which flows were APPROVED is a document the enumeration is compared against.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2119,6 +3138,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS IAM",
@@ -2142,6 +3164,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2164,6 +3190,9 @@
         "rationale": "CloudTrail records management events by default, and every privileged control-plane call arrives as one — IAM policy writes, KMS key operations, security-group authorizations. A trail capturing read AND write management events, still logging, with log-file validation on, decides the control-plane half from its own output. The in-guest half does not close: AWS documents that Session Manager logging is unavailable for sessions connecting through port forwarding or SSH, so an operator who reaches a host that way executes privileged functions and leaves no session log while get-document still reports logging enabled, and which instances ship the auth log is a CloudWatch agent configuration living on the instance, not a field any API returns. A recipe here evidences the control plane and hands the in-guest plane to a sampled review.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2190,6 +3219,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2211,6 +3244,9 @@
         "rationale": "Access Analyzer and the public-access Config rules enumerate every path that reaches a resource without authentication; the rationale for each path that is deliberately permitted is documented.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2235,6 +3271,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2254,6 +3294,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2279,6 +3323,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2300,6 +3347,9 @@
         "rationale": "Training delivery and completion live in a learning management system; AWS has no notion of a trained person.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -2323,6 +3373,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2343,6 +3396,9 @@
         "rationale": "Same shape as the sibling enhancement: what the training covers is a property of the curriculum, which no API enumerates.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -2366,6 +3422,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2383,6 +3442,9 @@
         "rationale": "Whether PII-handling training was delivered is an LMS record; AWS can show where PII sits, never who was trained on it.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -2406,6 +3468,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2425,6 +3490,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2441,6 +3510,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2460,6 +3533,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2479,6 +3556,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2500,6 +3581,9 @@
         "rationale": "Security Hub standards and Config conformance packs perform an automated control assessment continuously and return a pass/fail per control, which is the assessment ACTIVITY; the assessment plan that fixed the scope, depth and methods, and the report that came out the other end, are documents no call returns. AWS Audit Manager is the obvious candidate and is deliberately not named — AWS has closed it to new customers, so a recipe built on it would be unfollowable advice for most readers.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2527,6 +3611,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-11",
@@ -2548,6 +3635,9 @@
         "rationale": "Every external interface is enumerable — VPC peering connections, Transit Gateway attachments, PrivateLink endpoints, Direct Connect virtual interfaces and the resource policies that admit another account — so the interface characteristics the control asks to be documented are telemetry. The agreement that APPROVES each exchange is not, and the dataset's own AC-20 guidance says exactly this, differentiating CA-3 as the documented agreement between the two system owners.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2577,6 +3667,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Config",
@@ -2601,6 +3694,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2622,6 +3719,9 @@
         "rationale": "Two of the three named ingredients are collectible: compliance monitoring is Security Hub control status and a conformance pack's compliance summary, change monitoring is the Config configuration-item history joined to CloudTrail. Effectiveness monitoring — whether the risk responses in place are actually reducing risk — is the judgement, and it is the third no score substitutes for.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2647,6 +3747,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2666,6 +3770,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2689,6 +3797,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS CloudFormation",
@@ -2710,12 +3821,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "This is the closest the plane comes to a membership claim it can check: CODEOWNERS, required-reviewer branch protection and per-PR approval records show that a designated reviewer approved each change, with identities and timestamps. What the telemetry cannot establish is that those identities are the security and privacy representatives the control requires on the change control element — that mapping lives in the CCB charter, and a repository team named security is an assertion about a name. The gap is an identity mapping rather than a missing signal. The platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -2730,12 +3846,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "KSI-CMT-VTD asks for automated testing and validation of changes throughout deployment, and a pipeline run record is exactly that: post-change test and policy-gate outcomes, per change. The control's own words keep it partial — the impacted controls, operating as intended, producing the desired outcome — because which controls a change impacts, and whether a passing test verifies one, is a human mapping from test to control. A pipeline that publishes such a mapping is publishing an authored artifact, not a measurement. The CI platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -2752,6 +3873,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2772,6 +3897,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2795,6 +3924,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-11",
@@ -2817,6 +3949,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2838,6 +3973,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2859,6 +3998,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2878,6 +4021,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2900,6 +4047,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -2921,6 +4071,9 @@
         "rationale": "AWS Backup restore-testing plans and their job history genuinely evidence that a technical recovery test ran on a schedule, completed, and how long it took — that is more than nothing and should not be closed as narrative. What it does not cover is CP-04's subject: exercising the contingency PLAN, reviewing the results with the participants and initiating corrective actions, which is an exercise report and a remediation record.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -2947,6 +4100,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2968,6 +4125,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -2988,6 +4149,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3007,6 +4172,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3026,6 +4195,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3045,6 +4218,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3064,6 +4241,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3083,6 +4264,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3102,6 +4287,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3121,6 +4310,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3140,6 +4333,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3159,6 +4356,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3178,6 +4379,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3199,6 +4404,9 @@
         "rationale": "The credential report and STS usage prove authentication runs on signed, time-bounded temporary credentials rather than long-lived secrets; replay resistance itself is a property of the SigV4 protocol, cited from AWS documentation rather than measured.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -3224,6 +4432,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3245,6 +4457,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3269,6 +4485,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "AWS Certificate Manager",
@@ -3292,12 +4511,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Secret scanning and push protection give a narrow but real slice: credentials committed to, or blocked from, the repositories in scope, with alert and block records. The control is broader in two directions this plane cannot see. Authenticators also live in secret stores, images, CI variables and operator laptops, and commensurate with the security category of the information the authenticator permits access to is a judgement that requires knowing what the credential opens. KSI-SVC-ASM's rotation limb is likewise not a scanning result. The scanning platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -3316,6 +4540,9 @@
         "rationale": "Obscuring authentication feedback is a property of what a login interface renders; no API reports what a form displayed while someone typed into it.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -3338,6 +4565,9 @@
         "rationale": "The same shape as SC-13, which the overlay already rates partial: KMS and CloudHSM are enumerable and the FIPS endpoints in use are checkable, but the module's FIPS 140 validation is a certificate that is cited, never measured.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -3362,6 +4592,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3381,6 +4615,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3400,6 +4638,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3419,6 +4661,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3441,6 +4687,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3457,6 +4706,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3477,6 +4730,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3499,6 +4756,9 @@
         "rationale": "Systems Manager Maintenance Windows and their execution history prove scheduled maintenance was defined, ran, and what it touched — the schedule, the tasks, the targets and the outcome of each run. The approval before the work, the review of maintenance records afterwards, and all physical maintenance and component replacement, which is AWS's responsibility, are outside that output.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -3527,6 +4787,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3544,6 +4807,9 @@
         "rationale": "Organizations SCPs, a Config aggregator and Security Hub central configuration prove that management IS centralized; which controls the organization chose to manage centrally is an ODP a human states.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -3573,6 +4839,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3589,6 +4858,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3605,6 +4878,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3627,6 +4904,9 @@
         "rationale": "Risk designations are assigned to positions in an HR system and reviewed against screening criteria; no AWS API knows what a position is.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -3651,6 +4931,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3673,6 +4956,9 @@
         "rationale": "CloudTrail records every group and policy change with a timestamp, so the reassignment itself is observable; whether it matched the individual's new role is an HR judgement.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -3702,6 +4988,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3723,6 +5012,9 @@
         "rationale": "Requirements on third-party personnel live in contracts and in provider notifications of personnel changes, not in any AWS resource.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -3746,6 +5038,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3767,6 +5062,9 @@
         "rationale": "Security roles and responsibilities are stated in position descriptions maintained entirely outside the system.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [],
@@ -3790,6 +5088,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -3810,6 +5111,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3832,6 +5137,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-11",
@@ -3852,6 +5160,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3875,6 +5187,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-11",
@@ -3895,6 +5210,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -3912,12 +5231,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "SA-8 requires the principles to be applied in specification, design, development, implementation and modification, and the implementation limb is the one a pipeline can see: an IaC policy rule that fails a world-readable bucket or an over-broad role is telemetry about a layered-protection or least-privilege principle actually holding in the artifact being deployed. Rated partial rather than narrative for that limb alone. The gap is the rest of the control and it is most of it — which organization-defined principles were selected, and how they were applied in specification and design, is an SDLC document, and a passing rule evidences a principle without naming the one that was chosen. KSI-PIY-RSD asks whether the effectiveness of that selection is persistently reviewed, which is a review record. The platform running the policy pack is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -3937,6 +5261,9 @@
         "rationale": "The inventory half is already collected by this overlay — Access Analyzer enumerates every external principal trusted by the estate, and that is the same enumeration the AC-20 recipe performs. That each external provider MEETS the security requirements imposed on it is a statement about somebody else's estate, captured in the agreement CA-3 names, which is why the dataset's AC-20 guidance separates the three controls in the first place.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -3959,12 +5286,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Version control is where developer configuration management actually happens: branch protection, required reviews, signed commits and merge records show that only approved changes reached the mainline and that the integrity of each change was tracked, which is most of the control's document-manage-and-control limb. The gap is what counts as organization-approved — the CM plan naming the approving authority and the change classes it covers is a document, and a merge record cannot show that the approver held that authority. The platform holding those records is itself an external system, so adopting it to collect this raises SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -3978,12 +5310,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "SAST and dependency scan records in CI evidence that testing ran, with what ruleset, and what it found, and KSI-SCR-MIT's identify-review-mitigate reads directly onto that. What no scanner emits is the developer's security assessment plan, the depth-and-coverage determination the control requires that plan to state, or the judgement that a flaw was remediated rather than dismissed; a 3PAO reads those in the plan and the flaw remediation record. The scanning platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -3997,12 +5334,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "narrative",
+        "rationale": "The control asks the developer to perform a criticality analysis at defined decision points and at a defined level of rigor. No pipeline emits one: the analysis names which components are critical to mission function, which is a judgement about the mission rather than a property of the build. A dependency graph enumerates components and ranks none of them. A 3PAO reads the criticality analysis itself and the decision points recorded in the SDLC documentation.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -4017,12 +5359,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Dependency and base-image scanning identifies components past end of support, which is the control's detection half and the half that rots fastest. The decision half — that an unsupported component is replaced, or that continued use carries documented justification and approval — is a human record. The scanned population is also narrower than the control's: firmware, appliances and managed-service versions that never appear in a manifest are outside it. The scanning platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -4039,6 +5386,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4063,6 +5414,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "Amazon EBS",
@@ -4086,6 +5440,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4105,6 +5463,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4125,6 +5487,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4146,6 +5512,9 @@
         "rationale": "Generation and rotation are fields: GetKeyRotationStatus returns whether automatic rotation is enabled and its period, DescribeKey returns the origin — AWS_KMS meaning material generated inside the HSM that never leaves it — and the key policy is the access scoping written down. Destruction is not. DeletionDate is present only when a key is already scheduled for deletion and PendingDeletionWindowInDays only for a pending replica, so on an estate of healthy keys the fields an assertion would read are absent from the response and any claim about the destruction window is vacuously true; the window is a ScheduleKeyDeletion request parameter, not a key attribute. The deeper gap is the control's own wording — generation, distribution, storage, access and destruction are measured against organization-defined requirements, and this dataset carries no SC-12 parameter value, so the check compares KMS state to the SSP rather than to something in the output.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -4172,6 +5541,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4189,12 +5562,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "The control has a definition limb — establishing which mobile code technologies are acceptable — and an enforcement limb, authorizing, monitoring and controlling their use, and the discussion names requiring mobile code to be digitally signed by a trusted source. That second limb is a pipeline check, and for any CSO shipping a browser bundle the mobile code in question is built by the pipeline that would evidence it: signing and provenance over the delivered artifact, and a dependency gate over what is allowed into it. Partial on the same shape this batch gives cm-3.4 and sa-22 — a document limb the plane cannot reach and an enforcement limb it can. The definition is the gap: a gate enforces an acceptability list and does not establish one. The platform is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -4216,6 +5594,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
@@ -4235,6 +5616,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4254,6 +5639,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4275,6 +5664,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4293,12 +5686,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Attestation verification detects the unauthorized change: `gh attestation verify` over a named artifact is a command with an exit status, and it is the strongest signal this plane has. The control asks for something on top of detection — that it be incorporated into the organizational incident response capability — and an exit status does not show that a failure raises an incident, is triaged, or reaches anyone. The gap is the integration, not the detection, and the authoring batch should not read the strength of the command as covering the clause it does not touch. Note for that batch: this control is reached by KSI-MLA-EVC, KSI-MLA-LET and KSI-MLA-OSM, NOT by KSI-SVC-VRI. The build platform issuing the attestation is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -4316,6 +5714,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4335,6 +5737,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4352,12 +5758,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "Taint-tracking SAST is genuine telemetry about input validation: injection sinks reachable from untrusted sources are what the control is about, and a scan record names the rules that ran. Two things keep it short of full. The control is scoped to organization-defined information inputs and that list is human, so a clean scan says no sink the ruleset knows about rather than every defined input is checked. And a clean result means nothing until the scan is shown to have run, recently, over the repositories inside the boundary — an empty alert list is equally consistent with a scanner that never ran. The platform running it is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -4373,12 +5784,17 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "partial",
+        "rationale": "SAST rules for information exposure through error messages and stack traces give real telemetry on the first limb, that errors do not reveal exploitable information, and a CI record proves the rules ran. Whether a particular message reveals exploitable information is a judgement no rule settles. The second limb — that error messages are revealed only to defined personnel — is a runtime access decision no code scan observes at all, and this plane should not be credited with it. The platform running the scan is itself an external system, raising SA-09 and CA-03.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
+        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -4397,6 +5813,9 @@
         "rationale": "Retention is set where it is enforced and every setting is readable: CloudWatch Logs retention in days, S3 lifecycle rules and Object Lock, and a Backup vault locked IN COMPLIANCE MODE, whose MinRetentionDays and MaxRetentionDays cannot be shortened by anyone, including the root user, once the grace time expires — a governance-mode lock is removable by any principal holding the IAM permission, so the mode is load-bearing rather than decorative. How long the information is REQUIRED to be kept comes from the records schedule and the law behind it, and that number arrives from outside AWS.",
         "sourcesConsidered": [
           "aws"
+        ],
+        "openFor": [
+          "pipeline"
         ],
         "coveredBy": [],
         "candidateServices": [
@@ -4417,6 +5836,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4437,6 +5860,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4451,6 +5878,10 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
@@ -4468,13 +5899,18 @@
           "c",
           "d"
         ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
+        "disposition": "narrative",
+        "rationale": "The control establishes a supply chain risk management team — organization-defined personnel, roles and responsibilities, leading defined SCRM activities. Nothing a pipeline emits evidences a team's existence or its charter. Recorded against the plan rather than silently: `docs/automation-beyond-aws.md` §P5 lists SR-02 (01) among the controls build attestation bears on, and `docs/code-scanning-overlay-plan.md` step 8 carries that into the attestation authoring batch. The control text does not support it. The attestation argument belongs to si-7.7 on its detection limb; KSI-SVC-VRI, which asks for cryptographic validation of integrity, reaches si-7 and si-7.1 instead — both already covered by an AWS partial recipe, which is where a pipeline attestation recipe would sit beside rather than replace one. A 3PAO reads the SCRM plan and the team's charter.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
+        "reviewed": "2026-08-13",
+        "leverage": 7
       },
       {
         "controlId": "sr-5",
@@ -4494,6 +5930,9 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [
           "Amazon Inspector",
@@ -4501,47 +5940,7 @@
           "AWS Config"
         ],
         "reviewed": "2026-08-11",
-        "leverage": 7
-      },
-      {
-        "controlId": "sr-6",
-        "displayId": "SR-06",
-        "family": "SR",
-        "ksis": [
-          "KSI-SCR-MIT",
-          "KSI-SCR-MON"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 4
-      },
-      {
-        "controlId": "sr-8",
-        "displayId": "SR-08",
-        "family": "SR",
-        "ksis": [
-          "KSI-SCR-MON"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
+        "leverage": 8
       },
       {
         "controlId": "sr-10",
@@ -4562,10 +5961,13 @@
         "sourcesConsidered": [
           "aws"
         ],
+        "openFor": [
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
-        "leverage": 8
+        "leverage": 9
       },
       {
         "controlId": "sr-11.1",
@@ -4582,10 +5984,14 @@
         "disposition": null,
         "rationale": null,
         "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
-        "leverage": 6
+        "leverage": 7
       }
     ]
   }
