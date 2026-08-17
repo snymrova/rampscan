@@ -11,6 +11,27 @@ export const SliceEnvelope = z.object({
   data: z.unknown().optional(),
 });
 
+/**
+ * The overlay version a slice payload was derived under, wherever upstream
+ * happens to write it. Two spellings are in the published snapshot today —
+ * `overlay_version` at the payload root (automation-frontier, aws-evidence) and
+ * `overlay.overlay_version` one level down (evidence-plan) — so this reads both
+ * rather than assuming the shape we happened to look at first. Returns
+ * `undefined` when the slice carries no overlay at all (crosswalk, index),
+ * which the loader treats as a refusal only when a pin was declared for it.
+ */
+export function sliceOverlayVersion(payload: unknown): string | undefined {
+  if (payload === null || typeof payload !== "object") return undefined;
+  const root = payload as Record<string, unknown>;
+  if (typeof root.overlay_version === "string") return root.overlay_version;
+  const nested = root.overlay;
+  if (nested !== null && typeof nested === "object") {
+    const inner = (nested as Record<string, unknown>).overlay_version;
+    if (typeof inner === "string") return inner;
+  }
+  return undefined;
+}
+
 export const CrosswalkControl = z.object({
   canonicalId: z.string(),
   displayId: z.string(),
