@@ -17,7 +17,7 @@ import { recordScoping } from "../src/scoping.js";
 // emit, against a real ledger and real keys.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const RECIPES_DIR = join(REPO_ROOT, "recipes/pipeline");
+const RECIPES_DIR = join(REPO_ROOT, "recipes/commit");
 const DATASET_DIR = join(REPO_ROOT, "docs/context/ramprules/derived");
 
 const REPO = "fixtures/vulnerable-app";

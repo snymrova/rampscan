@@ -79,7 +79,7 @@ export const CommitAdjudication = z
      * distinguishable in a file a reader holds beside upstream's own.
      */
     source: z.literal("commit"),
-    /** recipes in `recipes/pipeline/` that discharge it — empty until they exist */
+    /** recipes in `recipes/commit/` that discharge it — empty until they exist */
     recipeIds: z.array(z.string()).default([]),
     /** collectors that could evidence it: registered today, or named in Tier 2 */
     candidateCollectors: z.array(z.string()).default([]),

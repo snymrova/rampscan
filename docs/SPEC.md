@@ -208,7 +208,7 @@ Phase 0 is data work, no infrastructure, and it is done when:
 
 1. `packages/schema` defines the **pipeline recipe** type mirroring `aws-evidence.json`'s recipe shape (`ksi_ids`, `control_ids`, `evidence`, `collection` with `kind: "pipeline"`, `expected_output`, `assertions`, `cadence`, `automatable`, `notes`, and `caveats` — the one deliberate rename, generalizing aws-evidence's partition-specific `govcloud` field) plus `anchor: commit`.
 2. `recipes/adjudications/` holds a disposition for **each of the 121 uncovered controls** — `automatable | partial | narrative`, with one paragraph of reasoning each, in ramprules' frontier vocabulary so the overlay can be contributed upstream.
-3. `recipes/pipeline/` holds drafted recipes for every control adjudicated `automatable` or `partial` — the honest pipeline ceiling, computed before any scanner exists.
+3. `recipes/commit/` holds drafted recipes for every control adjudicated `automatable` or `partial` — the honest pipeline ceiling, computed before any scanner exists.
 4. A generated `docs/FRONTIER-PIPELINE.md` states the numbers: how many of 121 the pipeline source can cover, fully or partially, and what remains narrative forever.
 
 That document is simultaneously rampscan's scope definition, its first marketing artifact, and a contribution ramprules' automation-frontier register is structured to receive.

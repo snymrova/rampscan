@@ -37,7 +37,7 @@ Concretely, the pieces as they exist in the tree:
 
 | Layer | Where | What it is |
 |---|---|---|
-| Recipe catalog | [recipes/pipeline/](../recipes/pipeline/) | 17 declarative JSON checks, each carrying KSI ids, NIST control ids, assertions, cadence, and authored plain-language prose |
+| Recipe catalog | [recipes/commit/](../recipes/commit/) | 17 declarative JSON checks, each carrying KSI ids, NIST control ids, assertions, cadence, and authored plain-language prose |
 | Collectors | [packages/collectors/src/](../packages/collectors/src/) | 12 collectors wrapping 7 pinned external tools + 5 pure ones |
 | Code graph | [packages/graph/src/](../packages/graph/src/) | TS-compiler-based nodes/edges/routes with per-edge `exact`\|`inferred` resolution |
 | Join | [packages/core/src/assert.ts](../packages/core/src/assert.ts) | assertion evaluation over observation rows → verdict + offender pointers |

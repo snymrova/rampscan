@@ -91,7 +91,7 @@ beforeAll(async () => {
     keysDir: join(base, "keys"),
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [repoFacts],
     certClass: "b",
     cacheDir: join(base, "cache"),
@@ -212,7 +212,9 @@ describe("M5: the clock runs itself", () => {
   });
 
   it("the daemon's event log is a computed record: every scan and warning is in daemon-events.jsonl — and the tick heartbeat stays OUT of it", async () => {
-    daemon.stop();
+    // awaited: stop() drains the append chain. Before it did, this read raced
+    // the last write and the count below came up one short under load.
+    await daemon.stop();
     const lines = (await readFile(join(base, "out", "daemon-events.jsonl"), "utf8"))
       .trim()
       .split("\n")
@@ -223,6 +225,12 @@ describe("M5: the clock runs itself", () => {
     expect(kinds.has("cache-verified")).toBe(true);
     expect(kinds.has("divergence")).toBe(true);
     expect(lines.filter((l) => l.kind === "scan-recorded")).toHaveLength(daemon.scanCount());
+    // the drain stated as an invariant rather than as a count that happens to
+    // match: onEvent fires synchronously and completely, so after stop() the
+    // mirror holds EVERY non-tick event the daemon announced, in order
+    expect(lines.map((l) => l.kind)).toEqual(
+      events.filter((e) => e.kind !== "tick").map((e) => e.kind),
+    );
     // one heartbeat per check interval would drown the events mirror's tail
     // (and a standing divergence with it) — ticks live in the snapshot file
     expect(kinds.has("tick")).toBe(false);

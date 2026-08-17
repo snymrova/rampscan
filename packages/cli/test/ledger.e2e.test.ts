@@ -52,7 +52,7 @@ async function runScan(now: Date): Promise<ScanOutcome> {
     outDir: await mkdtemp(join(tmpdir(), "rampscan-m2-out-")),
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [repoFacts],
     ledgerDir,
     keysDir,
@@ -96,7 +96,7 @@ beforeAll(async () => {
   // capture what the board looked like right after the first scan — the
   // as-of exit test (I1b) must reproduce this byte-for-byte from the ledger
   projectionAfterScan1 = await createProjector({
-    recipes: await loadRecipes(join(repoRoot, "recipes/pipeline")),
+    recipes: await loadRecipes(join(repoRoot, "recipes/commit")),
     windowMs: windowMsFor("b"),
     now: () => new Date("2026-08-13T10:30:00Z"),
   }).fold(createLocalLedger(ledgerDir));
@@ -172,7 +172,7 @@ describe("M2: ledger, signing, and honest death", () => {
 describe("Phase I1 exit: point-in-time truth over the append-only record", () => {
   async function foldNow(asOf?: string): Promise<Projection> {
     return createProjector({
-      recipes: await loadRecipes(join(repoRoot, "recipes/pipeline")),
+      recipes: await loadRecipes(join(repoRoot, "recipes/commit")),
       windowMs: windowMsFor("b"),
       now: () => new Date("2026-08-13T10:30:00Z"),
       ...(asOf !== undefined ? { asOf } : {}),
@@ -196,7 +196,7 @@ describe("Phase I1 exit: point-in-time truth over the append-only record", () =>
   it("computeBoardAsOf between the scans reproduces the first scan's registers and rollups (I3d)", async () => {
     const outcome = await computeBoardAsOf({
       ledgerDir,
-      recipesDir: join(repoRoot, "recipes/pipeline"),
+      recipesDir: join(repoRoot, "recipes/commit"),
       asOf: "2026-08-13T10:30:00.000Z",
     });
     expect(canonicalJson(outcome.projection.registers)).toBe(
@@ -216,10 +216,10 @@ describe("Phase I1 exit: point-in-time truth over the append-only record", () =>
   it("computeBoardAsOf at a scan instant includes that scan and says it is one (I3d)", async () => {
     const scansOnly = await computeBoardAsOf({
       ledgerDir,
-      recipesDir: join(repoRoot, "recipes/pipeline"),
+      recipesDir: join(repoRoot, "recipes/commit"),
       asOf: (await computeBoardAsOf({
         ledgerDir,
-        recipesDir: join(repoRoot, "recipes/pipeline"),
+        recipesDir: join(repoRoot, "recipes/commit"),
         asOf: "2026-08-13T10:30:00.000Z",
       })).scans[0]!,
     });
@@ -234,7 +234,7 @@ describe("Phase I1 exit: point-in-time truth over the append-only record", () =>
   it("computeBoardAsOf before any scan folds an honestly empty world (I3d)", async () => {
     const outcome = await computeBoardAsOf({
       ledgerDir,
-      recipesDir: join(repoRoot, "recipes/pipeline"),
+      recipesDir: join(repoRoot, "recipes/commit"),
       asOf: "2020-01-01T00:00:00.000Z",
     });
     // no repo had been scanned at that instant — no rows exist to show, and

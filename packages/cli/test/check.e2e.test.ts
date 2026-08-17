@@ -45,7 +45,7 @@ import type { DryRunOutcome, DryRunRow } from "../src/index.js";
 //      pins the fix (the offenders come off the failing ASSERTION).
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const recipesDir = join(repoRoot, "recipes/pipeline");
+const recipesDir = join(repoRoot, "recipes/commit");
 const datasetDir = join(repoRoot, "docs/context/ramprules/derived");
 
 const gitEnv = {

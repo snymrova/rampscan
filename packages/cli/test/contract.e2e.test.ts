@@ -87,7 +87,7 @@ async function runScan(now: Date): Promise<void> {
     outDir: join(base, "out"),
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [graphCollector, contract],
     ledgerDir,
     keysDir,
@@ -98,7 +98,7 @@ async function runScan(now: Date): Promise<void> {
 
 async function fold(): Promise<Projection> {
   return createProjector({
-    recipes: await loadRecipes(join(repoRoot, "recipes/pipeline")),
+    recipes: await loadRecipes(join(repoRoot, "recipes/commit")),
     windowMs: windowMsFor("b"),
     now: () => new Date("2026-08-15T12:00:00Z"),
   }).fold(createLocalLedger(ledgerDir));

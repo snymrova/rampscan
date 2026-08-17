@@ -87,7 +87,7 @@ empty_means: "unevidenced"  an empty set means there was nothing to search;
 
 **N0-T3 — `packages/cli/test/catalog.test.ts`, the static half.** Modelled on `plain.test.ts`, which is the house precedent for "policy lives in a test that fails CI, not in a convention someone remembers."
 
-1. Every recipe in `recipes/pipeline/` declares `empty_means`.
+1. Every recipe in `recipes/commit/` declares `empty_means`.
 2. Every recipe whose assertions are *all* count-ops or row-wise ops (i.e. every recipe that can pass over zero rows) declares it explicitly rather than inheriting a default — there is no default.
 3. Every `empty_means: "clean"` recipe's `notes` states what domain was searched exhaustively. A clean claim that cannot say what it searched is not a clean claim.
 4. Every recipe names a collector that exists and whose manifest declares it — this closes the `tools`-map link at catalog level rather than only in `rampscan tools`.
@@ -485,3 +485,17 @@ T6 was the cheapest item on the list and the only one that was a gift rather tha
 ---
 
 **N1a′ is complete.** Both bugs fixed and the re-pin landed at overlay 0.7.2 (T1, T2); the plane-identity decision taken and enforced (T3); the two limbs and the external-system answer required of every live record (T4); ground rule 10 made a link check with all three overlaps cited (T5); the tools contribution closed with its reasoning (T6). **N1a-T3 resumes**, reshaped by §2.1b: **37 in the class-b lead set**, in batches of ~15 interleaved with N1b recipes, each batch closed by an independent auditor pass.
+
+### The pre-batch pass — the two loose ends, taken before batch 1 rather than after (landed 2026-08-17)
+
+Neither is adjudication work. Both were flagged in N1a′ as out of scope for the commit they were found in, and both get *more* expensive with every recipe and every record that lands after them — which is the whole argument for spending an hour on them at the seam between two phases instead of at the end of one.
+
+**The catalog directory is `recipes/commit/`, closing the note left open at T3.** T3 renamed the plane and said plainly that the directory was a separate blast radius: the CLI default, 19 test files, the schema's own comments, and four documents. That radius does not shrink — the catalog is 17 recipes today and N1b's whole purpose is to make it bigger — so this is the cheapest the rename will ever be, and every day it waits it costs more. The substantive reason it could not simply be left: `recipes/pipeline/` is now **the other project's plane name sitting in our tree**, one directory away from `recipes/adjudications/` whose every record is filed `source: "commit"`. T3's finding was that `row.pipeline` and `row.upstream.pipeline` were a collision worst exactly where the output mattered most; a directory named for upstream's plane holding our plane's recipes is the same collision one level up.
+
+**Dated records are not rewritten to match.** `PLAN-OF-ACTION.md`'s 2026-08-13 log row says twelve recipes landed in `recipes/pipeline/`, and on that day they did. The live references moved — `README.md`, `PRODUCT-READ.md`'s catalog link, `SPEC.md` §10.2's item 3, this document's N0 rule 1 — and the spent plans (`IMPLEMENTATION-PLAN.md`, the ontology plan, the brainstorm, `IMPLEMENTATION-PLAN-REMAINING.md`) keep the name they were written with. This is the rule the retired `sr-8` record already established from the other direction: a paragraph edited to agree with the present leaves a reader unable to tell what was true when.
+
+**The daemon's event mirror is drained at shutdown, and it was a real defect wearing a flake's clothes.** `daemon.e2e.test.ts` failed once under full-suite load with six of seven `scan-recorded` lines and passed in isolation, which is the signature of a test to re-run rather than a bug to fix. It was the second thing. `emit` is synchronous and chains its file write onto a fire-and-forget `eventWrites` promise; `stop(): void` never awaited it. So a process that exits on the turn `stop()` returns — which is precisely what `rampscan daemon` does on ctrl-c — **loses the tail of its own history**, and the file it loses the tail of is the one `rampscan serve` tails into the console. A standing divergence alert as the last event before shutdown is the case that matters, and it is the case that vanished.
+
+The fix drains to a **fixed point** rather than awaiting once, because awaiting the chain captured at stop time is the same lost tail one turn later: a scan already in flight when the signal arrives emits *after* `scheduler.stop()` returns, and its append is chained onto whatever the promise was by then. The loop re-reads `eventWrites` until it stops moving.
+
+The test's assertion moved with it, from a count that happened to match to the invariant behind it: `onEvent` fires synchronously and completely, so after `await stop()` the mirror holds **every** non-tick event the daemon announced, in order. The old assertion — seven `scan-recorded` lines for seven scans — could only ever fail by racing; the new one states what the drain is for. **659 vitest** green, root and console typecheck clean.

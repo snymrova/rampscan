@@ -79,7 +79,7 @@ beforeAll(async () => {
     outDir,
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [repoFacts],
     ledgerDir,
     keysDir,

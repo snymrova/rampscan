@@ -21,7 +21,7 @@ import { loadRecipes } from "../src/recipes.js";
 // questions, or jargon explained with more jargon.
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const recipesDir = join(repoRoot, "recipes/pipeline");
+const recipesDir = join(repoRoot, "recipes/commit");
 const glossaryLib = join(repoRoot, "console/web/lib/glossary.ts");
 
 interface GlossaryModule {

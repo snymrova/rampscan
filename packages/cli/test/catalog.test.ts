@@ -28,7 +28,7 @@ import { loadRecipes } from "../src/recipes.js";
 // barren fixture.
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const recipesDir = join(repoRoot, "recipes/pipeline");
+const recipesDir = join(repoRoot, "recipes/commit");
 
 /**
  * The five empty-set patterns the catalog already used before any of them had
@@ -52,7 +52,7 @@ beforeAll(async () => {
 });
 
 describe("the catalog declares what an empty observation set means (N0-T3)", () => {
-  it("every recipe in recipes/pipeline declares empty_means", () => {
+  it("every recipe in recipes/commit declares empty_means", () => {
     const missing = recipes.filter((r) => r.empty_means === undefined).map((r) => r.id);
     expect(missing, "recipes with no `empty_means` declaration").toEqual([]);
     // the whole catalog, not a sample — a count here would pass while a new

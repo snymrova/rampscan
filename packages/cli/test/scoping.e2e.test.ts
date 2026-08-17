@@ -16,7 +16,7 @@ import { verify } from "../src/verify.js";
 // fold → store → read-back → byte equality.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const RECIPES_DIR = join(REPO_ROOT, "recipes/pipeline");
+const RECIPES_DIR = join(REPO_ROOT, "recipes/commit");
 const DATASET_DIR = join(REPO_ROOT, "docs/context/ramprules/derived");
 
 describe("two-key scoping → rebuild survival", () => {

@@ -95,7 +95,7 @@ function runScan(overrides: Partial<Parameters<typeof scan>[0]> = {}) {
     outDir,
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [repoFacts, toollessCollector, leakyCollector],
     ledgerDir,
     keysDir,
@@ -253,7 +253,7 @@ describe("J1 — the projection folds it and rebuild proves it", () => {
   beforeAll(async () => {
     const report = await rebuild({
       ledgerDir,
-      recipesDir: join(repoRoot, "recipes/pipeline"),
+      recipesDir: join(repoRoot, "recipes/commit"),
       dbPath: join(await mkdtemp(join(tmpdir(), "rampscan-j1-db-")), "projection.db"),
     });
     expect(report.ok).toBe(true); // sqlite reads back byte-identical to the fold

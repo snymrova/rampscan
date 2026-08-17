@@ -124,7 +124,7 @@ beforeAll(async () => {
     outDir,
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [repoFacts],
     ledgerDir,
     keysDir,
@@ -136,7 +136,7 @@ async function pkg(overrides: Partial<Parameters<typeof computeEvidencePackage>[
   return computeEvidencePackage({
     ledgerDir,
     keysDir,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     artifactsDir: join(outDir, "artifacts"),
     register: "controls",
     // si-7.1 is mapped by three repo-facts recipes with different verdicts —
@@ -247,7 +247,7 @@ describe("computeEvidencePackage", () => {
     const { manifest } = await computeEvidencePackage({
       ledgerDir,
       keysDir,
-      recipesDir: join(repoRoot, "recipes/pipeline"),
+      recipesDir: join(repoRoot, "recipes/commit"),
       register: "controls",
       id: "si-7.1",
       now: new Date("2026-08-15T10:00:00.000Z"),

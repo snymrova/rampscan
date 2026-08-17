@@ -21,7 +21,7 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 async function realMap() {
   return buildToolMap({
-    recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+    recipes: await loadRecipes(join(REPO_ROOT, "recipes/commit")),
     collectors: allCollectors,
     toolManifest: await loadToolManifest(),
   });

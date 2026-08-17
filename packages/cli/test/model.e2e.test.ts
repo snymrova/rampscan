@@ -45,7 +45,7 @@ import type { ContractRuleNode, GraphNode, RecipeNode, RepoModel, ToolMap } from
 //      could not be drawn is a STATED problem rather than a silent absence.
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const recipesDir = join(repoRoot, "recipes/pipeline");
+const recipesDir = join(repoRoot, "recipes/commit");
 const datasetDir = join(repoRoot, "docs/context/ramprules/derived");
 
 const gitEnv = {

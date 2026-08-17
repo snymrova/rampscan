@@ -383,7 +383,7 @@ describe("repo model (L2): nodes AND links, and no second coverage number", () =
     const { allCollectors, loadToolManifest } = await import("@rampscan/collectors");
     const { DEFAULT_DATASET_PIN, loadLocalDataset } = await import("@rampscan/dataset");
     const { buildRepoModel, buildToolMap, loadRecipes } = await import("../src/index.js");
-    const recipes = await loadRecipes(join(repoRoot, "recipes/pipeline"));
+    const recipes = await loadRecipes(join(repoRoot, "recipes/commit"));
     const real = buildRepoModel({
       entries: [],
       recipes,

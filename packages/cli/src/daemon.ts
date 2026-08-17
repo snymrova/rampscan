@@ -87,7 +87,14 @@ export interface DaemonHandle {
   scheduler: LocalScheduler;
   /** scans run so far (incremental + full) */
   scanCount(): number;
-  stop(): void;
+  /**
+   * Stops the loop and DRAINS the event writes before resolving. `emit` is
+   * synchronous and its file write is not, so a caller that exits the process
+   * on the turn `stop()` returns loses the tail of its own history — which is
+   * the file `rampscan serve` tails. Awaiting this is the only way the events
+   * mirror is complete at shutdown.
+   */
+  stop(): Promise<void>;
 }
 
 export function describeDaemonEvent(event: DaemonEvent): string {
@@ -263,6 +270,17 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
   return {
     scheduler,
     scanCount: () => scans,
-    stop: () => scheduler.stop(),
+    stop: async () => {
+      scheduler.stop();
+      // Drain to a FIXED POINT rather than awaiting once: a scan already in
+      // flight when the signal arrives emits after `scheduler.stop()` returns,
+      // and its append is chained onto whatever `eventWrites` was at that
+      // moment. Awaiting the chain we captured would resolve before that write
+      // — the same lost tail one turn later. Loop until the chain stops moving.
+      for (let pending = eventWrites; ; pending = eventWrites) {
+        await pending;
+        if (pending === eventWrites) return;
+      }
+    },
   };
 }

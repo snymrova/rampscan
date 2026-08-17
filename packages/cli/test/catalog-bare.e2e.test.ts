@@ -36,7 +36,7 @@ import { loadRecipes } from "../src/recipes.js";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureRoot = join(repoRoot, "fixtures/bare-app");
-const recipesDir = join(repoRoot, "recipes/pipeline");
+const recipesDir = join(repoRoot, "recipes/commit");
 
 function installed(tool: string): boolean {
   try {

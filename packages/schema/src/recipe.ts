@@ -120,7 +120,7 @@ export const PipelineRecipe = z.object({
    * K1's operator English. OPTIONAL in the shape and REQUIRED in the shipped
    * catalog: the schema mirrors aws-evidence.json's recipe form, which carries
    * no such field, so a recipe imported from that dataset must still parse —
-   * while `plain.test.ts` fails CI on any recipe in `recipes/pipeline/` that
+   * while `plain.test.ts` fails CI on any recipe in `recipes/commit/` that
    * lacks one. Shape is schema's job; completeness is policy's.
    */
   plain: PlainLanguage.optional(),
@@ -129,7 +129,7 @@ export const PipelineRecipe = z.object({
    * shipped catalog, for the same reason `plain` is: the recipe shape mirrors
    * aws-evidence.json, which carries no such field, so an imported recipe must
    * still parse — while `catalog.test.ts` fails CI on any recipe in
-   * `recipes/pipeline/` that omits it. Shape is schema's job; completeness is
+   * `recipes/commit/` that omits it. Shape is schema's job; completeness is
    * policy's.
    */
   empty_means: EmptyMeans.optional(),

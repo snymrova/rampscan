@@ -83,7 +83,7 @@ function usage(): never {
       "  --db <path>       board/rebuild: SQLite projection path (default: ./rampscan-projection.db for rebuild)",
       "  --dataset <dir>   ramprules derived-slice dir (default: docs/context/ramprules/derived)",
       "  --pin <version>   dataset version pin (default: " + DEFAULT_DATASET_PIN + ")",
-      "  --recipes <dir>   pipeline recipe dir (default: recipes/pipeline)",
+      "  --recipes <dir>   commit-plane recipe dir (default: recipes/commit)",
       "  --adjudications <dir>  frontier: per-control disposition dir (default: recipes/adjudications)",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b)",
@@ -143,7 +143,7 @@ async function main(): Promise<void> {
   const keysDir = values.keys ?? "./rampscan-keys";
   const datasetDir = values.dataset ?? join(REPO_ROOT, "docs/context/ramprules/derived");
   const datasetPin = values.pin ?? DEFAULT_DATASET_PIN;
-  const recipesDir = values.recipes ?? join(REPO_ROOT, "recipes/pipeline");
+  const recipesDir = values.recipes ?? join(REPO_ROOT, "recipes/commit");
   const adjudicationsDir = values.adjudications ?? join(REPO_ROOT, "recipes/adjudications");
   const useColor = values["no-color"] ? false : (process.stdout.isTTY ?? false);
   const certClass = (values.class ?? "b") as CertClass;
@@ -287,10 +287,13 @@ async function main(): Promise<void> {
         `· daemon watching ${target} (class ${certClass}) — ctrl-c to stop`,
       );
       await new Promise<void>((resolvePromise) => {
-        const shutdown = () => {
-          handle.stop();
-          console.error(`· daemon stopped after ${handle.scanCount()} scan(s)`);
-          resolvePromise();
+        // awaited, not fired: the process exits on the next turn and the last
+        // events append is still in flight until stop() drains it
+        const shutdown = (): void => {
+          void handle.stop().then(() => {
+            console.error(`· daemon stopped after ${handle.scanCount()} scan(s)`);
+            resolvePromise();
+          });
         };
         process.once("SIGINT", shutdown);
         process.once("SIGTERM", shutdown);

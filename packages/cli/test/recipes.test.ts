@@ -12,7 +12,7 @@ import { loadRecipes, validateRecipeIds } from "../src/index.js";
 // catalog doesn't know is worse than no verdict.
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const recipesDir = join(repoRoot, "recipes/pipeline");
+const recipesDir = join(repoRoot, "recipes/commit");
 const derivedDir = join(repoRoot, "docs/context/ramprules/derived");
 
 let recipes: PipelineRecipe[];

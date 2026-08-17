@@ -32,7 +32,7 @@ async function realMap() {
   return buildFrontier({
     frontier: dataset.frontier(),
     adjudications: await loadAdjudications(join(REPO_ROOT, "recipes/adjudications")),
-    recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+    recipes: await loadRecipes(join(REPO_ROOT, "recipes/commit")),
     collectors: allCollectors,
     datasetVersion: dataset.version(),
     ksiReachedControls: dataset.ksiReachedControls(),
@@ -64,7 +64,7 @@ async function mapWith(adjudications: CommitAdjudication[]) {
   return buildFrontier({
     frontier: dataset.frontier(),
     adjudications,
-    recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+    recipes: await loadRecipes(join(REPO_ROOT, "recipes/commit")),
     collectors: allCollectors,
     datasetVersion: dataset.version(),
     ksiReachedControls: dataset.ksiReachedControls(),
@@ -196,7 +196,7 @@ describe("upstream's dispositions are filed by the source that wrote them", () =
     return buildFrontier({
       frontier,
       adjudications: [],
-      recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+      recipes: await loadRecipes(join(REPO_ROOT, "recipes/commit")),
       collectors: allCollectors,
       datasetVersion: DEFAULT_DATASET_PIN,
       ksiReachedControls: 209,
@@ -512,7 +512,7 @@ describe("where upstream has spoken, the record says whether it agrees", () => {
     const map = buildFrontier({
       frontier: [frontier],
       adjudications: [record({ controlId: "sa-8", displayId: "SA-08", family: "SA", ...ours })],
-      recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+      recipes: await loadRecipes(join(REPO_ROOT, "recipes/commit")),
       collectors: allCollectors,
       datasetVersion: DEFAULT_DATASET_PIN,
       ksiReachedControls: 209,

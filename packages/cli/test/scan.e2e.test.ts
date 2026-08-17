@@ -97,7 +97,7 @@ beforeAll(async () => {
     outDir: await mkdtemp(join(tmpdir(), "rampscan-e2e-")),
     datasetDir: join(repoRoot, "docs/context/ramprules/derived"),
     datasetPin: DEFAULT_DATASET_PIN,
-    recipesDir: join(repoRoot, "recipes/pipeline"),
+    recipesDir: join(repoRoot, "recipes/commit"),
     collectors: [
       repoFacts,
       gitleaks,
