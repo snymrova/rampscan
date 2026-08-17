@@ -1,12 +1,15 @@
+import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { allCollectors } from "@rampscan/collectors";
+import type { FrontierControl } from "@rampscan/dataset";
 import { DEFAULT_DATASET_PIN, loadLocalDataset } from "@rampscan/dataset";
 import type { PipelineAdjudication } from "@rampscan/schema";
 import { PipelineAdjudication as AdjudicationSchema } from "@rampscan/schema";
 import { loadAdjudications } from "../src/adjudications.js";
-import { buildFrontier, renderFrontier, unreviewedControls } from "../src/frontier.js";
+import type { FrontierRow } from "../src/frontier.js";
+import { UNATTRIBUTED, buildFrontier, renderFrontier, unreviewedControls } from "../src/frontier.js";
 import { loadRecipes } from "../src/recipes.js";
 
 // `rampscan frontier` (plan N1a-T2). Two kinds of test, answering different
@@ -132,6 +135,106 @@ describe("the overlay as it stands", () => {
     const b = renderFrontier(await realMap(), false);
     expect(a).toBe(b);
     expect(a).toContain("frontier 121 uncovered controls");
+  });
+});
+
+// N1a′-T2. `frontier.ts` used to copy `f.disposition` into `row.aws`
+// unconditionally, on an invariant that had already expired: upstream opened a
+// second plane, named it `pipeline`, and its reviewed rows carry that name. The
+// mis-filing would have printed upstream's pipeline reasoning in the AWS column
+// on exactly the rows where our own column disagrees with it.
+describe("upstream's dispositions are filed by the source that wrote them", () => {
+  function frontierRow(over: Partial<FrontierControl> = {}): FrontierControl {
+    return {
+      controlId: "sa-8",
+      displayId: "SA-08",
+      family: "SA",
+      ksis: ["KSI-PIY-RSD"],
+      classes: ["b"],
+      disposition: "partial",
+      rationale: "upstream's paragraph",
+      sourcesConsidered: ["aws"],
+      ...over,
+    } as FrontierControl;
+  }
+
+  /** the single row these synthetic maps are about, or a loud failure */
+  function only(map: { rows: FrontierRow[] }): FrontierRow {
+    const [row, ...rest] = map.rows;
+    if (row === undefined || rest.length > 0) {
+      throw new Error(`expected exactly one row, got ${map.rows.length}`);
+    }
+    return row;
+  }
+
+  async function mapOver(frontier: FrontierControl[]) {
+    return buildFrontier({
+      frontier,
+      adjudications: [],
+      recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+      collectors: allCollectors,
+      datasetVersion: DEFAULT_DATASET_PIN,
+      ksiReachedControls: 209,
+    });
+  }
+
+  it("a row attributed to pipeline does not populate the aws column", async () => {
+    const map = await mapOver([frontierRow({ sourcesConsidered: ["pipeline"] })]);
+    expect(only(map).upstream.aws).toBeUndefined();
+    expect(only(map).upstream.pipeline?.disposition).toBe("partial");
+    expect(map.rollup.upstreamAdjudicatedBySource).toEqual({ pipeline: 1 });
+  });
+
+  it("a row attributed to aws does", async () => {
+    const map = await mapOver([frontierRow()]);
+    expect(only(map).upstream.aws?.disposition).toBe("partial");
+    expect(only(map).upstream.pipeline).toBeUndefined();
+  });
+
+  it("a row attributed to both populates both, and the renderer names them rather than picking one", async () => {
+    const map = await mapOver([frontierRow({ sourcesConsidered: ["pipeline", "aws"] })]);
+    expect(Object.keys(only(map).upstream)).toEqual(["aws", "pipeline"]);
+    expect(map.rollup.upstreamAdjudicatedBySource).toEqual({ aws: 1, pipeline: 1 });
+    const text = renderFrontier(map, false);
+    expect(text).toContain("upstream: aws partial · pipeline partial");
+  });
+
+  it("an unreviewed row populates nothing at all", async () => {
+    // upstream writes `null` for a control no pass reached; absent and
+    // explicitly-nothing are the same fact, and neither is an adjudication
+    const map = await mapOver([
+      frontierRow({ disposition: null, rationale: null, sourcesConsidered: [] }),
+    ]);
+    expect(only(map).upstream).toEqual({});
+    expect(map.problems).toEqual([]);
+  });
+
+  it("a disposition with no source is filed unattributed and reported, never credited to a plane", async () => {
+    const map = await mapOver([frontierRow({ sourcesConsidered: [] })]);
+    expect(only(map).upstream.aws).toBeUndefined();
+    expect(only(map).upstream[UNATTRIBUTED]?.disposition).toBe("partial");
+    expect(map.problems.join(" ")).toContain("filed unattributed");
+  });
+
+  it("the aws count recounts against upstream's own rollup.bySource", async () => {
+    // Two independent counts of one fact, which is the only way a mis-filing is
+    // visible at all: before T2 every reviewed row landed under `aws` whatever
+    // the file said, and no number in the system would have disagreed.
+    const dataset = await loadLocalDataset(DERIVED, DEFAULT_DATASET_PIN);
+    const raw = JSON.parse(
+      await readFile(join(DERIVED, "automation-frontier.json"), "utf8"),
+    ) as { data: { rollup: { bySource: Record<string, Record<string, number>> } } };
+    const map = await realMap();
+    for (const [source, upstreamCounts] of Object.entries(raw.data.rollup.bySource)) {
+      // covered controls have left the frontier, so what remains adjudicated on
+      // it is automatable + partial + narrative
+      const expected =
+        (upstreamCounts.automatable ?? 0) +
+        (upstreamCounts.partial ?? 0) +
+        (upstreamCounts.narrative ?? 0);
+      expect(map.rollup.upstreamAdjudicatedBySource[source] ?? 0, source).toBe(expected);
+    }
+    expect(dataset.frontierOverlayVersion()).toBeDefined();
   });
 });
 

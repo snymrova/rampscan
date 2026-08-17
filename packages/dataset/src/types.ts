@@ -57,14 +57,25 @@ export const CrosswalkIndicator = z.object({
 export type CrosswalkIndicator = z.infer<typeof CrosswalkIndicator>;
 
 /**
- * One uncovered control on ramprules' automation frontier (the 121). Upstream's
- * shape, mirrored and not owned: `disposition`/`rationale`/`sourcesConsidered`
- * are the AWS pass's adjudication of this control, and every reviewed row in the
- * published file carries `sourcesConsidered: ["aws"]`. rampscan's own
- * adjudications live beside the file in `recipes/adjudications/`, never inside
- * it (N0 decision 1) — this type exists so `rampscan frontier` can read the
- * register it is adjudicating against, under the same version pin as every
- * other slice.
+ * One uncovered control on ramprules' automation frontier. Upstream's shape,
+ * mirrored and not owned: `disposition`/`rationale` are an adjudication of this
+ * control and `sourcesConsidered` names the plane that wrote it.
+ *
+ * **Corrected 2026-08-17 (N1a′-T2).** This comment used to state an invariant —
+ * "every reviewed row in the published file carries `sourcesConsidered: ["aws"]`"
+ * — which was true of the snapshot pinned when it was written and false of
+ * upstream's file by then. Upstream has opened a second plane of its own, named
+ * it `pipeline`, and reviewed rows now carry that name instead. So
+ * `sourcesConsidered` is READ rather than assumed: `frontier.ts` files each
+ * disposition under the source that wrote it, because a reader shown upstream's
+ * pipeline reasoning in an AWS column has been told something untrue about who
+ * concluded what.
+ *
+ * rampscan's own adjudications live beside the file in `recipes/adjudications/`,
+ * never inside it (N0 decision 1) — this type exists so `rampscan frontier` can
+ * read the register it is adjudicating against, under the same version pins as
+ * every other slice (`dataset_version` AND the slice's `overlay_version`; see
+ * `pins.ts` for why the second one had to be added).
  *
  * Passthrough and mostly optional on purpose: the fields we reason about are
  * validated, the rest travel untouched, because a stricter mirror of someone
@@ -78,12 +89,13 @@ export const FrontierControl = z
     ksis: z.array(z.string()).default([]),
     classes: z.array(z.string()).default([]),
     leverage: z.number().optional(),
-    // nullable AND optional: the published file writes `null` for a control
-    // the AWS pass never reached, and "the field is absent" and "the field is
+    // nullable AND optional: the published file writes `null` for a control no
+    // upstream pass ever reached, and "the field is absent" and "the field is
     // explicitly nothing" are the same fact to a reader — both mean unreviewed
-    /** the AWS pass's disposition, when it reviewed this control */
+    /** an upstream plane's disposition, when one reviewed this control */
     disposition: z.string().nullish(),
     rationale: z.string().nullish(),
+    /** which upstream plane(s) wrote the disposition above — never assumed */
     sourcesConsidered: z.array(z.string()).default([]),
   })
   .passthrough();

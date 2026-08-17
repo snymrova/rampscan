@@ -12,10 +12,21 @@ import type { Disposition, PipelineAdjudication, PipelineRecipe } from "@rampsca
 // emitted it. After N1a the number is this command's output, and every later
 // claim about coverage quotes it.
 //
-// The frontier holds 121 controls a KSI reaches that no AWS recipe covers,
-// adjudicated from exactly one source — every reviewed row reads
-// `sourcesConsidered: ["aws"]`. The question here is the other one: which of
-// them can evidence committed to a REPOSITORY discharge?
+// The frontier holds the controls a KSI reaches that no AWS recipe covers. When
+// this command was written every reviewed row read `sourcesConsidered: ["aws"]`,
+// and the question here was the other one: which of them can evidence committed
+// to a REPOSITORY discharge?
+//
+// That premise expired on 2026-08-17 (N1a′-T2). The project that publishes the
+// register opened a second evidence plane of its own and named it `pipeline`, so
+// upstream's file now carries reviewed rows attributed to a source that is not
+// AWS. Upstream's disposition is therefore filed under THE SOURCE THAT WROTE IT
+// and never under a default, because the alternative — copying `f.disposition`
+// into an `aws` field unconditionally, which is what this file used to do —
+// prints upstream's pipeline reasoning in the AWS column on exactly the rows
+// where our own pipeline column duplicates or disagrees with it. Two planes
+// reasoning about one control is the interesting case, and conflating them
+// destroys the only thing that makes it readable.
 
 /**
  * Collectors named in `IMPLEMENTATION-PLAN-REMAINING.md` Tier 2 as cheap wins:
@@ -27,6 +38,20 @@ import type { Disposition, PipelineAdjudication, PipelineRecipe } from "@rampsca
  */
 export const TIER_2_COLLECTORS = ["actionlint", "dockle", "license", "trivy-config", "zizmor"];
 
+/**
+ * The key a disposition is filed under when upstream published one and named no
+ * source for it. Reserved rather than guessed: dropping the reasoning would lose
+ * it, and crediting it to a plane the file did not name is the bug T2 fixes,
+ * arriving by a quieter route.
+ */
+export const UNATTRIBUTED = "unattributed";
+
+/** upstream's own pass over a control, mirrored and never edited by us */
+export interface UpstreamDisposition {
+  disposition?: string;
+  rationale?: string;
+}
+
 export interface FrontierRow {
   controlId: string;
   displayId: string;
@@ -34,8 +59,13 @@ export interface FrontierRow {
   classes: string[];
   ksis: string[];
   leverage?: number;
-  /** upstream's pass over this control, mirrored and never edited by us */
-  aws: { disposition?: string; rationale?: string };
+  /**
+   * Upstream's adjudications, keyed by the source in `sourcesConsidered` that
+   * wrote each one — `aws` for the AWS pass, `pipeline` for upstream's own
+   * pipeline plane, `unattributed` when the file names none. Keys sorted on
+   * construction so the JSON is stable.
+   */
+  upstream: Record<string, UpstreamDisposition>;
   /** ours, when `recipes/adjudications/` holds a record for it */
   pipeline?: {
     disposition: Disposition;
@@ -74,6 +104,14 @@ export interface FrontierRollup {
   reachable: number;
   /** reachable ÷ ksiReachedControls — the pipeline source's ceiling */
   ceiling: number;
+  /**
+   * How many frontier rows each upstream source adjudicated, counted from the
+   * rows rather than read from upstream's own `rollup.bySource`. Two independent
+   * counts of one fact is the only way a mis-filing is visible at all: the bug
+   * T2 fixed would have shown 61 rows under `aws` where upstream's own rollup
+   * said 48, and nothing in the old shape would have noticed.
+   */
+  upstreamAdjudicatedBySource: Record<string, number>;
 }
 
 export interface FrontierMap {
@@ -94,6 +132,40 @@ export interface FrontierInput {
   datasetVersion: string;
   /** upstream's `rollup.ksiReachedControls` — read, never typed */
   ksiReachedControls: number;
+}
+
+/**
+ * File upstream's disposition under the source that wrote it (N1a′-T2).
+ *
+ * Upstream publishes one `disposition`/`rationale` pair per row alongside a
+ * `sourcesConsidered` list, so a row reviewed by two of upstream's planes
+ * carries both names and one paragraph; that paragraph is filed under both,
+ * because the file does not say which half of it belongs to which plane and
+ * picking one would be us inventing an attribution upstream did not publish.
+ *
+ * Upstream writes `null` for a control its passes never reached, and "the field
+ * is absent" and "the field is explicitly nothing" are the same fact to a
+ * reader — both mean unreviewed, and both produce no key at all.
+ */
+function upstreamDispositions(f: FrontierControl): Record<string, UpstreamDisposition> {
+  const claim: UpstreamDisposition = {
+    ...(f.disposition ? { disposition: f.disposition } : {}),
+    ...(f.rationale ? { rationale: f.rationale } : {}),
+  };
+  if (claim.disposition === undefined && claim.rationale === undefined) return {};
+  const sources = f.sourcesConsidered.length > 0 ? [...f.sourcesConsidered].sort() : [UNATTRIBUTED];
+  return Object.fromEntries(sources.map((source) => [source, claim]));
+}
+
+/** rows each upstream source adjudicated, keys sorted */
+function upstreamCounts(rows: FrontierRow[]): Record<string, number> {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    for (const source of Object.keys(row.upstream)) {
+      counts.set(source, (counts.get(source) ?? 0) + 1);
+    }
+  }
+  return Object.fromEntries([...counts.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
 
 /**
@@ -124,12 +196,7 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
         classes: [...f.classes].sort(),
         ksis: [...f.ksis].sort(),
         ...(f.leverage !== undefined ? { leverage: f.leverage } : {}),
-        // upstream writes `null` for a control its pass never reached; absent
-        // and explicitly-nothing are the same fact, so both land as no key
-        aws: {
-          ...(f.disposition ? { disposition: f.disposition } : {}),
-          ...(f.rationale ? { rationale: f.rationale } : {}),
-        },
+        upstream: upstreamDispositions(f),
         catalogRecipeIds: recipesForControl.get(f.controlId) ?? [],
       };
       if (record) {
@@ -193,6 +260,7 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
       catalogCovered: catalogControls.size,
       reachable: reachable.size,
       ceiling: input.ksiReachedControls > 0 ? reachable.size / input.ksiReachedControls : 0,
+      upstreamAdjudicatedBySource: upstreamCounts(rows),
     },
     ceilingByFamily: [...families.entries()]
       .map(([family, e]) => ({ family, ...e }))
@@ -221,6 +289,19 @@ function frontierProblems(input: {
 }): string[] {
   const problems: string[] = [];
   const tier2 = new Set(TIER_2_COLLECTORS);
+  // Upstream published reasoning and named nobody who wrote it. Not our record's
+  // fault and not silently absorbable either: the whole of T2 is that a
+  // disposition belongs to the plane that wrote it, and a claim with no plane
+  // cannot be compared with ours, cited under ground rule 10, or argued with.
+  for (const row of input.rows) {
+    if (row.upstream[UNATTRIBUTED] !== undefined) {
+      problems.push(
+        `frontier row "${row.displayId}" carries an upstream disposition ` +
+          `("${row.upstream[UNATTRIBUTED].disposition ?? "—"}") with an empty sourcesConsidered — ` +
+          "it is filed unattributed rather than credited to a plane the file did not name",
+      );
+    }
+  }
   for (const record of input.adjudications) {
     // Upstream drift, caught at the record rather than discovered in a number
     // (risk 4): our reasoning is keyed to controlId + datasetVersion, and a
@@ -331,6 +412,17 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
     lines.push("");
   }
 
+  const bySource = Object.entries(r.upstreamAdjudicatedBySource);
+  if (bySource.length > 0) {
+    lines.push(
+      bold("upstream's own passes over the same controls"),
+      ...bySource.map(([source, n]) => `  ${source.padEnd(14)} ${String(n).padStart(3)} adjudicated`),
+      dim("  filed by the source that wrote each one, never conflated — a control both planes"),
+      dim("  reasoned about is the interesting case, and one column would hide it"),
+      "",
+    );
+  }
+
   lines.push(bold("controls"), "");
   for (const row of map.rows) {
     const p = row.pipeline;
@@ -340,6 +432,14 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
         (row.classes.length > 0 ? dim(` [${row.classes.join("")}]`) : "") +
         (row.leverage !== undefined ? dim(` lev ${row.leverage}`) : ""),
     );
+    const upstream = Object.entries(row.upstream);
+    if (upstream.length > 0) {
+      lines.push(
+        dim(
+          `      upstream: ${upstream.map(([source, u]) => `${source} ${u.disposition ?? "—"}`).join(" · ")}`,
+        ),
+      );
+    }
     if (p) {
       lines.push(dim(`      ${p.rationale}`));
       if (p.remainder) lines.push(dim(`      remainder: ${p.remainder}`));
