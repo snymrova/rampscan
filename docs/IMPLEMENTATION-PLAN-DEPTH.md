@@ -468,3 +468,20 @@ Four failure modes, each shown to fire, and the third is the one worth building 
 The eleven class-c/d controls upstream adjudicated beyond the overlap are **not** touched, per decision 10: they are outside the lead set, upstream reasoned about them first, and filling a column for symmetry is risk 3 arriving by a route the plan had not considered.
 
 **659 vitest** (653 + 6: every shipped overlap cites, the four failure modes, and a citation of a plane that said nothing). Root and console typecheck clean.
+
+#### N1a′-T6 — closed without a contribution, because the premise expired twice (2026-08-17)
+
+T6 was the cheapest item on the list and the only one that was a gift rather than a fix: *"`data/overlays/pipeline-tools.json` upstream **ships empty**, and their own card says the gate that fails an unresolvable spelling had to exist before the first spelling was written — so their plane cannot author its first recipe until someone writes the vocabulary. Offering it is one commit."*
+
+**Read rather than assumed, and both halves of that are now false.**
+
+1. **The file is not empty.** It carries **seven entries at version 0.4.0** — `github-dependabot`, `github-code-security-configurations`, `github-webhooks`, `github-secret-scanning`, `github-artifact-attestations`, `github-code-scanning`, `github-codeql` — and their plane has authored **six recipes** against them. The blocked-authoring premise was true of the snapshot §1a was written against and was overtaken before this task was reached, the same way §1's sharpest sentence was.
+2. **Their file forbids the contribution in its own note.** *"Entries are added by the batch that first names a tool — this is a vocabulary for the data on hand, not a catalogue of the industry."* Offering `gitleaks`, `syft`, `grype`, `osv-scanner`, `semgrep`, `checkov` and `spectral` would add seven entries no upstream recipe references, which is precisely the catalogue-of-the-industry their rule refuses. Recounted rather than trusted: every `pipeline_tools` string across their six recipes resolves in their vocabulary today, **zero unresolved** — there is no gap to fill.
+
+**So T6 closes with nothing offered, and the reason it closes is worth more than the task was.** The two vocabularies have **zero overlap**: theirs is seven GitHub SaaS features, ours is seven local open-source binaries with pinned versions. That is not a coincidence to be tidied away by merging them — it is independent evidence for decision 6. The planes were split on trust model rather than subject matter, and the tool vocabularies fell out along exactly that line without either project arranging it. A shared vocabulary would have had to reconcile "a capability of a platform inside the boundary" with "a binary executed offline against a checkout", which is the same conflation `platform` and `external_system` would have forced.
+
+**What contributability actually needs is decision 9, and it is already scheduled.** Upstream requires at least one verified `https://` source on every recipe on both planes; all 17 of ours carry none, so the overlay is not offerable whatever SPEC §10.2 intends. That is N1b's `references[]` task, recorded when it was found rather than remembered — and it is the real answer to "make contributability true of something", where the tools file was a route that had already closed.
+
+---
+
+**N1a′ is complete.** Both bugs fixed and the re-pin landed at overlay 0.7.2 (T1, T2); the plane-identity decision taken and enforced (T3); the two limbs and the external-system answer required of every live record (T4); ground rule 10 made a link check with all three overlaps cited (T5); the tools contribution closed with its reasoning (T6). **N1a-T3 resumes**, reshaped by §2.1b: **37 in the class-b lead set**, in batches of ~15 interleaved with N1b recipes, each batch closed by an independent auditor pass.
