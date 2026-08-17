@@ -1,0 +1,23 @@
+{
+  "controlId": "si-12",
+  "displayId": "SI-12",
+  "family": "SI",
+  "disposition": "partial",
+  "rationale": "Retention is enforced by settings, and on a system whose infrastructure is declared in code those settings are committed before they are estate state: a log group's retention in days, a bucket's lifecycle rules and object-lock configuration, a backup vault's minimum and maximum retention and the mode its lock is in are all fields in a committed infrastructure file, read without an account — Terraform today, since that is the framework this repository's policy scanner matches alongside Dockerfiles and workflows, and CloudFormation through the Tier-2 config scanner rather than through the one already registered. What the commit plane adds is not a different fact but a different moment and a different attribution — a retention period shortened is a reviewable diff with an author and a rationale in the pull request, where the same change observed at the estate is a configuration item that differs from yesterday's and has to be traced back to whoever made the call.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["checkov", "trivy-config", "repo-facts"],
+  "remainder": {
+    "control": "How long the information is required to be kept — and, before that, whether anything was declared to retain. A repository that declares infrastructure containing no log group, no bucket and no vault produces zero failed policy checks and would pass a baseline recipe on an empty population, which is ground rule 7's failure arriving through the framework rather than through the assertion: a retention claim here has to state the retention-bearing resources it counted, or an evidenced result means only that nothing was declared. The required period is the second gap. That number comes from a records schedule and the law behind it, arrives from outside the system entirely, and is no more available to a repository than to an API — so a committed retention of ninety days is checkable against a declared requirement and is not, on its own, evidence that ninety days is right. And declared infrastructure is not deployed infrastructure: a resource created outside the code, or drifted since it was applied, retains whatever it was last told to, and the file says nothing about it.",
+    "boundary": "The declarations read here are one repository's. Information inside the authorization boundary held by a system whose infrastructure is declared elsewhere — or not declared at all — is retained under settings this scan never saw, and an evidenced result covers the resources this checkout declares rather than the information the control is about."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict, same wall, opposite ends of the same field — and one distinction inherited from their pass rather than rediscovered. Upstream is careful that a Backup vault locked in compliance mode cannot be shortened by anyone including the root user once the grace time expires, while a governance-mode lock is removable by any principal holding the IAM permission, so the mode is load-bearing rather than decorative. A committed IaC assertion that checked retention days without checking the lock mode would be reporting a number anyone can change, which is this overlay's own failure mode arriving in someone else's control. Reading the same fields at their source of truth catches a shortening in review rather than after it takes effect; it cannot see resources that were never declared in code, and upstream's pass can."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The retention declarations are read as files in the checkout, so evidencing this control introduces no log-shipping or archival service — which would otherwise be the ordinary route to it, and would place the retained information itself inside a supplier's estate under whatever retention that supplier enforces.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

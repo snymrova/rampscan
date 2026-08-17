@@ -1,0 +1,23 @@
+{
+  "controlId": "ac-14",
+  "displayId": "AC-14",
+  "family": "AC",
+  "disposition": "partial",
+  "rationale": "The control asks which actions can be performed without identification or authentication, and for the supporting rationale to be documented. The enumeration half is a property of the application's own routing, which is source: route-auth-coverage walks the call graph from each declared route and reports whether an authentication guard is reached on every path to it, so the set of unauthenticated actions is read off the code that implements them rather than off a description of it, and it moves the moment a route is added. It is also under-approximate by construction — a chain the graph cannot walk reads as uncovered rather than as covered — which is the direction an enumeration control needs its errors to run in. The documented-rationale half is the one this plane does not currently answer, and the reason is recorded in the remainder rather than glossed: the artifact that would carry it does not exist yet.",
+  "source": "commit",
+  "recipeIds": ["route-auth-coverage"],
+  "candidateCollectors": ["graph", "repo-facts"],
+  "remainder": {
+    "control": "The rationale, and it is further out of reach than a first reading suggests. The architecture contract looks like the home for it and is not: ContractRule is a closed union of two kinds, and RouteAuthRule scopes which routes MUST reach an authentication check — so a route reachable without authentication and absent from the declaration matches no rule, emits no row and fails nothing. Silence reads as compliance, which is ground rule 7's failure mode, and arch-route-auth-declared says as much in its own notes. Answering this limb needs a rule kind that does not exist — a declared allow-list of permitted unauthenticated routes, failing any enumerated route absent from it — and even then, whether a permitted exception is adequate is a judgement no assertion makes. The enumeration is bounded too: actions reachable through a queue, a scheduled job, an administrative console or a language the graph does not walk are outside the population, as are infrastructure paths that reach a resource without passing through the application at all.",
+    "boundary": "One checkout's routes. A second service inside the same authorization boundary can expose an unauthenticated action this scan never saw, and no coverage figure computed here reaches it — this is the one-repository-out-of-forty arm of the vacuity trap, and on this control it is unusually costly, because the control is about completeness of an enumeration and a partial enumeration reads exactly like a complete one."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict from two enumerations that do not overlap at all, which makes this the most useful corroboration in the batch. Upstream enumerates at the estate — Access Analyzer and the public-access Config rules find every path that reaches a resource without authentication — and that pass cannot see an application route: an authenticated gateway in front of an application that authenticates nothing is a compliant estate and an open system. This plane enumerates the routes and cannot see the resource policies. Neither substitutes for the other, and both stop at the same remainder, which is that the rationale for a permitted exception is a human's to defend — upstream states it as documented rather than collected, and this plane cannot yet even hold the document beside the route. Where a reader has both, the two enumerations should be read as one list with two sources rather than as two answers to be chosen between."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — the routes are enumerated by reading and walking the checkout, never by probing a running system. That distinction is load-bearing on this control: the obvious alternative evidence path is an external scanner that requests every route from outside, which both adds a service to the boundary and can only see what is deployed and reachable from wherever it happens to be run.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

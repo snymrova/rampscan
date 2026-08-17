@@ -526,18 +526,50 @@ describe("where upstream has spoken, the record says whether it agrees", () => {
   };
 
   it("every shipped record whose control upstream adjudicated cites it", async () => {
-    // over the REAL overlay: the three surviving overlaps after the 0.7.2
-    // re-pin are SA-08, SA-22 and SR-02 (01), and all three agree
+    // Over the REAL overlay. This used to pin the overlap set to the three
+    // surviving after the 0.7.2 re-pin (SA-08, SA-22, SR-02 (01)) and assert
+    // all three agreed — true when three of our seven records met upstream and
+    // wrong the moment a batch was written into families the AWS pass had
+    // already walked. N1a-T3 batch 1 is nineteen such records, so the list is
+    // no longer the fact worth pinning: the PROPERTY is.
     const map = await realMap();
     const overlaps = map.rows.filter(
       (r) => r.commit !== undefined && Object.keys(r.upstream).length > 0,
     );
-    expect(overlaps.map((r) => r.displayId).sort()).toEqual(["SA-08", "SA-22", "SR-02 (01)"]);
     for (const row of overlaps) {
       expect(row.commit!.citesUpstream, `${row.displayId} cites nobody`).toBeDefined();
-      expect(row.commit!.citesUpstream!.agreement).toBe("agrees");
       // the note argues a route rather than restating our own rationale
       expect(row.commit!.citesUpstream!.note.length).toBeGreaterThan(200);
+    }
+  });
+
+  it("the divergences are declared by name, because a divergence is a claim", async () => {
+    // The half of ground rule 10 that cannot be checked mechanically: `agrees`
+    // is recounted against upstream's file by the link check, but `diverges` is
+    // an ARGUMENT, and an argument is only as good as its being noticed. Pinned
+    // by displayId so a record filed as divergence without anyone deciding to
+    // fails here rather than shipping — the set is small on purpose and grows
+    // only by an edit someone had to make.
+    const map = await realMap();
+    const diverging = map.rows
+      .filter((r) => r.commit?.citesUpstream?.agreement === "diverges")
+      .map((r) => r.displayId)
+      .sort();
+    // SA-03 was the fifth until the batch's independent auditor pass found the
+    // artifact its divergence rested on — branch protection — is platform state
+    // no collector reads. It concedes upstream's refusal now, and the list is
+    // shorter by exactly the record the gate caught.
+    expect(diverging).toEqual(["AC-01", "IA-06", "RA-05 (11)", "SR-10"]);
+    // and every other overlap agrees — the link check proves the dispositions
+    // match, this proves nothing sits in between the two declarations
+    const others = map.rows.filter(
+      (r) =>
+        r.commit !== undefined &&
+        Object.keys(r.upstream).length > 0 &&
+        !diverging.includes(r.displayId),
+    );
+    for (const row of others) {
+      expect(row.commit!.citesUpstream!.agreement, `${row.displayId}`).toBe("agrees");
     }
   });
 

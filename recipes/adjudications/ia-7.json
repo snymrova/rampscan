@@ -1,0 +1,23 @@
+{
+  "controlId": "ia-7",
+  "displayId": "IA-07",
+  "family": "IA",
+  "disposition": "partial",
+  "rationale": "The control asks that the mechanisms used to authenticate to a cryptographic module meet the requirements for the module's FIPS 140 validation, and two of the facts that question turns on sit in a checkout. Which module is actually linked: the SBOM resolves the cryptographic library and version the build consumes, which is a stronger statement than a configured endpoint because it names what will run rather than what was intended. And how it is reached: the call sites are source, so a system that delegates key operations to a managed module and one that reimplements them in application code are distinguishable by reading rather than by asking, as is a client that reaches a validated service through an unvalidated path.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["syft", "semgrep", "graph"],
+  "remainder": {
+    "control": "The validation, and the mode. A FIPS 140 certificate is cited and never measured — upstream says exactly this for KMS and CloudHSM and it is no more measurable from a lockfile. Worse for this plane, validation attaches to a module built and operated in a specific configuration: the same library version is validated or not depending on flags set at build time and a mode enabled at run time, neither of which a source tree fixes. A commit names the module; it cannot show the deployed instance is the validated build of it.",
+    "boundary": "One checkout's dependency set. The modules that authenticate other components inside the authorization boundary — a database driver, a message broker's client, an operating system's own libraries — are resolved by builds this scan never ran, and which of them are in scope is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict and the same residue. Upstream reaches it by analogy with SC-13, already partial on their plane: the modules are enumerable and the FIPS endpoints in use are checkable, and the validation itself is a certificate that is cited. This plane's enumeration is of a different kind — not which service is configured but which library the build resolves — and it is the more precise of the two for exactly the case a certificate does not cover, where an application reaches a validated service through a client nobody validated. Both passes stop at the certificate, and neither treats a version string as a validation, which is the agreement worth having on a control where a version string looks so much like one."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and the signing is worth naming here rather than only reciting, because this is the control that asks what cryptographic module an evidence path authenticates to. This one authenticates to none: it signs with the runtime's own library on the machine that ran the scan, so no key custody moves to a service and no module outside the boundary is introduced by the act of evidencing.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

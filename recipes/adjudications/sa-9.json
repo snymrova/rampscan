@@ -1,0 +1,23 @@
+{
+  "controlId": "sa-9",
+  "displayId": "SA-09",
+  "family": "SA",
+  "disposition": "partial",
+  "rationale": "External system services are the services a system relies on and does not control, and their inventory is legible in source. The SBOM names the SDKs and clients a build resolves, and the call graph names which part of the system depends on which provider, so a reliance is attributable to a module rather than to the estate as a whole. Those two are what this plane actually reads. The first draft of this record added infrastructure provider blocks and configuration keys naming a service, and the audit on this batch found neither is collected: the policy scanner emits failed checks rather than a resource inventory, and nothing reads configuration keys at all. What remains is the same inventory limb upstream collects, taken from the opposite end — not which external principals the estate trusts, but which external services the code is written against, which is knowable before deployment and attributable to the commit that introduced the reliance.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["graph", "syft", "repo-facts"],
+  "remainder": {
+    "control": "That each provider meets the security requirements imposed on it, and that its compliance is monitored on an ongoing basis. Both are statements about somebody else's estate, captured in an agreement, and the dataset's own AC-20 guidance separates the three controls on that line. A commit records that a dependency on a provider was taken and by whom; it records nothing about what the provider undertook, and a service consumed under a free tier with no agreement at all looks in source exactly like one under a negotiated contract.",
+    "boundary": "The reliances of one checkout. Services the authorization boundary depends on through another repository, through a platform the organization adopted centrally, or through a subprocessor of a named provider are absent from this inventory in the same way an unused dependency is absent — and the repository set that would complete it is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict, complementary inventories, and one addition this plane can make that upstream's own research calls its sharpest finding. Three of the four upstream rationales over controls both projects adjudicated end on the observation that the evidence platform is itself an external system, raising SA-09 and CA-03 — the plane that would close SA-11 raises this control. That is not true here, and this is the record where it belongs in the argument rather than only in a field: collectors take no network, execution is local, signing is node:crypto, so adopting rampscan as an evidence path adds no provider to the very inventory this control asks for. An assessment tool that enlarges the boundary it reports on is a real cost, and the overlay that does not pay it should say on which control the cost would have landed."
+  },
+  "externalSystem": "Nothing, and on this control that is the whole point rather than a disclaimer. Every other evidence path considered for SA-09 — a SaaS scanner, a third-party risk platform, a compliance automation vendor — closes the control by becoming an entry in it. rampscan does not: it runs offline against a checkout on a machine the organization already controls, signs with the runtime's own library, and produces a bundle a third party can verify with standard tooling and no rampscan installation, so nothing about adopting it needs a new agreement or a new provider assessment.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

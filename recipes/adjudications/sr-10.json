@@ -1,0 +1,23 @@
+{
+  "controlId": "sr-10",
+  "displayId": "SR-10",
+  "family": "SR",
+  "disposition": "partial",
+  "rationale": "The software-component limb of this control has its expected values committed, which is the half of an inspection a repository holds. A lockfile carries a cryptographic integrity digest per resolved component: the value a fetched artifact is compared against is under version control, and every change to it is a reviewable diff, so tampering that would otherwise be invisible becomes a line someone has to approve. That is the basis of the disposition, and the audit on this batch cut back what this record originally claimed on top of it. Nothing in the collector set reads those digests today — repo-facts records that a lockfile is present and reads no entries — so the inspection is a fact about the artifact rather than a fact this plane currently reports, and reading them is an extension of the SBOM collector that has not been built. Provenance is the same shape: the workflow patterns matched today detect provenance being GENERATED and SIGNED, and verification-before-consumption, which is what would inspect an artifact's origin, is a distinct pattern nothing matches.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts", "syft"],
+  "remainder": {
+    "control": "Three limbs stay out of reach and one of them is a gap in this plane rather than in the control. The trigger conditions — inspection at random, at a defined frequency, or upon indication of need — are a documented procedure, and a digest comparison answers a frequency nobody chose and none of the other two. A digest proves an artifact matches what this repository recorded, not what the supplier published: without a provenance attestation verified against the supplier's identity, a lockfile pins a first observation, so tampering that happened before the digest was written is inspected against itself and passes. And the reading itself is unbuilt — a recipe over this control needs a collector that parses lockfile integrity entries and a workflow pattern for verification as against generation, neither of which exists today.",
+    "boundary": "Hardware is the limb this plane never touches at all, and the repository set is the limb it shares with every other claim here: one checkout's manifests inspect one checkout's components. Base-image contents, vendored binaries, and anything installed outside a package manager are absent from the population this record counts in exactly the way an untampered component is absent, and which other repositories inside the authorization boundary run the same check is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "diverges",
+    "note": "Upstream refuses SR-10 and the refusal is about hardware: inspecting physical components for tampering is AWS's responsibility under the shared model, evidenced by its own authorization package, and the customer-side inspection is a documented procedure with records. This record diverges because it answers a limb their route cannot see, not because it disputes theirs. The components a cloud system acquires are overwhelmingly software, and what they are inspected against is not a procedure someone performs on a schedule — it is a set of expected digests carried in a reviewed file. A complete SR-10 answer would carry upstream's hardware paragraph and this one's lockfile paragraph; filing this as agreement would have thrown away the only limb either project can presently evidence, and filing it as a contest would have claimed a hardware answer this plane does not have."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. On an inspection control that matters more than usual: the conventional way to evidence component integrity continuously is to ship the inventory to a supply-chain platform that watches it, which puts a full component list of the assessed system inside a supplier's estate. The digests are compared where they already sit, in the checkout, and nothing leaves it.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

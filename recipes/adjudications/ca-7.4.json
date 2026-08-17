@@ -1,0 +1,23 @@
+{
+  "controlId": "ca-7.4",
+  "displayId": "CA-07 (04)",
+  "family": "CA",
+  "disposition": "partial",
+  "rationale": "Risk monitoring names three ingredients — effectiveness, compliance and change monitoring — and the third is what this plane is built out of. Change monitoring on an estate is a configuration-item history: a resource differed at a time. Here it is stronger by construction, because every claim is anchored to the commit it was taken over and to the files it depends on. When an anchoring file changes the evidence is killed with the commit that killed it; check classifies a would-be violation as newly-violated rather than inherited; and a violated streak walks back through the bundle chain to the first commit at which the violation was seen. The precision of that last one is worth stating exactly, because this record first overstated it: scans sample commits, so what is recovered is the first SCANNED commit carrying the violation rather than the commit that introduced it, and no author is recorded anywhere in the register — attribution here reaches a file and a scanned commit, and stops. That is still more than 'a change occurred near this control', and it is less than 'here is who did it'. Compliance monitoring is the board beside it: a current verdict per control with the evidence and the signature behind each.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts", "contract", "graph"],
+  "remainder": {
+    "control": "Effectiveness — whether the risk responses in place are actually reducing risk — is the judgement no score substitutes for, and this record does not claim it any more than upstream's does. Compliance monitoring is bounded by the catalog rather than by the baseline. And change monitoring sees only changes that pass through the repository: a resource altered in a console, an image rebuilt from a moving tag, a dependency republished under a version already pinned, or a runtime configuration supplied by the environment are all changes to the system that leave no commit and are therefore invisible to this limb.",
+    "boundary": "The changes monitored are this repository's. A system assembled from several repositories has a change history this record cannot see, and no figure computed here reaches it — the risk being monitored is the system's, the evidence is one checkout's, and the difference is named by a human rather than by any assertion."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict, and the two passes divide the three ingredients almost cleanly. Upstream collects compliance monitoring from Security Hub control status and a conformance pack's summary, and change monitoring from the Config configuration-item history joined to CloudTrail — the estate's record of what changed and who called the API. This plane's change monitoring answers a question theirs cannot: not that a change happened, but which change broke which control, attributed to a file and to the scanned commit the breakage first appeared at, before deployment rather than after. Their attribution is the better one on the identity limb — CloudTrail names the principal that made the call, and nothing here names a person. Both refuse the effectiveness limb, and two passes refusing the same third of a control from opposite substrates is the strongest statement either project can make that the limb is genuinely not collectible rather than merely not collected yet."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The change history read here is git's own, in place, with no webhook, no app installation and no repository access granted to a third party — which is the usual price of continuous change monitoring and would put the full commit history of the assessed system inside a supplier's estate.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

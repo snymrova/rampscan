@@ -1,0 +1,19 @@
+{
+  "controlId": "sc-39",
+  "displayId": "SC-39",
+  "family": "SC",
+  "disposition": "narrative",
+  "rationale": "A separate execution domain for each executing process is a property of the kernel and the hypervisor at run time — address-space separation, the scheduler, and the namespace and cgroup a process is placed in by whatever launches it. Nothing committed to a repository establishes any of it. The nearest artifacts are the ones this plane has to be most careful about, because each is adjacent enough to be mistaken for evidence: a Dockerfile's USER directive and the container-runs-nonroot recipe are least privilege, which is AC-06 and already claimed there; a base image tag names a userland, not the kernel that isolates processes running on it; and the architecture contract separates modules in an import graph, which is a design boundary inside one address space rather than an execution domain around it. The fourth is the one this record missed on its first writing and the independent pass caught, and it is the strongest of them: a committed runtimeClassName, seccomp profile or securityContext is a declared sandbox in exactly the class of artifact this batch rates partial elsewhere, since si-12 accepts committed infrastructure declarations of a run-time setting. It is refused here for a reason that does not apply there — a sandbox is a boundary drawn around a container, not a separate execution domain per process inside it, so the declaration does not describe what the control asks about even when it is honoured. Filing any of the four as partial evidence would be the vacuous pass ground rule 7 exists to refuse: a claim that reports evidenced because something nearby was found.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Both planes refuse, from opposite ends of the same stack, and the agreement is worth citing because it generalises. Upstream's route is that isolation belongs to the Nitro hypervisor and the guest operating system, read from AWS's own authorization package rather than from any customer-invocable API. This record adds the third place a reader would look — the source that builds the workload — and finds it fails for a reason neither pass could establish alone: a repository can say which runtime and base image a process will run under, and the isolation property still holds or fails in a kernel loaded on a host no commit describes. A control refused by the estate's API and by the estate's source is refused because of what it asks about, not because either pass looked in the wrong place."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The point is sharper on this control than on most: evidencing process isolation is the classic reason to install a runtime agent with privileged visibility into other processes, and rampscan reads a checkout as files, so it adds no privileged runtime hook and no execution domain of its own to the system it reports on.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

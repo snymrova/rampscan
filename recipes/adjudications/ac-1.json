@@ -1,0 +1,23 @@
+{
+  "controlId": "ac-1",
+  "displayId": "AC-01",
+  "family": "AC",
+  "disposition": "partial",
+  "rationale": "An access control policy and its procedures are documents, and a repository is a document store under version control with authorship, review and a content hash per commit. What a checkout evidences today is the existence and integrity half of a policy control: that a policy document is present at a declared path, that it is not empty, and what its content hashes to, anchored so that a later change kills the evidence rather than passing unnoticed. This is the same shape as SA-05 in this overlay and the same shape as the twenty-seven controls upstream refuses on the ground that no API reports a document exists. The currency limb — the review cycle, which is the part of a policy control most often asserted and least often shown — is the one this record originally claimed and does not have: nothing in the collector set reads git history metadata, repo-facts is a file-existence-and-hash collector over a fixed set of filename families, and reviewer identity is the hosting platform's state rather than a commit's, which under a squash merge is not recoverable from the tree at all. It is a capability this plane could hold and does not, and it is named here as an absence rather than borrowed from the fact that git records dates somewhere.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts"],
+  "remainder": {
+    "control": "Dissemination, adequacy, and — until a history collector exists — currency. The control requires the policy to reach defined personnel or roles, and nothing in a commit records that anyone received or read it — a file being public is not a file being disseminated, which is the exact half upstream's refusal actually rests on and this record does not contest. Adequacy is the second: no assertion here reads the document's content, so that the file at the declared path addresses purpose, scope, roles, responsibilities, management commitment and coordination is a 3PAO's reading. A recipe over this control can prove a policy file is there and cannot prove it is a policy.",
+    "boundary": "Policy is the artifact most likely to live somewhere a scan of this checkout never reaches — a governance repository, a wiki, or a document management system — so an unevidenced result here is not evidence that no access control policy exists, and an evidenced one covers the document at this path and not the policy set inside the authorization boundary. Which repositories hold the governing policy is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "diverges",
+    "note": "Upstream refuses AC-01 on a ground this record accepts without qualification — no API reports that a document exists or that anyone read it — and the divergence is about where each pass can look rather than about what the control asks. A commit is the report that a document exists, and it carries the content hash and the anchoring an account API cannot produce; their pass looked where policy is not, this one looks where policy usually is. It is filed as divergence rather than smoothed into agreement because the verdicts differ and a reader holding both overlays has to be able to see that narrative is the AWS plane's answer and not the control's last word. The half their sentence really turns on — that anyone read it — stays in this record's remainder, refused for their reason and in their words."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The policy is read from the checkout in place; no document is uploaded to a service to be indexed, classified or attested, which is the ordinary route by which a documentation control quietly acquires an external system that then has to be assessed under SA-09 and CA-03.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

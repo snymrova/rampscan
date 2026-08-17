@@ -1,0 +1,19 @@
+{
+  "controlId": "ca-2.1",
+  "displayId": "CA-02 (01)",
+  "family": "CA",
+  "disposition": "narrative",
+  "rationale": "Independence is a property of the assessor, and no artifact in a repository establishes it. The nearest committed artifacts are named here so a later reader can see they were considered and refused rather than missed: CODEOWNERS and a branch-protection rule requiring approval by someone other than the author enforce separation of duties over code changes, which is CM-05's limb and already claimed there by codeowners-defined; a CI job runs under a machine identity with no stake in the outcome, which is impartial execution and not an independent assessor. The control asks who performed the assessment, who they report to, and whether they had any hand in developing or operating the system — three facts about people and reporting lines, and a commit carries none of them. Reading a review gate as assessor independence would be the same over-reach this overlay retired a record for on SR-08, made a second time in a family where it would be harder to notice.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses on the same ground and states it in the sharper form: no account state distinguishes an independent assessor from an employee holding the same IAM role. The commit-plane equivalent is exact — no repository state distinguishes an independent assessor from a colleague holding the same write permission — and that exactness is why the agreement is cited rather than merely matched. Two refusals reaching the same place from different substrates say something a single refusal cannot: the control is uncollectible because of what it asks about, not because either pass was looking at the wrong layer."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. It bears on this control in a specific way: the usual route to evidencing assessor independence is an engagement recorded in a third-party audit-management platform, and adopting one puts the assessment record and the assessor relationship inside a supplier's system. Refusing the control leaves that untouched, which is the cheaper of the two honest answers.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

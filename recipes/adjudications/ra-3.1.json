@@ -1,0 +1,19 @@
+{
+  "controlId": "ra-3.1",
+  "displayId": "RA-03 (01)",
+  "family": "RA",
+  "disposition": "narrative",
+  "rationale": "A supply chain risk assessment is an analysis a person writes about suppliers, components and services, and updates as the supply chain changes. This plane holds the best inputs to that analysis either project has — a component inventory resolved from the build rather than declared, advisories joined to it, and provenance for the build itself — and an inventory is not an assessment. Refusing here costs more than refusing where nothing is nearby, and that is the reason to state it plainly: the SBOM is this overlay's strongest artifact, filing RA-03 (01) as partial on the strength of it is exactly the shape risk 3 names, and a wall of dispositions justified by adjacent evidence is how a coverage push destroys the rows that are true. What the control asks for is judgement — which suppliers matter, what follows if one is compromised, which risks are accepted and by whom — and no assertion over an inventory produces a paragraph of it.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses on precisely the argument this record has to make against its own best evidence: AWS Artifact supplies inputs to the assessment — third-party attestations and audit reports — and the assessment itself is the document a 3PAO reads. Our inputs are different and in one respect better, since a resolved component inventory beats a vendor attestation for knowing what is actually present, and the conclusion is unchanged. That is what makes the agreement worth citing rather than merely recording: two passes each holding good inputs and each declining to call them the assessment says more about the control than either refusal alone, and on this control the tempting over-claim is ours rather than theirs."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and the negative answer bears directly on this control's subject matter. The ordinary route to a continuous supply chain risk assessment is a third-party risk platform that ingests the component inventory, which places a complete list of the assessed system's suppliers inside another supplier's estate: the exact dependency class this control asks the organization to reason about, acquired in the act of reasoning about it.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

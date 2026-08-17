@@ -1,0 +1,23 @@
+{
+  "controlId": "sc-12",
+  "displayId": "SC-12",
+  "family": "SC",
+  "disposition": "partial",
+  "rationale": "Key establishment and management is mostly a runtime property, and a repository answers two narrow limbs of it well. The first is negative and is this plane's most exhaustively searchable claim: no-secrets-in-history walks the full commit history rather than the working tree, so 'no key material has ever been committed here' is a searched population rather than an absence of findings — which matters because the storage limb of SC-12 fails most often through a key checked in years ago and deleted at the tip, where it remains in every clone and every fork. The second is delegation: call sites are source, so whether key generation and storage are handed to a managed module or hand-rolled in application code is readable, and a committed infrastructure declaration carries a managed key's rotation period and access policy before the key exists.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["gitleaks", "semgrep", "syft", "checkov"],
+  "remainder": {
+    "control": "Establishment, distribution and destruction measured against organization-defined requirements — and the requirements themselves, which this dataset does not carry as a parameter value, so neither plane can compare what it finds to what the organization requires. A commit shows that a key operation is delegated; it does not show the key was generated inside the module, never left it, or was destroyed when it should have been. A repository also has upstream's own vacuity hole in its own form: a key-management call that is never made leaves nothing to assert over, and a check written to read those call sites would pass on a system that manages no keys at all.",
+    "boundary": "Keys are established and held where the system runs. One checkout does not know which repositories inside the authorization boundary hold the rest of the material, and the exhaustive history search that makes the negative claim strong is exhaustive over this repository only — a key committed to a sibling repository is absent here in exactly the way no key at all is absent."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict, and this is the citation this overlay learns most from rather than the one it adds most to. Upstream does not merely rate the control partial: it works out which fields would be absent on an estate of healthy keys — DeletionDate present only when a key is already scheduled for deletion — and concludes that an assertion about the destruction window is vacuously true, the window being a request parameter rather than a key attribute. That is the vacuity trap this project made a ground rule and a catalog test out of, found independently inside someone else's evidence path, and it is worth citing as corroboration that the trap is a property of compliance automation rather than of one implementation. Where this plane adds something it is the history: an API reports a live key's rotation status and no API reports a key that was committed to source control in 2019, deleted at the tip, and still carried by every fork."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and on a key-management control the shape of that answer is worth being precise about: the scan reads a checkout for evidence about keys, it does not hold, escrow or transmit key material, and the signing key it uses for its own bundles is generated and kept on the machine that runs it. No custody moves anywhere as a consequence of evidencing this control.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

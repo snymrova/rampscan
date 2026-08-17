@@ -1,0 +1,23 @@
+{
+  "controlId": "ca-7",
+  "displayId": "CA-07",
+  "family": "CA",
+  "disposition": "partial",
+  "rationale": "CA-07 is not CA-02 on a timer: the control names a strategy — the metrics chosen, the frequency at which each is monitored and assessed, the correlation of results and the reporting of them. Two of those are committed here rather than described. The metric set is the recipe catalog, where each recipe names the KSIs and controls it answers and carries its own cadence, so what is monitored is a reviewed list rather than a claim in a plan. The frequency is enforced rather than stated: evidence that outruns its maximum verification age is marked stale by the projector rather than by a person noticing, and the schedule that re-verifies it is a committed workflow. A monitoring frequency the system fails against is a materially stronger artifact than one that is a sentence in a plan. The limits of that claim are worth stating in the same breath, because the first draft of this record overstated it: the maximum age is derived from the certification class, and the class is a command-line flag defaulting to b rather than a committed declaration, so the window is chosen at invocation. And the cadences are declared in rampscan's catalog, not in the assessed repository — the monitored system does not state its own monitoring frequency, the tool does.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts", "contract"],
+  "remainder": {
+    "control": "Correlation and reporting — who reads the results, how findings are correlated across sources, and to whom they are reported at what interval — are organizational assignments no file carries. So is the choice of metrics as a strategy: this record evidences which metrics are monitored, never that they are the right ones for the system's risk posture, and a fraction of the baseline monitored perfectly is still a partial view of the control the strategy was meant to cover.",
+    "boundary": "A monitoring programme covers a system; this evidence covers a checkout. Whether the components inside the authorization boundary that this repository does not build are monitored at all — and at what frequency, against which metrics — is named by a human, and a green board here says nothing about them."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict and the same split: upstream rates the operating half pure telemetry — whether the Config recorder is on and recording every resource type, which Security Hub standards are enabled, whether Inspector and GuardDuty cover the account — and the strategy half a document. What this plane adds is the middle term their own rationale identifies and cannot supply. They write that the telemetry is what the document is measured against rather than a substitute for it; measuring requires the document's declared frequency in a form a machine can compare, and on this plane the recipe cadences are exactly that — committed, reviewed, and an input to the same computation that decides whether evidence is stale. The correction this record carries after audit is which half of that is the assessed organization's: the cadences are the tool's, and the class that sets the window is an operator's flag, so what is enforced is a frequency chosen outside the system being monitored rather than declared inside it."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Continuous monitoring is the control most often closed by adopting a monitoring SaaS, which is exactly the trade this plane declines: the cadence is enforced by a local scheduler over a local ledger, so the monitoring programme adds no provider whose own compliance would then have to be monitored.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

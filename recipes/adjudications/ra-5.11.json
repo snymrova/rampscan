@@ -1,0 +1,23 @@
+{
+  "controlId": "ra-5.11",
+  "displayId": "RA-05 (11)",
+  "family": "RA",
+  "disposition": "partial",
+  "rationale": "A public disclosure program is a published intake channel plus a commitment to act on what arrives through it, and the published channel is a file. SECURITY.md at a repository root and security.txt under .well-known are the two canonical forms, and both are committed: a checkout shows that the channel exists, where reports are meant to go, what is in scope, whether a safe-harbour or a response timeline is promised, and what the published text hashes to — anchored, so that a change to the promise kills the evidence rather than passing quietly. What this record originally called its own contribution was currency, and the audit on this batch found no collector that can produce it: nothing in the set reads git history metadata, and repo-facts hashes files at fixed paths rather than dating them. A disclosure policy naming a contact address that stopped working two years ago is a real failure and this plane cannot presently date it; the honest claim is the published text and its integrity, not its age.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts"],
+  "remainder": {
+    "control": "The programme, as against its front door — and, until a history collector exists, the front door's age. Nothing in a commit shows that a report arrived, that anyone answered it, or that a finding was resolved inside the timeline the document promises — and a published channel with no operating history behind it is precisely the artifact this control exists to look past. A file also cannot show that the address it names is monitored, which is the cheapest way for a compliant-looking policy to be inert.",
+    "boundary": "The disclosure policy for an authorized system is frequently published by an organization-level repository or a corporate site that no scan of this checkout reaches. So an unevidenced result here is not evidence that no programme exists, and an evidenced one is a statement about this repository's published channel rather than about the boundary's — which repository publishes for the system is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "diverges",
+    "note": "The divergence is unusually narrow, because upstream's own rationale names the artifacts this record reads: a 3PAO reads the published policy, the disclosure page or security.txt, and the history of reports received and resolved. Two of those three are files under version control and the third is this record's remainder. So the disagreement is not about what the control asks for — the two rationales agree on that almost word for word — but about whether the artifacts are reachable, and they are not reachable from an AWS account while being trivially reachable from a checkout. Filing this as agreement would have hidden the one thing this plane adds to a control the other pass had no choice but to refuse."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The policy file is read in place and is not fetched from the published URL — which is the honest limit of the evidence and also the reason it adds no external system: verifying that the channel is live from the outside would mean a service that reaches the internet on the assessed system's behalf, and this evidence path has none.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

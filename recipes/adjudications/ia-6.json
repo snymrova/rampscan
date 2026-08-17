@@ -1,0 +1,23 @@
+{
+  "controlId": "ia-6",
+  "displayId": "IA-06",
+  "family": "IA",
+  "disposition": "partial",
+  "rationale": "Obscuring authentication feedback is a property of what an interface renders, and the interface is source. The template that draws a login form declares whether the credential field is masked. The handler that reports a failure declares whether it distinguishes 'no such account' from 'wrong password'. The logging call on a failed attempt declares whether it carries the submitted credential with it, which is the same leak arriving in a different place and the one an operator is most likely to find months later in a log aggregator. Each is a committed line, reachable from a route in the call graph, and expressible as a static rule. So the limb of this control about what a user sees while authenticating is not evidence-free on this plane; it is a rendering decision under version control, and a regression in it is a diff. What the construction cannot be is the one this record first reached for. no-reachable-dangerous-code is a find-the-bad-pattern recipe with empty_means clean, and borrowing it here would mean a repository with plenty of source and no login interface matching none of the rules, skipping nothing, and passing — nothing found reading exactly like nothing looked, on the one control where the artifact is easiest to not have. A recipe over this control has to enumerate the authentication-rendering surfaces first and judge them second, in the shape codeowners-defined uses, where a witness row carrying the existence boolean is always emitted.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["semgrep", "graph"],
+  "remainder": {
+    "control": "Whether the deployed interface is the one in this repository, whether masking is the whole of obscuring, and — before either — whether there is an interface here at all. A repository with no authentication surface produces no rows for a rule set written to find bad ones, so the enumeration has to come first and the population has to be stated, or an evidenced result on this control means only that nobody has written a login screen in a language the graph walks. Feedback is rendered by whatever actually serves the user — a reverse proxy's error page, a native or third-party client, a hosted identity provider's login screen — and none of those need be built from the scanned checkout. And the control's concern is broader than a masked field: response timing, status codes and rate-limit messages leak the same information about which accounts exist, and a static rule over rendering code reaches none of them.",
+    "boundary": "The login screen is one of the artifacts most likely to live in a different repository from the system being authorized — a design system, a separate front end, or an identity provider's hosted page — so an unevidenced result here is not evidence that feedback is unobscured, and an evidenced one covers the interface this checkout renders rather than the one a user meets."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "diverges",
+    "note": "Upstream refuses this control in one sentence — no API reports what a form displayed while someone typed into it — and this record diverges by reading the artifact that sentence is about. A form is not observable at the estate and is entirely observable in the source that produces it: the masking attribute, the error-message branch and the credential-carrying log line are all committed text. The divergence is stated rather than folded into agreement because a reader holding both files would otherwise conclude the control is uncollectible, when what is true is narrower and more useful — uncollectible from an account API, partly collectible from the code that renders the screen. Their ground is accepted where it applies and appears in this record's remainder: nothing here reports what any user actually saw, only what the committed interface would render if it is the interface that ran."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The alternative evidence path for this control is a screenshot or a session recording of a real login, which means an external capture service holding images of an authentication screen — an exchange this control's own subject matter makes particularly unattractive.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

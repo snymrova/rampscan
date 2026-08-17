@@ -1,0 +1,23 @@
+{
+  "controlId": "ia-2.8",
+  "displayId": "IA-02 (08)",
+  "family": "IA",
+  "disposition": "partial",
+  "rationale": "Replay resistance is a property of a protocol, and no evidence path measures the property — upstream says so and cites SigV4 from documentation rather than testing it. What differs between the planes is what each can establish about the mechanism actually in use. A repository names it exactly: the authentication library and version are resolved in the lockfile and appear in the SBOM, the middleware is wired to routes in the call graph, and the code that issues and verifies a credential is readable, so 'which mechanism authenticates this account class' is a fact about the system rather than a claim about it, and a change of mechanism is a reviewable commit rather than a configuration drift. Where the resistance rests on a construction — a nonce, a bounded timestamp, a one-time challenge — the presence of that construction in the verifying path is source too.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["syft", "graph", "semgrep"],
+  "remainder": {
+    "control": "The property itself, and the deployment. That a named mechanism resists replay is cited from its specification and its own review, never measured here — and a correct library used incorrectly reads in source exactly like a correct library: a nonce accepted twice, a timestamp window never compared, a verification result discarded. Nor does a checkout show what is switched on where it runs; a mechanism present in the code and disabled by an environment variable is authenticated by neither plane.",
+    "boundary": "Privileged accounts frequently authenticate against something that is not this system at all — an identity provider, a cloud console, a bastion — and none of those is in this checkout. So an evidenced result here covers the account classes this repository authenticates, and whether they are the account classes the control is asking about inside the authorization boundary is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict and the same honest limit, reached from opposite sides of one claim. Upstream proves that authentication runs on signed, time-bounded temporary credentials rather than long-lived secrets — an estate fact this plane cannot see — and then cites the protocol for the resistance property itself. This plane cannot say which credentials an account used and can read the code that verifies them. Neither pass measures replay resistance and both say so, which is the part most worth citing: on a control where two independent passes each stop at 'cited, never measured', a confident automatable disposition from either would have been the warning sign rather than the achievement."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — the authentication path is read, never exercised. That matters here because the intuitive way to evidence replay resistance is to replay a captured credential against the running system, which requires a testing service inside the boundary, live credentials, and permission to attack production.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

@@ -1,0 +1,23 @@
+{
+  "controlId": "sr-5",
+  "displayId": "SR-05",
+  "family": "SR",
+  "disposition": "partial",
+  "rationale": "The tools-and-methods half of an acquisition strategy is not described in this repository, it is executed by it. A lockfile is the acquisition record itself: for every component it names the version that was accepted, the registry it came from and the integrity digest it was accepted under, committed, anchored, and changed only through a reviewed diff — so what the system acquired is a fact under review rather than a report about a fetch that has already happened. Pinned action digests are the same move applied to the build's own supply chain, and a committed dependency-update configuration states the method by which new versions are admitted: who proposes them, what gates them, how often. Read together these are the control's protective methods in enforced form, and their most useful property is that a change of method is a commit with an author rather than a change of posture nobody can date.",
+  "source": "commit",
+  "recipeIds": ["ci-actions-pinned", "lockfile-pinned-deps"],
+  "candidateCollectors": ["repo-facts", "syft", "license"],
+  "remainder": {
+    "control": "Procurement, and the strategy as a strategy. Contract clauses, an approved-supplier list, delivery-method requirements and the terms imposed on a supplier are agreements no commit records; and whether the methods in force were chosen to mitigate identified supply-chain risks — the word the control turns on — is a judgement, not a file. A repository can show that components arrive pinned and verified. It cannot show that pinning was the response to an assessed risk rather than a habit.",
+    "boundary": "The manifests read here belong to one checkout. Components that reach the authorization boundary through another repository's pipeline, through a base image, or through a vendored artifact committed as bytes are acquired under whatever strategy governs them, and this record cannot say what that is or whether one exists — the repository set inside the boundary is named by a human, and an evidenced result here is a statement about this repository's acquisitions, never about the system's."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict, and the two halves are complementary rather than duplicated. Upstream reaches the tooling half at the estate — Inspector monitoring third-party packages for upstream vulnerabilities, ECR scan-on-push gating an image at the moment of acquisition — which is acquisition observed after the component arrives. This plane reads the acquisition record before anything is deployed, and it carries a field their route does not produce: the digest the component was accepted under, with the commit and the author that accepted it. Both passes stop at the same wall and name it in nearly the same words — the contract clauses, the approved-supplier list and the delivery method are procurement, and no scanner stands in for them. Two independent passes drawing the boundary of a partial in the same place is the strongest available evidence that the boundary is the control's and not an artefact of either evidence path."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — the lockfile and the manifests are read in place. The relevance to this control is direct: the usual way to evidence an acquisition strategy continuously is to adopt a software-composition service that watches the dependency set, which makes that supplier part of the supply chain the control is about, and this evidence path adds no such supplier.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

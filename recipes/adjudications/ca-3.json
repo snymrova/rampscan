@@ -1,0 +1,23 @@
+{
+  "controlId": "ca-3",
+  "displayId": "CA-03",
+  "family": "CA",
+  "disposition": "partial",
+  "rationale": "Information exchange asks that the exchanges be identified and characterised and that each be approved under an agreement. The identification half is in the source, three ways. The call graph names which module reaches the network and what it reaches — an external client is an import and a call site before it is a connection — and the SBOM names the clients themselves. Infrastructure declarations carry the interfaces that will exist as committed text before they are estate state, and an interface description like an OpenAPI document is a characterisation of an exchange written down. Those last two are read here more weakly than the first draft of this record claimed, and the audit was right to cut it: the policy scanner in this repository emits failed checks and a passed count, not an inventory of egress rules, peering or endpoints, and the spec linter judges a document's form rather than characterising the exchange it describes. An IaC inventory — as against an IaC verdict — is not something this plane produces today. The commit plane's advantage is the moment: a new exchange is visible when it is proposed, attributable to a commit and an author, and refusable in review.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["graph", "syft", "repo-facts"],
+  "remainder": {
+    "control": "The agreement. The control's operative act is that each exchange is approved by both system owners under an interconnection security agreement or its equivalent, and nothing in a commit records that a counterparty agreed to anything — the dataset's own AC-20 guidance separates the three controls on exactly this line. Characterisation is incomplete too: a connection established at run time from configuration supplied by the environment appears in a repository as a variable name, so what a checkout enumerates is the interfaces the system is written to have, not the ones it turns out to open.",
+    "boundary": "The exchanges of one checkout. Another repository inside the same authorization boundary can open an exchange this scan never saw, and an exchange enumerated here may be one leg of a connection whose other end is governed by a system nobody pointed rampscan at. Whether this repository's interfaces are the boundary's interfaces is named by a human."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Same verdict, and the halves are complementary rather than duplicated. Upstream enumerates established interfaces at the estate — VPC peering, Transit Gateway attachments, PrivateLink endpoints, Direct Connect virtual interfaces, resource policies admitting another account — which is the authoritative list of what exists. This plane enumerates what the system intends to reach, from the code and the declarations that will produce those interfaces, and can therefore attribute a new exchange to the commit that introduced it rather than noticing it after it is live. Both stop at the agreement, and upstream names the reason first and better, citing the dataset's own AC-20 guidance differentiating CA-3 as the documented agreement between the two system owners. This record adopts that framing rather than restating it."
+  },
+  "externalSystem": "Nothing, and this is one of the two controls where the negative answer is the point rather than a footnote. Three of the four upstream rationales over controls both projects have adjudicated end on the observation that the evidence platform is itself an external system, raising SA-09 and CA-03 — the plane that would close a control raises this one. Collectors take no network by decision, execution is local, and signing is node:crypto, so adopting rampscan as an evidence path opens no exchange and adds no interconnection for this control to have to cover.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}

@@ -1,0 +1,23 @@
+{
+  "controlId": "ca-2",
+  "displayId": "CA-02",
+  "family": "CA",
+  "disposition": "partial",
+  "rationale": "The assessment activity — a defined control set evaluated against the system on a stated cadence, producing a pass or fail per control — is the thing this tool performs, so the honest question is what a commit evidences about it rather than what a run does. Two things, chosen before any result exists, and one that is not — and the third is named here because the first draft of this record claimed it. The assessment's method is committed configuration: rampscan.config.json carries the architecture rules in force, and the recipe catalog is the control set, with each recipe's assertions its method and its own cadence. The results are signed and anchored to the commit they were taken over, so a later reader can say which version of the system was assessed rather than which day the report is dated. The third is the certification class, and it is NOT committed: it arrives as a command-line flag defaulting to b, so the depth at which the assessment runs is chosen per invocation and leaves no record of who chose it — which is precisely the defect this record's own citation levels at a conformance pack, and it would have gone into the overlay unnoticed had this batch not been attacked by someone who read main.ts instead of the sentence. What this record also refuses is the flattering version of the whole claim: a tool reporting that it ran is not evidence that an assessment programme exists, and the evidence here is the reviewed configuration rather than the output it produces.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts", "contract"],
+  "remainder": {
+    "control": "The plan and the report. The control names an assessment plan that fixes scope, depth and methods and is approved before the assessment runs, and a report of results delivered to defined personnel; a configuration file is the machine-readable half of the first — and only part of it, since the depth is a run-time flag rather than a declaration — and nothing here is the second. The deeper limb is scope: the assessment this record evidences is bounded by the catalog, which answers a fraction of the baseline, and a per-control verdict over that fraction is not a control assessment of the system however continuously it runs.",
+    "boundary": "The assessment evidenced here covers the checkout it was handed. Whether that checkout is the assessed system, or one component of it beside services assessed under a different regime or not at all, is named by a human — and on an assessment control that gap is the difference between a finding and a sample."
+  },
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Both planes rate the activity half collectible and the plan-and-report half not, from mechanisms with the same shape: Security Hub standards and Config conformance packs return a pass or fail per control continuously, and a recipe catalog does the same over a checkout. What a commit adds is the scope declaration. A conformance pack's membership is account state that can change without leaving a record of who chose it, while the control set assessed here is a file whose every change is authored, reviewed and anchored, so 'which controls were in scope at the time of this result' stays answerable months later. Their pass also names a candidate it deliberately refuses — Audit Manager, closed to new customers, on the ground that a recipe built on it would be unfollowable advice — and that refusal is the same discipline this overlay is trying to hold, cited here because it is easier to keep a rule someone else has already paid for."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. This is the control where the negative answer is most worth stating, because the standard way to evidence a continuous control assessment is to adopt a GRC platform, which puts the assessment record of the assessed system inside a supplier's estate and raises SA-09 and CA-03 against the very tool brought in to close them. Nothing here is uploaded; the bundle is verifiable offline with standard tooling and no rampscan installation.",
+  "reviewed": "2026-08-17",
+  "datasetVersion": "2026.07.14.01"
+}
