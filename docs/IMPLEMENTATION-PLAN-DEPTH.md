@@ -1,18 +1,21 @@
 # rampscan — implementation plan: depth (Phases N0–N3)
 
 **Status:** task breakdown and scope for `docs/PLAN-OF-ACTION-DEPTH.md`. That document owns the *argument* — why coverage leads, why languages stay deferred, what the fork is. This one owns **what gets built, where, in what order, and what test closes it**. On a scope dispute this document wins over the checklist; on an architecture dispute `docs/SPEC.md` wins over this one.
-**Date:** 2026-08-16
-**Reads against:** the code, and `docs/PLAN-OF-ACTION-DEPTH.md`. Nothing else was opened.
+**Date:** 2026-08-16 · **revised 2026-08-17** (§2.1a N1a′, §2.1b's resizing, decisions 6–10, risks 7–8 — the sibling plane)
+**Reads against:** the code, and `docs/PLAN-OF-ACTION-DEPTH.md`. Nothing else was opened. **The 2026-08-17 revision also reads the sibling** — `ramprules.com/fedramp-rules-hub`, which publishes the pinned dataset: its overlay-loop skill and both plane cards, `pipeline-evidence.schema.json`, and the live frontier at overlay 0.7.1. Every number in the revision is computed from those two files, not quoted from either project's prose.
 **Supersedes as plan of record:** `docs/IMPLEMENTATION-PLAN-ONTOLOGY-ONDEVICE-LLM.md` (L0–L3c landed; L3d deferred; L4/L5 cancelled 2026-08-16).
 
 ```
-N0  the catalog's honesty test         2.5–3 d   ← the spine; everything else rests on it
+N0  the catalog's honesty test         2.5–3 d   ← the spine; everything else rests on it  ✓ landed
 N1  the pipeline adjudication          12–15 d   ← the lead axis
+    └ N1a′  reconcile the sibling plane  1.5–2 d  ← 2026-08-17; out of N1a-T3, not added to N1
 N2  the loop                            3.5 d
 N3  claim fidelity                      6–7 d
                                        ────────
                                        24–29 d
 ```
+
+**N1's shape changed on 2026-08-17 and its total did not.** N1a no longer runs to 121 before N1b authors a recipe — §2.1a explains why (upstream's alternation rule, against our own risk 3), §2.1b resizes the near-term target from 114 to **37**, and N1a′ is the reconciliation that has to land first.
 
 ---
 
@@ -130,6 +133,62 @@ Field names mirror the frontier's own vocabulary because SPEC §10.2's stated go
 
 *Estimate: 4–5 days.*
 
+### 2.1a N1a′ — reconcile with the sibling plane (blocks the rest of T3)
+
+`PLAN-OF-ACTION-DEPTH.md` §1a is the argument; this is the work. Ordered so the two bugs land before the re-pin that would otherwise expose them, and the decision lands before the records that depend on it.
+
+**N1a′-T1 — pin the field that actually moves.** `packages/dataset/src/client.ts` checks `dataset_version` and nothing else. Both copies of `automation-frontier.json` read `2026.07.14.01`; the fifteen new dispositions arrived as `overlay_version` 0.6.0 → 0.7.1. Add the overlay pin **per slice**, because `overlay_version` is a property of the overlay a slice was derived from and not of the dataset — a single global constant would be wrong the first time two slices move independently. Then re-pin to 0.7.1 in the same commit, so the tree never holds a checked pin against an unread file.
+
+*Test:* the loader refuses a slice whose `overlay_version` differs from its pin, with the slice named; the existing `dataset_version` refusal is unchanged; the mismatch error distinguishes the two so a reader knows which pin to move.
+
+**N1a′-T2 — stop attributing upstream's pipeline work to AWS.** `frontier.ts` copies `f.disposition` into `row.aws` unconditionally, and `dataset/src/types.ts` documents an invariant that is already false upstream — *"every reviewed row in the published file carries `sourcesConsidered: ["aws"]`"*. After the re-pin, fifteen rows carry `["pipeline"]`, and `rampscan frontier` would print their reasoning in the AWS column, on the same rows where our own pipeline column disagrees or duplicates. Read `sourcesConsidered`, key upstream's disposition by the source that wrote it, and correct the comment.
+
+*Test:* a synthetic frontier row carrying `sourcesConsidered: ["pipeline"]` does not populate `row.aws`; a row carrying `["aws"]` does; a row carrying both populates both and the renderer says so rather than picking one. Over the real pinned file at 0.7.1, the count of rows with an AWS disposition equals `rollup.bySource.aws.adjudicated`, recounted from the rows — the same independent-recount discipline T2 already holds itself to.
+
+**N1a′-T3 — the plane-identity decision, then the schema.** Decision 6 below. Whatever it settles, `source: z.literal("pipeline")` in `packages/schema/src/adjudication.ts` is either confirmed with a stated reason or changed, and the seven existing records migrate in the same commit.
+
+**N1a′-T4 — two fields every record owes, both from §1a.**
+
+- `boundaryRemainder` (or a standing sentence in `remainder`): the "one repository out of forty" arm of the vacuity trap. `population` says how many rows a verdict counted; nothing says the scanned repository is the whole authorization boundary, multi-repo joins are deferred by name, and upstream's card states the consequence — *expect `partial`, because the repository set inside the boundary is named by a human.* Whether this is a new field or a required clause of the existing `remainder` is decision 7.
+- `externalSystem`: the term three of upstream's four overlapping rationales end on — *"the platform … is itself an external system, raising SA-09 and CA-03."* **Ours is the negative answer**, and it is the strongest thing this overlay can say that upstream's cannot: no network in collectors by decision, local execution, `node:crypto` signing, so adopting rampscan does not enlarge the boundary it reports on. A field rather than a habit, because a differentiator stated in four records out of a hundred and twenty-one is a differentiator nobody can count.
+
+*Test:* the catalog-test posture applied to the overlay — every record carries both, and the `externalSystem` text is asserted longer than a stub so an empty gesture fails, exactly as the L4b affordance test asserted its reason longer than its own prefix.
+
+**N1a′-T5 — read upstream's fifteen before writing over them (ground rule 10).** Four are already ours and agree; eleven are new and every one is class c/d. For the four: rewrite each record to cite the upstream disposition and state only what a commit adds that an API does not — SA-08's contract-versus-policy-rule and SA-22's inventory-versus-detection are the two where our route is stronger and the record should say so plainly. For the eleven: they are outside decision 4's lead set, so they are read and cited when their class comes up, not adjudicated now.
+
+*Test:* `rampscan frontier` grows a column for upstream's pipeline disposition beside ours, and a check fires when the two differ and our `rationale` does not name theirs — undeclared disagreement is the failure risk 7 names, and it is catchable by the same class of link check that caught the `sr-8` over-claim.
+
+**N1a′-T6 — the cheapest thing available, and it is a contribution rather than a fix.** `data/overlays/pipeline-tools.json` upstream **ships empty**, and their own card says the gate that fails an unresolvable spelling had to exist before the first spelling was written — so their plane cannot author its first recipe until someone writes the vocabulary. We have `tools.json`, a tested manifest with pinned versions for gitleaks, syft, grype, osv-scanner, semgrep, checkov and spectral, plus the Tier-2 names. Offering it is one commit, it unblocks their authoring phase, and it makes SPEC §10.2's "contributable upstream" true of something *today* instead of at the end of N1.
+
+**Exit (N1a′):** both bugs fixed and the re-pin landed at overlay 0.7.1; the plane-identity decision recorded with its reasoning; the seven records carrying both new fields and citing upstream where it has spoken; `rampscan frontier` printing both sources without conflating them; the tools contribution offered. **Then** T3 resumes.
+
+*Estimate: 1.5–2 days, and it comes out of T3's 4–5 rather than adding to the phase — see the revised sizing below.*
+
+### 2.1b N1a-T3, resized and reshaped
+
+The original T3 says "write the 121." Two things changed on 2026-08-17.
+
+**The sizing, computed from both files rather than from the pinned one:**
+
+```
+class b on the frontier      44     ← decision 4's lead set
+  adjudicated by us           7
+  adjudicated by upstream     4     (all four inside our seven)
+  class-b REMAINING          37     ← the real near-term number
+
+class c/d-only                77
+  adjudicated by upstream    11     (every one of them c/d)
+  adjudicated by us            0
+
+neither project has adjudicated  103 of 121
+```
+
+So the honest T3 target is **37 in the lead set**, not 114, and the 103 that nobody has touched is the number that describes the whole job. The 4–5 day estimate stands for the lead set at ground rule 8's bar; the full 121 was always going to overrun it.
+
+**The shape: interleave with N1b.** `PLAN-OF-ACTION-DEPTH.md` §2's alternation rule now forbids running T3 to completion before a recipe is authored. Batches of ~15 class-b controls, then the recipes that batch made available, then the next batch. `--strict` still lands at the last batch, for the reason already recorded.
+
+**The gate: an independent auditor per batch.** Upstream's definition-of-done requires a separate agent to attack the batch and its findings reported verbatim, clean results included, on the stated grounds that the reading which produced a claim cannot check it. Their step-7 audit re-rated two of its own dispositions and caught a real queue bug. Ground rule 8 has had no enforcement; this is it. A batch is not done until an independent pass has attacked every disposition in it.
+
 ### 2.2 N1b — wave 1: the class-b SA/SR set
 
 Seven controls, all leverage 6, all unreviewed by the AWS pass, all in scope for class b:
@@ -215,6 +274,14 @@ No new language. `IMPLEMENTATION-PLAN-REMAINING.md` Tier 3 defers "languages bey
 4. **Where does `remainder` render?** *Recommendation: on the board row beside the state*, not only on the evidence page. A partial claim whose boundary is one click away reads as a full claim.
 5. **Class d.** Still correctly refused (no MVX window). Unchanged; restated so N1's class filtering does not quietly invent one.
 
+**Added 2026-08-17, from §1a. These block N1a′ and therefore the rest of T3.**
+
+6. **What is our source, relative to upstream's two planes?** Upstream's `pipeline` plane covers our exact subject matter — SAST, dependency, secret, IaC, attestation — and differs in trust model, not scope: their plane reads a SaaS platform's API, ours reads a checkout offline and signs it. Their schema requires `platform` ("the exact offering", their plane's `govcloud`), `external_system` and `scan_scope`; their `collection.kind` already includes `cli`, so mechanically a rampscan recipe fits, and only `platform`/`external_system` need a defined answer for a self-hosted tool. Three options: **(a)** we are a platform on their `pipeline` plane; **(b)** we are a third plane, named for the anchor rather than the subject; **(c)** we keep a separate overlay and reconcile at re-pin, which is the status quo. *Recommendation: **(b)**.* Our own recipe schema already votes for it — `anchor: z.literal("commit")` is a field their plane has no concept of — and (a) requires either a `platform` value that is not an offering or a change to someone else's schema, while (c) is what produced two silent overlays in the first place. (b) also keeps the name collision from propagating: `pipeline` is taken, and it was taken by the project that publishes the register.
+7. **Is the boundary gap a field or a clause?** Every claim here is at most `partial` because the scanned repository may be one of forty and nothing in the evidence says otherwise. *Recommendation: a required clause of `remainder`, not a new field* — the schema already refuses a `partial` with no remainder and refuses a non-`partial` that has one, so the gap has a home with a rule behind it. A separate field would let a record carry the boundary sentence while claiming `automatable`, which is the contradiction the existing rule exists to prevent. The consequence is worth stating: **`automatable` becomes nearly unreachable on this plane**, which matches both upstream's card ("expect `partial`") and our own first seven records (0 automatable of 7).
+8. **Does `rampscan frontier` render upstream's pipeline disposition beside ours?** *Recommendation: yes, and it fails on undeclared divergence* — the same class of link check that caught the `sr-8` over-claim, applied to reasoning rather than to wiring. The alternative is that the two overlays disagree in a file nobody joins, which is risk 7.
+9. **Do our recipes gain `references[]`?** Upstream requires at least one verified `https://` source on **every** recipe on **both** planes, and our recipe schema has no such field — all 17 recipes fail that gate today, so the overlay is not offerable upstream whatever §10.2 intends. *Recommendation: yes, but as its own task in N1b rather than inside N1a′* — it is 17 recipes' worth of citation-fetching, it is orthogonal to adjudication, and bundling it here would stall the reconciliation behind a research errand. Record it now so it is scheduled rather than remembered.
+10. **The one thing not to do:** re-adjudicate upstream's eleven class-c/d controls to make our column look complete. They are outside decision 4's lead set, upstream reasoned about them first, and ground rule 10 says the cheap correct move is to cite. A column filled for symmetry is the "wall of assertions" risk 3 names, arriving by a route the plan had not considered.
+
 ---
 
 ## 6. Risks
@@ -222,9 +289,11 @@ No new language. `IMPLEMENTATION-PLAN-REMAINING.md` Tier 3 defers "languages bey
 1. **Vacuous passing.** N0 is the mitigation and it is why N0 is first. Forty recipes that pass because there was nothing to check is worse than seventeen that are true.
 2. **The L4/L5 cancellation taxes N1 directly.** Every recipe needs three authored paragraphs, enforced by `plain.test.ts`, in operator English, with **no drafting assistant by decision** — on evidence that a small local model fabricates verdicts. Forty recipes is ~120 paragraphs of careful human writing. That decision was right; this is its bill, budgeted rather than discovered.
 3. **Adjudication drifting into opinion.** 121 dispositions written fast become a wall of assertions. If the reasoning cannot be written, the disposition is not known.
-4. **Upstream frontier drift.** Records key on `controlId` + `datasetVersion`; a re-publish must fail loudly (ground rule 2 applied to a new file class).
+4. **Upstream frontier drift.** Records key on `controlId` + `datasetVersion`; a re-publish must fail loudly (ground rule 2 applied to a new file class). **Found false 2026-08-17:** the adjudications are versioned by `overlay_version`, which the loader does not read, and 0.6.0 → 0.7.1 moved fifteen dispositions under an unchanged `dataset_version`. This risk was already realised when it was written down. N1a′-T1.
 5. **Board noise scaling with the catalog.** The action queue, guided empty states and `classifySkip` were tuned against 17 recipes and will meet skip reasons nobody has written yet. Re-check at the end of N1b, not at the end of N1.
-6. **The ceiling disappoints before it reassures.** N1d will likely show the pipeline source topping out well below half the frontier. Publish it anyway and early — it is the number that makes every other number believable.
+6. **The ceiling disappoints before it reassures.** N1d will likely show the pipeline source topping out well below half the frontier. Publish it anyway and early — it is the number that makes every other number believable. §1a sharpens it: upstream's own pipeline ceiling computes to **0.062**, on a reason that applies to us unchanged.
+7. **Two overlays diverging in silence** (2026-08-17). Not disagreement — *undeclared* disagreement. A reader holding both files finds two confident paragraphs and no way to choose, which is worse than one and worse than none. Ground rule 10 and N1a′-T5 are the mitigation, cheap at four overlapping controls and expensive at forty.
+8. **Adjudicating for symmetry rather than for a reader** (2026-08-17). With a second overlay visible, the temptation is to fill our column wherever theirs is filled. Decision 10 refuses it; the eleven class-c/d controls are cited, not re-derived.
 
 ---
 
@@ -232,7 +301,8 @@ No new language. `IMPLEMENTATION-PLAN-REMAINING.md` Tier 3 defers "languages bey
 
 - A deliberately vacuous recipe cannot reach `main`; CI names it and the pattern it should have used.
 - Every count-based claim on every surface states the population it counted over — `0 of 412` and `0 of 0` never look alike again.
-- `rampscan frontier` reports a pipeline disposition for all 121 controls with an authored rationale each, in a shape offerable upstream.
+- `rampscan frontier` reports a pipeline disposition for all 121 controls with an authored rationale each, in a shape offerable upstream — and prints upstream's own disposition beside ours wherever it has one, so agreement is cited and divergence is argued rather than left in two files nobody joins.
+- Every record names the boundary it could not see (the repository set) and the boundary it does not enlarge (no external system), which are the two halves of what this evidence path is and is not.
 - Two waves of recipes, every one shown to go `unevidenced` rather than `evidenced` on the barren fixture.
 - The pipeline ceiling is published, computed and attributable.
 - A pull request that breaks a control is told so, in the recipe's authored words, when it is opened.
@@ -247,7 +317,7 @@ No new language. `IMPLEMENTATION-PLAN-REMAINING.md` Tier 3 defers "languages bey
 
 **The six decisions from `PLAN-OF-ACTION-DEPTH.md` §3, recorded here so they are not re-taken by accident.**
 
-1. **Pipeline adjudications live in `recipes/adjudications/<control-id>.json`**, one file per control, exactly as SPEC §10.2 specifies — *not* written back into `automation-frontier.json`, which is upstream's file behind a version pin the dataset client hard-fails on (ground rule 2). Each record carries `datasetVersion`, so an upstream re-publish invalidates loudly instead of silently re-basing our reasoning.
+1. **Pipeline adjudications live in `recipes/adjudications/<control-id>.json`**, one file per control, exactly as SPEC §10.2 specifies — *not* written back into `automation-frontier.json`, which is upstream's file behind a version pin the dataset client hard-fails on (ground rule 2). Each record carries `datasetVersion`, so an upstream re-publish invalidates loudly instead of silently re-basing our reasoning. **Corrected 2026-08-17** — it does not, because the dispositions are versioned by `overlay_version` and nothing here reads it; the decision stands and N1a′-T1 is its missing half.
 2. **The record schema mirrors the frontier's own vocabulary** (`controlId · disposition · rationale · source: "pipeline" · recipeIds[] · candidateCollectors[] · reviewed · datasetVersion`), because SPEC §10.2's stated goal is that the overlay be contributable upstream. Mirroring now makes that a merge; diverging now makes it a rewrite.
 3. **`partial` does not count as covered.** A control is covered only when a recipe's assertions fully discharge it; otherwise the record names the *remainder* — the specific thing a repository cannot see — and the control stays uncovered. This is the rule that keeps the ceiling honest.
 4. **Class b leads.** 44 of 121 are in scope for it, it is the CLI default, and it is the class a first customer certifies at.

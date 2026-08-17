@@ -1,8 +1,8 @@
 # rampscan — plan of action: depth (Phases N0–N3)
 
 **Status:** proposed plan of record. The previous one — `docs/IMPLEMENTATION-PLAN-ONTOLOGY-ONDEVICE-LLM.md` (L0–L5) — is spent: L0–L3c landed 2026-08-15/16, L3d is deferred until an external user asks, and **L4/L5 were cancelled 2026-08-16 on evidence from a live draft**. There is currently no active plan of record; this document proposes one.
-**Date:** 2026-08-16
-**Reads against:** the code first (see `docs/PRODUCT-READ.md`, a code-only reading), then `SPEC.md` §10.2 (which already specifies the central deliverable here), `IMPLEMENTATION-PLAN-REMAINING.md` §1 (which flags it as the largest undone product scope), and the two existing checklists for phase-letter continuity.
+**Date:** 2026-08-16 · **revised 2026-08-17** (§1a, ground rule 10, §2's alternation rule, risks 7–8 — the sibling plane, found after N0 and N1a-T1/T2 landed)
+**Reads against:** the code first (see `docs/PRODUCT-READ.md`, a code-only reading), then `SPEC.md` §10.2 (which already specifies the central deliverable here), `IMPLEMENTATION-PLAN-REMAINING.md` §1 (which flags it as the largest undone product scope), and the two existing checklists for phase-letter continuity. **The 2026-08-17 revision also reads the sibling** — `ramprules.com/fedramp-rules-hub`, which publishes the dataset this repo pins: its `docs/code-scanning-overlay-plan.md`, its `.claude/skills/overlay-loop/` (SKILL.md and both plane cards), its `pipeline-evidence.schema.json`, and the live `data/derived/automation-frontier.json` at overlay 0.7.1.
 **Phase letter:** **N**. A–H, I, J, K and L are taken, M0–M5 are the original milestones, and "Phase L" already collides once (L0–L5 vs the Tier-2 DAST entry). N avoids a third.
 
 **Thesis in one line:** rampscan's differentiator is proven; its *coverage* is 17 recipes against 22 of 209 controls. Go deeper on the substrate that exists — more of the standard answered, the claims answered harder, and the answers delivered to someone — rather than wider across languages, which the docs already defer by name.
@@ -11,11 +11,12 @@
 
 ## 0. Ground rules
 
-The six from `PLAN-OF-ACTION.md` §0 stay active unchanged. Three more are specific to a coverage push, and exist because a coverage push is the single easiest way to destroy this product's credibility.
+The six from `PLAN-OF-ACTION.md` §0 stay active unchanged. Four more are specific to a coverage push, and exist because a coverage push is the single easiest way to destroy this product's credibility. (Ground rule 10 was added 2026-08-17, after §1a.)
 
 7. **No vacuous passes — ever.** A recipe may not report `evidenced` from the *absence* of something to check. The catalog already holds this line in two places and both are load-bearing: `route-auth-coverage` says "a repo with no detected routes stays honestly unevidenced, never vacuously evidenced," and `arch-boundaries-hold` fails a rule whose module path matches nothing, because "a module path that matches nothing is guarding nothing." Every recipe added under this plan inherits that, and N0 turns it into a test over the catalog rather than a convention.
 8. **A disposition is reasoning, not a label.** Every adjudication record carries an authored paragraph in the frontier's own voice. The upstream AWS adjudication set the bar — read `automation-frontier.json`'s rationale for AC-01 and match it. An adjudication without reasoning is an opinion, and this repo does not ship opinions as evidence.
 9. **Coverage is computed, never typed.** No coverage number appears in a document, a README or a slide unless a command emitted it. This is ground rule 4 applied to the one number this plan exists to move, and it is why N1a ships `rampscan frontier` before it ships recipes.
+10. **An adjudication upstream has already written is read before it is re-written.** §1a is why. Where we agree with a published disposition, the record cites it and adds only what a *commit* answers that an *API* does not — a shorter and better record than a fresh derivation. Where we disagree, the record says so and argues, because a silent disagreement between two overlays is the one outcome that makes both of them worthless. This is ground rule 2's posture — upstream's file is upstream's — applied to upstream's *reasoning* rather than only its bytes.
 
 ---
 
@@ -58,6 +59,72 @@ And the honest counterweight, which this plan states up front rather than discov
 
 ---
 
+## 1a. The sibling plane — found 2026-08-17, after §1 was written
+
+§1's sharpest sentence — *"Nobody has ever asked which of the 121 a repository can answer"* — was true of the file this repo pins and already false of the world. `ramprules.com/fedramp-rules-hub`, the project that **publishes** the dataset this one pins, has opened a second evidence plane of its own and **named it `pipeline`**. Its first triage batch landed fifteen controls before N1a wrote its seventh. Neither project's tree mentions the other.
+
+Read side by side, the two copies of the same file disagree about the one column this phase exists to fill:
+
+| `rollup.bySource.pipeline` | pinned here (overlay **0.6.0**) | upstream today (overlay **0.7.1**) |
+|---|---|---|
+| partial · narrative · unreviewed | 0 · 0 · 121 | **13 · 2 · 106** |
+| reachable · ceiling | 0 · 0 | 13 · 0.062 |
+
+**Both files carry `dataset_version: 2026.07.14.01`.** The adjudications are versioned by `overlay_version`, which this repo does not read — see risk 8.
+
+### The four overlaps agree, and that is the most valuable fact in this section
+
+Four controls are now adjudicated by both projects, independently, from different evidence. All four match:
+
+```
+SA-08  partial / partial      SR-08       partial   / partial
+SA-22  partial / partial      SR-02 (01)  narrative / narrative
+```
+
+The *remainders* converge too — the specification-and-design phase, support status plus the replacement decision, the agreements limb, a team's charter. Two passes that never saw each other reaching the same four verdicts with the same boundaries is the strongest evidence either project has that ground rule 8's bar is real rather than self-congratulatory. It should be read as validation, not waste, and it is the reason ground rule 10 says *cite* rather than *avoid*.
+
+The routes differ, and in two cases ours is the stronger one: upstream reaches SA-08 through an IaC policy rule passing over a deployed artifact, we reach it through the architecture contract checked against the actual import graph; upstream reaches SA-22 through scanner detection, we reach it through the lockfile and SBOM as the component inventory itself.
+
+### The two `pipeline`s are not the same plane
+
+Upstream's plane card defines it as *"the overlay that reads the pipeline that produces the estate: SAST, dependency scanning, secret scanning, IaC policy scanning, build attestation."* That is our collector set exactly. The difference is not subject matter but **trust model**: their plane reads a SaaS platform's API, ours reads a checkout offline and signs the result. Their schema encodes the SaaS assumption in three *required* fields — `platform` (the exact offering, "never a bare vendor name", described as this plane's `govcloud`), `external_system`, and `scan_scope`.
+
+So the name is taken and the collision is real. Deciding what our source *is* relative to their two planes is now the first thing N1a owes, and it is posed in the implementation plan's decision list rather than settled here. The recipe schema already votes: `anchor: z.literal("commit")` is a field their plane has no concept of.
+
+### The division of labour already exists, and nobody arranged it
+
+Computed from both files:
+
+```
+class b on the frontier      44     ← decision 4's lead set
+  adjudicated by us           7
+  adjudicated by upstream     4     ← all four inside our seven
+  class-b REMAINING          37
+
+class c/d-only                77
+  adjudicated by upstream    11     ← every one of them c/d
+  adjudicated by us            0
+
+neither project has adjudicated  103 of 121
+```
+
+**Every one of the eleven controls upstream adjudicated beyond the overlap is class c/d.** Their loop triages by leverage across all classes; ours leads on class b because it is the CLI default and the class a first customer certifies at. The two orders barely intersect, which means the duplication risk is far smaller than the shared plane name suggests — and it means the honest revision to N1a's sizing is not "121 to write" but **37 in the lead set and 103 nobody has touched**.
+
+### Two things their loop knows that this plan did not
+
+1. **An independent auditor closes a batch.** Their definition-of-done requires the batch be attacked by a separate agent — *"you cannot do this to your own work, because the reading that produced the claim is the reading that would check it"* — and reported verbatim, clean results included. It earns its keep: their step-7 audit re-rated two of its own dispositions and caught a queue bug that had let four controls leave a backlog on a rationale which only argued about scanners. Ground rule 8 sets our bar and *nothing enforces it*; the seven records were written and self-reviewed. This becomes N1a's exit gate.
+2. **The alternation rule, which N1a as written violates by design.** See §2.
+
+### And one thing their card knows that N0 did not
+
+Their pipeline card leads — before the field list, deliberately — with the vacuity trap in a longer form than N0 found it: *"An empty alert list is indistinguishable from four different worlds: the scanner found nothing, the scanner never ran, scanning is switched off, or the scan covered one repository out of forty."* N0's `population` closes the first two. Their `scan_scope: {inventory, enumerated_by[]}` closes the fourth, and requires the inventory be **outside the scanner**, warning explicitly that naming the scanner's own repository list satisfies the validator and closes nothing.
+
+rampscan enumerates from the checkout it was handed, and multi-repo joins are deferred by name at the foot of this document. So *"is this repository the whole authorization boundary"* is unanswered here, and their card states the consequence plainly: **"Expect `partial`. Most of this plane is honestly partial, because the repository set inside the authorization boundary is named by a human."** That is N1d's ceiling argument, already written by someone else, and it belongs in every record as a standing remainder rather than being rediscovered at control ninety.
+
+The counterweight to it, which is ours alone: three of upstream's four overlapping rationales end *"the platform … is itself an external system, raising SA-09 and CA-03."* Their research calls this their sharpest finding — the plane that would close SA-11 raises SA-09. **Our answer is negative**: collectors take no network by decision, execution is local, signing is `node:crypto`. Adopting rampscan to collect evidence does not enlarge the boundary it reports on. That sentence appears in none of our seven records and is the single strongest thing this overlay can say that upstream's cannot.
+
+---
+
 ## 2. Sequencing, and the one real fork
 
 ```
@@ -69,6 +136,10 @@ decisions  coverage  the loop  claim fidelity
 **Why coverage leads.** It is the largest undone *product* scope in the docs by the docs' own assessment, it is the axis on which a buyer judges the tool, and — unlike the other two — it is mostly data and recipe work over collectors that already exist, so it is the axis least likely to be blocked by engineering.
 
 **Why the loop is second and fidelity third.** The instinct is to protect the moat first. The mechanical argument goes the other way: N1's recipes will ride `repo-facts`, `contract`, `checkov`, `spectral` and the Tier-2 cheap-win collectors, none of which are graph-gated — so coverage growth adds almost no load to the graph and does not compound fidelity debt. Meanwhile N2 is cheap and is what makes N1 *measurable*: with no PR gate there is no way to tell whether forty recipes helped anyone. Fidelity is the long game and it can be the long game.
+
+**The alternation rule (added 2026-08-17, from §1a).** N1a as originally written adjudicates **all 121 before a single recipe is authored**, and that is precisely the drift upstream's loop forbids: *"triage is cheap and moves `unreviewed`/`reachable`/`ceiling`, authoring is expensive and moves `covered`/`recipes`, and a loop that prices only the cheap one drifts."* Their rule is never two triage batches in a row while an authoring backlog stands above ~15. The mechanical case for adopting it here is that our own risk 3 — *121 dispositions written fast become a wall of assertions* — is the same failure, and we listed it without a mitigation beyond willpower.
+
+So **N1a and N1b interleave**: a triage batch of ~15, then the recipes that batch made available, then the next batch. The `--strict` gate still lands at the end of the last triage batch rather than the first, for the reason already recorded (a command red from its first run teaches people to ignore it). This changes N1's *shape*, not its scope or its estimate, and it makes N1b's exit — the fork below — arrive after the first fifteen instead of after all one hundred and twenty-one.
 
 **The one real fork:** whether **N2a (the PR gate) jumps ahead of N1c**. The argument for jumping is that N1b's first recipes are the ones most worth putting in front of a developer, and shipping the gate at that moment is the cheapest possible test of whether coverage is landing. The argument against is that a moving catalog makes a noisy gate. *Recommendation: take the jump if N1b lands clean; hold if wave 1 needed more than one collector change.* Decide at the N1b exit, not now.
 
@@ -82,7 +153,7 @@ Estimates, focused-work days, honest but rough: N0 0.5 · N1a 4–5 · N1b 4–5
 
 No code. L0 set this precedent and it paid for itself twice.
 
-1. **Where pipeline adjudications live.** `recipes/adjudications/<control-id>.json`, one file per control, exactly as SPEC §10.2 specifies — *not* written back into `automation-frontier.json`, which is upstream's file behind a version pin the dataset client hard-fails on (ground rule 2). Each record carries `datasetVersion`, so an upstream re-publish of the frontier invalidates loudly instead of silently re-basing our reasoning.
+1. **Where pipeline adjudications live.** `recipes/adjudications/<control-id>.json`, one file per control, exactly as SPEC §10.2 specifies — *not* written back into `automation-frontier.json`, which is upstream's file behind a version pin the dataset client hard-fails on (ground rule 2). Each record carries `datasetVersion`, so an upstream re-publish of the frontier invalidates loudly instead of silently re-basing our reasoning. **Corrected 2026-08-17:** it does not. The dispositions move with `overlay_version`, which nothing here reads — see §1a and risk 8. The decision was right and its enforcement was incomplete.
 2. **The record schema mirrors the frontier's vocabulary** — `controlId · disposition · rationale · source: "pipeline" · recipeIds[] · candidateCollectors[] · reviewed · datasetVersion` — because SPEC §10.2's stated goal is that this overlay be **contributable upstream**. Mirroring now makes that a merge; diverging now makes it a rewrite.
 3. **`partial` does not count as covered.** A control is covered only when a recipe's assertions fully discharge it; otherwise the disposition is `partial`, the control stays uncovered, and the record names the *remainder* — the specific thing a repo cannot see. This is the rule that keeps the ceiling honest.
 4. **Class b leads.** 44 of 121 are in scope for it, it is the CLI default, and it is the class a first customer certifies at.
@@ -168,13 +239,15 @@ The moat, deepened rather than widened. Nothing here adds a language; `IMPLEMENT
 3. **Adjudication drifting into opinion.** 121 dispositions written quickly become a wall of assertions. Ground rule 8, and the discipline of matching the upstream rationale voice, are the mitigation. If the reasoning cannot be written, the disposition is not known.
 4. **Upstream frontier drift.** Our adjudications are keyed to `controlId` + `datasetVersion`. A re-published frontier must fail loudly. This is ground rule 2 applied to a new file class, and N0 item 1 is where it is bought.
 5. **Board noise scaling with the catalog.** The action queue, the guided empty states and the skip classifier were built and tuned against 17 recipes. At 40 they need re-checking — particularly `classifySkip`, whose whole job is telling a fixable skip from an honest one, and which will meet skip reasons no one has written yet.
-6. **The ceiling disappoints before it reassures.** N1d will likely show the pipeline source topping out well below half the frontier. That number should be published anyway and early — it is the number that makes every other number in this system believable, and it positions rampscan correctly as the *evidence engine* rather than the whole binder.
+6. **The ceiling disappoints before it reassures.** N1d will likely show the pipeline source topping out well below half the frontier. That number should be published anyway and early — it is the number that makes every other number in this system believable, and it positions rampscan correctly as the *evidence engine* rather than the whole binder. §1a sharpens this: upstream's own pipeline ceiling computes to **0.062**, and their card's reason for it — the repository set is named by a human — applies to us unchanged.
+7. **Two overlays diverging in silence** (added 2026-08-17). The failure is not disagreement; it is *undeclared* disagreement. If both projects adjudicate a control and neither cites the other, a reader holding both files has two confident paragraphs and no way to choose, which is worse than one paragraph and worse than none. Ground rule 10 is the mitigation and it is cheap while the overlap is four controls. It stops being cheap at forty.
+8. **The version pin does not cover the field that moves** (added 2026-08-17). Ground rule 2 and risk 4 assume a re-published frontier fails loudly. It does not: adjudication content is versioned by `overlay_version` (0.6.0 → 0.7.1 changed fifteen dispositions) while `dataset_version` — the only field the client checks — stayed identical at 2026.07.14.01. Every record written under this plan is keyed to a snapshot the loader cannot detect moving. This is the one item on this list that is a bug rather than a hazard, and it is the first task N1a owes.
 
 ---
 
 ## 8. What "done" looks like at the end of N3
 
-- `rampscan frontier` reports a pipeline disposition for all 121 controls, zero unreviewed, with an authored rationale each — and the overlay is in a shape that could be offered upstream, as SPEC §10.2 intends.
+- `rampscan frontier` reports a pipeline disposition for all 121 controls, zero unreviewed, with an authored rationale each — and the overlay is in a shape that could be offered upstream, as SPEC §10.2 intends. Every control upstream has also adjudicated is *declared* as agreement or as argued disagreement, never left as two silent paragraphs (ground rule 10).
 - The catalog has grown by two waves of recipes, every one of which has been shown to go `unevidenced` rather than `evidenced` on a repo that lacks the thing it checks.
 - The pipeline ceiling is a published, computed, attributable figure.
 - A pull request that breaks a control gets told so, in the authored words of the recipe, at the moment it is opened.
@@ -186,6 +259,8 @@ The moat, deepened rather than widened. Nothing here adds a language; `IMPLEMENT
 ## Deferred by name (unchanged; restated so this plan is honest about its boundary)
 
 Terraform / Fargate / Step Functions / EventBridge and the AWS adapters behind the six ports · KMS + S3 Object Lock · GitHub App repo access · Bedrock and the micro-LLM cascade · **languages beyond TS/JS in the graph** · OSCAL assessment-results emission · multi-repo joins · GovCloud · the React Flow graph canvas · webhooks · auditor SSO · console access audit log · acknowledge-as-ledger-event · PDF rendering service.
+
+**One of those deferrals stopped being neutral on 2026-08-17.** `multi-repo joins` is now the named reason every claim this overlay makes is at most `partial` — it is the "one repository out of forty" arm of §1a's vacuity trap, and no `population` figure reaches it. The deferral stands (it is a product scope, not a phase), but it must be *stated in the records* rather than left implicit, and N1d's ceiling has to attribute part of itself to it.
 
 Held at a go/no-go, unchanged: **DAST / ZAP** (runtime evidence is a second anchor class, parked 2026-08-15) · **L3d, the MCP agent surface** (un-defer when an external user asks) · **engine-track CI wiring for the Phase H collector families** (deferred by user decision; see §2 for why N2a does not reopen it).
 
