@@ -7,6 +7,7 @@
   "source": "commit",
   "recipeIds": [],
   "candidateCollectors": [],
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — so the supply-chain risk-management plan is read as a committed document rather than through a platform that would itself join the boundary this control is about.",
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"
 }

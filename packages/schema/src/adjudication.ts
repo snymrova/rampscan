@@ -88,8 +88,55 @@ export const CommitAdjudication = z
      * covered (N0 decision 3), and the only thing that keeps that honest is a
      * sentence naming the specific thing a repository cannot see. A partial
      * disposition with no remainder is a covered claim wearing a smaller word.
+     *
+     * TWO LIMBS, both required, because there are two different boundaries and
+     * only one of them is about the control (N1a′-T4, decision 7). `control` is
+     * the half this control asks for that a commit cannot show. `boundary` is
+     * the half no control asks for and every claim on this plane owes anyway:
+     * rampscan enumerates from the checkout it was handed, multi-repo joins are
+     * deferred by name, and so nothing here can say the scanned repository is
+     * the whole authorization boundary — upstream's own plane card reaches the
+     * same conclusion from the other side ("expect `partial`, because the
+     * repository set inside the boundary is named by a human").
+     *
+     * Two limbs rather than one paragraph with a clause in it, because a clause
+     * can be forgotten in a rewrite and a required field cannot. Inside
+     * `remainder` rather than beside it, because the schema already refuses a
+     * `partial` without one and a non-`partial` with one — so the boundary gap
+     * inherits that rule instead of needing its own, and no record can carry a
+     * boundary sentence while claiming `automatable`. The consequence is worth
+     * stating rather than discovering: `automatable` is nearly unreachable on
+     * this plane, and the first seven records found it exactly zero times.
      */
-    remainder: z.string().min(1).optional(),
+    remainder: z
+      .object({
+        /** the limb of THIS control a commit cannot reach */
+        control: z.string().min(1),
+        /**
+         * the limb no commit reaches on any control: one checkout is not known
+         * to be the boundary. Required on a live record, and only on a live
+         * one — see `retired`, which freezes a record rather than back-filling
+         * a sentence it never carried.
+         */
+        boundary: z.string().min(1).optional(),
+      })
+      .optional(),
+    /**
+     * What adopting this evidence path adds to the authorization boundary, and
+     * on this plane the answer is the NEGATIVE one — which is the single
+     * strongest thing this overlay can say that upstream's cannot. Three of the
+     * four rationales upstream wrote over controls we also adjudicated end on
+     * "the platform … is itself an external system, raising SA-09 and CA-03";
+     * their research calls it their sharpest finding, that the plane which
+     * would close SA-11 raises SA-09. Ours does not: collectors take no network
+     * by decision, execution is local, signing is `node:crypto`. So adopting
+     * rampscan to collect evidence does not enlarge the boundary it reports on.
+     *
+     * A field rather than a habit, because a differentiator stated in four
+     * records out of a hundred and nineteen is a differentiator nobody can
+     * count. Required on a live record; a retired one is closed.
+     */
+    externalSystem: z.string().min(1).optional(),
     /**
      * Set when the control this record adjudicates has LEFT the frontier — the
      * frontier is the uncovered set, upstream's file, and it shrinks whenever
@@ -140,6 +187,38 @@ export const CommitAdjudication = z
         message:
           `${record.controlId}: only a "partial" disposition carries a remainder — ` +
           `an "${record.disposition}" record with one is claiming a boundary it did not draw.`,
+      });
+    }
+    // A RETIRED RECORD IS FROZEN, and that is one rule rather than two
+    // exemptions. `retired` already promises the disposition, rationale and
+    // remainder stay exactly as they were written, so a field added to this
+    // schema afterwards is required of LIVE records only: back-filling
+    // `boundary` or `externalSystem` into a closed record would mean writing
+    // sentences it never carried and presenting them as what it said at the
+    // time, which is the same revision-in-hindsight the freeze exists to stop.
+    // The cost is that a retired record is less complete than a live one, and
+    // that is the correct trade — it is a historical claim, not a current one.
+    if (record.retired !== undefined) return;
+    if (record.remainder !== undefined && record.remainder.boundary === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["remainder", "boundary"],
+        message:
+          `${record.controlId}: a live "partial" must name the boundary limb too — ` +
+          "rampscan reads the checkout it was handed, so no claim here knows the scanned repository " +
+          "is the whole authorization boundary. A remainder that names only the control's own gap " +
+          "reads as though that gap were the only one.",
+      });
+    }
+    if (record.externalSystem === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["externalSystem"],
+        message:
+          `${record.controlId}: every live record states what this evidence path adds to the ` +
+          "authorization boundary. On this plane the answer is the negative one, and it is the " +
+          "strongest thing this overlay can say that upstream's cannot — a differentiator stated " +
+          "on some records and not others is one nobody can count.",
       });
     }
   });

@@ -7,6 +7,7 @@
   "source": "commit",
   "recipeIds": [],
   "candidateCollectors": [],
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — so adopting rampscan to allocate and evidence resources adds no external system to the authorization boundary and raises neither SA-09 nor CA-03.",
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"
 }

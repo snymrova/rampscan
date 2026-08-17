@@ -7,7 +7,11 @@
   "source": "commit",
   "recipeIds": [],
   "candidateCollectors": ["contract"],
-  "remainder": "The design phase itself: whether the principles applied were the right ones for this system, and whether they were considered during specification rather than reconstructed afterwards from code that happened to comply. The gate can show the code matches the declaration; it cannot show the declaration was reasoned about before the code.",
+  "remainder": {
+    "control": "The design phase itself: whether the principles applied were the right ones for this system, and whether they were considered during specification rather than reconstructed afterwards from code that happened to comply. The gate can show the code matches the declaration; it cannot show the declaration was reasoned about before the code.",
+    "boundary": "And the repository set. The architecture contract is checked against the import graph of one checkout, so it demonstrates that THIS repository's modules hold the separation they declare. A system whose components span repositories can satisfy every rule here while the boundaries that matter run between the repositories rather than inside them, and no population figure reaches that."
+  },
+  "externalSystem": "Nothing, and on this control that is the whole argument. A boundary-protection claim evidenced by a tool that itself calls out would be evidence against itself: rampscan reads the checkout offline, signs with node:crypto, and adds no component to the architecture it reports on. Upstream's route reaches SA-08 through a policy rule running on a SaaS platform, and their own rationale ends on that platform raising SA-09 and CA-03.",
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"
 }

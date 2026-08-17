@@ -7,7 +7,9 @@
   "source": "commit",
   "recipeIds": [],
   "candidateCollectors": ["repo-facts", "syft", "reachability"],
-  "remainder": "The agreements. Contractual notification terms with suppliers, and the procedures for acting on a notification once received, are documents held between organizations; a repository shows the automated channel is configured, never that a supplier is obliged to tell you anything.",
+  "remainder": {
+    "control": "The agreements. Contractual notification terms with suppliers, and the procedures for acting on a notification once received, are documents held between organizations; a repository shows the automated channel is configured, never that a supplier is obliged to tell you anything."
+  },
   "retired": {
     "at": "2026-08-17",
     "overlayVersion": "0.7.2",

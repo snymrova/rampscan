@@ -84,7 +84,13 @@ export interface FrontierRow {
     rationale: string;
     recipeIds: string[];
     candidateCollectors: string[];
-    remainder?: string;
+    /**
+     * Two limbs — the control's own gap, and the boundary gap every claim owes.
+     * Taken from the record's own type rather than restated, so the map cannot
+     * drift from the schema the records are validated against.
+     */
+    remainder?: CommitAdjudication["remainder"];
+    externalSystem?: string;
     reviewed: string;
     datasetVersion: string;
   };
@@ -240,6 +246,9 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
           recipeIds: [...record.recipeIds].sort(),
           candidateCollectors: [...record.candidateCollectors].sort(),
           ...(record.remainder !== undefined ? { remainder: record.remainder } : {}),
+          ...(record.externalSystem !== undefined
+            ? { externalSystem: record.externalSystem }
+            : {}),
           reviewed: record.reviewed,
           datasetVersion: record.datasetVersion,
         };
@@ -527,7 +536,16 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
     }
     if (p) {
       lines.push(dim(`      ${p.rationale}`));
-      if (p.remainder) lines.push(dim(`      remainder: ${p.remainder}`));
+      // The two limbs print on separate lines and are labelled differently,
+      // because they are different kinds of gap: `remainder` is this control's,
+      // `boundary` is every claim's. Run together they read as one hedge, and
+      // the boundary limb — the one no control asks for — is the half a reader
+      // skips first.
+      if (p.remainder) {
+        lines.push(dim(`      remainder: ${p.remainder.control}`));
+        if (p.remainder.boundary) lines.push(dim(`      boundary:  ${p.remainder.boundary}`));
+      }
+      if (p.externalSystem) lines.push(dim(`      external system: ${p.externalSystem}`));
       if (p.recipeIds.length > 0) lines.push(dim(`      recipes: ${p.recipeIds.join(", ")}`));
       else if (p.candidateCollectors.length > 0) {
         lines.push(dim(`      candidates: ${p.candidateCollectors.join(", ")}`));

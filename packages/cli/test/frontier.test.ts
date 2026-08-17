@@ -49,11 +49,15 @@ function record(over: Partial<CommitAdjudication> = {}): CommitAdjudication {
     source: "commit",
     recipeIds: [],
     candidateCollectors: [],
+    externalSystem: "nothing: no network in collectors, local execution, node:crypto signing",
     reviewed: "2026-08-16",
     datasetVersion: DEFAULT_DATASET_PIN,
     ...over,
   });
 }
+
+/** a two-limbed remainder, for synthetic records that only need a valid one */
+const REMAINDER = { control: "the half a repo cannot see", boundary: "one checkout of unknown many" };
 
 async function mapWith(adjudications: CommitAdjudication[]) {
   const dataset = await loadLocalDataset(DERIVED, DEFAULT_DATASET_PIN);
@@ -115,15 +119,31 @@ describe("the overlay as it stands", () => {
     expect(familyTotal).toBe(r.frontierTotal);
   });
 
-  it("a partial disposition always names its remainder, on every record we ship", async () => {
+  it("a partial disposition always names BOTH remainder limbs, on every record we ship", async () => {
     // The schema refuses one at parse time; this is the catalog-level restatement,
     // because `partial` not counting as covered (N0 decision 3) is only honest
     // while the boundary is written down.
     const map = await realMap();
     for (const row of map.rows) {
       if (row.commit?.disposition === "partial") {
-        expect(row.commit.remainder, `${row.displayId} is partial with no remainder`).toBeTruthy();
+        const r = row.commit.remainder;
+        expect(r?.control, `${row.displayId} is partial with no remainder`).toBeTruthy();
+        expect(r?.boundary, `${row.displayId} names no boundary limb`).toBeTruthy();
       }
+    }
+  });
+
+  it("every live record says what this evidence path adds to the boundary", async () => {
+    // N1a′-T4. The answer here is always the negative one, and that is the
+    // point: a differentiator stated on some records and not others is one
+    // nobody can count. Asserted longer than a stub so an empty gesture fails,
+    // the same posture the L4b affordance test used on its own reason string.
+    const records = await loadAdjudications(join(REPO_ROOT, "recipes/adjudications"));
+    const live = records.filter((r) => r.retired === undefined);
+    expect(live.length).toBeGreaterThan(0);
+    for (const r of live) {
+      expect(r.externalSystem, `${r.displayId} states no external-system answer`).toBeTruthy();
+      expect(r.externalSystem!.length, `${r.displayId}'s answer is a gesture`).toBeGreaterThan(80);
     }
   });
 
@@ -308,9 +328,20 @@ describe("a record whose control leaves the frontier is retired, not deleted", (
     // stops being evidence
     const raw = JSON.parse(
       await readFile(join(REPO_ROOT, "recipes/adjudications/sr-8.json"), "utf8"),
-    ) as { disposition: string; remainder: string };
+    ) as {
+      disposition: string;
+      remainder: { control: string; boundary?: string };
+      externalSystem?: string;
+    };
     expect(raw.disposition).toBe("partial");
-    expect(raw.remainder).toContain("The agreements.");
+    expect(raw.remainder.control).toContain("The agreements.");
+    // …and the freeze survived T4, which is the first time it was tested by
+    // something other than intent. Splitting `remainder` into two limbs moved
+    // this text and did not rewrite it; the limbs the split ADDED are absent,
+    // because back-filling them would present today's sentences as what this
+    // record said when it was written.
+    expect(raw.remainder.boundary).toBeUndefined();
+    expect(raw.externalSystem).toBeUndefined();
   });
 });
 
@@ -342,13 +373,13 @@ describe("the checker notices a broken overlay", () => {
 
   it("an adjudication naming a collector nobody has scoped", async () => {
     const map = await mapWith([
-      record({ disposition: "partial", remainder: "r", candidateCollectors: ["wishful"] }),
+      record({ disposition: "partial", remainder: REMAINDER, candidateCollectors: ["wishful"] }),
     ]);
     expect(map.problems.join(" ")).toContain("neither registered nor a Tier-2 cheap win");
     // …while a Tier-2 name is accepted: the whole point of the list is that a
     // disposition may rest on a collector that is scoped but unwritten
     const ok = await mapWith([
-      record({ disposition: "partial", remainder: "r", candidateCollectors: ["dockle"] }),
+      record({ disposition: "partial", remainder: REMAINDER, candidateCollectors: ["dockle"] }),
     ]);
     expect(ok.problems).toEqual([]);
   });
@@ -368,9 +399,46 @@ describe("the checker notices a broken overlay", () => {
 
   it("the schema refuses a partial with no remainder, and a remainder without a partial", () => {
     expect(() => record({ disposition: "partial" })).toThrow();
-    expect(() => record({ disposition: "narrative", remainder: "half of it" })).toThrow();
-    expect(() => record({ disposition: "partial", remainder: "the half a repo cannot see" }))
-      .not.toThrow();
+    expect(() => record({ disposition: "narrative", remainder: REMAINDER })).toThrow();
+    expect(() => record({ disposition: "partial", remainder: REMAINDER })).not.toThrow();
+  });
+
+  // N1a′-T4. Both limbs of decision 7, enforced by the type rather than by a
+  // reviewer noticing a missing sentence.
+  it("the schema refuses a live partial that names only the control's own gap", () => {
+    // The boundary limb is the one nobody would miss in review: it is the same
+    // fact on every record, which is exactly why it is the one that gets
+    // dropped in a rewrite and never questioned afterwards.
+    expect(() =>
+      record({ disposition: "partial", remainder: { control: REMAINDER.control } }),
+    ).toThrow();
+  });
+
+  it("the schema refuses a live record with no external-system answer", () => {
+    expect(() => record({ externalSystem: undefined })).toThrow();
+  });
+
+  it("…and requires neither of them on a retired record, which is frozen", () => {
+    // One rule, not two exemptions: `retired` already promises the disposition,
+    // rationale and remainder stay as written, so a field added afterwards is
+    // owed by live records only. Back-filling a closed record would present
+    // today's sentence as what it said at the time.
+    const retired = {
+      at: "2026-08-17",
+      overlayVersion: "0.7.2",
+      reason: "upstream answered it and argued our route",
+      upstreamRecipeIds: ["some-upstream-recipe"],
+    };
+    expect(() =>
+      record({
+        disposition: "partial",
+        remainder: { control: REMAINDER.control },
+        externalSystem: undefined,
+        retired,
+      }),
+    ).not.toThrow();
+    // the freeze is not a hole: the rules that predate it still bite
+    expect(() => record({ disposition: "partial", remainder: undefined, retired })).toThrow();
   });
 });
 

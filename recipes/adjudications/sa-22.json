@@ -7,7 +7,11 @@
   "source": "commit",
   "recipeIds": [],
   "candidateCollectors": ["syft", "grype", "dockle"],
-  "remainder": "Support status itself. Whether a named version is still supported by its developer or vendor comes from a lifecycle source outside the repository — an end-of-life feed, a registry deprecation flag, a support contract — and collectors here do not reach the network. Replacement, the control's actual requirement, is an act rather than an artifact: the repository can show an unsupported component is still pinned, never that a plan exists to replace it.",
+  "remainder": {
+    "control": "Support status itself. Whether a named version is still supported by its developer or vendor comes from a lifecycle source outside the repository — an end-of-life feed, a registry deprecation flag, a support contract — and collectors here do not reach the network. Replacement, the control's actual requirement, is an act rather than an artifact: the repository can show an unsupported component is still pinned, never that a plan exists to replace it.",
+    "boundary": "And the repository set. The lockfile and SBOM are an inventory of the components of one checkout, which is the strongest form this control's evidence takes and still not the system inventory the control asks about: components deployed from other repositories, or vendored outside the manifest, are absent from the evidence in exactly the way a supported component is absent — indistinguishable without the human-named repository set."
+  },
+  "externalSystem": "Nothing — which is the sharp end of the difference on this control. Determining supported versions is what pulls a component-inventory tool onto a vendor's API, and that API is an external system. rampscan declines the network and therefore declines the lifecycle feed too: the remainder above is the price of the external system this plane does not add.",
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"
 }
