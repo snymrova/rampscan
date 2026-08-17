@@ -11,7 +11,9 @@ import { windowMsFor } from "@rampscan/scheduler";
 import { renderBoard, renderBoardDiff } from "./board.js";
 import { computeBoardAsOf } from "./board-asof.js";
 import { computeBoardDiff } from "./board-diff.js";
+import { loadAdjudications } from "./adjudications.js";
 import { check, renderCheck } from "./check.js";
+import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
 import { rebuild } from "./rebuild.js";
@@ -39,6 +41,8 @@ import { verify } from "./verify.js";
 //   rampscan tools           the static map: recipe ↔ collector ↔ tool ↔ image
 //   rampscan model           the repo model: the ledger's world as typed nodes
 //                            and links (`--json` reproduces the scan artifact)
+//   rampscan frontier        the pipeline source's answer to ramprules' automation
+//                            frontier: catalog × adjudications × the pinned 121
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -67,6 +71,9 @@ function usage(): never {
       "  model             the repo model: repos, recipes, controls, KSIs, collectors, tools,",
       "                    contract rules and the walked graph, as typed nodes and links.",
       "                    `--json` prints the artifact a scan attests, byte-for-byte",
+      "  frontier          the pipeline source's coverage of ramprules' 121 uncovered controls:",
+      "                    catalog × adjudications × the pinned frontier, nothing probed. Exits 1",
+      "                    on a broken link; --strict also exits 1 on any unreviewed control",
       "",
       "options:",
       "  --out <dir>       scan/daemon output directory (default: ./rampscan-out);",
@@ -77,6 +84,8 @@ function usage(): never {
       "  --dataset <dir>   ramprules derived-slice dir (default: docs/context/ramprules/derived)",
       "  --pin <version>   dataset version pin (default: " + DEFAULT_DATASET_PIN + ")",
       "  --recipes <dir>   pipeline recipe dir (default: recipes/pipeline)",
+      "  --adjudications <dir>  frontier: per-control disposition dir (default: recipes/adjudications)",
+      "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b)",
       "  --as-of <iso>     board: fold only statements at or before this instant (I1b)",
       "  --since <v>       board: lead with the diff against a baseline board — `previous`",
@@ -110,6 +119,8 @@ async function main(): Promise<void> {
       dataset: { type: "string" },
       pin: { type: "string" },
       recipes: { type: "string" },
+      adjudications: { type: "string" },
+      strict: { type: "boolean" },
       class: { type: "string" },
       "as-of": { type: "string" },
       since: { type: "string" },
@@ -133,6 +144,7 @@ async function main(): Promise<void> {
   const datasetDir = values.dataset ?? join(REPO_ROOT, "docs/context/ramprules/derived");
   const datasetPin = values.pin ?? DEFAULT_DATASET_PIN;
   const recipesDir = values.recipes ?? join(REPO_ROOT, "recipes/pipeline");
+  const adjudicationsDir = values.adjudications ?? join(REPO_ROOT, "recipes/adjudications");
   const useColor = values["no-color"] ? false : (process.stdout.isTTY ?? false);
   const certClass = (values.class ?? "b") as CertClass;
   if (certClass !== "b" && certClass !== "c") usage();
@@ -312,6 +324,44 @@ async function main(): Promise<void> {
         console.error(
           `\n${problems.length} broken link(s) in the map:\n` +
             problems.map((p) => `  - ${p}`).join("\n"),
+        );
+        process.exit(1);
+      }
+      return;
+    }
+
+    case "frontier": {
+      // ground rule 9's enforcement (N1a-T2): coverage is computed, never
+      // typed. A pure derivation in the shape of `tools` and `model` — catalog
+      // × adjudications × the pinned frontier, nothing probed, nothing
+      // written, non-zero exit on a broken link.
+      const dataset = await loadLocalDataset(datasetDir, datasetPin);
+      const map = buildFrontier({
+        frontier: dataset.frontier(),
+        adjudications: await loadAdjudications(adjudicationsDir),
+        recipes: await loadRecipes(recipesDir),
+        collectors: allCollectors,
+        datasetVersion: dataset.version(),
+        ksiReachedControls: dataset.ksiReachedControls(),
+      });
+      if (values.json) console.log(JSON.stringify(map, null, 2));
+      else console.log(renderFrontier(map, useColor));
+      if (map.problems.length > 0) {
+        console.error(
+          `\n${map.problems.length} broken link(s) in the adjudication overlay:\n` +
+            map.problems.map((p) => `  - ${p}`).join("\n"),
+        );
+        process.exit(1);
+      }
+      // The strict gate (N0 decision 3): once N1a has adjudicated all 121,
+      // this becomes the CI invocation, so the set cannot silently regrow. It
+      // is a flag rather than the default only until that day — a command red
+      // from its first run teaches people to ignore it.
+      const unreviewed = unreviewedControls(map);
+      if (values.strict && unreviewed.length > 0) {
+        console.error(
+          `\n${unreviewed.length} control(s) unreviewed from the pipeline source:\n  ` +
+            unreviewed.join(", "),
         );
         process.exit(1);
       }

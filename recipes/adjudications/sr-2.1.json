@@ -1,0 +1,12 @@
+{
+  "controlId": "sr-2.1",
+  "displayId": "SR-02 (01)",
+  "family": "SR",
+  "disposition": "narrative",
+  "rationale": "Establishing a supply chain risk management team is an organizational act: named people, assigned roles, and a charter for leading and supporting the SCRM activities the plan defines. Nothing in a commit records that a team was established or that the people named accepted the remit. CODEOWNERS is the nearest committed artifact and it is not this — it routes code review by path, which is neither a supply chain remit nor a team, and adjudicating it as evidence here would spend the credibility every other row in this overlay depends on.",
+  "source": "pipeline",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "reviewed": "2026-08-16",
+  "datasetVersion": "2026.07.14.01"
+}

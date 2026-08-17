@@ -5,6 +5,7 @@ import {
   AwsRecipe,
   CrosswalkControl,
   CrosswalkIndicator,
+  FrontierControl,
   SliceEnvelope,
 } from "./types.js";
 
@@ -27,6 +28,20 @@ export interface DatasetClient {
   controlsFor(ksiId: string): string[];
   /** KSI indicator ids that reach a control, ascending */
   ksisFor(controlId: string): string[];
+  /**
+   * The automation frontier: the uncovered controls a KSI reaches, as upstream
+   * published them. Read under the same pin as every other slice, so a
+   * re-published frontier fails loudly here rather than silently re-basing the
+   * adjudications keyed to it (ground rule 2, applied to a new file class).
+   */
+  frontier(): FrontierControl[];
+  /**
+   * Upstream's denominator: how many controls any KSI reaches at all (209 in
+   * the pinned snapshot). Read from the frontier's own rollup rather than
+   * typed anywhere, because it is the divisor under every ceiling figure this
+   * repository publishes (ground rule 9).
+   */
+  ksiReachedControls(): number;
 }
 
 export class DatasetVersionMismatchError extends Error {
@@ -50,6 +65,11 @@ const CrosswalkData = z.object({
 
 const AwsEvidenceData = z.object({
   recipes: z.array(AwsRecipe),
+});
+
+const FrontierData = z.object({
+  frontier: z.array(FrontierControl),
+  rollup: z.object({ ksiReachedControls: z.number() }).passthrough(),
 });
 
 async function loadSlice(
@@ -79,6 +99,9 @@ export async function loadLocalDataset(
   const awsEvidence = AwsEvidenceData.parse(
     await loadSlice(derivedDir, "aws-evidence.json", pin),
   );
+  const frontier = FrontierData.parse(
+    await loadSlice(derivedDir, "automation-frontier.json", pin),
+  );
 
   const recipesById = new Map(awsEvidence.recipes.map((r) => [r.id, r]));
 
@@ -96,6 +119,8 @@ export async function loadLocalDataset(
       if (!control) return [];
       return [...control.indicatorIds].sort();
     },
+    frontier: () => [...frontier.frontier],
+    ksiReachedControls: () => frontier.rollup.ksiReachedControls,
   };
 }
 

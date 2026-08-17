@@ -1,0 +1,13 @@
+{
+  "controlId": "sa-5",
+  "displayId": "SA-05",
+  "family": "SA",
+  "disposition": "partial",
+  "rationale": "System documentation is the control the pipeline source reads better than the runtime source does, and it is the shape of the argument for most of the SA family: administrator and user documentation describing secure configuration, installation, operation and effective use is a set of documents, and a repository is a document store under version control with authorship, review and a content hash per commit. rampscan can evidence that the documents exist at named paths, that they are non-empty, when they last changed, which commit changed them and who reviewed that change — the existence, currency and integrity half of the control, anchored the same way every other claim here is anchored.",
+  "source": "pipeline",
+  "recipeIds": [],
+  "candidateCollectors": ["repo-facts"],
+  "remainder": "Distribution: the control requires the documentation to reach defined personnel or roles, and no commit records that anyone received or read it — the same gap upstream names for every policy control, and it is not closed by the document being public.",
+  "reviewed": "2026-08-16",
+  "datasetVersion": "2026.07.14.01"
+}

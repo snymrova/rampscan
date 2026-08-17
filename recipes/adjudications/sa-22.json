@@ -1,0 +1,13 @@
+{
+  "controlId": "sa-22",
+  "displayId": "SA-22",
+  "family": "SA",
+  "disposition": "partial",
+  "rationale": "Unsupported system components asks two questions in sequence: what components are in use, and are any of them past vendor support. The first is answered exactly by a repository — the lockfile pins every direct and transitive dependency to a version, syft resolves the same tree into an SBOM, and the Dockerfile names the base image tag the container is built from, all at a commit and all anchored — and that inventory is normally the part an assessment has to take on trust from a spreadsheet. The advisory collectors add a weaker signal on top: a component still receiving fixes is one the vendor still supports.",
+  "source": "pipeline",
+  "recipeIds": [],
+  "candidateCollectors": ["syft", "grype", "dockle"],
+  "remainder": "Support status itself. Whether a named version is still supported by its developer or vendor comes from a lifecycle source outside the repository — an end-of-life feed, a registry deprecation flag, a support contract — and collectors here do not reach the network. Replacement, the control's actual requirement, is an act rather than an artifact: the repository can show an unsupported component is still pinned, never that a plan exists to replace it.",
+  "reviewed": "2026-08-16",
+  "datasetVersion": "2026.07.14.01"
+}

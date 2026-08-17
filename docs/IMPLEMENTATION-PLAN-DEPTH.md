@@ -280,3 +280,25 @@ The seventeenth re-keyed, and it is worth writing down because it is **not** `po
 
 **The empirical baseline holds.** `fixtures/bare-app` still reads **5 evidenced · 4 violated · 8 unevidenced**, verified from a live scan rather than the recorded smoke output, and the split is now pinned by a test so movement under N1 is deliberate. Of the five passes, three are genuine (`lockfile-pinned-deps` over a real manifest, `sbom-exists-and-fresh` over a real SBOM, `no-secrets-in-history` over every commit) and two count zero over an empty domain (`no-critical-reachable-advisories`, `no-reachable-dangerous-code`) — which is exactly what `population` now says out loud on both surfaces.
 
+### N1a — the pipeline adjudication (T1 and T2 landed 2026-08-16; T3 started, 7 of 121)
+
+**N1a-T1 — the record.** `packages/schema/src/adjudication.ts` holds `PipelineAdjudication`, field-for-field in the frontier's own vocabulary (`recipeIds` where it has `coveredBy`, `candidateCollectors` where it has `candidateServices`), so the overlay stays a merge rather than a rewrite. Two rules are enforced by the type rather than by review: a `partial` **must** name its remainder, and anything that is not `partial` **may not** — a disposition with a boundary it did not draw is as wrong as one that hid the boundary it did. `packages/cli/src/adjudications.ts` loads them beside `loadRecipes`, tolerating a missing directory (a checkout with no adjudications is valid and should read "121 unreviewed", not crash) and refusing a malformed record outright.
+
+**N1a-T2 — `rampscan frontier`.** A pure derivation in the shape of `tools` and `model`: catalog × adjudications × the pinned frontier, nothing probed, nothing written. The frontier slice joined the dataset client so it is read *under the same version pin* as every other slice — risk 4 bought at the loader rather than discovered in a number. Exits 1 on a broken link; `--strict` also exits 1 on any unreviewed control, which is decision 3's gate held back until N1a completes, because a command that is red from its first run teaches people to ignore it.
+
+Its output today, and every figure in this paragraph is the command's:
+
+```
+frontier 121 uncovered controls · dataset 2026.07.14.01
+  adjudicated  0 automatable · 4 partial · 3 narrative
+  unreviewed   114
+  discharged   0        (automatable AND a recipe exists today)
+  catalog covers   22 of 209 controls a KSI reaches
+  reachable        25 of 209 — 12.0%
+```
+
+**The command found a real over-claim on its first run, which is the argument for building it before the recipes.** The first draft of `sr-8` named `dependency-update-automation` in `recipeIds`. That recipe exists, and it does *not* claim `sr-8` — so the board, the rollups and every coverage count, all of which join on the recipe's own `control_ids`, would never have recorded the discharge. The overlay would have said "covered" and every surface would have said "unevidenced", with nothing to reconcile them. That check is now permanent (`does not claim this control`), and it turned up a genuine wave-1 opportunity in passing: `sr-8`'s indicator IS among that recipe's `ksi_ids`, so the claim is *available* to N1b — it just has to be made in the catalog, deliberately, rather than asserted in an overlay.
+
+**N1a-T3 — the data work, 7 of 121 written.** The sharpest starting set the plan names: the class-b, leverage-6, AWS-unreviewed SA/SR controls. **4 partial · 3 narrative · 0 automatable**, which is worth stating plainly rather than softening — the first seven controls nobody had asked a repository about produced no outright automatable answer, and the ceiling is going to be lower than the enthusiasm for it. The four partials are the interesting ones and they are the plan's thesis in miniature: `SA-05` (documentation exists, is current and is anchored — distribution is the remainder), `SA-08` (the architecture contract makes domain separation *demonstrated* rather than asserted — the design phase is the remainder), `SA-22` (the lockfile and SBOM are the component inventory an assessment normally takes on trust — vendor support status needs a feed collectors may not reach), `SR-08` (a committed dependabot config is the monitoring subscription itself — the supplier agreements are the remainder). The three narratives are refusals taken on purpose: `SR-02 (01)` in particular, where CODEOWNERS is the nearest committed artifact and reading it as a supply-chain risk team would spend the credibility every other row depends on.
+
+**114 records remain**, and at the quality bar ground rule 8 sets they are the 4–5 days the plan budgets, not an afternoon. 13 vitest cover the command over the real overlay (every printed number recounts from its own rows) and over synthetic broken records (each of the six link checks shown to fire), bringing the suite to **630** with root and console typecheck clean.

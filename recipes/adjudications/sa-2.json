@@ -1,0 +1,12 @@
+{
+  "controlId": "sa-2",
+  "displayId": "SA-02",
+  "family": "SA",
+  "disposition": "narrative",
+  "rationale": "Allocation of resources is a budgeting act: security and privacy requirements are determined during mission and business process planning, the resources to meet them are documented and allocated through the capital planning and investment control process, and a discrete line item appears in the organization's programming and budgeting documentation. A repository can hold a file that states a number; no commit records that a budget was approved, that the line item exists in the organization's programming documentation, or that the resources named were the ones actually allocated. Reading a committed cost estimate as evidence of an approved allocation would be reading an intention as a decision.",
+  "source": "pipeline",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "reviewed": "2026-08-16",
+  "datasetVersion": "2026.07.14.01"
+}
