@@ -1,6 +1,6 @@
 import type { Collector } from "@rampscan/core";
 import type { FrontierControl } from "@rampscan/dataset";
-import type { Disposition, PipelineAdjudication, PipelineRecipe } from "@rampscan/schema";
+import type { Disposition, CommitAdjudication, PipelineRecipe } from "@rampscan/schema";
 
 // `rampscan frontier` (plan N1a-T2) — a pure derivation in the shape of
 // `rampscan tools`: catalog × adjudications × the pinned frontier → coverage.
@@ -24,9 +24,15 @@ import type { Disposition, PipelineAdjudication, PipelineRecipe } from "@rampsca
 // and never under a default, because the alternative — copying `f.disposition`
 // into an `aws` field unconditionally, which is what this file used to do —
 // prints upstream's pipeline reasoning in the AWS column on exactly the rows
-// where our own pipeline column duplicates or disagrees with it. Two planes
-// reasoning about one control is the interesting case, and conflating them
-// destroys the only thing that makes it readable.
+// where our own column duplicates or disagrees with it. Two planes reasoning
+// about one control is the interesting case, and conflating them destroys the
+// only thing that makes it readable.
+//
+// Three plane names appear in this file and they are not interchangeable
+// (N1a′-T3): `aws` and `pipeline` are UPSTREAM's two, and `commit` is ours —
+// named for the anchor rather than the subject, because the subject is shared
+// and the anchor is not. Where this file says "the commit plane" it means our
+// adjudications; where it says `pipeline` it means upstream's.
 
 /**
  * Collectors named in `IMPLEMENTATION-PLAN-REMAINING.md` Tier 2 as cheap wins:
@@ -66,8 +72,14 @@ export interface FrontierRow {
    * construction so the JSON is stable.
    */
   upstream: Record<string, UpstreamDisposition>;
-  /** ours, when `recipes/adjudications/` holds a record for it */
-  pipeline?: {
+  /**
+   * Ours, when `recipes/adjudications/` holds a record for it. Named `commit`
+   * and not `pipeline` because `upstream` above already has a `pipeline` key
+   * that means something else — a row where both are populated is the case
+   * this whole command was rebuilt to render, and two fields one word apart
+   * would have made it unreadable at exactly that moment.
+   */
+  commit?: {
     disposition: Disposition;
     rationale: string;
     recipeIds: string[];
@@ -102,7 +114,7 @@ export interface FrontierRollup {
   catalogCovered: number;
   /** catalogCovered ∪ {frontier controls adjudicated automatable or partial} */
   reachable: number;
-  /** reachable ÷ ksiReachedControls — the pipeline source's ceiling */
+  /** reachable ÷ ksiReachedControls — the commit plane's ceiling */
   ceiling: number;
   /**
    * How many frontier rows each upstream source adjudicated, counted from the
@@ -138,7 +150,7 @@ export interface FrontierMap {
   datasetVersion: string;
   rows: FrontierRow[];
   rollup: FrontierRollup;
-  /** families the pipeline source cannot answer, with the count it cannot answer (N1d) */
+  /** families the commit plane cannot answer, with the count it cannot answer (N1d) */
   ceilingByFamily: Array<{ family: string; narrative: number; unreviewed: number; total: number }>;
   /** records closed because upstream took the control off the frontier */
   retired: RetiredAdjudication[];
@@ -147,7 +159,7 @@ export interface FrontierMap {
 
 export interface FrontierInput {
   frontier: FrontierControl[];
-  adjudications: PipelineAdjudication[];
+  adjudications: CommitAdjudication[];
   recipes: PipelineRecipe[];
   collectors: Collector[];
   /** the pin every record must have been written against (ground rule 2) */
@@ -222,7 +234,7 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
         catalogRecipeIds: recipesForControl.get(f.controlId) ?? [],
       };
       if (record) {
-        row.pipeline = {
+        row.commit = {
           disposition: record.disposition,
           rationale: record.rationale,
           recipeIds: [...record.recipeIds].sort(),
@@ -239,12 +251,12 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
     // expects, while the canonical id sorts "ac-18.1" before "ac-2"
     .sort((a, b) => a.displayId.localeCompare(b.displayId));
 
-  const count = (d: Disposition) => rows.filter((r) => r.pipeline?.disposition === d).length;
+  const count = (d: Disposition) => rows.filter((r) => r.commit?.disposition === d).length;
   const discharged = rows.filter(
     (r) =>
-      r.pipeline?.disposition === "automatable" &&
-      r.pipeline.recipeIds.length > 0 &&
-      r.pipeline.recipeIds.every((id) => recipeIds.has(id)),
+      r.commit?.disposition === "automatable" &&
+      r.commit.recipeIds.length > 0 &&
+      r.commit.recipeIds.every((id) => recipeIds.has(id)),
   ).length;
 
   // What the catalog claims today, counted from the catalog itself rather than
@@ -254,7 +266,7 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
   const catalogControls = new Set(input.recipes.flatMap((r) => r.control_ids));
   const reachable = new Set(catalogControls);
   for (const row of rows) {
-    if (row.pipeline?.disposition === "automatable" || row.pipeline?.disposition === "partial") {
+    if (row.commit?.disposition === "automatable" || row.commit?.disposition === "partial") {
       reachable.add(row.controlId);
     }
   }
@@ -263,8 +275,8 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
   for (const row of rows) {
     const entry = families.get(row.family) ?? { narrative: 0, unreviewed: 0, total: 0 };
     entry.total++;
-    if (row.pipeline === undefined) entry.unreviewed++;
-    else if (row.pipeline.disposition === "narrative") entry.narrative++;
+    if (row.commit === undefined) entry.unreviewed++;
+    else if (row.commit.disposition === "narrative") entry.narrative++;
     families.set(row.family, entry);
   }
 
@@ -277,7 +289,7 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
       automatable: count("automatable"),
       partial: count("partial"),
       narrative: count("narrative"),
-      unreviewed: rows.filter((r) => r.pipeline === undefined).length,
+      unreviewed: rows.filter((r) => r.commit === undefined).length,
       discharged,
       catalogCovered: catalogControls.size,
       reachable: reachable.size,
@@ -319,7 +331,7 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
 
 function frontierProblems(input: {
   rows: FrontierRow[];
-  adjudications: PipelineAdjudication[];
+  adjudications: CommitAdjudication[];
   onFrontier: Set<string>;
   recipeIds: Set<string>;
   /** recipe id → the controls that recipe claims */
@@ -421,7 +433,7 @@ function frontierProblems(input: {
 
 /** unreviewed controls, as the strict gate reports them (N0 decision 3) */
 export function unreviewedControls(map: FrontierMap): string[] {
-  return map.rows.filter((r) => r.pipeline === undefined).map((r) => r.displayId);
+  return map.rows.filter((r) => r.commit === undefined).map((r) => r.displayId);
 }
 
 /**
@@ -439,7 +451,7 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
 
   lines.push(
     dim(
-      "the pipeline source's answer to ramprules' automation frontier — catalog × adjudications × the pinned frontier. " +
+      "the commit plane's answer to ramprules' automation frontier — catalog × adjudications × the pinned frontier. " +
         "Nothing was probed and nothing was written; every number here is counted from the rows below it.",
     ),
     "",
@@ -448,7 +460,7 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
     `  unreviewed   ${r.unreviewed}${r.unreviewed > 0 ? dim("  ← the question nobody has asked yet") : ""}`,
     `  discharged   ${r.discharged}${dim("  (automatable AND a recipe exists today)")}`,
     "",
-    bold("the pipeline ceiling"),
+    bold("the commit plane's ceiling"),
     `  catalog covers   ${r.catalogCovered} of ${r.ksiReachedControls} controls a KSI reaches`,
     `  reachable        ${r.reachable} of ${r.ksiReachedControls} — ${pct(r.ceiling)}`,
     dim("  reachable = what the catalog claims today ∪ what the adjudication says a repository could answer"),
@@ -498,7 +510,7 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
 
   lines.push(bold("controls"), "");
   for (const row of map.rows) {
-    const p = row.pipeline;
+    const p = row.commit;
     const state = p ? p.disposition : dim("unreviewed");
     lines.push(
       `  ${row.displayId.padEnd(12)} ${row.family.padEnd(3)} ${state}` +

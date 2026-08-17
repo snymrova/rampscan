@@ -1,6 +1,6 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { PipelineAdjudication } from "@rampscan/schema";
+import { CommitAdjudication } from "@rampscan/schema";
 
 // Adjudication loading (plan N1a-T1), beside `loadRecipes` and shaped like it:
 // one file per control, parsed through the zod schema, refused on a duplicate.
@@ -12,7 +12,7 @@ import { PipelineAdjudication } from "@rampscan/schema";
 // exactly the failure ground rule 8 exists to catch, and it fails loudly here
 // rather than rendering as a coverage number nobody can defend.
 
-export async function loadAdjudications(dir: string): Promise<PipelineAdjudication[]> {
+export async function loadAdjudications(dir: string): Promise<CommitAdjudication[]> {
   let files: string[];
   try {
     files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
@@ -20,14 +20,14 @@ export async function loadAdjudications(dir: string): Promise<PipelineAdjudicati
     if ((cause as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw cause;
   }
-  const records: PipelineAdjudication[] = [];
+  const records: CommitAdjudication[] = [];
   for (const file of files) {
     const raw = JSON.parse(await readFile(join(dir, file), "utf8")) as unknown;
     try {
-      records.push(PipelineAdjudication.parse(raw));
+      records.push(CommitAdjudication.parse(raw));
     } catch (cause) {
       throw new Error(
-        `adjudication file ${file} does not match the PipelineAdjudication schema`,
+        `adjudication file ${file} does not match the CommitAdjudication schema`,
         { cause },
       );
     }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// The pipeline adjudication record (SPEC §10.2, plan N1a-T1): one file per
+// The commit-plane adjudication record (SPEC §10.2, plan N1a-T1): one file per
 // uncovered frontier control, answering ONE question — can evidence committed
 // to a repository discharge this control, in whole or in part?
 //
@@ -15,6 +15,22 @@ import { z } from "zod";
 // upstream opened a second plane of its own, named it `pipeline`, and thirteen
 // frontier rows now carry it. Ours is not the only pass asking this question —
 // see N1a′ and ground rule 10, which is why a record cites rather than ignores.
+//
+// WHICH IS WHY `source` READS `commit` AND NO LONGER READS `pipeline` (N1a′-T3,
+// decision 6, settled 2026-08-17 as option (b): a third plane, named for the
+// ANCHOR rather than the subject). Upstream's plane covers our exact subject
+// matter — SAST, dependency, secret, IaC, attestation — and differs in TRUST
+// MODEL, not scope: theirs reads a SaaS platform's API, ours reads a checkout
+// offline and signs the result. Their schema encodes that assumption in two
+// fields REQUIRED on every recipe, and neither has an honest value here:
+// `platform` wants the exact offering ("GitHub Enterprise Cloud", "never a bare
+// vendor name") and a local CLI is not an offering, while `external_system`
+// wants what adopting the platform ADDS to the authorization boundary and our
+// answer is the negative one. So filing under their name would have meant
+// either writing a `platform` that is not a platform or editing someone else's
+// schema. Naming the plane for what distinguishes it costs neither: `anchor:
+// z.literal("commit")` in `recipe.ts` is a field their plane has no concept of,
+// and it is the property that survives all the way into the signed bundle.
 //
 // Two structural decisions, both load-bearing and both taken at N0:
 //
@@ -34,7 +50,7 @@ import { z } from "zod";
 export const Disposition = z.enum(["automatable", "partial", "narrative"]);
 export type Disposition = z.infer<typeof Disposition>;
 
-export const PipelineAdjudication = z
+export const CommitAdjudication = z
   .object({
     /** canonical control id, as the crosswalk and the frontier key it ("sa-9") */
     controlId: z.string().min(1),
@@ -55,8 +71,14 @@ export const PipelineAdjudication = z
      * and if the reasoning cannot be written the disposition is not known.
      */
     rationale: z.string().min(1),
-    /** which adjudication pass wrote this; ours is always the pipeline */
-    source: z.literal("pipeline"),
+    /**
+     * Which adjudication pass wrote this; ours is always the commit plane.
+     * Upstream's two planes are `aws` and `pipeline`, and a record filed under
+     * either of those names would be claiming a pass it did not make — the
+     * whole point of the header's decision is that the three names stay
+     * distinguishable in a file a reader holds beside upstream's own.
+     */
+    source: z.literal("commit"),
     /** recipes in `recipes/pipeline/` that discharge it — empty until they exist */
     recipeIds: z.array(z.string()).default([]),
     /** collectors that could evidence it: registered today, or named in Tier 2 */
@@ -121,4 +143,4 @@ export const PipelineAdjudication = z
       });
     }
   });
-export type PipelineAdjudication = z.infer<typeof PipelineAdjudication>;
+export type CommitAdjudication = z.infer<typeof CommitAdjudication>;

@@ -41,7 +41,7 @@ import { verify } from "./verify.js";
 //   rampscan tools           the static map: recipe ↔ collector ↔ tool ↔ image
 //   rampscan model           the repo model: the ledger's world as typed nodes
 //                            and links (`--json` reproduces the scan artifact)
-//   rampscan frontier        the pipeline source's answer to ramprules' automation
+//   rampscan frontier        the commit plane's answer to ramprules' automation
 //                            frontier: catalog × adjudications × the pinned frontier
 // Run from the repo: `pnpm rampscan <command>`.
 
@@ -71,7 +71,7 @@ function usage(): never {
       "  model             the repo model: repos, recipes, controls, KSIs, collectors, tools,",
       "                    contract rules and the walked graph, as typed nodes and links.",
       "                    `--json` prints the artifact a scan attests, byte-for-byte",
-      "  frontier          the pipeline source's coverage of ramprules' uncovered controls:",
+      "  frontier          the commit plane's coverage of ramprules' uncovered controls:",
       "                    catalog × adjudications × the pinned frontier, nothing probed. Exits 1",
       "                    on a broken link; --strict also exits 1 on any unreviewed control",
       "",
@@ -360,7 +360,7 @@ async function main(): Promise<void> {
       const unreviewed = unreviewedControls(map);
       if (values.strict && unreviewed.length > 0) {
         console.error(
-          `\n${unreviewed.length} control(s) unreviewed from the pipeline source:\n  ` +
+          `\n${unreviewed.length} control(s) unreviewed from the commit plane:\n  ` +
             unreviewed.join(", "),
         );
         process.exit(1);

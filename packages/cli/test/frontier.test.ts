@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import { allCollectors } from "@rampscan/collectors";
 import type { FrontierControl } from "@rampscan/dataset";
 import { DEFAULT_DATASET_PIN, loadLocalDataset } from "@rampscan/dataset";
-import type { PipelineAdjudication } from "@rampscan/schema";
-import { PipelineAdjudication as AdjudicationSchema } from "@rampscan/schema";
+import type { CommitAdjudication } from "@rampscan/schema";
+import { CommitAdjudication as AdjudicationSchema } from "@rampscan/schema";
 import { loadAdjudications } from "../src/adjudications.js";
 import type { FrontierRow } from "../src/frontier.js";
 import { UNATTRIBUTED, buildFrontier, renderFrontier, unreviewedControls } from "../src/frontier.js";
@@ -39,14 +39,14 @@ async function realMap() {
   });
 }
 
-function record(over: Partial<PipelineAdjudication> = {}): PipelineAdjudication {
+function record(over: Partial<CommitAdjudication> = {}): CommitAdjudication {
   return AdjudicationSchema.parse({
     controlId: "sa-2",
     displayId: "SA-02",
     family: "SA",
     disposition: "narrative",
     rationale: "a paragraph",
-    source: "pipeline",
+    source: "commit",
     recipeIds: [],
     candidateCollectors: [],
     reviewed: "2026-08-16",
@@ -55,7 +55,7 @@ function record(over: Partial<PipelineAdjudication> = {}): PipelineAdjudication 
   });
 }
 
-async function mapWith(adjudications: PipelineAdjudication[]) {
+async function mapWith(adjudications: CommitAdjudication[]) {
   const dataset = await loadLocalDataset(DERIVED, DEFAULT_DATASET_PIN);
   return buildFrontier({
     frontier: dataset.frontier(),
@@ -94,17 +94,17 @@ describe("the overlay as it stands", () => {
     // measurement of it.
     const map = await realMap();
     const r = map.rollup;
-    const by = (d: string) => map.rows.filter((row) => row.pipeline?.disposition === d).length;
+    const by = (d: string) => map.rows.filter((row) => row.commit?.disposition === d).length;
     expect(r.automatable).toBe(by("automatable"));
     expect(r.partial).toBe(by("partial"));
     expect(r.narrative).toBe(by("narrative"));
-    expect(r.unreviewed).toBe(map.rows.filter((row) => row.pipeline === undefined).length);
+    expect(r.unreviewed).toBe(map.rows.filter((row) => row.commit === undefined).length);
     expect(r.automatable + r.partial + r.narrative + r.unreviewed).toBe(r.frontierTotal);
     expect(r.ceiling).toBeCloseTo(r.reachable / r.ksiReachedControls, 10);
     // the ceiling counts controls, and a control adjudicated automatable or
     // partial is reachable exactly once even when the catalog already claims it
     const reachable = new Set(map.rows.flatMap((row) =>
-      row.pipeline?.disposition === "automatable" || row.pipeline?.disposition === "partial"
+      row.commit?.disposition === "automatable" || row.commit?.disposition === "partial"
         ? [row.controlId]
         : [],
     ));
@@ -121,8 +121,8 @@ describe("the overlay as it stands", () => {
     // while the boundary is written down.
     const map = await realMap();
     for (const row of map.rows) {
-      if (row.pipeline?.disposition === "partial") {
-        expect(row.pipeline.remainder, `${row.displayId} is partial with no remainder`).toBeTruthy();
+      if (row.commit?.disposition === "partial") {
+        expect(row.commit.remainder, `${row.displayId} is partial with no remainder`).toBeTruthy();
       }
     }
   });
@@ -371,5 +371,43 @@ describe("the checker notices a broken overlay", () => {
     expect(() => record({ disposition: "narrative", remainder: "half of it" })).toThrow();
     expect(() => record({ disposition: "partial", remainder: "the half a repo cannot see" }))
       .not.toThrow();
+  });
+});
+
+// N1a′-T3, decision 6 settled as option (b): our plane is `commit`, named for
+// the anchor rather than the subject, because the SUBJECT is shared with
+// upstream's `pipeline` plane and the anchor is not. Three plane names now
+// exist across two projects and the failure this guards is the cheapest one
+// available — a record filed under a neighbour's name, which reads as a claim
+// about a pass we did not make.
+describe("the commit plane is named, and the name is enforced", () => {
+  it("every record this repository ships is filed under `commit`", async () => {
+    const records = await loadAdjudications(join(REPO_ROOT, "recipes/adjudications"));
+    expect(records.length).toBeGreaterThan(0);
+    for (const r of records) {
+      expect(r.source, `${r.displayId} is filed under a plane that is not ours`).toBe("commit");
+    }
+  });
+
+  it("the schema refuses upstream's two plane names outright", () => {
+    // `pipeline` is the one that would actually have been typed: it is what
+    // these records read until 2026-08-17, and it is upstream's name for a
+    // plane covering our exact subject matter from the opposite trust model.
+    expect(() => record({ source: "pipeline" } as never)).toThrow();
+    expect(() => record({ source: "aws" } as never)).toThrow();
+  });
+
+  it("a real row carrying both planes keeps them apart", async () => {
+    // The case the rename exists for, and it is not hypothetical: SA-08 is one
+    // of the three controls both projects adjudicated independently and agreed
+    // on. `row.upstream.pipeline` and `row.commit` are one word apart in prose
+    // and must never be one field in the map — a control both planes reasoned
+    // about is the interesting row, and it is exactly the row a shared name
+    // would have flattened.
+    const row = (await realMap()).rows.find((r) => r.controlId === "sa-8");
+    expect(row, "sa-8 left the frontier — the overlap this test reads is gone").toBeDefined();
+    expect(row!.upstream.pipeline?.disposition).toBe("partial"); // theirs
+    expect(row!.commit?.disposition).toBe("partial"); // ours, reached another way
+    expect(row!.upstream.commit).toBeUndefined(); // and never credited to them
   });
 });

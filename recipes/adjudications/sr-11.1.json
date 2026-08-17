@@ -4,7 +4,7 @@
   "family": "SR",
   "disposition": "narrative",
   "rationale": "Anti-counterfeit training requires that personnel be trained to detect counterfeit hardware, software and firmware components. Training is delivered to people and recorded in a training system: a curriculum, a roster and completion dates. A repository can hold the curriculum, and nothing in a commit records that anyone read it or that the people who needed it were the people who did — the same boundary upstream draws for the AT family, and it does not move because the material happens to be version-controlled.",
-  "source": "pipeline",
+  "source": "commit",
   "recipeIds": [],
   "candidateCollectors": [],
   "reviewed": "2026-08-16",

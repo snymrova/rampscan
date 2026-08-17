@@ -4,7 +4,7 @@
   "family": "SA",
   "disposition": "partial",
   "rationale": "Security engineering principles — least privilege, layering, modularity, domain separation, mediated access — are applied in specification, design, development and modification, and an assessor normally reads a design document and takes the application on trust. A repository can do better than trust for the implementation half: the architecture contract in rampscan.config.json states the intended separation, and the contract gate checks it against the actual import graph of the code at that commit, so a declared module boundary that holds is domain separation demonstrated rather than asserted, and a declared route rule that reaches an authentication check is mediated access demonstrated the same way. The move is already proved for cm-2 and cm-6 by arch-boundaries-hold; discharging this control needs a recipe of the same shape whose KSIs reach sa-8, not a relabelling of that one.",
-  "source": "pipeline",
+  "source": "commit",
   "recipeIds": [],
   "candidateCollectors": ["contract"],
   "remainder": "The design phase itself: whether the principles applied were the right ones for this system, and whether they were considered during specification rather than reconstructed afterwards from code that happened to comply. The gate can show the code matches the declaration; it cannot show the declaration was reasoned about before the code.",

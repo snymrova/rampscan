@@ -4,7 +4,7 @@
   "family": "SR",
   "disposition": "partial",
   "rationale": "Notification agreements require a mechanism by which compromises and assessment results in the supply chain reach the organization, and the indicator that reaches this control (KSI-SCR-MON) explicitly accepts active monitoring services alongside contractual notification. The active-monitoring half is committed evidence: a dependabot or renovate configuration in the tree is the subscription itself under version control, a fresh SBOM enumerates what is being monitored, and the advisory join shows the mechanism producing results rather than merely existing. That is the difference between a claim that upstream vulnerabilities are watched and a repository that demonstrates the watching. dependency-update-automation is the recipe that would carry it and does not claim this control today — its indicators reach sr-8, so the claim is available to wave 1, but adding it is a catalog decision and this record only says the evidence exists.",
-  "source": "pipeline",
+  "source": "commit",
   "recipeIds": [],
   "candidateCollectors": ["repo-facts", "syft", "reachability"],
   "remainder": "The agreements. Contractual notification terms with suppliers, and the procedures for acting on a notification once received, are documents held between organizations; a repository shows the automated channel is configured, never that a supplier is obliged to tell you anything.",
