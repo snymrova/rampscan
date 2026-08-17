@@ -7,6 +7,12 @@
   "source": "commit",
   "recipeIds": [],
   "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "pipeline",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Both planes refuse SR-02 (01), and upstream's refusal is the stronger of the two because it is a self-correction: their own `docs/automation-beyond-aws.md` §P5 had listed this control among those build attestation bears on, and their step-8 batch carried it forward, until the adjudication read the control text and found it did not support the claim — the attestation argument belongs to si-7.7 on its detection limb. Cited rather than merely matched, because agreement reached after upstream argued its way OFF a route is worth more than agreement reached without ever considering it, and it is the corroboration our own refusal most needs: CODEOWNERS is the nearest committed artifact and reading it as a supply-chain risk team would spend the credibility every other row depends on. A 3PAO reads the SCRM plan and the team's charter."
+  },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — so the supply-chain risk-management plan is read as a committed document rather than through a platform that would itself join the boundary this control is about.",
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"

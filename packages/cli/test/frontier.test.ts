@@ -479,3 +479,112 @@ describe("the commit plane is named, and the name is enforced", () => {
     expect(row!.upstream.commit).toBeUndefined(); // and never credited to them
   });
 });
+
+// N1a′-T5. Ground rule 10 as a link check. The failure is not disagreement —
+// it is UNDECLARED disagreement (risk 7): a reader holding both overlays finds
+// two confident paragraphs about one control and no way to choose. Agreement
+// left silent fails the same way, because two passes reaching one verdict from
+// different evidence is the strongest corroboration either project has and it
+// is worth nothing if neither says so.
+describe("where upstream has spoken, the record says whether it agrees", () => {
+  const CITE = {
+    source: "pipeline",
+    disposition: "partial",
+    agreement: "agrees" as const,
+    note: "what a commit adds that their evidence path does not",
+  };
+
+  function upstreamRow(over: Partial<FrontierControl> = {}): FrontierControl {
+    return {
+      controlId: "sa-8",
+      displayId: "SA-08",
+      family: "SA",
+      ksis: ["KSI-PIY-RSD"],
+      classes: ["b"],
+      disposition: "partial",
+      rationale: "upstream's paragraph",
+      sourcesConsidered: ["pipeline"],
+      ...over,
+    } as FrontierControl;
+  }
+
+  async function mapOf(frontier: FrontierControl, ours: Partial<CommitAdjudication>) {
+    const map = buildFrontier({
+      frontier: [frontier],
+      adjudications: [record({ controlId: "sa-8", displayId: "SA-08", family: "SA", ...ours })],
+      recipes: await loadRecipes(join(REPO_ROOT, "recipes/pipeline")),
+      collectors: allCollectors,
+      datasetVersion: DEFAULT_DATASET_PIN,
+      ksiReachedControls: 209,
+    });
+    return map.problems.join(" ");
+  }
+
+  const partial = {
+    disposition: "partial" as const,
+    remainder: REMAINDER,
+  };
+
+  it("every shipped record whose control upstream adjudicated cites it", async () => {
+    // over the REAL overlay: the three surviving overlaps after the 0.7.2
+    // re-pin are SA-08, SA-22 and SR-02 (01), and all three agree
+    const map = await realMap();
+    const overlaps = map.rows.filter(
+      (r) => r.commit !== undefined && Object.keys(r.upstream).length > 0,
+    );
+    expect(overlaps.map((r) => r.displayId).sort()).toEqual(["SA-08", "SA-22", "SR-02 (01)"]);
+    for (const row of overlaps) {
+      expect(row.commit!.citesUpstream, `${row.displayId} cites nobody`).toBeDefined();
+      expect(row.commit!.citesUpstream!.agreement).toBe("agrees");
+      // the note argues a route rather than restating our own rationale
+      expect(row.commit!.citesUpstream!.note.length).toBeGreaterThan(200);
+    }
+  });
+
+  it("a record silent about an upstream disposition is a broken link", async () => {
+    expect(await mapOf(upstreamRow(), partial)).toContain("does not say whether it agrees");
+  });
+
+  it("a citation whose disposition no longer matches upstream's file", async () => {
+    // The one the structure buys that a prose check cannot: upstream moved and
+    // the citation did not, which is the silent drift the overlay pin exists
+    // to stop, arriving through the reasoning instead of through the bytes.
+    const text = await mapOf(upstreamRow({ disposition: "narrative" }), {
+      ...partial,
+      citesUpstream: CITE,
+    });
+    expect(text).toContain("but upstream's file now reads");
+  });
+
+  it("a divergence filed as agreement", async () => {
+    // risk 7 arriving WITH a citation attached, which is the version a reader
+    // would never catch by eye
+    const text = await mapOf(upstreamRow({ disposition: "narrative" }), {
+      ...partial,
+      citesUpstream: { ...CITE, disposition: "narrative" },
+    });
+    expect(text).toContain("a divergence filed as agreement");
+  });
+
+  it("agreement filed as a divergence, which throws corroboration away", async () => {
+    const text = await mapOf(upstreamRow(), {
+      ...partial,
+      citesUpstream: { ...CITE, agreement: "diverges" },
+    });
+    expect(text).toContain("filing it as a disagreement throws it away");
+  });
+
+  it("a citation of a plane that said nothing", async () => {
+    const cited = await mapOf(upstreamRow({ sourcesConsidered: ["aws"] }), {
+      ...partial,
+      citesUpstream: CITE,
+    });
+    expect(cited).toContain("which has no disposition on this control");
+    // …and citing upstream where upstream is silent altogether
+    const none = await mapOf(upstreamRow({ disposition: null, sourcesConsidered: [] } as never), {
+      ...partial,
+      citesUpstream: CITE,
+    });
+    expect(none).toContain("upstream's file carries none on this control");
+  });
+});

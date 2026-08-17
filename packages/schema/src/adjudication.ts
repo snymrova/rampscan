@@ -122,6 +122,49 @@ export const CommitAdjudication = z
       })
       .optional(),
     /**
+     * Ground rule 10, made checkable (N1a′-T5). Where upstream has already
+     * adjudicated a control, this record READS that adjudication before writing
+     * over it and says which of two things is true.
+     *
+     * The failure being guarded is not disagreement — it is UNDECLARED
+     * disagreement (risk 7). A reader holding both overlays finds two confident
+     * paragraphs about one control and no way to choose, which is worse than
+     * one paragraph and worse than none. Agreement left silent is the same
+     * failure wearing a friendlier face: two passes reaching the same verdict
+     * from different evidence is the strongest corroboration either project
+     * has, and it is worth nothing if neither says so.
+     *
+     * Structured rather than a sentence in `rationale`, for the reason T4 chose
+     * two limbs over a clause: a citation checked by matching on prose is
+     * fragile when the wording moves and gameable when it does not. Here it
+     * also buys something a prose check cannot — `disposition` is recounted
+     * against upstream's live file, so a citation that was true at the last
+     * re-pin and is false now fails loudly instead of ageing quietly.
+     *
+     * Required on a live record whose control upstream has adjudicated. That
+     * condition depends on upstream's file, which this schema cannot see, so it
+     * is enforced in `rampscan frontier`'s link checks beside every other
+     * cross-file rule rather than here.
+     */
+    citesUpstream: z
+      .object({
+        /** which of upstream's planes wrote it — `aws` or `pipeline` */
+        source: z.string().min(1),
+        /** their disposition, recounted against their file, never remembered */
+        disposition: z.string().min(1),
+        /**
+         * `agrees` — same verdict, and the note says what a commit adds that
+         *   their evidence path does not; corroboration is the whole value and
+         *   it has to be legible as corroboration.
+         * `diverges` — different verdict, and the note ARGUES. This is the case
+         *   ground rule 10 exists for; a divergence with a note that merely
+         *   restates our own rationale has declared nothing.
+         */
+        agreement: z.enum(["agrees", "diverges"]),
+        note: z.string().min(1),
+      })
+      .optional(),
+    /**
      * What adopting this evidence path adds to the authorization boundary, and
      * on this plane the answer is the NEGATIVE one — which is the single
      * strongest thing this overlay can say that upstream's cannot. Three of the

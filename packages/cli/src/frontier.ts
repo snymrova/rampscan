@@ -90,6 +90,8 @@ export interface FrontierRow {
      * drift from the schema the records are validated against.
      */
     remainder?: CommitAdjudication["remainder"];
+    /** ground rule 10: what this record says about upstream's pass over the same control */
+    citesUpstream?: CommitAdjudication["citesUpstream"];
     externalSystem?: string;
     reviewed: string;
     datasetVersion: string;
@@ -246,6 +248,9 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
           recipeIds: [...record.recipeIds].sort(),
           candidateCollectors: [...record.candidateCollectors].sort(),
           ...(record.remainder !== undefined ? { remainder: record.remainder } : {}),
+          ...(record.citesUpstream !== undefined
+            ? { citesUpstream: record.citesUpstream }
+            : {}),
           ...(record.externalSystem !== undefined
             ? { externalSystem: record.externalSystem }
             : {}),
@@ -338,6 +343,83 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
   };
 }
 
+/**
+ * Ground rule 10 as a link check (N1a′-T5). A row where both planes have
+ * spoken is the interesting row, and the failure risk 7 names is not that the
+ * two disagree — it is that neither says so, leaving a reader holding both
+ * overlays with two confident paragraphs and no way to choose.
+ *
+ * Three ways to get it wrong, and the third is the one worth building for: a
+ * missing citation, a citation that misquotes upstream, and a citation that
+ * calls a divergence agreement. The second and third are only catchable because
+ * the claim is recounted against upstream's live file rather than trusted —
+ * which means a citation true at the last re-pin and false now fails on the
+ * next run rather than ageing quietly into the same silent drift the
+ * `overlay_version` pin was built to stop.
+ */
+function citationProblems(row: FrontierRow): string[] {
+  const ours = row.commit;
+  if (ours === undefined) return [];
+  // upstream's dispositions on this control, ignoring the unattributed bucket —
+  // that has its own problem and citing a plane the file did not name is worse
+  // than citing nothing.
+  const theirs = Object.entries(row.upstream).filter(
+    ([source, u]) => source !== UNATTRIBUTED && u.disposition !== undefined,
+  );
+  const cite = ours.citesUpstream;
+  if (theirs.length === 0) {
+    return cite === undefined
+      ? []
+      : [
+          `adjudication "${row.controlId}" cites an upstream disposition from "${cite.source}", ` +
+            "but upstream's file carries none on this control — a citation nobody can check " +
+            "reads exactly like one nobody did",
+        ];
+  }
+  if (cite === undefined) {
+    return [
+      `adjudication "${row.controlId}" does not say whether it agrees with upstream, which has ` +
+        `already adjudicated it (${theirs.map(([s, u]) => `${s} ${u.disposition}`).join(" · ")}) — ` +
+        "ground rule 10: agreement is cited and divergence is argued, never left as two paragraphs " +
+        "in two files nobody joins",
+    ];
+  }
+  const cited = row.upstream[cite.source];
+  if (cited?.disposition === undefined) {
+    return [
+      `adjudication "${row.controlId}" cites upstream's "${cite.source}" plane, which has no ` +
+        `disposition on this control — upstream's passes here are ${theirs.map(([s]) => s).join(", ")}`,
+    ];
+  }
+  const problems: string[] = [];
+  if (cited.disposition !== cite.disposition) {
+    problems.push(
+      `adjudication "${row.controlId}" cites upstream "${cite.source}" as "${cite.disposition}", ` +
+        `but upstream's file now reads "${cited.disposition}" — the citation was written against a ` +
+        "disposition that has since moved, and a stale citation is a stale argument",
+    );
+  }
+  // The sharp one. `agrees` is a claim about two verdicts matching, and it is
+  // the claim a reader leans on hardest — so it is checked against both
+  // dispositions rather than taken on the record's word.
+  const same = cited.disposition === ours.disposition;
+  if (cite.agreement === "agrees" && !same) {
+    problems.push(
+      `adjudication "${row.controlId}" declares agreement with upstream "${cite.source}", but ` +
+        `ours reads "${ours.disposition}" and theirs "${cited.disposition}" — a divergence filed ` +
+        "as agreement is the undeclared disagreement of risk 7, arriving with a citation attached",
+    );
+  }
+  if (cite.agreement === "diverges" && same) {
+    problems.push(
+      `adjudication "${row.controlId}" declares divergence from upstream "${cite.source}", but ` +
+        `both planes read "${ours.disposition}" — two independent passes reaching the same verdict ` +
+        "is the strongest corroboration either project has, and filing it as a disagreement throws it away",
+    );
+  }
+  return problems;
+}
+
 function frontierProblems(input: {
   rows: FrontierRow[];
   adjudications: CommitAdjudication[];
@@ -362,6 +444,7 @@ function frontierProblems(input: {
           "it is filed unattributed rather than credited to a plane the file did not name",
       );
     }
+    problems.push(...citationProblems(row));
   }
   for (const record of input.adjudications) {
     // Upstream drift, caught at the record rather than discovered in a number
@@ -544,6 +627,10 @@ export function renderFrontier(map: FrontierMap, useColor: boolean): string {
       if (p.remainder) {
         lines.push(dim(`      remainder: ${p.remainder.control}`));
         if (p.remainder.boundary) lines.push(dim(`      boundary:  ${p.remainder.boundary}`));
+      }
+      if (p.citesUpstream) {
+        const c = p.citesUpstream;
+        lines.push(dim(`      ${c.agreement} with ${c.source} (${c.disposition}): ${c.note}`));
       }
       if (p.externalSystem) lines.push(dim(`      external system: ${p.externalSystem}`));
       if (p.recipeIds.length > 0) lines.push(dim(`      recipes: ${p.recipeIds.join(", ")}`));

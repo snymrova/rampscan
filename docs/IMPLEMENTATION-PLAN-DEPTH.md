@@ -404,7 +404,7 @@ Two checks, deliberately a mirrored pair, because a field whose presence changes
 
 **646 vitest** (641 + 5 on retirement: the pair above, that a retired record moves no number and holds no row, and that `sr-8`'s real record cites the upstream recipe by id and is unedited underneath), root and console typecheck clean.
 
-**T5–T6 remain**: citing upstream on the three surviving overlaps — `SA-08`, `SA-22`, `SR-02 (01)`, all three of which agree with upstream independently — then the `pipeline-tools.json` contribution.
+**T6 remains**: the `pipeline-tools.json` contribution.
 
 #### N1a′-T3 — the plane is `commit` (settled 2026-08-17)
 
@@ -443,3 +443,28 @@ externalSystem                       required on every LIVE record
 **And the freeze was tested for the first time by something other than intent.** It was asserted in N1a′-T1/T2 and never exercised, because nothing had tried to change a retired record since. T4 is the first schema change that would have: `sr-8`'s remainder was *migrated structurally* — the text moved into `remainder.control` byte-identical — and gained neither new limb. A test now pins both halves: the text is unchanged, and the fields the split added are **absent**. The mirror is pinned too, so the freeze is not a hole — the rules that predate it still bite on a retired record.
 
 **653 vitest** (649 + 4: both limbs present on every shipped partial, an external-system answer on every live record asserted longer than a stub so an empty gesture fails, the two refusals shown to fire on their own paths, and the freeze). Root and console typecheck clean. Every number `rampscan frontier` prints is unchanged — T4 moved what a record must say, not what any record claims.
+
+#### N1a′-T5 — ground rule 10 stops being a norm (landed 2026-08-17)
+
+**The rule had no enforcement, which is the same shape ground rule 8 was in before upstream's auditor gate was adopted.** T5's deliverable is a link check beside the ones that already catch a record naming a recipe the catalog does not hold: **where upstream has adjudicated a control and our record does not say whether it agrees, that is a broken link.**
+
+`citesUpstream: { source, disposition, agreement, note }` — structured rather than a sentence in `rationale`, for exactly the reason T4 chose two limbs over a clause: a citation checked by matching on prose is fragile when the wording moves and gameable when it does not. Structure also buys something a prose check *cannot*: **`disposition` is recounted against upstream's live file**, so a citation that was true at the last re-pin and is false now fails on the next run rather than ageing quietly — the same silent drift the `overlay_version` pin was built to stop, arriving through the reasoning instead of through the bytes.
+
+Four failure modes, each shown to fire, and the third is the one worth building for:
+
+| | |
+|---|---|
+| silent | our record says nothing while upstream has spoken — risk 7 in its plain form |
+| stale | the cited disposition no longer matches upstream's file |
+| **a divergence filed as agreement** | ours and theirs differ while the record claims they match — **risk 7 arriving with a citation attached**, which is the version no reader catches by eye |
+| an agreement filed as divergence | two independent passes reached one verdict and the record throws the corroboration away |
+
+**All three surviving overlaps agree, and the notes say what a commit adds rather than restating our own rationale** — corroboration is only worth something if a reader can see the two routes were different:
+
+- **`SA-08`** — upstream reaches the implementation limb through an IaC policy rule failing a world-readable bucket, and *names the weakness of that route itself*: "a passing rule evidences a principle without naming the one that was chosen." That is precisely the half a commit adds — the architecture contract **names** the separation the organization selected and the gate checks that named declaration against the real import graph. Upstream's rationale ends on the policy platform raising SA-09 and CA-03; ours does not, and on a boundary-protection control that difference is the argument rather than a footnote.
+- **`SA-22`** — the routes are complementary, not redundant. Theirs is detection (which components are past end of support, on a scanned population their own rationale grants is narrower than the control's); ours is the inventory itself, the lockfile and SBOM being the component list an assessment normally takes on trust. The cost of declining the network is that support status stays in the remainder, stated plainly rather than hidden.
+- **`SR-02 (01)`** — both refuse, and **upstream's refusal is the stronger of the two because it is a self-correction**: their own `automation-beyond-aws.md` §P5 had listed this control under build attestation and their step-8 batch carried it forward, until the adjudication read the control text and found it unsupported. Agreement reached after upstream argued its way *off* a route is worth more than agreement reached without considering it — and it is the corroboration our own refusal most needs, since CODEOWNERS is the nearest committed artifact and reading it as a supply-chain risk team would spend the credibility every other row depends on.
+
+The eleven class-c/d controls upstream adjudicated beyond the overlap are **not** touched, per decision 10: they are outside the lead set, upstream reasoned about them first, and filling a column for symmetry is risk 3 arriving by a route the plan had not considered.
+
+**659 vitest** (653 + 6: every shipped overlap cites, the four failure modes, and a citation of a plane that said nothing). Root and console typecheck clean.

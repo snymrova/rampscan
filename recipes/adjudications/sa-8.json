@@ -11,6 +11,12 @@
     "control": "The design phase itself: whether the principles applied were the right ones for this system, and whether they were considered during specification rather than reconstructed afterwards from code that happened to comply. The gate can show the code matches the declaration; it cannot show the declaration was reasoned about before the code.",
     "boundary": "And the repository set. The architecture contract is checked against the import graph of one checkout, so it demonstrates that THIS repository's modules hold the separation they declare. A system whose components span repositories can satisfy every rule here while the boundaries that matter run between the repositories rather than inside them, and no population figure reaches that."
   },
+  "citesUpstream": {
+    "source": "pipeline",
+    "disposition": "partial",
+    "agreement": "agrees",
+    "note": "Both planes rate SA-08 partial, independently and from different evidence, and both keep the same remainder: the specification-and-design phase. Upstream reaches the implementation limb through an IaC policy rule failing a world-readable bucket or an over-broad role — telemetry that a least-privilege or layering principle held in the artifact being deployed — and names the weakness of that route itself: \"a passing rule evidences a principle without naming the one that was chosen.\" That is exactly the half a commit adds. The architecture contract in rampscan.config.json NAMES the separation the organization selected, and the gate checks that named declaration against the actual import graph at that commit, so the principle under test is the one the organization wrote down rather than one inferred from a rule that passed. Upstream's rationale ends \"the platform running the policy pack is itself an external system, raising SA-09 and CA-03\"; ours does not, and on this control that difference is the argument rather than a footnote."
+  },
   "externalSystem": "Nothing, and on this control that is the whole argument. A boundary-protection claim evidenced by a tool that itself calls out would be evidence against itself: rampscan reads the checkout offline, signs with node:crypto, and adds no component to the architecture it reports on. Upstream's route reaches SA-08 through a policy rule running on a SaaS platform, and their own rationale ends on that platform raising SA-09 and CA-03.",
   "reviewed": "2026-08-16",
   "datasetVersion": "2026.07.14.01"
