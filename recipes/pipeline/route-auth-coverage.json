@@ -17,7 +17,8 @@
   ],
   "cadence": "weekly",
   "automatable": "full",
-  "notes": "Live as of M4: route nodes are extracted from the code (express-style registrations), and reaches(route, authCheck) is answered by recursive CTE over calls/handles edges. Auth detection is a name heuristic (default: /auth/i) — override with graph.authPatterns in rampscan.config.json. A repo with no detected routes stays honestly unevidenced, never vacuously evidenced.",
+  "notes": "Live as of M4: route nodes are extracted from the code (express-style registrations), and reaches(route, authCheck) is answered by recursive CTE over calls/handles edges. Auth detection is a name heuristic (default: /auth/i) — override with graph.authPatterns in rampscan.config.json. A repo with no detected routes stays honestly unevidenced, never vacuously evidenced. Empty-set discipline — Guard: the collector omits this recipe's observation key entirely when the graph found no route, because `count_eq 0` over zero rows would report full auth coverage for a repository that serves nothing.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Finds the HTTP routes the code registers, then follows each route's call path to see whether it reaches an authentication or authorization check.",
     "violation": "A route serves requests with no identity check anywhere on the way in. Anyone who can reach the port can call it, whatever the documentation says about who is supposed to.",

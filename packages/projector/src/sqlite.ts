@@ -66,6 +66,7 @@ export async function writeProjectionSqlite(
         fresh_as_of        TEXT,
         commit_sha         TEXT,
         pointers           TEXT, -- JSON array of fix pointers (I2c), violated rows only
+        population         INTEGER, -- observation rows the verdict was reached over (N0-T1)
         introduced_at      TEXT, -- start of the current violated streak
         introducing_commit TEXT,
         scoping_digest     TEXT,
@@ -156,9 +157,9 @@ export async function writeProjectionSqlite(
       `INSERT INTO registers
          (repo, recipe_id, ksi_ids, control_ids, state, cadence, collector, plain, run_id,
           bundle_digest, fresh_as_of, commit_sha,
-          pointers, introduced_at, introducing_commit,
+          pointers, population, introduced_at, introducing_commit,
           scoping_digest, scoping_just, scoping_proposed, scoping_approved, scoping_timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.registers) {
       insertRegister.run(
@@ -175,6 +176,7 @@ export async function writeProjectionSqlite(
         row.freshAsOf ?? null,
         row.commit ?? null,
         row.pointers ? JSON.stringify(row.pointers) : null,
+        row.population ?? null,
         row.introducedAt ?? null,
         row.introducingCommit ?? null,
         row.scoping?.digest ?? null,
@@ -311,6 +313,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
         if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
         if (r.commit_sha) row.commit = r.commit_sha;
         if (r.pointers) row.pointers = JSON.parse(r.pointers);
+        if (r.population !== null && r.population !== undefined) row.population = r.population;
         if (r.introduced_at) row.introducedAt = r.introduced_at;
         if (r.introducing_commit) row.introducingCommit = r.introducing_commit;
         if (r.scoping_digest) {

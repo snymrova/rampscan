@@ -16,6 +16,8 @@
   ],
   "cadence": "weekly",
   "automatable": "full",
+  "notes": "Empty-set discipline — Witness: repo-facts always emits exactly one row carrying the `automated` boolean, so a repo with no update automation violates honestly rather than passing over zero rows; an empty observation set here could only mean the collector never ran.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Looks for a Dependabot or Renovate configuration — a robot whose job is to open a pull request when a dependency you use publishes a new version.",
     "violation": "Nothing brings fixes to you. Vulnerable dependencies stay exactly where they are until a person happens to look, which in practice means until a scan like this one finds them.",

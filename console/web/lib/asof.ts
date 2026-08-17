@@ -72,6 +72,7 @@ export function asOfRegisterRecord(row: AsOfRegisterRow): RegisterRecord {
     fresh_as_of: row.freshAsOf ?? "",
     commit_sha: row.commit ?? "",
     pointers: row.pointers ?? null,
+    population: row.population ?? null,
     introduced_at: row.introducedAt ?? "",
     introducing_commit: row.introducingCommit ?? "",
     scoping: row.scoping ?? null,

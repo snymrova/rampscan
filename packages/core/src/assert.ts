@@ -11,6 +11,13 @@ import type { ObservationRows } from "./ports.js";
 //   - count ops (count_eq, count_lte): the size of the filtered set is
 //     compared to the value ("zero leaks" is `count_eq 0`).
 //
+// Both of those pass over an EMPTY set, which is correct for the claims they
+// were written for and catastrophic for the ones they were not — so since N0
+// every result also states its `population`: how many rows the collector
+// actually emitted for the recipe. The evaluator does not judge that number;
+// it publishes it, and the recipe's `empty_means` plus the catalog test decide
+// what an empty domain is allowed to mean.
+//
 // Field paths are dotted lookups into the row object.
 
 function lookup(row: Record<string, unknown>, path: string): unknown {
@@ -130,6 +137,14 @@ export function evaluateAssertion(
   const filtered = assertion.where
     ? rows.filter((row) => assertion.where!.every((w) => clauseHolds(row, w, now)))
     : rows;
+  // N0-T1: the domain, stated. `rows` is the collector's whole observation set
+  // for this recipe — the same array for every assertion of the recipe — so
+  // the population is a property of the OBSERVATION, not of the clause, and
+  // "count 0" can finally be read as "0 of 412" or "0 of 0". Never folded into
+  // `detail`: detail participates in `sameEvidence` and must stay
+  // byte-identical to what it always was (the discipline I2c used for
+  // `offenders`).
+  const population = rows.length;
 
   if (assertion.op === "count_eq" || assertion.op === "count_lte") {
     const expected = assertion.value;
@@ -138,6 +153,7 @@ export function evaluateAssertion(
         description: assertion.description,
         passed: false,
         detail: `${assertion.op} requires a numeric value, got ${JSON.stringify(expected)}`,
+        population,
       };
     }
     const passed =
@@ -149,6 +165,7 @@ export function evaluateAssertion(
         ? `count ${filtered.length}`
         : `expected count ${assertion.op === "count_eq" ? "==" : "<="} ${expected}, got ${filtered.length}` +
           (filtered.length > 0 ? `; e.g. ${describeRow(filtered[0]!)}` : ""),
+      population,
     };
     // a failing count assertion's offenders are the counted rows themselves
     // ("zero leaks" failing means every filtered row is a leak)
@@ -164,6 +181,7 @@ export function evaluateAssertion(
     detail: passed
       ? `${filtered.length} row(s) satisfy ${assertion.field} ${assertion.op}`
       : `${offenders.length} of ${filtered.length} row(s) fail ${assertion.field} ${assertion.op}; e.g. ${describeRow(offenders[0]!)}`,
+    population,
   };
   if (!passed) attachOffenders(result, offenders);
   return result;

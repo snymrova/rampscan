@@ -24,6 +24,8 @@
   "cadence": "weekly",
   "automatable": "full",
   "caveats": "Detects the configuration, not the attestations themselves — verifying published attestations against a registry is appliance-phase work.",
+  "notes": "Empty-set discipline — Counter: repo-facts always emits exactly one summary row of workflow and provenance-step counts, so a repo with no CI at all violates honestly instead of passing over an empty set; an empty observation set here could only mean the collector never ran.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Checks whether any CI workflow records where a build came from — a signed attestation or provenance document tying the artifact it published back to the commit that produced it.",
     "violation": "Nothing links a shipped artifact to the source it was built from. Anyone reviewing an incident later has to take the build's word for it, and an artifact built somewhere else looks exactly like the real one.",

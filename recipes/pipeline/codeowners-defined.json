@@ -17,6 +17,8 @@
   "cadence": "weekly",
   "automatable": "full",
   "caveats": "Proves ownership is declared, not that branch protection enforces it — enforcement lives server-side and needs the GitHub App (appliance phase).",
+  "notes": "Empty-set discipline — Witness: repo-facts always emits exactly one row carrying the existence boolean, so a repo with no CODEOWNERS file violates honestly rather than passing over zero rows; an empty observation set here could only mean the collector never ran.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Looks for a CODEOWNERS file in one of the three locations the host honours: the repository root, .github/, or docs/.",
     "violation": "Nobody is named as the required reviewer for anything. Review still happens by convention, but nothing routes a change to the people who understand that part of the code, and nothing notices when it does not.",

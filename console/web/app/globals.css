@@ -240,6 +240,18 @@ ol.chain { list-style: none; margin: 0; padding: 0; }
 .pill.live { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 45%, transparent); }
 .pill.dead { color: var(--text-dim); border-color: var(--border); }
 
+/* ---- the domain a verdict was reached over (N0-T1) ----
+   A pass over an empty domain is TRUE and nearly worthless, and until N0 it
+   wore the same green badge as an exhaustive search. It does not any more:
+   the population rides the pill, and an empty one is drawn as the warning it
+   is rather than left for the reader to discover on the evidence page. */
+.pill.population { color: var(--text-dim); border-color: var(--border); font-weight: 500; }
+.pill.population.empty-domain {
+  color: var(--unevidenced); font-weight: 700;
+  border-color: color-mix(in srgb, var(--unevidenced) 55%, transparent);
+  background: color-mix(in srgb, var(--unevidenced) 12%, transparent);
+}
+
 /* ---- collector runtime pills (J2): a skip is the loudest fact ---- */
 .pill.runtime-skipped { color: var(--unevidenced); font-weight: 700; border-color: var(--unevidenced); background: color-mix(in srgb, var(--unevidenced) 16%, transparent); }
 .pill.runtime-cache-hit { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }

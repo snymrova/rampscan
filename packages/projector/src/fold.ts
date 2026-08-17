@@ -307,6 +307,12 @@ export function foldEntries(
       row.commit = p.commit;
       // the run that produced THIS evidence, from the predicate's own claim
       row.runId = p.run_id;
+      // the domain the verdict was reached over (N0-T1), lifted from the
+      // signed assertions. Every assertion of a recipe saw the same
+      // observation set, so the first one that states a population states the
+      // row's; a bundle minted before N0 states none and the row carries none.
+      const population = p.assertions.find((a) => a.population !== undefined)?.population;
+      if (population !== undefined) row.population = population;
       if (p.verdict === "violated") {
         // fix pointers (I2c): where the violation lives, lifted from the
         // live bundle's failing assertions — absent when the evidence

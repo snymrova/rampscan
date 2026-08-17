@@ -48,6 +48,8 @@ interface AssertionResult {
   /** structured fix pointers (I2c) — bundles minted since carry them */
   offenders?: OffenderPointer[];
   offender_count?: number;
+  /** the observation rows this assertion was evaluated over (N0-T1) */
+  population?: number;
 }
 
 /**
@@ -549,6 +551,20 @@ function Evidence({ digest }: { digest: string }) {
                     <td>{a.description}</td>
                     <td className="faint" style={{ overflowWrap: "anywhere" }}>
                       {a.detail ?? ""}
+                      {/* N0-T1: the domain, beside the count that was taken
+                          over it. `detail` says "count 0"; alone that reads
+                          the same whether the collector searched 412 rows or
+                          none, and the recipe's own `empty_means` is the only
+                          reason the second one is allowed to be evidence at
+                          all. Never folded INTO detail — detail participates
+                          in evidence identity and must stay byte-identical. */}
+                      {a.population !== undefined && (
+                        <span className={a.population === 0 ? "assertion-fail" : undefined}>
+                          {" "}
+                          of {a.population} observation row{a.population === 1 ? "" : "s"}
+                          {a.population === 0 && " — an empty domain"}
+                        </span>
+                      )}
                       {a.offenders ? (
                         // structured offenders (I2c): every failing row's
                         // pointer, bounded — the count says what was cut

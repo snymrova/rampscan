@@ -271,6 +271,20 @@ export interface RegisterRow {
    */
   pointers?: OffenderPointer[];
   /**
+   * The domain this cell's live verdict was reached over (N0-T1): how many
+   * observation rows the collector emitted for the recipe. One number per row
+   * rather than one per assertion, because every assertion of a recipe is
+   * evaluated over the same observation set.
+   *
+   * It is on the board because that is where the badge is read. "Evidenced"
+   * over 412 dependencies and "evidenced" over none are the same word for
+   * very different facts, and a reader who has to open the evidence page to
+   * tell them apart will read the first one every time. Absent when the live
+   * evidence predates N0 — never inferred, because a population invented here
+   * would describe a scan that did not state one.
+   */
+  population?: number;
+  /**
    * The start of the current violated streak (I2c), walked back through the
    * cell's bundle chain: the first consecutive violated bundle's timestamp
    * and scanned commit. "Scanned" said honestly — scans sample commits, so

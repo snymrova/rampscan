@@ -155,6 +155,11 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("fresh_as_of"),
       text("commit_sha"),
       json("pointers"),
+      // a NUMBER in a json field, deliberately (N0-T1): absence has to survive
+      // the round trip, and a PocketBase number field coerces null to 0 —
+      // which would state a population of zero for evidence that stated none,
+      // the exact invention this field exists to prevent.
+      json("population"),
       text("introduced_at"),
       text("introducing_commit"),
       json("scoping"),
@@ -400,6 +405,7 @@ export async function writeProjectionPocketBase(
       fresh_as_of: row.freshAsOf ?? "",
       commit_sha: row.commit ?? "",
       pointers: row.pointers ?? null,
+      population: row.population ?? null,
       introduced_at: row.introducedAt ?? "",
       introducing_commit: row.introducingCommit ?? "",
       scoping: row.scoping ?? null,
@@ -524,6 +530,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
     if (r.commit_sha) row.commit = r.commit_sha;
     if (r.pointers) row.pointers = r.pointers;
+    if (typeof r.population === "number") row.population = r.population;
     if (r.introduced_at) row.introducedAt = r.introduced_at;
     if (r.introducing_commit) row.introducingCommit = r.introducing_commit;
     if (r.scoping) row.scoping = r.scoping;

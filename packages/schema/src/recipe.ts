@@ -82,6 +82,28 @@ export const PlainLanguage = z.object({
 });
 export type PlainLanguage = z.infer<typeof PlainLanguage>;
 
+/**
+ * What an EMPTY observation set means for this recipe (N0-T2) — the one thing
+ * no static test can infer, so the recipe declares it.
+ *
+ *   "clean"        the collector searched a domain that exists and found
+ *                  nothing: gitleaks walked every commit, spectral linted
+ *                  every document it found. An empty set is a real result and
+ *                  `evidenced` is honest.
+ *   "unevidenced"  an empty set means there was nothing to search. The
+ *                  collector MUST guard (omit the observation key) or skip
+ *                  (state a reason) — it may never emit `[]` and let the
+ *                  assertions pass over zero rows.
+ *
+ * Two values, not three: a domain that exists but was searched incompletely is
+ * a `population` fact (AssertionResult.population), not a second kind of
+ * emptiness. There is no default, and `catalog.test.ts` refuses a recipe that
+ * leaves it unstated — a recipe that cannot say what an empty result means has
+ * not decided, and the vacuous pass is what undecided looks like in production.
+ */
+export const EmptyMeans = z.enum(["clean", "unevidenced"]);
+export type EmptyMeans = z.infer<typeof EmptyMeans>;
+
 export const PipelineRecipe = z.object({
   id: z.string(),
   ksi_ids: z.array(z.string()).min(1),
@@ -102,6 +124,15 @@ export const PipelineRecipe = z.object({
    * lacks one. Shape is schema's job; completeness is policy's.
    */
   plain: PlainLanguage.optional(),
+  /**
+   * N0's empty-set declaration. OPTIONAL in the shape and REQUIRED in the
+   * shipped catalog, for the same reason `plain` is: the recipe shape mirrors
+   * aws-evidence.json, which carries no such field, so an imported recipe must
+   * still parse — while `catalog.test.ts` fails CI on any recipe in
+   * `recipes/pipeline/` that omits it. Shape is schema's job; completeness is
+   * policy's.
+   */
+  empty_means: EmptyMeans.optional(),
   anchor: z.literal("commit"),
 });
 export type PipelineRecipe = z.infer<typeof PipelineRecipe>;

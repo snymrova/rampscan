@@ -19,8 +19,9 @@
   ],
   "cadence": "daily",
   "automatable": "full",
-  "notes": "Config-plane collector, no graph involvement by design — a Dockerfile has no call path. Frameworks are limited to what the committed tree contains (detected up front from git); a repo with nothing IaC-shaped skips honestly and the recipe stays unevidenced, never vacuously evidenced. --skip-download: the policy set inside the pinned image is the whole baseline, offline and deterministic.",
+  "notes": "Config-plane collector, no graph involvement by design — a Dockerfile has no call path. Frameworks are limited to what the committed tree contains (detected up front from git); a repo with nothing IaC-shaped skips honestly and the recipe stays unevidenced, never vacuously evidenced. --skip-download: the policy set inside the pinned image is the whole baseline, offline and deterministic. Empty-set discipline — Skip: with nothing IaC-shaped in the tree the collector skips with a stated reason and the recipe stays unevidenced; when it does run, every policy in the pinned image's baseline is applied to every file of every detected framework, so an empty failure set is an exhaustively searched clean result.",
   "caveats": "Open-source checkov emits no severity — the assertion is baseline-clean, not severity-thresholded. Kubernetes manifests deferred until a consuming repo demands them.",
+  "empty_means": "clean",
   "plain": {
     "checks": "Runs a fixed policy baseline over the infrastructure definitions committed to the repository — Dockerfiles, CI workflows, Terraform — and counts the checks that fail.",
     "violation": "Some piece of your infrastructure is defined in a way the baseline rejects: a container with a writable root filesystem, storage without encryption, a workflow holding more permission than it uses. It is a real setting in a real file, not a note about style.",

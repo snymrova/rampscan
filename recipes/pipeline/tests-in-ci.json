@@ -17,6 +17,8 @@
   "cadence": "weekly",
   "automatable": "full",
   "caveats": "Recognizes common test invocations by pattern; a bespoke test harness under an unrecognized name reads as absent.",
+  "notes": "Empty-set discipline — Counter: repo-facts always emits exactly one summary row of workflow and test-step counts, so a repo with no CI at all violates honestly instead of passing over an empty set; an empty observation set here could only mean the collector never ran.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Reads the CI workflows and looks for a step that actually runs a test suite, rather than only building, installing or linting.",
     "violation": "Changes reach the default branch with nothing checking that they work. Every other control that rests on “the pipeline would have caught it” is resting on a pipeline that does not look.",

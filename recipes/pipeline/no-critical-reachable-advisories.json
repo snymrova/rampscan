@@ -24,7 +24,8 @@
   ],
   "cadence": "daily",
   "automatable": "full",
-  "notes": "M4 posture: reachability-gated. An advisory is not_affected only when the code graph PROVES the package is beyond every entry point and declared route — that claim is emitted as OpenVEX with justification vulnerable_code_not_in_execute_path. No graph, or no detectable entry points, degrades to the M1 posture: every advisory counts, marked unknown.",
+  "notes": "M4 posture: reachability-gated. An advisory is not_affected only when the code graph PROVES the package is beyond every entry point and declared route — that claim is emitted as OpenVEX with justification vulnerable_code_not_in_execute_path. No graph, or no detectable entry points, degrades to the M1 posture: every advisory counts, marked unknown. Empty-set discipline — Skip: no SBOM to read and the collector skips with a stated reason; when it does run, every component the SBOM lists is matched against the whole pinned advisory database, so an empty advisory set is an exhaustively searched clean result. What that result does NOT say is how large the domain was — a repository with no dependencies also counts zero, which is why every assertion states its population.",
+  "empty_means": "clean",
   "plain": {
     "checks": "Cross-references the repository's component inventory against published advisories, then walks the code to see whether the affected package can be reached at all from the places the program starts.",
     "violation": "A dependency with a known critical or high-severity advisory sits on a path your code can execute — or the walk could not prove that it does not, which counts the same way here. This is the subset worth your attention, not the whole advisory list.",

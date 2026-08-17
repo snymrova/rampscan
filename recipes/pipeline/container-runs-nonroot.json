@@ -16,7 +16,8 @@
   ],
   "cadence": "weekly",
   "automatable": "full",
-  "notes": "Unevidenced when the repo has no Dockerfile — nothing container-shaped to prove.",
+  "notes": "Unevidenced when the repo has no Dockerfile — nothing container-shaped to prove. Empty-set discipline — Guard over a witness: repo-facts emits the single `nonroot` row only when a Dockerfile exists and omits the observation key otherwise, because `nonroot eq true` over zero rows would pass vacuously.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Reads the Dockerfile and works out which account the container ends up running as: the last USER line in the final build stage, or root when the file never names one.",
     "violation": "The container runs as root. Any code execution inside it starts with full control of the container, and a much shorter path out of it wherever a host mount or a kernel bug is available.",

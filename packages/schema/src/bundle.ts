@@ -63,6 +63,25 @@ export const AssertionResult = z.object({
   offenders: z.array(OffenderPointer).optional(),
   /** total failing rows, so a bounded `offenders` can honestly say "+N more" */
   offender_count: z.number().int().optional(),
+  /**
+   * The domain this assertion was evaluated over (N0-T1): the number of
+   * observation rows the collector emitted for the recipe, BEFORE the
+   * assertion's own `where` filter narrowed them.
+   *
+   * It exists because `count 0` is ambiguous and the ambiguity is the whole
+   * failure mode N0 is built to catch: "0 of 412" and "0 of 0" are different
+   * facts and only one of them is evidence. Carried on EVERY assertion, not
+   * only the count ops the plan named — a row-wise op over an empty filtered
+   * set passes vacuously too (`assert.ts`'s own doc comment says so), so the
+   * discrimination has to be available wherever a pass can be vacuous.
+   *
+   * Deliberately EXCLUDED from evidence identity (`sameEvidence`), like the
+   * I2c additions: it restates the size of what `detail` already witnesses, so
+   * keying on it would re-key every pre-N0 bundle for zero informational
+   * change. Old evidence honestly carries no population until real drift
+   * refreshes it.
+   */
+  population: z.number().int().optional(),
 });
 export type AssertionResult = z.infer<typeof AssertionResult>;
 

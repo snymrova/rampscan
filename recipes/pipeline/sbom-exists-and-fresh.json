@@ -23,7 +23,8 @@
   ],
   "cadence": "weekly",
   "automatable": "full",
-  "notes": "syft over the working tree at the pinned commit; the SBOM artifact is the input to osv-scanner downstream.",
+  "notes": "syft over the working tree at the pinned commit; the SBOM artifact is the input to osv-scanner downstream. Empty-set discipline — Skip over a counter: no syft and the collector skips with a stated reason; when it does run it emits exactly one summary row carrying the component count and the generation instant, so an empty observation set could only mean the collector never ran — and both assertions are row-wise, which over zero rows would pass vacuously.",
+  "empty_means": "unevidenced",
   "plain": {
     "checks": "Builds an inventory of every component the repository is made of — a software bill of materials — and checks that this scan generated it rather than finding an older one lying around.",
     "violation": "Either nothing enumerates what your software is made of, or the list on hand describes an older version of it. Every question that depends on it — above all “are we affected by this advisory?” — gets answered against the wrong inventory.",

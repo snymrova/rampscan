@@ -87,6 +87,12 @@ export interface RegisterRecord {
   commit_sha: string;
   /** fix pointers (I2c) — violated rows whose evidence carries them; null before that */
   pointers: OffenderPointer[] | null;
+  /**
+   * How many observation rows this cell's verdict was reached over (N0-T1).
+   * Null when the live evidence predates it — never 0 by default, because
+   * "counted over nothing" is the one thing this field exists to say out loud.
+   */
+  population: number | null;
   /** start of the current violated streak — first scanned commit the violation appeared at */
   introduced_at: string;
   introducing_commit: string;
@@ -356,6 +362,8 @@ export interface AsOfRegisterRow {
   freshAsOf?: string;
   commit?: string;
   pointers?: OffenderPointer[];
+  /** the domain the historical verdict was reached over (N0-T1) */
+  population?: number;
   introducedAt?: string;
   introducingCommit?: string;
   scoping?: ScopingInfo;

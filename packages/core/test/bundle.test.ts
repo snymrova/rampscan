@@ -10,6 +10,7 @@ import { sameEvidence } from "../src/bundle.js";
 function bundle(extra: {
   offenders?: Array<{ file?: string; line?: number }>;
   offender_count?: number;
+  population?: number;
   reproduce?: string;
   collector?: string;
   basis?: EvidenceBundle["predicate"]["basis"];
@@ -35,6 +36,7 @@ function bundle(extra: {
           detail: "1 of 1 row(s) fail x eq",
           ...(extra.offenders !== undefined ? { offenders: extra.offenders } : {}),
           ...(extra.offender_count !== undefined ? { offender_count: extra.offender_count } : {}),
+          ...(extra.population !== undefined ? { population: extra.population } : {}),
         },
       ],
       ...(extra.reproduce !== undefined ? { reproduce: extra.reproduce } : {}),
@@ -57,6 +59,22 @@ describe("sameEvidence × the I2c additions", () => {
     });
     expect(sameEvidence(before, after)).toBe(true);
     expect(sameEvidence(after, before)).toBe(true);
+  });
+
+  it("a pre-N0 bundle and its population-carrying re-scan are the same evidence", () => {
+    // N0-T1 rides the same slot for the same reason: the population restates
+    // the SIZE of what `detail` already witnesses, so keying on it would
+    // supersede every live bundle for zero informational change. The exit test
+    // for N0 says no digest in the ledger may move because the field arrived,
+    // and this is where that promise is kept.
+    expect(sameEvidence(bundle({}), bundle({ population: 412 }))).toBe(true);
+    expect(sameEvidence(bundle({ population: 412 }), bundle({}))).toBe(true);
+    // and — the case the field exists for — an exhaustive pass and an
+    // empty-domain pass are the same EVIDENCE while being very different
+    // facts. Identity is about what re-signs, not about what a reader should
+    // be told: the board and the evidence page draw them apart (N0-T1's
+    // surfaces), the ledger does not re-key over it.
+    expect(sameEvidence(bundle({ population: 0 }), bundle({ population: 412 }))).toBe(true);
   });
 
   it("a changed detail still re-keys — identity itself is untouched", () => {

@@ -473,6 +473,26 @@ function RegisterRowView({
           <span className={`pill ${row.state}`}>
             <Term name={row.state}>{row.state === "notApplicable" ? "n/a" : row.state}</Term>
           </span>
+          {/* N0-T1: the domain the verdict was reached over. "0 of 412" and
+              "0 of 0" are different facts and only one of them is evidence,
+              and the difference has to be legible where the badge is read —
+              a reader who must open the evidence page to tell an exhaustive
+              pass from an empty one will read the first one every time.
+              Rendered only where the evidence stated it: a cell with no
+              population says nothing rather than implying zero. */}
+          {row.population !== null && row.state !== "unevidenced" && (
+            <span
+              className={`pill population${row.population === 0 ? " empty-domain" : ""}`}
+              style={{ marginLeft: 6 }}
+              title={
+                row.population === 0
+                  ? "reached over an EMPTY observation set — the collector produced no rows at all, so this verdict counted nothing"
+                  : `reached over ${row.population} observation row(s) — the domain the collector actually looked at`
+              }
+            >
+              over {row.population} row{row.population === 1 ? "" : "s"}
+            </span>
+          )}
           {change && (
             <span
               className={`pill ${KIND_PILL[change.kind]}`}

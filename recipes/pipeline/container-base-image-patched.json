@@ -18,6 +18,8 @@
   "cadence": "daily",
   "automatable": "full",
   "caveats": "M1 scans the base image the final FROM names, not a locally built app image; unevidenced when there is no Dockerfile or the image cannot be pulled.",
+  "notes": "Empty-set discipline — Skip: with no image to scan the collector skips with a stated reason and the recipe stays unevidenced; when it does run, every package grype resolves in the image is matched against the whole pinned vulnerability database, so an empty finding set is an exhaustively searched clean result.",
+  "empty_means": "clean",
   "plain": {
     "checks": "Takes the base image your Dockerfile builds on and scans the operating-system packages inside it for known critical vulnerabilities — the software your application's dependency manifest never mentions.",
     "violation": "The image you ship carries a known-critical hole in something you did not choose and do not list: a system library, a shell, a TLS package. It is present in every running container regardless of how clean your own dependencies are.",
