@@ -25,3 +25,7 @@ e2e/.smoke/
 test-results/
 playwright-report/
 .gstack/
+# design-tooling scratch (impeccable): local authoring aids, not repository documents
+console/web/.impeccable/
+console/web/DESIGN.md
+console/web/PRODUCT.md
