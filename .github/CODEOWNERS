@@ -1,0 +1,7 @@
+# Every path, one owner — this is a single-maintainer repository and saying so
+# in the file is more honest than a pattern list implying a team.
+#
+# The handle is taken from the sibling ramprules remote (github.com/snymrova),
+# which is the same person who authors every commit here. If rampscan lands
+# under a different account or an organisation, this is the one line to change.
+* @snymrova

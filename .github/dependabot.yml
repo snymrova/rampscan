@@ -1,0 +1,32 @@
+# Dependency update automation (plan P3, alongside the test job).
+#
+# Added because a security tool that lets its own dependencies rot is making an
+# argument against itself, and because this repository is about to be public —
+# not because `dependency-update-automation` reports it violated. The recipe
+# checks for the existence of this file and nothing more; what makes the row
+# honest is that the updates it opens actually get looked at.
+#
+# Note the ordering: dependabot does nothing until a remote exists, so this
+# config is inert until P5 and the recipe flips at commit time regardless. That
+# gap is the recipe's own stated remainder, not a defect in it.
+version: 2
+updates:
+  # the workflows above pin every action by SHA, which is what
+  # `ci-actions-pinned` requires and what makes a pinned action go stale
+  # silently. This is the thing that unsticks them.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # one PR for the noisy, low-risk churn; anything else arrives alone and
+      # gets read on its own
+      dev-dependencies:
+        dependency-type: development
