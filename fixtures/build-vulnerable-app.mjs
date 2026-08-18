@@ -76,7 +76,18 @@ const gitEnv = {
 };
 
 function git(...args) {
-  return execFileSync("git", args, { cwd: root, env: gitEnv, encoding: "utf8" });
+  // GIT_DIR and GIT_WORK_TREE are pinned rather than relying on `cwd` alone.
+  // With cwd only, git falls back to DISCOVERY: if `root` exists but its .git
+  // does not — an interrupted build, a half-deleted fixture, two builds racing —
+  // git walks UP and finds the rampscan repository that contains this file, and
+  // then `git add -A && git commit` writes the whole working tree into rampscan's
+  // own history under the fixture identity below. That has happened. Pinning
+  // both makes the same situation an error instead of a commit.
+  return execFileSync("git", args, {
+    cwd: root,
+    env: { ...gitEnv, GIT_DIR: join(root, ".git"), GIT_WORK_TREE: root },
+    encoding: "utf8",
+  });
 }
 
 function write(rel, content) {
