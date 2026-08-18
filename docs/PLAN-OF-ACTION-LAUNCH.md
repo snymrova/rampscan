@@ -82,7 +82,20 @@ No code. Two of these need the owner and cannot be defaulted.
   > one-file change in the sibling repo**, not on anything in this one.
 - [ ] **P0-3. What of the internal plans ships.** ~3,500 lines across 14 documents, including session logs of unusual length. Default: **ship all of it.** The build log is the credibility argument for a compliance-evidence tool — it is the artifact that shows the reasoning was done rather than asserted, which is exactly what the product claims about evidence. Record the decision either way so it is not re-opened per-file during P4.
 - [ ] **P0-4. Version and tag scheme.** `v0.1.0-beta` for this launch; workspace packages stay `private: true` and unpublished (no npm), so the tag is the only version surface. Record that the CLI is run from a clone, by decision, until an external user asks for a bin.
-- [ ] **P0-5. Support posture.** What `SECURITY.md` promises and to what address; whether issues are open; what "beta" commits you to. A security tool with no vulnerability-report path is the first thing a security reader looks for and does not find.
+- [x] **P0-5. Support posture.** What `SECURITY.md` promises and to what address; whether issues are open; what "beta" commits you to. A security tool with no vulnerability-report path is the first thing a security reader looks for and does not find.
+
+  > **Decided 2026-08-18: GitHub private vulnerability reporting, issues open
+  > with the three templates, and a promise sized to one maintainer** — 7 days to
+  > acknowledge, 14 to a first assessment, fix or public statement best-effort,
+  > `main` only, credit unless declined. The private-reporting channel is chosen
+  > over a published address because there is no domain to host one and an
+  > unmonitored `security@` is worse than no address; it also costs a repository
+  > setting at P5 rather than a mailbox forever. What the policy adds beyond the
+  > template is a scope sentence this product needs and a generic one would not
+  > have: **a recipe reporting `evidenced` without the evidence being there is a
+  > security report, not a bug report** — a compliance tool that passes a control
+  > it cannot prove is issuing a false attestation, and someone will hand it to an
+  > assessor.
 - [ ] **P0-6. Repository name, description, topics, visibility.** Public from the first push — a repository created private and flipped later carries its whole private history into public visibility at the moment of the flip, which is a worse version of the P1 problem.
 
 **Exit:** six decisions recorded in this document's session log with their reasoning. No files written.
@@ -116,8 +129,8 @@ No code. Two of these need the owner and cannot be defaulted.
 ## 5. Phase P2 — the files a public repository owes
 
 - [x] **P2-1. `LICENSE`** per P0-1, plus a copyright line with a real holder.
-- [ ] **P2-2. `NOTICE`** — attribution for `docs/context/` per P0-2, and for the pinned third-party tools the collectors invoke. Not required by every licence; required by honesty for a repository that vendors a snapshot of someone else's published data.
-- [ ] **P2-3. `SECURITY.md`** per P0-5 — reporting path, expected response, and the one sentence a reader of *this* product wants: what rampscan does and does not send anywhere (collectors take no network, execution is local, signing is `node:crypto` — the sentence the adjudication records already make repeatedly, which makes it quotable rather than new).
+- [x] **P2-2. `NOTICE`** — attribution for `docs/context/` per P0-2, and for the pinned third-party tools the collectors invoke. Not required by every licence; required by honesty for a repository that vendors a snapshot of someone else's published data.
+- [x] **P2-3. `SECURITY.md`** per P0-5 — reporting path, expected response, and the one sentence a reader of *this* product wants: what rampscan does and does not send anywhere (collectors take no network, execution is local, signing is `node:crypto` — the sentence the adjudication records already make repeatedly, which makes it quotable rather than new).
 - [x] **P2-4. `CONTRIBUTING.md`** — the ground rules that actually gate a merge, not a generic template: ports-and-adapters (§0.1), append-only tested by a cheat (§0.3), computed-never-typed (§0.4), no vacuous passes (depth §0.7), and the three authored `plain` paragraphs every recipe owes. A contributor who reads this and writes a recipe correctly on the first try is what the file is for.
 - [~] **P2-5. `.github/` furniture** — issue templates (bug · recipe proposal · adjudication disagreement), a PR template pointing at the ground rules, and `CODEOWNERS`.
 - [x] **P2-6. `.gitleaksignore`** for the fixture's remaining intentional plants, so the self-scan and any contributor's scan stay honest rather than noisy.
@@ -170,6 +183,7 @@ Today `smoke.yml` runs the Playwright console smoke and **nothing else**. The 69
 
 ## 8. Phase P5 — the push
 
+- [ ] **P5-0. The three placeholders that must be closed before the push, not after.** Each is a file that is already correct except for a fact P0-6 has not decided, and each fails silently rather than loudly. (a) `NOTICE` states that `docs/context/ramprules/` is CC BY 4.0 — **decided 2026-08-18, and not yet applied in the sibling repository.** Until a `LICENSE` lands there, `NOTICE` cites a licence that does not exist, which is worse than the missing-licence problem it was written to fix. (b) `.github/ISSUE_TEMPLATE/config.yml` carries `OWNER/REPO` in two absolute URLs — GitHub's issue-form schema takes no relative link — and one of them is the *report a vulnerability* link, the first thing a security reader clicks. (c) `CODEOWNERS` is unwritten because it needs a GitHub handle.
 - [ ] **P5-1. Create the remote** (public, per P0-6) and push `main`.
 - [ ] **P5-2. Watch the first CI run** and fix forward per P3-4.
 - [ ] **P5-3. Handle secret-scanning.** Push protection may still flag the fixture's remaining intentional plants even after P1. If it blocks, the resolution is the allowlist and a dismissal with a reason — never a quiet weakening of the fixture, which is load-bearing for the product's own tests.
@@ -219,6 +233,7 @@ Update as work lands — newest first. "Phase" refers to this document's phases.
 
 | Date | Phase | What landed |
 |---|---|---|
+| 2026-08-18 | P2 · P0-5 | **P2 closes; the last two files landed on answers.** `SECURITY.md` per the P0-5 decision recorded at that item, carrying the no-network/local-execution/`node:crypto` sentence the adjudication records make repeatedly and a scope clause that counts a vacuous pass as a security report. `NOTICE` attributes the ramprules snapshot as CC BY 4.0 per the sibling-licence decision, attributes the harnessarch snapshot, and states plainly that **no scan tool is redistributed** — each resolves at run time from its own publisher — which is a shorter and truer NOTICE than one asserting seven licences it cannot verify offline. The sibling's `LICENSE` is decided but not yet written, so **`NOTICE` is correct only after that lands**; tracked as P5-0(a) alongside the `OWNER/REPO` placeholder and the unwritten `CODEOWNERS`, because all three are files that are already right except for a fact P0-6 has not decided. |
 | 2026-08-18 | P2 | **Four of six landed; two are held on answers, and one of the four was a plan item that dissolved on inspection.** `LICENSE` is the canonical Apache-2.0 text per P0-1 (P2-1). `CONTRIBUTING.md` states the ten ground rules as merge gates and names the test that enforces each — `self-contract.test.ts`, `ledger.test.ts`'s cheating tests, `plain.test.ts`, `catalog.test.ts` and `catalog-bare.e2e.test.ts`, `frontier.test.ts` — plus the recipe and adjudication checklists (P2-4). `.github/` carries three issue forms (bug · recipe proposal · adjudication disagreement, the last two written as the CONTRIBUTING checklists asked as questions) and a PR template (P2-5, less `CODEOWNERS`, which needs a GitHub handle). **P2-6 shipped as no file** — see the correction at the item. **P2-2 stays blocked on the sibling's missing licence; P2-3 stays blocked on P0-5.** |
 | 2026-08-18 | P1 | **The history is publishable, and no remote has ever existed.** One `git filter-repo` pass (P1-3), `--replace-text` + `--mailmap` together. `gitleaks detect` over the rewritten 57 commits: **no leaks found**, from 4. `git log --format='%ae %ce' \| sort -u`: **one address**. 695/695 tests green, `tsc --build` clean root and console, fixture rebuilds to its documented SHAs. A verified `git bundle` of the pre-rewrite history is held outside the repo. |
 | 2026-08-18 | P1-1 | The three shaped credentials assembled rather than written (see the correction at P1-1 — the item named one file, gitleaks named three). |

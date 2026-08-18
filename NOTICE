@@ -1,0 +1,74 @@
+rampscan
+Copyright 2026 Sunny Luthra
+
+This product is licensed under the Apache License, Version 2.0. See LICENSE.
+
+================================================================================
+Bundled third-party content
+================================================================================
+
+Two directories in this repository are snapshots of other projects, copied in on
+2026-08-13 so that work on rampscan has the demand-side dataset and the founding
+arguments in reach. They are redistributed here, so they are named here.
+
+--------------------------------------------------------------------------------
+docs/context/ramprules/  —  the FedRAMP Rules Hub dataset
+--------------------------------------------------------------------------------
+
+  Source:   ramprules — https://ramprules.com
+  Snapshot: dataset version 2026.07.14.01, taken 2026-08-13
+  Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0)
+            https://creativecommons.org/licenses/by/4.0/
+
+This is a copy of ramprules' published JSON slices — the KSI graph, the control
+set, the AWS evidence recipes and the automation frontier. rampscan reads it in
+dev mode and 17 test files depend on it, which is why it is shipped whole rather
+than trimmed or fetched.
+
+It is a snapshot and it rots. rampscan pins against `dataset_version` and, per
+slice, against `overlay_version` — never against these copies. The source of
+truth is upstream, and `docs/context/README.md` says how to check a fact against
+it.
+
+Where this repository's own adjudication records cite or disagree with an
+upstream disposition, the citation is recorded in the record itself
+(`citesUpstream`), not here.
+
+--------------------------------------------------------------------------------
+docs/context/harnessarch/  —  the founding brainstorms
+--------------------------------------------------------------------------------
+
+  Source:   harnessarch (sibling project, same author)
+  Snapshot: taken 2026-08-13
+
+The two design documents rampscan descends from: the code-graph harness and the
+domain harnesses. Included as context, unchanged.
+
+================================================================================
+Third-party tools rampscan invokes but does not redistribute
+================================================================================
+
+No copy of any of these ships in this repository. rampscan resolves each one at
+run time — a binary already on your PATH is used as-is, otherwise the pinned
+container image is run — and it never installs anything on the host. Each tool
+reaches you from its own publisher, under its own licence, which travels with the
+binary or image you obtained. They are named here because rampscan's output cites
+their findings, and a reader deserves to know whose analysis they are reading.
+
+  syft         1.51.0     anchore/syft:v1.51.0                   SBOM
+  grype        0.117.0    anchore/grype:v0.117.0                 container advisories
+  gitleaks     8.24.3     ghcr.io/gitleaks/gitleaks:v8.24.3      secrets in history
+  osv-scanner  2.5.0      ghcr.io/google/osv-scanner:v2.5.0      dependency advisories
+  semgrep      1.173.0    semgrep/semgrep:1.173.0                static analysis
+  checkov      3.3.11     bridgecrew/checkov:3.3.11              IaC misconfiguration
+  spectral     6.16.3     stoplight/spectral:6.16.3              API description linting
+
+The authoritative list is packages/collectors/tools.json; this table is a copy of
+it and the file wins.
+
+PocketBase (pinned 0.39.10) backs the local console. Its binary is likewise not
+vendored here — `pnpm fetch-pocketbase` downloads it from the official release and
+verifies it against the sha256 sums pinned in console/pocketbase/version.json.
+
+npm dependencies are declared in the package manifests and resolved by pnpm from
+the registry. None is vendored into this repository.
