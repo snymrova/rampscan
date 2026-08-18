@@ -102,7 +102,7 @@ describe("classifySkip, pinned to the real reason producers", () => {
     const result = queue.classifySkip(wrapped);
     expect(result.actionable).toBe(true);
     expect(result.category).toBe("tool-missing");
-    expect(result.hint).toContain("pnpm doctor");
+    expect(result.hint).toContain("pnpm run doctor");
   });
 
   it("the collectors' crash wording is collector-failed", () => {
@@ -256,7 +256,7 @@ describe("deriveActionQueue: the ranked list of record", () => {
     expect(actionable).toHaveLength(1);
     expect(actionable[0]!.recipeIds).toEqual(["iac-baseline-clean"]);
     expect(actionable[0]!.title).toContain('"checkov"');
-    expect(actionable[0]!.action).toContain("pnpm doctor");
+    expect(actionable[0]!.action).toContain("pnpm run doctor");
     // the honest spectral skip stays on the board, not the queue
     expect(derive().some((i) => i.recipeIds.includes("api-spec-lint-clean"))).toBe(false);
   });
@@ -356,7 +356,7 @@ describe("actionable-unevidenced from the run record, with no daemon anywhere (K
     expect(items[0]!.kind).toBe("actionable-unevidenced");
     expect(items[0]!.recipeIds).toEqual(["iac-baseline-clean"]);
     expect(items[0]!.detail).toContain(absentReason("checkov"));
-    expect(items[0]!.action).toContain("pnpm doctor");
+    expect(items[0]!.action).toContain("pnpm run doctor");
     // stamped with the run's own clock — the queue says when, and the only
     // honest instant available is the scan's
     expect(items[0]!.at).toBe(runRecord.run_timestamp);

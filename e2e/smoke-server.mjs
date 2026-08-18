@@ -49,14 +49,14 @@ execFileSync(
 
 // Fail here, legibly, rather than let the board tests fail confusingly: if
 // the flagship recipe is not violated, the scan tools are missing or broken
-// (they live in ~/.local/bin locally; `pnpm doctor` names them).
+// (they live in ~/.local/bin locally; `pnpm run doctor` names them).
 const result = JSON.parse(readFileSync(join(smokeDir, "out/scan-result.json"), "utf8"));
 const flagship = result.recipes.find((r) => r.recipe_id === FLAGSHIP);
 if (flagship?.verdict !== "violated") {
   console.error(
     `fixture scan did not violate ${FLAGSHIP} (got: ${flagship?.verdict ?? "no row"}) — ` +
       "the smoke needs syft + osv-scanner (plus gitleaks/grype for the other registers) " +
-      "on PATH; run `pnpm doctor` (locally the tools live in ~/.local/bin)",
+      "on PATH; run `pnpm run doctor` (locally the tools live in ~/.local/bin)",
   );
   process.exit(1);
 }

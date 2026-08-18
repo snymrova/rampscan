@@ -176,7 +176,7 @@ describe("explainUnevidenced: five absences, told apart", () => {
     expect(why.source).toBe("skip-reason");
     expect(why.reason).toContain(reason);
     expect(why.actionable).toBe(true);
-    expect(why.action).toContain("pnpm doctor");
+    expect(why.action).toContain("pnpm run doctor");
   });
 
   it("an honest skip is explained and is NOT dressed up as a task", () => {

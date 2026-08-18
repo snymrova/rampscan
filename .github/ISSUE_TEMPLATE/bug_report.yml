@@ -37,7 +37,7 @@ body:
     attributes:
       label: Environment
       description: >-
-        Paste `pnpm doctor` output. It records how each scan tool resolved
+        Paste `pnpm run doctor` output. It records how each scan tool resolved
         (binary, Docker image, or skipped), which is the difference between a
         real bug and a collector that never ran.
       render: shell

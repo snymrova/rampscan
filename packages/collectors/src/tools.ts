@@ -197,5 +197,5 @@ export async function resolveTool(
 
 /** the honest skip reason when a tool resolves to nothing */
 export function absentReason(name: string): string {
-  return `${name} is not installed and Docker is unavailable — install Docker (missing tools then run pinned images automatically, nothing installs on the host) or install ${name} (see \`pnpm doctor\`)`;
+  return `${name} is not installed and Docker is unavailable — install Docker (missing tools then run pinned images automatically, nothing installs on the host) or install ${name} (see \`pnpm run doctor\`)`;
 }

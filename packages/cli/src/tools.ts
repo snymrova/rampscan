@@ -195,7 +195,7 @@ export function renderToolMap(map: ToolMap, useColor: boolean): string {
 
   lines.push(
     dim(
-      "the static map — who feeds whom. Nothing here was probed on this host: `pnpm doctor` answers whether a tool can run, `/runs` answers what actually ran.",
+      "the static map — who feeds whom. Nothing here was probed on this host: `pnpm run doctor` answers whether a tool can run, `/runs` answers what actually ran.",
     ),
     "",
   );

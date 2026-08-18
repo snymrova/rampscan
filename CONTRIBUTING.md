@@ -20,10 +20,10 @@ people's repositories, and none of them merges into this one.
 pnpm install          # Node 22, pnpm
 pnpm test             # the whole suite — unit and e2e
 pnpm typecheck        # tsc --build, root and console
-pnpm doctor           # how each scan tool resolves on this machine
+pnpm run doctor           # how each scan tool resolves on this machine
 ```
 
-`pnpm doctor` is worth running first. Scan tools resolve Docker-first: a binary on
+`pnpm run doctor` is worth running first. Scan tools resolve Docker-first: a binary on
 `PATH` is used as-is, otherwise the pinned image from
 [`packages/collectors/tools.json`](packages/collectors/tools.json) runs. rampscan
 never installs anything on the host. With neither binary nor Docker, a collector

@@ -44,7 +44,7 @@ export function classifySkip(reason: string): SkipClassification {
     return {
       actionable: true,
       category: "tool-missing",
-      hint: "install the tool or Docker — `pnpm doctor` lists what's missing and how to get it",
+      hint: "install the tool or Docker — `pnpm run doctor` lists what's missing and how to get it",
     };
   }
   if (/failed \(exit /.test(reason)) {

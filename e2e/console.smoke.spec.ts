@@ -801,7 +801,7 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
   await expect(semgrepCard).toContainText(/docker|binary/);
   await expect(semgrepCard).toContainText("asked for by semgrep");
   // and the page refuses to pass historical resolution off as a live probe
-  await expect(page.locator("body")).toContainText("pnpm doctor");
+  await expect(page.locator("body")).toContainText("pnpm run doctor");
 
   // ── I3f: the not-affected claim shows its work ──────────────────────────
   await page.goto(evidenceUrl);

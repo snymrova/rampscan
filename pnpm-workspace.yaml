@@ -1,3 +1,14 @@
 packages:
   - "packages/*"
   - "console/web"
+
+# esbuild (via vite/vitest) and sharp (via Next) are the only dependencies that
+# ship install scripts. Both resolve their platform binaries through optional
+# dependencies, so neither needs to run one — and a tool whose README says it
+# never installs anything on the host should not execute a third party's
+# postinstall in order to test itself. Denied explicitly rather than left
+# unanswered: pnpm 10+ exits 1 on an undeclared build script, which is how
+# `pnpm install` came to fail on a clean clone while passing in this tree.
+allowBuilds:
+  esbuild: false
+  sharp: false
