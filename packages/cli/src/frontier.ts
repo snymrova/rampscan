@@ -35,7 +35,7 @@ import type { Disposition, CommitAdjudication, PipelineRecipe } from "@rampscan/
 // adjudications; where it says `pipeline` it means upstream's.
 
 /**
- * Collectors named in `IMPLEMENTATION-PLAN-REMAINING.md` Tier 2 as cheap wins:
+ * Collectors identified as tier-2 cheap wins:
  * each an H-phase-shaped single-collector move, scoped upstream, on nobody's
  * critical path. An adjudication may name one of these as its candidate before
  * it is written — that is the whole use of the list — but it may not name

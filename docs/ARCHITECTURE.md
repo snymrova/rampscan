@@ -2,7 +2,7 @@
 
 **Status:** consolidated reference, derived from the spec and plan — it introduces no new decisions. Where this document and `docs/SPEC.md` disagree, the spec wins; where the spec and the founding doc's §11 decisions disagree, §11 wins (except §11.3's signing mechanism, superseded by the spec's cosign + KMS choice).
 **Date:** 2026-08-13
-**Reads against:** `docs/SPEC.md` (§2–§8), `docs/IMPLEMENTATION-PLAN.md` (§2–§3), `docs/COMPLIANCE-SCAN-HARNESS.md` (§11–§13), `docs/context/README.md` (dataset facts, 2026.07.14.01).
+**Reads against:** `docs/SPEC.md` (§2–§8), `docs/COMPLIANCE-SCAN-HARNESS.md` (§11–§13), `docs/context/README.md` (dataset facts, 2026.07.14.01).
 
 ---
 

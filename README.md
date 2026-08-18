@@ -17,8 +17,6 @@ M4 is the tier-2 move: the `graph` collector builds `graph.db` for the snapshot 
 Setup: Node 22 + pnpm, then `pnpm install && pnpm test`; `pnpm fetch-pocketbase` before the first `serve`. Scan tools resolve Docker-first: a binary already on PATH is used as-is; otherwise, with Docker present, the pinned image from [`packages/collectors/tools.json`](packages/collectors/tools.json) runs automatically — **rampscan never installs anything on the host**. `pnpm doctor` shows how each tool resolves; only with neither binary nor Docker does a collector skip (gracefully, with its recipes reporting unevidenced and the reason recorded).
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — consolidated architecture and data flow reference: components, the scan pipeline end to end, stores, trust boundaries, evidence lifecycle, invariants.
-- [`docs/IMPLEMENTATION-PLAN.md`](docs/IMPLEMENTATION-PLAN.md) — the local prototype plan: milestones M0–M5, ports-and-adapters, MVP scope.
-- [`docs/PLAN-OF-ACTION.md`](docs/PLAN-OF-ACTION.md) — the working checklist for local development: task order, exit tests, session log. Updated as work lands.
 - [`docs/SPEC.md`](docs/SPEC.md) — the working spec: tech, architecture, dataflow, primitives, UI.
 - [`docs/COMPLIANCE-SCAN-HARNESS.md`](docs/COMPLIANCE-SCAN-HARNESS.md) — the founding brainstorm, including the decisions log (§11–§13).
 - [`docs/context/`](docs/context/README.md) — snapshots of the ramprules dataset and the harnessarch brainstorms, for agent context. Read its README before trusting a number.

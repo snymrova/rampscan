@@ -1,6 +1,6 @@
 # The console smoke in CI (plan I2e): a real fixture scan behind a real
 # `rampscan serve`, walked by Playwright. Deliberately NOT the engine track's
-# collector-family CI (deferred by name in docs/PLAN-OF-ACTION-CONSOLE.md):
+# collector-family CI, which is a separate deferred decision:
 # this job installs the four core tool binaries and lets the Phase H tools
 # (semgrep/checkov/spectral) resolve through their pinned Docker images, the
 # collectors' documented fallback — the same shape the smoke was validated

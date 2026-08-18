@@ -56,9 +56,9 @@ that quiets a scan you are not running is a detection hole you are.
 
 ## The ten ground rules
 
-Six are from [`docs/PLAN-OF-ACTION.md`](docs/PLAN-OF-ACTION.md) §0 and have been
-active since the first commit. Four more arrived with the coverage push in
-[`docs/PLAN-OF-ACTION-DEPTH.md`](docs/PLAN-OF-ACTION-DEPTH.md) §0.
+Six have been active since the first commit. Four more arrived later, with the
+coverage push, and exist because a coverage push is the easiest way to destroy
+this product's credibility.
 
 **1. Ports and adapters, or it does not merge.** Any code touching storage,
 signing, execution, scheduling or repo access goes through an interface in
