@@ -86,6 +86,34 @@ pnpm run fetch-pocketbase     # sha256 verified against console/pocketbase/versi
 pnpm rampscan serve           # PocketBase + the Next.js console on :3000
 ```
 
+## The console
+
+Three views, screenshotted from a real projection — the scans behind them are
+`rampscan scan fixtures/vulnerable-app`, run twice with one fault fixed in between.
+
+**The coverage board.** Every recipe against every repository, with the offender
+pointer printed under the row that failed and `violating since … · first seen at
+commit …` beside it. A verdict here is never a bare red dot: it names the file,
+the rule and the commit that introduced it.
+
+![The coverage board — 20 rows for one repository, 6 evidenced and 14 violated, each violation naming its offending file and the commit it was first seen at](docs/images/board.png)
+
+**An evidence bundle.** What a signed bundle actually contains, and the reason
+the plain-English block is authored per recipe rather than generated: it explains
+the *check* and says nothing about your repository, so it stays true when the
+verdict changes. This one is marked `dead` because the second scan superseded it
+— the ledger keeps it and names the commit that killed it.
+
+![An evidence detail page for arch-boundaries-hold — plain-English checks, what a violation means and how to fix it, above the commit anchor, KSIs, controls, cadence, dataset pin, and the note that this bundle was superseded and killed by commit b51feb542f3f](docs/images/evidence.png)
+
+**Drift.** Every movement the ledger records, with its cause. The `VERDICT
+FLIPPED` row is the second scan finding the `CODEOWNERS` file that the first scan
+reported missing — `violated → evidenced (anchor-drift)`, attributed to the
+commit that did it. Nothing on this page is typed; it is folded from the bundle
+chain.
+
+![The drift view — evidence born, died and verdict-flipped, including codeowners-defined flipping from violated to evidenced by a named commit](docs/images/drift.png)
+
 ## It scans itself
 
 The clearest demonstration is the one you can reproduce in the clone you just made. `rampscan scan .` on this repository:
