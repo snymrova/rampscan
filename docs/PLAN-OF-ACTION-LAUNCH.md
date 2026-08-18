@@ -115,12 +115,28 @@ No code. Two of these need the owner and cannot be defaulted.
 
 ## 5. Phase P2 — the files a public repository owes
 
-- [ ] **P2-1. `LICENSE`** per P0-1, plus a copyright line with a real holder.
+- [x] **P2-1. `LICENSE`** per P0-1, plus a copyright line with a real holder.
 - [ ] **P2-2. `NOTICE`** — attribution for `docs/context/` per P0-2, and for the pinned third-party tools the collectors invoke. Not required by every licence; required by honesty for a repository that vendors a snapshot of someone else's published data.
 - [ ] **P2-3. `SECURITY.md`** per P0-5 — reporting path, expected response, and the one sentence a reader of *this* product wants: what rampscan does and does not send anywhere (collectors take no network, execution is local, signing is `node:crypto` — the sentence the adjudication records already make repeatedly, which makes it quotable rather than new).
-- [ ] **P2-4. `CONTRIBUTING.md`** — the ground rules that actually gate a merge, not a generic template: ports-and-adapters (§0.1), append-only tested by a cheat (§0.3), computed-never-typed (§0.4), no vacuous passes (depth §0.7), and the three authored `plain` paragraphs every recipe owes. A contributor who reads this and writes a recipe correctly on the first try is what the file is for.
-- [ ] **P2-5. `.github/` furniture** — issue templates (bug · recipe proposal · adjudication disagreement), a PR template pointing at the ground rules, and `CODEOWNERS`.
-- [ ] **P2-6. `.gitleaksignore`** for the fixture's remaining intentional plants, so the self-scan and any contributor's scan stay honest rather than noisy.
+- [x] **P2-4. `CONTRIBUTING.md`** — the ground rules that actually gate a merge, not a generic template: ports-and-adapters (§0.1), append-only tested by a cheat (§0.3), computed-never-typed (§0.4), no vacuous passes (depth §0.7), and the three authored `plain` paragraphs every recipe owes. A contributor who reads this and writes a recipe correctly on the first try is what the file is for.
+- [~] **P2-5. `.github/` furniture** — issue templates (bug · recipe proposal · adjudication disagreement), a PR template pointing at the ground rules, and `CODEOWNERS`.
+- [x] **P2-6. `.gitleaksignore`** for the fixture's remaining intentional plants, so the self-scan and any contributor's scan stay honest rather than noisy.
+
+  > **Corrected 2026-08-18: the file has no content to hold, and shipping one
+  > would be a detection hole rather than an allowlist.** The item was written
+  > before P1 ran and assumed plants would survive it; none did. `gitleaks git
+  > --redact .` — the exact command `packages/collectors/src/gitleaks.ts` runs —
+  > reports **no leaks across 59 commits**, and no tracked file contains one.
+  > A *working-tree* scan does find 40, and that is the number the item was
+  > reaching for, but every one is untracked local state: the signing key under
+  > `rampscan-keys/`, the PocketBase superuser record, and pattern hits inside
+  > `console/web/.next/` build output. The collector scans history, so none of it
+  > ever reaches the self-scan. Allowlisting them would quiet a scan nobody runs
+  > here while blinding the scan everybody does — and it would blind it over
+  > exactly the paths where an accidental commit is most damaging, which is risk
+  > 3's "quiet weakening of the fixture" wearing different clothes. Shipped as
+  > **no file plus a recorded reason** in `CONTRIBUTING.md`, so the next person to
+  > notice the 40 finds the argument instead of re-deriving it.
 
 **Exit test:** a reader landing cold can answer, without opening a source file: what may I do with this, where do I report a vulnerability, what is expected of a change, and what does this send off my machine.
 
@@ -203,6 +219,7 @@ Update as work lands — newest first. "Phase" refers to this document's phases.
 
 | Date | Phase | What landed |
 |---|---|---|
+| 2026-08-18 | P2 | **Four of six landed; two are held on answers, and one of the four was a plan item that dissolved on inspection.** `LICENSE` is the canonical Apache-2.0 text per P0-1 (P2-1). `CONTRIBUTING.md` states the ten ground rules as merge gates and names the test that enforces each — `self-contract.test.ts`, `ledger.test.ts`'s cheating tests, `plain.test.ts`, `catalog.test.ts` and `catalog-bare.e2e.test.ts`, `frontier.test.ts` — plus the recipe and adjudication checklists (P2-4). `.github/` carries three issue forms (bug · recipe proposal · adjudication disagreement, the last two written as the CONTRIBUTING checklists asked as questions) and a PR template (P2-5, less `CODEOWNERS`, which needs a GitHub handle). **P2-6 shipped as no file** — see the correction at the item. **P2-2 stays blocked on the sibling's missing licence; P2-3 stays blocked on P0-5.** |
 | 2026-08-18 | P1 | **The history is publishable, and no remote has ever existed.** One `git filter-repo` pass (P1-3), `--replace-text` + `--mailmap` together. `gitleaks detect` over the rewritten 57 commits: **no leaks found**, from 4. `git log --format='%ae %ce' \| sort -u`: **one address**. 695/695 tests green, `tsc --build` clean root and console, fixture rebuilds to its documented SHAs. A verified `git bundle` of the pre-rewrite history is held outside the repo. |
 | 2026-08-18 | P1-1 | The three shaped credentials assembled rather than written (see the correction at P1-1 — the item named one file, gitleaks named three). |
 | 2026-08-18 | P0 | **P0-1 decided: Apache-2.0** — the patent grant is why security tooling standardises on it over MIT, and a tool whose entire output is a signed attestation is one adopters want patent clarity on. **P0-2 decided: ship `docs/context/` whole with `NOTICE`** — see the correction at P0-2, including the sibling's missing licence, which now blocks P2-2. **P0-4 stands at its stated default** (`v0.1.0-beta`, no npm, run from a clone). **P0-3, P0-5 and P0-6 remain open and are the owner's.** |

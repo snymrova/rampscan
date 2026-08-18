@@ -1,0 +1,49 @@
+name: Adjudication disagreement
+description: A control this project adjudicated, judged wrongly.
+labels: ["adjudication"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Adjudications are arguments, so disagreeing with one means answering its
+        argument rather than its label. Ground rule 8: this repository does not
+        ship opinions as evidence, and that cuts both ways — a disagreement
+        recorded without reasoning cannot change a record either.
+  - type: input
+    id: control
+    attributes:
+      label: Control ID
+      description: "e.g. `cp-2`. The file is `recipes/adjudications/<id>.json`."
+    validations:
+      required: true
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Which way is it wrong?
+      options:
+        - The record claims more than a checkout can answer
+        - The record refuses something a checkout could answer
+        - The remainder is missing a limb
+        - The citation of upstream misreads their disposition
+    validations:
+      required: true
+  - type: textarea
+    id: argument
+    attributes:
+      label: The argument
+      description: >-
+        Quote the sentence of the record's `rationale` you disagree with, and say
+        what a repository can or cannot show that it got wrong. If the claim is
+        that a checkout could answer more, name what a collector would read.
+    validations:
+      required: true
+  - type: textarea
+    id: upstream
+    attributes:
+      label: Upstream's position, if you know it
+      description: >-
+        Whether the ramprules AWS overlay adjudicated the same control, and how.
+        A divergence between the two overlays is worth recording explicitly even
+        when this record turns out to be right.
+    validations:
+      required: false

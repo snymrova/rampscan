@@ -1,0 +1,18 @@
+# NOTE (blocked on launch-plan P0-6): the two URLs below carry the placeholder
+# OWNER/REPO because the repository slug is not decided yet. GitHub's issue-form
+# config accepts only absolute URLs here, so this cannot be written relatively.
+# Both must be rewritten before the first push, or the "report a vulnerability"
+# link — the first thing a security reader clicks — 404s.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/OWNER/REPO/blob/main/SECURITY.md
+    about: >-
+      Not through an issue. Vulnerabilities in rampscan itself go through the
+      process in SECURITY.md, which is private until a fix exists.
+  - name: Read the ground rules first
+    url: https://github.com/OWNER/REPO/blob/main/CONTRIBUTING.md
+    about: >-
+      Most questions about why a recipe, an adjudication or a verdict is shaped
+      the way it is are answered by the ten ground rules and the tests that
+      enforce them.

@@ -1,0 +1,56 @@
+name: Recipe proposal
+description: A check a repository could prove that rampscan does not yet make.
+labels: ["recipe"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Recipes are the coverage surface, so a proposal is welcome even without
+        an implementation. What it needs is the honest half: what a checkout can
+        actually show, and where that stops. See CONTRIBUTING.md, "Adding a
+        recipe" — this form is that checklist, asked as questions.
+  - type: textarea
+    id: claim
+    attributes:
+      label: What would the recipe claim?
+      description: One sentence, in the auditor-facing register — what a passing row asserts.
+    validations:
+      required: true
+  - type: input
+    id: controls
+    attributes:
+      label: Controls and KSIs
+      description: The control IDs and KSI IDs this would resolve to, if you know them.
+    validations:
+      required: false
+  - type: textarea
+    id: collector
+    attributes:
+      label: What would observe it
+      description: >-
+        An existing collector, or a new one. If a new tool is needed, say which
+        one and whether it runs offline — collectors take no network, by
+        decision.
+    validations:
+      required: true
+  - type: textarea
+    id: empty
+    attributes:
+      label: What does finding nothing mean?
+      description: >-
+        The load-bearing question, and the one ground rule 7 exists for. If the
+        collector emits zero rows on some repository, is that repository clean,
+        or is it a repository the check could not see into? A recipe that answers
+        "clean" has to be able to say what domain it searched exhaustively.
+    validations:
+      required: true
+  - type: textarea
+    id: remainder
+    attributes:
+      label: Where does it stop?
+      description: >-
+        What the check would NOT prove, even when it passes. This becomes the
+        recipe's `caveats`, and stating it is what makes the passing rows
+        believable rather than what weakens them.
+    validations:
+      required: true

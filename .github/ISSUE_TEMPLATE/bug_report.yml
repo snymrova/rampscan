@@ -1,0 +1,55 @@
+name: Bug report
+description: Something rampscan does is wrong, or crashes.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        A wrong verdict is the most valuable bug this project can receive, and
+        the most expensive to reproduce from a description. The commit hash and
+        the actual output are what make it cheap.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran and what it printed. Paste the output rather than summarising it.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+      description: >-
+        If this is a verdict you disagree with, say which register you expected
+        (evidenced / violated / unevidenced / not-applicable) and why.
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: rampscan commit
+      description: "`git rev-parse --short HEAD` in your rampscan clone."
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: >-
+        Paste `pnpm doctor` output. It records how each scan tool resolved
+        (binary, Docker image, or skipped), which is the difference between a
+        real bug and a collector that never ran.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: What you scanned
+      description: >-
+        A public repository and commit is ideal. If the repository is private,
+        `fixtures/vulnerable-app` or a minimal reproduction is far more useful
+        than a description of the private one.
+    validations:
+      required: false
