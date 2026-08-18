@@ -19,11 +19,30 @@ docs/context/ramprules/  —  the FedRAMP Rules Hub dataset
   Snapshot: dataset version 2026.07.14.01, taken 2026-08-13
   Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0)
             https://creativecommons.org/licenses/by/4.0/
+            upstream text: data/LICENSE in github.com/snymrova/ramprules.com
 
-This is a copy of ramprules' published JSON slices — the KSI graph, the control
-set, the AWS evidence recipes and the automation frontier. rampscan reads it in
-dev mode and 17 test files depend on it, which is why it is shipped whole rather
-than trimmed or fetched.
+  Attribution, in the form the upstream licence asks for:
+
+      "FedRAMP Rules Hub dataset (ramprules.com), CC BY 4.0"
+      dataset_version 2026.07.14.01
+
+`derived/` is a copy of ramprules' published JSON slices — the KSI graph, the
+control set, the AWS evidence recipes and the automation frontier. rampscan
+reads it in dev mode and 17 test files depend on it, which is why it is shipped
+whole rather than trimmed or fetched. **The CC BY 4.0 grant covers `derived/`
+and nothing else here**, because upstream scoped its licence to the data
+directories and said so explicitly: Creative Commons licences are not intended
+for software, and the code around that dataset is deliberately left ungranted.
+
+Five files sit beside `derived/` in this directory and are NOT covered by that
+grant — `README.md`, `PRODUCT.md`, `DATASET-FACTS.md` and the two type
+declarations `types.ts` and `raw-types.ts`, all copied from outside upstream's
+licensed data directories. They are here as reading material for a person or an
+agent working on rampscan; nothing in this repository imports or tests against
+them, and they carry no licence. They come from the same author as this
+repository, so there is no third-party permission at stake — but a reader who
+reuses this snapshot should carry `derived/` and leave those five, because they
+are the ones the grant does not reach.
 
 It is a snapshot and it rots. rampscan pins against `dataset_version` and, per
 slice, against `overlay_version` — never against these copies. The source of
