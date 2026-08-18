@@ -60,8 +60,8 @@ Estimates, focused-work days: P0 0.5 · P1 0.5 · P2 0.5 · P3 1 · P4 1 · P5 0
 
 No code. Two of these need the owner and cannot be defaulted.
 
-- [ ] **P0-1. The licence.** *Owner's decision.* Recommendation: **Apache-2.0** — the patent grant is the reason security tooling standardises on it over MIT, and a tool whose whole output is a signed attestation is a tool people will want patent clarity on before adopting. The alternative worth weighing is a source-available licence (BSL/Elastic) if rampscan is intended to become commercial, which converts every later relicensing conversation into a contributor-consent problem. Decide once; the choice propagates into P2's headers and the `NOTICE`.
-- [ ] **P0-2. What of `docs/context/` ships.** *Owner's decision.* `docs/context/ramprules/` is a 3.0 MB snapshot of the sibling project's published dataset, and publishing this repository redistributes it. Three options: ship with attribution and the upstream licence recorded in `NOTICE`; trim to only the slices `packages/dataset` pins against; or gitignore it and have `docs/context/README.md` state how to fetch it. Note the constraint before choosing — the loader's dev mode reads `derived/`, so option three changes what a fresh clone can do without a sibling checkout, which is a P4 problem.
+- [x] **P0-1. The licence.** *Owner's decision.* Recommendation: **Apache-2.0** — the patent grant is the reason security tooling standardises on it over MIT, and a tool whose whole output is a signed attestation is a tool people will want patent clarity on before adopting. The alternative worth weighing is a source-available licence (BSL/Elastic) if rampscan is intended to become commercial, which converts every later relicensing conversation into a contributor-consent problem. Decide once; the choice propagates into P2's headers and the `NOTICE`.
+- [x] **P0-2. What of `docs/context/` ships.** *Owner's decision.* `docs/context/ramprules/` is a 3.0 MB snapshot of the sibling project's published dataset, and publishing this repository redistributes it. Three options: ship with attribution and the upstream licence recorded in `NOTICE`; trim to only the slices `packages/dataset` pins against; or gitignore it and have `docs/context/README.md` state how to fetch it. Note the constraint before choosing — the loader's dev mode reads `derived/`, so option three changes what a fresh clone can do without a sibling checkout, which is a P4 problem.
 
   > **Decided 2026-08-18: ship whole, with `NOTICE`.** Two of the three options
   > died on contact with the code. **Gitignoring it is not available:**
@@ -105,7 +105,7 @@ No code. Two of these need the owner and cannot be defaulted.
   > **This document is the exception and goes last**, immediately before P5-1.
   > It is the plan of record and is still being executed; deleting it here would
   > mean finishing the launch out of git history.
-- [ ] **P0-4. Version and tag scheme.** `v0.1.0-beta` for this launch; workspace packages stay `private: true` and unpublished (no npm), so the tag is the only version surface. Record that the CLI is run from a clone, by decision, until an external user asks for a bin.
+- [x] **P0-4. Version and tag scheme.** `v0.1.0-beta` for this launch; workspace packages stay `private: true` and unpublished (no npm), so the tag is the only version surface. Record that the CLI is run from a clone, by decision, until an external user asks for a bin.
 - [x] **P0-5. Support posture.** What `SECURITY.md` promises and to what address; whether issues are open; what "beta" commits you to. A security tool with no vulnerability-report path is the first thing a security reader looks for and does not find.
 
   > **Decided 2026-08-18: GitHub private vulnerability reporting, issues open
@@ -130,7 +130,7 @@ No code. Two of these need the owner and cannot be defaulted.
 
 ## 4. Phase P1 — the history, made publishable (irreversible; before any remote)
 
-- [ ] **P1-1. Remove the shaped credential from history.** `fixtures/build-vulnerable-app.mjs` carries an AWS-key-shaped literal (deliberately, to make the fixture's planted fault real). `gitleaks detect` finds **4 hits across 56 commits**. Change the builder to synthesize the string at build time so no shaped literal exists in any blob, then rewrite so no reachable commit contains one. The fixture's behaviour must not change: the generated repo still carries the planted secret, and the fixture's SHAs are deterministic by design, so the M0/B4 determinism test is the check that the rewrite did not alter what is generated.
+- [x] **P1-1. Remove the shaped credential from history.** `fixtures/build-vulnerable-app.mjs` carries an AWS-key-shaped literal (deliberately, to make the fixture's planted fault real). `gitleaks detect` finds **4 hits across 56 commits**. Change the builder to synthesize the string at build time so no shaped literal exists in any blob, then rewrite so no reachable commit contains one. The fixture's behaviour must not change: the generated repo still carries the planted secret, and the fixture's SHAs are deterministic by design, so the M0/B4 determinism test is the check that the rewrite did not alter what is generated.
 
   > **Corrected 2026-08-18, during execution: this item was one file short.**
   > It was written from the fixture's description; the scanner's output names
@@ -143,10 +143,10 @@ No code. Two of these need the owner and cannot be defaulted.
   > `c37ed34 · d2e8583 · b9d879b` are unchanged, verified by rebuild.
   > The general lesson is the one this project keeps relearning: **a plan item
   > written from a description under-scopes a plan item written from output.**
-- [ ] **P1-2. Scrub the non-authoring identity.** 2 of 56 commits carry a second author/committer email. Rewrite both to the authoring identity. Display names are already clean.
-- [ ] **P1-3. One rewrite, not two.** P1-1 and P1-2 ride the same `git filter-repo` pass. It is not installed on this machine (`git-filter-repo not found`) — install it first; `filter-branch` is the wrong tool and its own manual says so.
-- [ ] **P1-4. Pin the local identity** so nothing new lands wrong: `git config user.email` set in this repository, not relied on globally.
-- [ ] **P1-5. Full re-verification after the rewrite.** `pnpm test`, `tsc --build`, and a fixture rebuild — a history rewrite touches every blob's parentage and this repository's tests are unusually coupled to commit identity (anchor drift, `git show` lines, the self-scan).
+- [x] **P1-2. Scrub the non-authoring identity.** 2 of 56 commits carry a second author/committer email. Rewrite both to the authoring identity. Display names are already clean.
+- [x] **P1-3. One rewrite, not two.** P1-1 and P1-2 ride the same `git filter-repo` pass. It is not installed on this machine (`git-filter-repo not found`) — install it first; `filter-branch` is the wrong tool and its own manual says so.
+- [x] **P1-4. Pin the local identity** so nothing new lands wrong: `git config user.email` set in this repository, not relied on globally.
+- [x] **P1-5. Full re-verification after the rewrite.** `pnpm test`, `tsc --build`, and a fixture rebuild — a history rewrite touches every blob's parentage and this repository's tests are unusually coupled to commit identity (anchor drift, `git show` lines, the self-scan).
 
 **Exit test:** `gitleaks detect` over the rewritten history reports zero findings; `git log --format='%ae %ce' | sort -u` returns exactly one address; `pnpm test` is 695/695 green and `tsc --build` clean on the rewritten tree; the fixture builder still produces its documented SHAs. **No remote has been added at any point during this phase.**
 
@@ -196,10 +196,34 @@ Today `smoke.yml` runs the Playwright console smoke and **nothing else**. The 69
 
 ## 7. Phase P4 — the stranger's first five minutes
 
-- [ ] **P4-1. Rewrite the README status.** It currently says *"Local prototype, M4 complete"* and is stale by Phase H, I, J, K, L and all of N. It also says *"Next: M5"*, which shipped.
-- [ ] **P4-2. Quote coverage from the command.** Ground rule 2: the README states 23 of 209 covered and 18.2% reachable **only** as `rampscan frontier`'s output, shown as a transcript, with the ceiling stated beside it. The small number is the credibility, not the weakness — a launch that hides it forfeits the one property that distinguishes this tool from the category.
-- [ ] **P4-3. A quickstart that has been walked from a clean clone** (ground rule 4), in a temp directory: `pnpm install` → `pnpm test` → `pnpm doctor` → `rampscan scan <path>` → `rampscan board`, and separately `pnpm fetch-pocketbase` → `rampscan serve`. Each step's real output, including what `doctor` prints on a machine with no scan tools and no Docker — the graceful-skip path is a feature and the README should show it working rather than assert it.
-- [ ] **P4-4. Say plainly how it is run.** Every package is `private: true` with no `bin`; the entry point is `pnpm rampscan …` from a clone via tsx. State it, with the reason (no external user has asked for a bin), rather than letting a reader discover it after `npm i -g` fails.
+- [x] **P4-1. Rewrite the README status.** It currently says *"Local prototype, M4 complete"* and is stale by Phase H, I, J, K, L and all of N. It also says *"Next: M5"*, which shipped.
+- [x] **P4-2. Quote coverage from the command.** Ground rule 2: the README states 23 of 209 covered and 18.2% reachable **only** as `rampscan frontier`'s output, shown as a transcript, with the ceiling stated beside it. The small number is the credibility, not the weakness — a launch that hides it forfeits the one property that distinguishes this tool from the category.
+- [x] **P4-3. A quickstart that has been walked from a clean clone** (ground rule 4), in a temp directory: `pnpm install` → `pnpm test` → `pnpm doctor` → `rampscan scan <path>` → `rampscan board`, and separately `pnpm fetch-pocketbase` → `rampscan serve`. Each step's real output, including what `doctor` prints on a machine with no scan tools and no Docker — the graceful-skip path is a feature and the README should show it working rather than assert it.
+
+  > **Corrected 2026-08-18, during execution: the walk found two defects, and
+  > neither was visible from this tree.** (1) **`pnpm install` exits 1 on a clean
+  > clone.** pnpm 10+ refuses an undeclared build script, and `esbuild` and
+  > `sharp` ship one; this tree passed only because its `node_modules` predates
+  > the gate, and CI passed only because it pinned pnpm 9.6.0 — so the very first
+  > README instruction failed for every stranger on a current pnpm while looking
+  > green in both places we could see. Fixed at the root: `packageManager` now
+  > pins pnpm, so the maintainer, CI and a stranger all get one version, and
+  > `allowBuilds` denies both scripts explicitly — the posture the README already
+  > claims, since a tool that installs nothing on the host should not run a third
+  > party's postinstall to test itself. Install goes 12s → ~3s and no build script
+  > runs. (2) **`pnpm doctor` was never rampscan's doctor.** pnpm has a built-in
+  > `doctor` that shadows the script, and it prints *"All checks passed"* about
+  > the package manager's own environment — a **reassuring** message about the
+  > wrong subject, which is ground rule 7's vacuous pass arriving through the
+  > README rather than through a recipe. It was `pnpm doctor` in twelve places
+  > including four test assertions and the console's empty-state hint; all now
+  > say `pnpm run doctor`.
+  >
+  > The general lesson is P1-1's, from the other direction: **a plan item written
+  > from this tree under-scopes a plan item written from a clone.** Both defects
+  > were invisible to `pnpm test` here and to CI, and both were the first thing a
+  > stranger would have hit.
+- [x] **P4-4. Say plainly how it is run.** Every package is `private: true` with no `bin`; the entry point is `pnpm rampscan …` from a clone via tsx. State it, with the reason (no external user has asked for a bin), rather than letting a reader discover it after `npm i -g` fails.
 - [ ] **P4-5. Console screenshots** — the coverage board, an evidence detail page, the drift view. The visual loop is a large share of what was built and is currently invisible to anyone who does not clone and run it.
 - [x] **P4-6. Prune or label the docs index** per P0-3, so a reader can tell the plan of record from the spent plans without opening seven files. *Done ahead of the rest of P4, because P4-1's README rewrite has to describe the index that survives rather than the one being deleted.* The five dangling references the removal created are fixed in the same commit; `docs/PLAN-OF-ACTION-LAUNCH.md` itself is held for P5-0(d).
 
@@ -259,6 +283,7 @@ Update as work lands — newest first. "Phase" refers to this document's phases.
 
 | Date | Phase | What landed |
 |---|---|---|
+| 2026-08-18 | P4 · ground rule 4 | **The README is rewritten against commands, and walking it from a clone found two defects that were invisible here.** P4-1 (status: `v0.1.0-beta`, eleven commands, twenty recipes, 692 passed · 3 skipped across 59 files — the stale *"M4 complete / Next: M5"* is gone), P4-2 (`rampscan frontier` quoted as a transcript, 23 of 209 with the 38-ceiling beside it and the 68 unreviewed printed as a question), P4-3 and P4-4 (run from a clone, `pnpm rampscan …`, with the reason). **`pnpm install` exited 1 on a clean clone** and **`pnpm doctor` was pnpm's doctor, not ours** — both fixed, both recorded at P4-3. Every line of the quickstart re-walked afterwards on a fresh `git clone`: install 3.1s · 692 passed \| 3 skipped · doctor · `scan .` **12 evidenced · 2 violated · 6 unevidenced** · board · both typechecks, all exit 0. P4-5 (screenshots) is the one item of the phase still open. |
 | 2026-08-18 | P0-3 · P4-6 | **The internal plans do not ship — decided against this item's own default.** Ten documents removed at HEAD, `docs/` 3,770 → 1,065 lines; see the decision recorded at P0-3 for the split and for why the removal stops at HEAD. The removal created exactly five dangling references and all five are fixed in the same commit — `CONTRIBUTING.md` now states the ground rules' provenance instead of linking to it, `ARCHITECTURE.md` drops one entry from *reads against*, `smoke.yml` names the deferral instead of the document that deferred it, `frontier.ts` loses a filename from a comment, and `README.md` loses two index bullets it was about to lose anyway. P4-6 is therefore done ahead of the rest of P4, which is the right order: P4-1 has to describe the index that survives. |
 | 2026-08-18 | P3 · P5-0 | **The 695 tests are gated, and the one row left violated is left violated on purpose.** `test.yml` runs `pnpm typecheck`, the console's own `tsc --noEmit` (root `tsc --build` walks the ten packages and does **not** reach `console/web`) and `pnpm test` — no tool binaries, no images, minutes not tens of minutes (P3-1). `smoke.yml` is unchanged (P3-2); badges wait for a green run on a remote that does not exist (P3-3). Two launch-hygiene rows from the last self-scan closed with them: `CODEOWNERS` (which also closes P5-0(c)) and `.github/dependabot.yml`, added because a security tool letting its own dependencies rot argues against itself — and because SHA-pinned actions are exactly the kind of pin that goes stale silently. **Self-scan: 10 · 4 · 6 → `12 evidenced · 2 violated · 6 unevidenced`.** |
 | 2026-08-18 | P3 note | **`ci-provenance-present` stays violated, and that is the decision rather than the backlog.** The row flips by adding an `attest-build-provenance` step, and this repository **publishes no build artifact** — every package is `private: true` with no `bin`, and the CLI runs from a clone (P0-4). A provenance step here would attest nothing and the recipe would pass on it, which is **ground rule 7's vacuous pass with the tool pointed at its own repository** — the exact failure P2-3 just defined as a security report. It flips honestly when there is something to attest, and not before. The second violation, `iac-baseline-clean`, is checkov flagging `fixtures/vulnerable-app/.github/workflows/ci.yml` — the **generated fixture's planted workflow**, gitignored and deliberately faulty — which raises a scan-scope question the engine track owns and this plan does not touch (risk 6): whether a checkout scan should read paths the repository ignores. |
