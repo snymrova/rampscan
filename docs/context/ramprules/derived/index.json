@@ -40,15 +40,15 @@
       "ordering": "`queue` by `leverage` DESCENDING, ties broken on canonical control id; `frontier` ascending by canonical control id.",
       "file": "data/derived/automation-frontier.json",
       "url": "/api/automation-frontier",
-      "bytes": 123593
+      "bytes": 156846
     },
     {
       "name": "evidence-plan",
-      "description": "The Evidence Plan: per class, authored AWS recipes grouped by KSI theme (densest first), the class clock, and the orphan/narrative register.",
+      "description": "The Evidence Plan: per class, authored recipes from every evidence plane grouped by KSI theme (densest first), the class clock, and the orphan/narrative register. Each item carries the `source` plane that produced it; each class carries one version stamp per contributing plane.",
       "ordering": "`classes` ascending by class letter; `themes` by `controlFootprint` DESCENDING (densest first), ties broken on theme key; `items` in overlay order; `orphanControls` ascending by canonical id.",
       "file": "data/derived/evidence-plan.json",
       "url": "/api/evidence-plan",
-      "bytes": 1124688
+      "bytes": 1622668
     },
     {
       "name": "obligations",
@@ -120,7 +120,7 @@
       "ordering": "entities grouped by kind, ascending by id within each kind.",
       "file": "data/derived/search.json",
       "url": "/api/search",
-      "bytes": 190356
+      "bytes": 195594
     }
   ]
 }

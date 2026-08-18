@@ -1,0 +1,19 @@
+{
+  "controlId": "sa-15.3",
+  "displayId": "SA-15 (03)",
+  "family": "SA",
+  "disposition": "narrative",
+  "rationale": "The control requires the developer to perform a criticality analysis at defined decision points in the lifecycle and at a defined breadth and depth. It asks which components are critical to mission function — a judgement about what the system is for, made by people who know what depends on what, recorded at a point in the process somebody chose. Nothing in a commit is that. This record exists because the catalog claimed the control anyway: `ci-provenance-present` carried `sa-15.3` from the H phase, on two assertions that a workflow file exists and that some step generates build provenance. Provenance answers where an artifact came from, which is a fact about the build; criticality answers which components matter most if they fail, which is a fact about the mission. A dependency graph or an SBOM enumerates components exhaustively and ranks none of them, and ranking is the whole of this control. The first of those two assertions was worse than merely off-target: `workflow_count >= 1` reports evidenced from the presence of a CI directory, which is ground rule 7's failure — a claim discharged by the existence of a file rather than by anything in it. Both are removed in the commit that files this record, and the control is honestly uncovered rather than quietly claimed.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "pipeline",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "This is the first citation in the overlay where upstream's paragraph corrected ours rather than corroborating it, and that is worth recording plainly. Their pipeline pass refuses SA-15 (03) on the ground that no pipeline emits a criticality analysis, because naming which components are critical to mission function is a judgement about the mission rather than a property of the build, and a dependency graph enumerates components and ranks none of them. The two projects reached the same control from opposite directions: they adjudicated it and declined to author, we authored and never adjudicated, so nothing on either side compared the recipe with the control text until both files were read together. That asymmetry is the argument for the check this commit adds — the divergence pin covers records against records, and a recipe claiming a control upstream has refused was in nobody's field of view. What this overlay adds to their refusal is the negative result: build provenance is the obvious commit-plane route to SA-15 (03), it was taken, and it answers a different question. A 3PAO reads the criticality analysis itself and the decision points recorded in the lifecycle documentation, and neither is a file this plane can find."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and the refusal here is not a trust-model refusal at all, which is worth separating from the ones that are. A criticality analysis is unreachable from a commit because it is a judgement nobody records as a checkable artifact, not because reading it would require an external system. Granting this plane a platform API, a work-tracking integration or a scanner would not move the disposition.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

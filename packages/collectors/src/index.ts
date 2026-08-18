@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import type { Collector } from "@rampscan/core";
 import { checkov } from "./checkov.js";
 import { contract } from "./contract.js";
+import { documents } from "./documents.js";
 import { gitleaks } from "./gitleaks.js";
 import { graphCollector } from "./graph.js";
 import { grype } from "./grype.js";
@@ -35,6 +36,13 @@ export {
   BOUNDARY_RECIPE,
   inModulePrefix,
 } from "./contract.js";
+export {
+  documents,
+  DOCUMENTS_VERSION,
+  POLICY_RECIPE,
+  SYSTEM_DOCS_RECIPE,
+  loadDocuments,
+} from "./documents.js";
 export { checkov, CHECKOV_RESULTS_ARTIFACT, matchIacFiles } from "./checkov.js";
 export { spectral, SPECTRAL_RESULTS_ARTIFACT, matchSpecFiles } from "./spectral.js";
 
@@ -58,6 +66,7 @@ export async function cacheKeySalt(): Promise<string> {
  */
 export const allCollectors: Collector[] = [
   repoFacts,
+  documents,
   gitleaks,
   graphCollector,
   contract,

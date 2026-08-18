@@ -5,7 +5,7 @@
 **Reads against:** the code first (see `docs/PRODUCT-READ.md`, a code-only reading), then `SPEC.md` §10.2 (which already specifies the central deliverable here), `IMPLEMENTATION-PLAN-REMAINING.md` §1 (which flags it as the largest undone product scope), and the two existing checklists for phase-letter continuity. **The 2026-08-17 revision also reads the sibling** — `ramprules.com/fedramp-rules-hub`, which publishes the dataset this repo pins: its `docs/code-scanning-overlay-plan.md`, its `.claude/skills/overlay-loop/` (SKILL.md and both plane cards), its `pipeline-evidence.schema.json`, and the live `data/derived/automation-frontier.json` at overlay 0.7.1.
 **Phase letter:** **N**. A–H, I, J, K and L are taken, M0–M5 are the original milestones, and "Phase L" already collides once (L0–L5 vs the Tier-2 DAST entry). N avoids a third.
 
-**Thesis in one line:** rampscan's differentiator is proven; its *coverage* is 17 recipes against 22 of 209 controls. Go deeper on the substrate that exists — more of the standard answered, the claims answered harder, and the answers delivered to someone — rather than wider across languages, which the docs already defer by name.
+**Thesis in one line:** rampscan's differentiator is proven; its *coverage* was 17 recipes against 22 of 209 controls when this plan was written, and is 20 against 24 after N1b wave 1 — quote `rampscan frontier`, never this sentence, which is dated by construction (ground rule 9). Go deeper on the substrate that exists — more of the standard answered, the claims answered harder, and the answers delivered to someone — rather than wider across languages, which the docs already defer by name.
 
 ---
 
@@ -126,6 +126,30 @@ rampscan enumerates from the checkout it was handed, and multi-repo joins are de
 The counterweight to it, which is ours alone: three of upstream's four overlapping rationales end *"the platform … is itself an external system, raising SA-09 and CA-03."* Their research calls this their sharpest finding — the plane that would close SA-11 raises SA-09. **Our answer is negative**: collectors take no network by decision, execution is local, signing is `node:crypto`. Adopting rampscan to collect evidence does not enlarge the boundary it reports on. That sentence appears in none of our seven records and is the single strongest thing this overlay can say that upstream's cannot.
 
 ---
+
+## 1b. Not doing the same work twice — the mechanism, proposed 2026-08-18
+
+§1a found the sibling plane and ground rule 10 made a record *cite* rather than write past one. Both are about **declaring** overlap after it has happened. This section is about not producing it, and it is written after a batch in which three controls turned out to be claimed by a recipe on both planes at once, undetected, invisible to every check either project had.
+
+**The division of labour is real and it is not a preference.** Read empirically rather than negotiated: every one of upstream's nine `pipeline` recipes collects through `gh api` over organization and repository state — rulesets, code-security configurations, alert stores, approval records. **Not one reads a file in a checkout.** Every recipe in this catalog reads the checkout and takes no network by decision. So the boundary already exists in the evidence, and it can be stated as a triage predicate rather than as taste:
+
+> **A control whose evidence is a file under version control belongs to the commit plane. A control whose evidence is platform or estate state belongs to the plane that holds the credential for it. Where both are true the control is genuinely dual, and the recipe declares it.**
+
+That last clause is now enforced here (`upstream_overlap`, N1b′). The first two are not enforced anywhere, and cannot be from one side.
+
+**The asymmetry is the actual risk, and it is one-directional.** This repository pins upstream's slices and now checks three versions against them; upstream's tree contains **zero** mentions of rampscan. So upstream can author a recipe over a control this catalog covers and neither project will know until somebody here re-pins and reads — which is exactly how `ia-5.6`, `sa-11` and `si-10` happened, and exactly how the `sa-15.3` over-claim survived: they adjudicated it and declined to author, we authored and never adjudicated, and nothing compared the two until both files were opened side by side. Every mitigation built in N1b′ works only from this side of the fence.
+
+**The fix upstream already built and does not know it built: `openFor`.** Their `FrontierControl` carries `openFor` — the planes still owed a triage on that control — computed as `EVIDENCE_SOURCES.filter(...)` over a closed enum that today holds exactly `aws` and `pipeline`. That is a shared work queue with one plane missing. Add `commit` to `EvidenceSource` and to `sources_considered`, and every frontier row states, per plane, who still owes an answer; each project pulls its own column and nobody coordinates anything. The register does the deconfliction, which is the only place it can be done without a standing meeting.
+
+**And the plane arrives fully authored, which is the strongest form of their own rule.** Their §7 rule is *"declare a plane in the same batch that authors its first recipe. Not before."* It exists because a declared plane with dispositions and no recipes moves the ceiling for a reason no reader can audit. The commit plane would land with **23 recipes and 27 adjudications**, every record carrying a rationale, a two-limbed remainder and an external-system answer. N0 decision 2 mirrored their vocabulary *precisely so that this would be a merge rather than a rewrite* — `controlId · disposition · rationale · source · recipeIds[] · candidateCollectors[] · datasetVersion` — and SPEC §10.2 has said since the founding document that the overlay should be contributable upstream. It has been ready for that longer than anyone noticed.
+
+**Sequenced, cheapest first:**
+
+1. **Export it.** `rampscan frontier --json` already emits the whole overlay. A `commit-evidence.json` in upstream's overlay schema is a projection of it, not new work. Nothing upstream has to accept for this to be useful — it makes the overlay *readable* by them, which is the precondition for everything below.
+2. **Offer the plane.** `EvidenceSource` gains `commit`; `openFor` becomes a three-column queue. Their gate for a new plane is a fetched, cited artifact model and a first recipe, and both exist here already.
+3. **Then, and only then, the boundary predicate becomes a rule both loops can apply** — because it is only checkable once both planes are in one register.
+
+**What this does not solve, stated so it is not mistaken for solved.** Two projects reading one register still both have to *choose* to read it. The predicate deconflicts subject matter; it does not stop two passes reaching the same control from different families on the same afternoon. What it does is make that visible within one batch instead of within one re-pin — and `openFor` is the field that makes it visible before the work rather than after.
 
 ## 2. Sequencing, and the one real fork
 

@@ -1,0 +1,37 @@
+{
+  "id": "access-control-policy-present",
+  "ksi_ids": ["KSI-SVC-SIN"],
+  "control_ids": ["ac-1"],
+  "evidence": "Every access control policy document the repository declares in rampscan.config.json exists at its declared path and is non-empty, with the declaration and each document content-anchored to the commit",
+  "collection": { "kind": "pipeline", "collector": "documents" },
+  "expected_output": "One observation row per declared access-control-policy document: document_id, kind, path, present, bytes, non_empty",
+  "assertions": [
+    {
+      "field": "present",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "present", "op": "eq", "value": false }],
+      "controls": ["ac-1"],
+      "description": "No declared access control policy document is missing from the checkout."
+    },
+    {
+      "field": "non_empty",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "non_empty", "op": "eq", "value": false }],
+      "controls": ["ac-1"],
+      "description": "No declared access control policy document is an empty file."
+    }
+  ],
+  "cadence": "monthly",
+  "automatable": "partial",
+  "caveats": "Existence and integrity, never adequacy or dissemination. Nothing here reads the document, so that the file addresses purpose, scope, roles, responsibilities, management commitment and coordination is a 3PAO's reading; and nothing in a commit records that the policy reached anyone. The declaration is also the repository's own claim about what the file IS — rampscan proves the file the repo named is there and unchanged since it was attested. AC-01's adjudication carries the remainder in full, including the boundary limb: policy frequently lives in a governance repository this scan never reaches.",
+  "notes": "Empty-set discipline — Guard and Negative witness: a repository that declares no documents at all makes the collector SKIP with a stated reason, and one that declares documents of the other kind only leaves this recipe's observation key omitted — both read unevidenced. A declared document that is missing emits a row with present:false and violates, the same posture contract.ts holds for a rule matching nothing: a declaration pointing at a path that is not there fails the thing it mistyped rather than waiving it. `non_empty` is a byte count and nothing more.",
+  "empty_means": "unevidenced",
+  "plain": {
+    "checks": "Reads the list of policy documents this repository declares in rampscan.config.json, then checks each one is really there and is not an empty file — and records what each hashes to, so a later edit shows up as an edit.",
+    "violation": "The repository says a document governs how access is controlled here, and the file named is missing or blank. Anyone following the declaration — an assessor, a new engineer, an incident responder — arrives at nothing.",
+    "fix": "Either write the document at the path the declaration names, or correct the declaration to point at where it actually lives. If the policy is genuinely kept elsewhere — a governance repository, a wiki — remove the declaration rather than pointing it at a placeholder; an empty file that satisfies a check is worse than an honest gap."
+  },
+  "anchor": "commit"
+}

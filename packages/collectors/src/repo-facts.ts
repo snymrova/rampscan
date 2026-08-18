@@ -1,4 +1,4 @@
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
@@ -19,6 +19,27 @@ const LOCKFILES = [
   "yarn.lock",
   "bun.lock",
   "bun.lockb",
+];
+
+/**
+ * The published vulnerability-disclosure channel, at the paths a reader
+ * actually looks (N1b wave 1, RA-05 (11)). Two canonical forms and the places
+ * each is honoured: SECURITY.md as the host renders it (root, .github/, docs/)
+ * and security.txt as RFC 9116 defines it (.well-known/, with the legacy root
+ * location alongside). First match wins, in this order, so a repository with
+ * both reports the one a reader reaches first.
+ *
+ * A filename list rather than a declaration — unlike the `documents` collector
+ * beside it — because these paths are conventions someone else established and
+ * a reader finds them without being told. There is nothing for a repo to
+ * declare.
+ */
+const DISCLOSURE_PATHS = [
+  "SECURITY.md",
+  ".github/SECURITY.md",
+  "docs/SECURITY.md",
+  ".well-known/security.txt",
+  "security.txt",
 ];
 
 const PROVENANCE_USES = /slsa-framework\/slsa-github-generator|actions\/attest-build-provenance|sigstore\/|cosign/i;
@@ -110,6 +131,7 @@ export const repoFacts: Collector = {
       "dependency-update-automation",
       "codeowners-defined",
       "container-runs-nonroot",
+      "security-disclosure-published",
     ],
     // exactly the files the checks above read
     cacheScope: [
@@ -128,6 +150,7 @@ export const repoFacts: Collector = {
       ".github/CODEOWNERS",
       "docs/CODEOWNERS",
       "Dockerfile",
+      ...DISCLOSURE_PATHS,
     ],
   },
 
@@ -304,6 +327,41 @@ export const repoFacts: Collector = {
       { codeowners_present: codeownersPath !== null, path: codeownersPath },
     ];
     if (codeownersPath) await anchor("codeowners-defined", codeownersPath);
+
+    // ---- security-disclosure-published ------------------------------------
+    // Witness: exactly one row, always, carrying the existence boolean — so a
+    // repository that publishes no channel violates honestly rather than
+    // passing over zero rows. `non_empty` is a byte count and nothing more: a
+    // file of blank lines passes it, and reading whether the text names a
+    // contact, a scope or a timeline is the adequacy limb RA-05 (11)'s record
+    // hands to a human.
+    let disclosurePath: string | null = null;
+    let disclosureBytes = 0;
+    for (const cand of DISCLOSURE_PATHS) {
+      try {
+        const info = await stat(join(root, cand));
+        if (!info.isFile()) continue;
+        disclosurePath = cand;
+        disclosureBytes = info.size;
+        break;
+      } catch {
+        // not at this path; try the next place a reader would look
+      }
+    }
+    observations["security-disclosure-published"] = [
+      {
+        disclosure_present: disclosurePath !== null,
+        path: disclosurePath,
+        bytes: disclosureBytes,
+        non_empty: disclosureBytes > 0,
+      },
+    ];
+    if (disclosurePath) await anchor("security-disclosure-published", disclosurePath);
+    // No finding when the channel is absent, following `codeowners-defined`
+    // rather than `lockfile-pinned-deps`: a finding carries an anchor, and the
+    // only file to anchor an absence to is one this repository may not have
+    // either. The violated row and its plain-language block say the same thing
+    // without pinning the claim to an arbitrary neighbour.
 
     // ---- container-runs-nonroot -------------------------------------------
     if (await exists(join(root, "Dockerfile"))) {

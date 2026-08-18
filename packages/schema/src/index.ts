@@ -8,3 +8,4 @@ export * from "./manifest.js";
 export * from "./scanresult.js";
 export * from "./canon.js";
 export * from "./contract.js";
+export * from "./documents.js";

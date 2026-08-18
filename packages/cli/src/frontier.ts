@@ -1,5 +1,5 @@
 import type { Collector } from "@rampscan/core";
-import type { FrontierControl } from "@rampscan/dataset";
+import type { FrontierControl, UpstreamRecipeRef } from "@rampscan/dataset";
 import type { Disposition, CommitAdjudication, PipelineRecipe } from "@rampscan/schema";
 
 // `rampscan frontier` (plan N1a-T2) — a pure derivation in the shape of
@@ -174,6 +174,14 @@ export interface FrontierInput {
   datasetVersion: string;
   /** upstream's `rollup.ksiReachedControls` — read, never typed */
   ksiReachedControls: number;
+  /**
+   * Upstream's own recipes, by the control each claims — the file the frontier
+   * cannot be. Optional so every existing caller keeps working and a caller
+   * with no dataset in hand is not forced to fake one; when it is absent the
+   * catalog arm of ground rule 10 does not run, and `frontier.test.ts` pins
+   * that it DOES run on the real load rather than trusting the wiring.
+   */
+  upstreamRecipesFor?: (controlId: string) => UpstreamRecipeRef[];
 }
 
 /**
@@ -337,8 +345,13 @@ export function buildFrontier(input: FrontierInput): FrontierMap {
       onFrontier,
       recipeIds,
       claimsControl: new Map(input.recipes.map((r) => [r.id, [...r.control_ids].sort()])),
+      catalogRecipesFor: recipesForControl,
       registered,
       datasetVersion: input.datasetVersion,
+      recipes: input.recipes,
+      ...(input.upstreamRecipesFor !== undefined
+        ? { upstreamRecipesFor: input.upstreamRecipesFor }
+        : {}),
     }),
   };
 }
@@ -427,8 +440,13 @@ function frontierProblems(input: {
   recipeIds: Set<string>;
   /** recipe id → the controls that recipe claims */
   claimsControl: Map<string, string[]>;
+  /** control id → the catalog recipes claiming it — `claimsControl` inverted, for the reverse link */
+  catalogRecipesFor: Map<string, string[]>;
   registered: Set<string>;
   datasetVersion: string;
+  /** the catalog itself, for the arm of ground rule 10 that is about recipes */
+  recipes: PipelineRecipe[];
+  upstreamRecipesFor?: (controlId: string) => UpstreamRecipeRef[];
 }): string[] {
   const problems: string[] = [];
   const tier2 = new Set(TIER_2_COLLECTORS);
@@ -499,6 +517,30 @@ function frontierProblems(input: {
         );
       }
     }
+    // The SAME link, walked the other way (N1b wave 1). The paragraph above
+    // this function has always said that a catalog recipe the record forgot to
+    // claim is a broken link too, and until wave 1 nothing checked it — every
+    // record's `recipeIds` was empty, so there was no direction to disagree in.
+    // Writing the first ones found the case immediately: `api-spec-lint-clean`
+    // had claimed SA-05 since the H phase while SA-05's record named no recipe
+    // at all, so the frontier's two independently derived sides said different
+    // things about the same control and neither was wrong enough to notice.
+    //
+    // It matters in both dispositions. On a `partial` the record understates
+    // what the catalog already discharges; on a `narrative` it is a flat
+    // contradiction — we said a repository cannot answer this and shipped a
+    // recipe claiming it — and that one has to be argued rather than left for a
+    // reader to find.
+    const claimedByCatalog = input.catalogRecipesFor.get(record.controlId) ?? [];
+    for (const id of claimedByCatalog) {
+      if (!record.recipeIds.includes(id)) {
+        problems.push(
+          `catalog recipe "${id}" claims control "${record.controlId}", which our adjudication ` +
+            `does not name in its recipeIds [${record.recipeIds.join(", ") || "—"}] — the record and ` +
+            "the catalog disagree about what is already answered",
+        );
+      }
+    }
     for (const name of record.candidateCollectors) {
       if (!input.registered.has(name) && !tier2.has(name)) {
         problems.push(
@@ -518,6 +560,162 @@ function frontierProblems(input: {
         `adjudication "${record.controlId}" is "${record.disposition}" but names no recipe and no ` +
           "candidate collector — a claim that a repository can answer it, with nothing that would",
       );
+    }
+  }
+  problems.push(...catalogOverlapProblems(input));
+  problems.push(...remainderPointerProblems(input));
+  return problems;
+}
+
+/**
+ * A refusal that names who CAN answer the limb it refuses, checked rather than
+ * trusted. Same posture as `citationProblems`: the reference is recounted
+ * against upstream's published plan, so a pointer at a recipe they have
+ * withdrawn fails on the next run instead of ageing into a cross-reference
+ * nobody can follow.
+ *
+ * Unscoped to plane, deliberately, and the opposite way round from
+ * `catalogOverlapProblems`. That check narrows to `pipeline` because an `aws`
+ * overlap is the product's premise and declaring it twenty-five times is noise.
+ * Here the `aws` pointer carries real information: a remainder answered by an
+ * API over a running estate is a remainder the commit plane will never close,
+ * which is exactly what N1d's ceiling needs to say about it.
+ */
+function remainderPointerProblems(input: {
+  adjudications: CommitAdjudication[];
+  upstreamRecipesFor?: (controlId: string) => UpstreamRecipeRef[];
+}): string[] {
+  const lookup = input.upstreamRecipesFor;
+  if (lookup === undefined) return [];
+  const problems: string[] = [];
+  for (const record of input.adjudications) {
+    for (const ref of record.remainderAnsweredBy ?? []) {
+      const published = lookup(ref.control).some(
+        (t) => t.plane === ref.plane && t.recipeId === ref.recipeId,
+      );
+      if (!published) {
+        problems.push(
+          `adjudication "${record.controlId}" says its remainder is answered by upstream ` +
+            `"${ref.plane}" recipe "${ref.recipeId}" under control "${ref.control}", which ` +
+            "upstream's pinned evidence plan does not carry — a refusal that points somewhere " +
+            "nobody can follow is a refusal that has stopped being checkable",
+        );
+      }
+    }
+    // A pointer on a record with nothing to point away from: `automatable`
+    // claims the control is answered here, so there is no remainder for
+    // somebody else to hold.
+    if (
+      (record.remainderAnsweredBy ?? []).length > 0 &&
+      record.disposition === "automatable"
+    ) {
+      problems.push(
+        `adjudication "${record.controlId}" is "automatable" and still names an upstream recipe ` +
+          "as answering its remainder — an automatable control has no remainder to hand over",
+      );
+    }
+  }
+  return problems;
+}
+
+/**
+ * Ground rule 10's second arm, and the one the first arm could never have
+ * grown into (added after the 0.7.5 re-pin).
+ *
+ * `citationProblems` walks FRONTIER ROWS. The frontier is the uncovered set, so
+ * the moment upstream authors a recipe over a control, that control leaves the
+ * file and every fact about it leaves with it — including the fact that this
+ * catalog also claims it. Three controls had been sitting in that gap:
+ *
+ *     ia-5.6   ours no-secrets-in-history        theirs secret-exposure-detection-and-push-protection
+ *     sa-11    ours no-reachable-dangerous-code  theirs static-analysis-coverage-and-flaw-disposition
+ *     si-10    ours no-reachable-dangerous-code  theirs input-validation-taint-analysis-coverage
+ *
+ * Neither project said a word about the other on any of the three, and no check
+ * on either side could have said one: they are on nobody's frontier. That is not
+ * a check that failed, it is a check pointed at the one file where the fact is
+ * structurally absent — which is why this arm reads upstream's evidence PLAN
+ * (their published recipes) rather than their frontier (their published gaps).
+ *
+ * What it is guarding is not duplication. Two planes answering one control from
+ * two evidence paths is corroboration and is worth more than either alone —
+ * upstream reads the platform's alert store over an org, this plane reads the
+ * committed bytes of one checkout, and on `ia-5.6` those are genuinely different
+ * claims that happen to share a control id. The failure is that undeclared, the
+ * same pair reads as two projects doing one job twice.
+ *
+ * **It is scoped to upstream's `pipeline` plane, and the scoping is the design
+ * decision rather than a filter.** Run unscoped, this check reports twenty-five
+ * overlaps with `aws` on the first pass — `ra-5`, `si-2`, `cm-2`, `ac-6`,
+ * `sc-28` and the rest — and every one of them is the product's own thesis
+ * rather than a finding. An AWS recipe and a commit recipe over one control are
+ * different evidence BY CONSTRUCTION: one is an API over a running estate, the
+ * other is a file in a checkout, and no reader holding both could mistake them
+ * for the same claim. Twenty-five declarations all saying that would be the
+ * thesis restated twenty-five times, and a gate that is red on its first run
+ * for reasons nobody acts on is the gate N2a was deliberately held back to
+ * avoid becoming.
+ *
+ * Upstream's `pipeline` plane is the one case where the two claims are
+ * PLAUSIBLY the same, because it is the only upstream plane whose subject is
+ * ours — code, CI, dependencies, secrets, static analysis. That is exactly
+ * where a human has to say which it is, and nowhere else. If upstream declares
+ * a third plane over the same subject (their `docs/machine-readable-evidence-planes.md`
+ * §7 sequences several), it belongs in this set and the set is the one line to
+ * change.
+ */
+const COLLIDING_UPSTREAM_PLANES = new Set(["pipeline"]);
+function catalogOverlapProblems(input: {
+  recipes: PipelineRecipe[];
+  upstreamRecipesFor?: (controlId: string) => UpstreamRecipeRef[];
+}): string[] {
+  const lookup = input.upstreamRecipesFor;
+  if (lookup === undefined) return [];
+  const problems: string[] = [];
+  for (const recipe of input.recipes) {
+    const declared = recipe.upstream_overlap ?? [];
+    for (const control of recipe.control_ids) {
+      for (const theirs of lookup(control)) {
+        if (!COLLIDING_UPSTREAM_PLANES.has(theirs.plane)) continue;
+        const match = declared.find(
+          (d) =>
+            d.control === control &&
+            d.plane === theirs.plane &&
+            d.recipeId === theirs.recipeId,
+        );
+        if (match === undefined) {
+          problems.push(
+            `catalog recipe "${recipe.id}" claims control "${control}", which upstream's ` +
+              `"${theirs.plane}" plane already answers with "${theirs.recipeId}" — and this recipe ` +
+              "says nothing about it. Two catalogs claiming one control without either naming the " +
+              "other is risk 7 arriving through the recipes instead of the records: declare it " +
+              "`corroborates` and say what the two artifacts each add, or `contests` and argue",
+          );
+        }
+      }
+    }
+    // The mirror, and it catches us rather than upstream: a declaration
+    // pointing at a recipe upstream no longer publishes is a citation nobody
+    // can check, which reads exactly like one nobody did — the same failure
+    // `citationProblems` names for a disposition that has moved.
+    for (const d of declared) {
+      const stillThere = lookup(d.control).some(
+        (t) => t.plane === d.plane && t.recipeId === d.recipeId,
+      );
+      if (!stillThere) {
+        problems.push(
+          `catalog recipe "${recipe.id}" declares an overlap on "${d.control}" with upstream ` +
+            `"${d.plane}" recipe "${d.recipeId}", which upstream's pinned evidence plan does not ` +
+            "carry — either the id is wrong or upstream withdrew it, and a declaration against a " +
+            "recipe nobody can open is worse than none",
+        );
+      }
+      if (!recipe.control_ids.includes(d.control)) {
+        problems.push(
+          `catalog recipe "${recipe.id}" declares an overlap on control "${d.control}", which is ` +
+            `not one of its own control_ids [${recipe.control_ids.join(", ")}]`,
+        );
+      }
     }
   }
   return problems;

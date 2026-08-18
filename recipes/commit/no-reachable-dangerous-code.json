@@ -1,12 +1,21 @@
 {
   "id": "no-reachable-dangerous-code",
-  "ksi_ids": ["KSI-SCR-MIT", "KSI-PIY-RSD"],
+  "ksi_ids": [
+    "KSI-SCR-MIT",
+    "KSI-PIY-RSD"
+  ],
   "evidence": "No dangerous code construct (dynamic evaluation, non-literal command execution) sits in the execute path from the repo's entry points at the scanned commit",
-  "control_ids": ["sa-11", "si-10"],
+  "control_ids": [
+    "sa-11",
+    "si-10"
+  ],
   "collection": {
     "kind": "pipeline",
     "collector": "sast-reachability",
-    "inputs": ["semgrep-results.json", "graph.db"]
+    "inputs": [
+      "semgrep-results.json",
+      "graph.db"
+    ]
   },
   "expected_output": "Gated SAST rows: check_id, path, line, severity (ERROR|WARNING|INFO), message, reachable (true|false|unknown), not_affected, call_path (the call path as the artifact when reachable)",
   "assertions": [
@@ -15,10 +24,21 @@
       "op": "count_eq",
       "value": 0,
       "where": [
-        { "field": "severity", "op": "eq", "value": "ERROR" },
-        { "field": "not_affected", "op": "eq", "value": false }
+        {
+          "field": "severity",
+          "op": "eq",
+          "value": "ERROR"
+        },
+        {
+          "field": "not_affected",
+          "op": "eq",
+          "value": false
+        }
       ],
-      "controls": ["sa-11", "si-10"],
+      "controls": [
+        "sa-11",
+        "si-10"
+      ],
       "description": "Zero ERROR-severity SAST hits reachable — or of unknown reachability — from the repo's entry points."
     }
   ],
@@ -31,5 +51,21 @@
     "violation": "Code that can execute attacker-influenced input is reachable when your program runs. Copies of the same pattern that nothing can reach were set aside deliberately; what is left is the part that can actually be triggered.",
     "fix": "Replace the construct with one that cannot execute data — a lookup table instead of eval, an argument array instead of a shell string. Where the hit is a false positive, the fix is to make the code plainly safe rather than to suppress the rule."
   },
+  "upstream_overlap": [
+    {
+      "control": "sa-11",
+      "plane": "pipeline",
+      "recipeId": "static-analysis-coverage-and-flaw-disposition",
+      "relation": "corroborates",
+      "note": "Two different limbs of SA-11, and the division is clean. Upstream proves the ANALYSIS: that code scanning is configured in the organization, which repositories it reaches, which query suite ran over which languages, that the recurring schedule is still alive, and how each flaw was dispositioned. This recipe proves a RESULT at one commit: no dangerous construct sits on the execute path from the repository's entry points, gated on the import graph, so a finding that cannot be reached is not reported as one. Reachability is the field their alert list does not carry and the reason this claim is narrower and harder rather than smaller. The honest counterweight belongs here rather than in a footnote: our ruleset is three rules today (plan N3a), so their query-suite and language coverage is a statement about breadth that ours does not make, and a reader comparing the two should read our claim as deep and theirs as wide."
+    },
+    {
+      "control": "si-10",
+      "plane": "pipeline",
+      "recipeId": "input-validation-taint-analysis-coverage",
+      "relation": "corroborates",
+      "note": "Same shape as the SA-11 pairing and worth stating separately because the control is about input validation rather than developer testing. Upstream establishes that a taint-tracking ruleset actually ran over the repository, which threat model decided what counts as an untrusted source, and that the scan is still scheduled — the configuration and the coverage. This recipe reports whether a dangerous sink is reachable from an entry point at the scanned commit, which is a fact about the code rather than about the scanner. Their route can tell a reader that no repository escaped analysis; ours cannot, because it is handed one checkout. Ours can tell a reader that a specific finding is on the execute path; theirs cannot, because reachability is not in the alert. Neither is a substitute and the overlap is declared so that a reader holding both catalogs reads them as one answer in two parts."
+    }
+  ],
   "anchor": "commit"
 }

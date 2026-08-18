@@ -1,0 +1,35 @@
+{
+  "id": "security-disclosure-published",
+  "ksi_ids": ["KSI-PIY-RVD"],
+  "control_ids": ["ra-5.11"],
+  "evidence": "A published vulnerability-disclosure channel — SECURITY.md or .well-known/security.txt — exists in the checkout, non-empty and content-anchored, so a change to the promise kills the evidence",
+  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "expected_output": "One observation row with disclosure_present, path, bytes and non_empty",
+  "assertions": [
+    {
+      "field": "disclosure_present",
+      "op": "eq",
+      "value": true,
+      "controls": ["ra-5.11"],
+      "description": "A disclosure channel is published at one of the paths a reporter looks: SECURITY.md (root, .github/, docs/) or security.txt (.well-known/, root)."
+    },
+    {
+      "field": "non_empty",
+      "op": "eq",
+      "value": true,
+      "controls": ["ra-5.11"],
+      "description": "The published file has content. A zero-byte SECURITY.md is a path that resolves and a channel that says nothing."
+    }
+  ],
+  "cadence": "weekly",
+  "automatable": "partial",
+  "caveats": "The front door, not the programme. Nothing here shows a report arrived, that anyone answered it, or that the address the document names is monitored — and the file is read in place rather than fetched from the published URL, so a channel that is committed but not served still passes. RA-05 (11)'s adjudication carries the remainder in full.",
+  "notes": "Empty-set discipline — Witness: repo-facts always emits exactly one row carrying disclosure_present, so a repository that publishes no channel violates honestly rather than passing over zero rows; an empty observation set here could only mean the collector never ran. `non_empty` is a byte count and nothing more — a file of blank lines passes it, and whether the text names a contact, a scope or a response timeline is the adequacy limb this recipe does not claim.",
+  "empty_means": "unevidenced",
+  "plain": {
+    "checks": "Looks for a security policy file — SECURITY.md at the repository root, in .github/ or in docs/, or a security.txt under .well-known/ — and records what it hashes to.",
+    "violation": "There is no published way to report a vulnerability in this code. Someone who finds one has to guess: a public issue that tells everybody at once, an email address nobody monitors, or silence until the flaw is used.",
+    "fix": "Add a SECURITY.md naming where reports go, what is in scope, and how fast you answer — then make sure the address it names reaches a person. The file is the half a repository can show; someone reading what arrives is the half it cannot."
+  },
+  "anchor": "commit"
+}

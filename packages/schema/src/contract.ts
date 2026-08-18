@@ -28,7 +28,14 @@ import { z } from "zod";
 
 const VERDICT_WORDS = /\b(violated|evidenced|unevidenced|notApplicable)\b/i;
 
-const ruleDescription = z
+/**
+ * Prose written by the repo being scanned, held to the rule above. Exported
+ * because the documents block (N1b) declares the same kind of thing for the
+ * same reason — a repo naming what it means, rendered on our surfaces — and
+ * two copies of this refinement would be two chances for one of them to drift
+ * into accepting a typed verdict.
+ */
+export const declaredDescription = z
   .string()
   .min(1)
   .refine((text) => !VERDICT_WORDS.test(text), {
@@ -53,7 +60,7 @@ export const RouteAuthRule = z
      * recorded for each declared route, method-independent.
      */
     routes: z.string().min(1),
-    description: ruleDescription,
+    description: declaredDescription,
   })
   .strict();
 export type RouteAuthRule = z.infer<typeof RouteAuthRule>;
@@ -72,7 +79,7 @@ export const BoundaryRule = z
     module: z.string().min(1),
     /** path prefixes whose files may import the module; empty = nobody may */
     allowedImporters: z.array(z.string().min(1)),
-    description: ruleDescription,
+    description: declaredDescription,
   })
   .strict();
 export type BoundaryRule = z.infer<typeof BoundaryRule>;

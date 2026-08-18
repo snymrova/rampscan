@@ -1,4 +1,4 @@
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,7 @@ import {
   graphCollector,
   inModulePrefix,
 } from "../src/index.js";
+import { copyCheckout } from "./checkout.js";
 
 // The contract gate (plan L1), driven on the REAL fixture rather than a typed
 // graph: `vulnerable-app` declares two rules in its own rampscan.config.json
@@ -58,8 +59,7 @@ async function runGate(root: string, graphPath?: string): Promise<CollectOutput>
 
 /** a copy of the fixture whose contract block is rewritten — for the mutation cases */
 async function withContract(rules: unknown): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "rampscan-contract-fixture-"));
-  await cp(fixtureRoot, root, { recursive: true });
+  const root = await copyCheckout(fixtureRoot, "contract-fixture");
   if (rules === undefined) {
     await rm(join(root, "rampscan.config.json"), { force: true });
   } else {
@@ -287,8 +287,7 @@ describe("the refusals — an absent or broken contract may never read as a pass
     // bare-app has no server surface. Give it the fixture's contract and the
     // route recipe must stay ABSENT (graph.ts's no-routes refusal, inherited)
     // while the boundary half still answers.
-    const root = await mkdtemp(join(tmpdir(), "rampscan-contract-noroutes-"));
-    await cp(bareRoot, root, { recursive: true });
+    const root = await copyCheckout(bareRoot, "contract-noroutes");
     await writeFile(
       join(root, "rampscan.config.json"),
       JSON.stringify({

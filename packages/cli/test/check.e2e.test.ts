@@ -203,7 +203,17 @@ beforeAll(async () => {
 describe("the dry-run gate set is computed from the manifests, and every refusal is stated", () => {
   it("runs exactly the pure collectors whose inputs other pure collectors produce", () => {
     const { run } = dryRunnable(allCollectors);
-    expect(run.map((c) => c.manifest.name)).toEqual(["repo-facts", "graph", "contract"]);
+    // `documents` joined the set on its first day and by the same rule the
+    // other three are in it: it spawns nothing and consumes no artifact, so
+    // the working tree is all it needs. That makes a declared document deleted
+    // in an uncommitted change a row `rampscan check` fails on before the
+    // commit exists, which is the property this list is for.
+    expect(run.map((c) => c.manifest.name)).toEqual([
+      "repo-facts",
+      "documents",
+      "graph",
+      "contract",
+    ]);
   });
 
   it("accounts for every collector in the registry — nothing is silently dropped", () => {

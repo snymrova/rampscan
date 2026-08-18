@@ -3,24 +3,24 @@
   "last_updated": "2026-07-14",
   "slice": "automation-frontier",
   "data": {
-    "overlay_version": "0.7.2",
+    "overlay_version": "0.7.5",
     "dataset_version_tested_against": "2026.07.14.01",
     "liveDatasetVersion": "2026.07.14.01",
     "versionMatch": true,
     "rollup": {
       "ksiReachedControls": 209,
-      "covered": 90,
+      "covered": 97,
       "controlsWithFullRecipe": 22,
       "fullRecipes": 12,
-      "recipes": 51,
-      "uncovered": 119,
+      "recipes": 58,
+      "uncovered": 112,
       "reachable": 122,
       "ceiling": 0.583732057416268,
       "unreviewed": 58,
       "adjudicated": 151,
       "byDisposition": {
         "automatable": 0,
-        "partial": 32,
+        "partial": 25,
         "narrative": 29
       },
       "bySource": {
@@ -29,14 +29,14 @@
           "automatable": 0,
           "partial": 21,
           "narrative": 27,
-          "unreviewed": 71,
+          "unreviewed": 64,
           "reachable": 109,
           "ceiling": 0.5215311004784688
         },
         "pipeline": {
-          "covered": 2,
+          "covered": 9,
           "automatable": 0,
-          "partial": 11,
+          "partial": 4,
           "narrative": 2,
           "unreviewed": 106,
           "reachable": 13,
@@ -234,6 +234,63 @@
           "AWS IAM Identity Center"
         ],
         "reviewed": "2026-08-04",
+        "leverage": 8
+      },
+      {
+        "controlId": "sa-3",
+        "displayId": "SA-03",
+        "family": "SA",
+        "ksis": [
+          "KSI-PIY-RIS",
+          "KSI-PIY-RSD"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The control asks that the system be acquired and built under a documented lifecycle, with security roles assigned and risk management integrated into each phase. None of those three is a property of the estate: a pipeline execution record names no lifecycle, assigns no role and integrates no risk decision, so it is not partial evidence of any limb — it is evidence of a different thing that happens to run alongside. The lifecycle definition, the role assignments and the phase gates live in the SSP and the acquisition record, and a 3PAO reads them there.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-11",
+        "leverage": 8
+      },
+      {
+        "controlId": "sa-9",
+        "displayId": "SA-09",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT",
+          "KSI-SCR-MON"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": "partial",
+        "rationale": "The inventory half is already collected by this overlay — Access Analyzer enumerates every external principal trusted by the estate, and that is the same enumeration the AC-20 recipe performs. That each external provider MEETS the security requirements imposed on it is a statement about somebody else's estate, captured in the agreement CA-3 names, which is why the dataset's AC-20 guidance separates the three controls in the first place.",
+        "sourcesConsidered": [
+          "aws"
+        ],
+        "openFor": [
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [
+          "AWS IAM Access Analyzer",
+          "AWS IAM",
+          "Amazon VPC",
+          "AWS Config"
+        ],
+        "reviewed": "2026-08-11",
         "leverage": 8
       },
       {
@@ -891,11 +948,58 @@
         "leverage": 7
       },
       {
-        "controlId": "sa-3",
-        "displayId": "SA-03",
+        "controlId": "sa-2",
+        "displayId": "SA-02",
         "family": "SA",
         "ksis": [
-          "KSI-PIY-RIS",
+          "KSI-PIY-RIS"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-5",
+        "displayId": "SA-05",
+        "family": "SA",
+        "ksis": [
+          "KSI-SVC-ACM"
+        ],
+        "classes": [
+          "b",
+          "c",
+          "d"
+        ],
+        "disposition": null,
+        "rationale": null,
+        "sourcesConsidered": [],
+        "openFor": [
+          "aws",
+          "pipeline"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": null,
+        "leverage": 7
+      },
+      {
+        "controlId": "sa-8",
+        "displayId": "SA-08",
+        "family": "SA",
+        "ksis": [
           "KSI-PIY-RSD"
         ],
         "classes": [
@@ -903,26 +1007,25 @@
           "c",
           "d"
         ],
-        "disposition": "narrative",
-        "rationale": "The control asks that the system be acquired and built under a documented lifecycle, with security roles assigned and risk management integrated into each phase. None of those three is a property of the estate: a pipeline execution record names no lifecycle, assigns no role and integrates no risk decision, so it is not partial evidence of any limb — it is evidence of a different thing that happens to run alongside. The lifecycle definition, the role assignments and the phase gates live in the SSP and the acquisition record, and a 3PAO reads them there.",
+        "disposition": "partial",
+        "rationale": "SA-8 requires the principles to be applied in specification, design, development, implementation and modification, and the implementation limb is the one a pipeline can see: an IaC policy rule that fails a world-readable bucket or an over-broad role is telemetry about a layered-protection or least-privilege principle actually holding in the artifact being deployed. Rated partial rather than narrative for that limb alone. The gap is the rest of the control and it is most of it — which organization-defined principles were selected, and how they were applied in specification and design, is an SDLC document, and a passing rule evidences a principle without naming the one that was chosen. KSI-PIY-RSD asks whether the effectiveness of that selection is persistently reviewed, which is a review record. The platform running the policy pack is itself an external system, raising SA-09 and CA-03.",
         "sourcesConsidered": [
-          "aws"
+          "pipeline"
         ],
         "openFor": [
-          "pipeline"
+          "aws"
         ],
         "coveredBy": [],
         "candidateServices": [],
-        "reviewed": "2026-08-11",
+        "reviewed": "2026-08-13",
         "leverage": 7
       },
       {
-        "controlId": "sa-9",
-        "displayId": "SA-09",
+        "controlId": "sa-22",
+        "displayId": "SA-22",
         "family": "SA",
         "ksis": [
-          "KSI-SCR-MIT",
-          "KSI-SCR-MON"
+          "KSI-SCR-MIT"
         ],
         "classes": [
           "b",
@@ -930,21 +1033,16 @@
           "d"
         ],
         "disposition": "partial",
-        "rationale": "The inventory half is already collected by this overlay — Access Analyzer enumerates every external principal trusted by the estate, and that is the same enumeration the AC-20 recipe performs. That each external provider MEETS the security requirements imposed on it is a statement about somebody else's estate, captured in the agreement CA-3 names, which is why the dataset's AC-20 guidance separates the three controls in the first place.",
+        "rationale": "Dependency and base-image scanning identifies components past end of support, which is the control's detection half and the half that rots fastest. The decision half — that an unsupported component is replaced, or that continued use carries documented justification and approval — is a human record. The scanned population is also narrower than the control's: firmware, appliances and managed-service versions that never appear in a manifest are outside it. The scanning platform is itself an external system, raising SA-09 and CA-03.",
         "sourcesConsidered": [
-          "aws"
-        ],
-        "openFor": [
           "pipeline"
         ],
-        "coveredBy": [],
-        "candidateServices": [
-          "AWS IAM Access Analyzer",
-          "AWS IAM",
-          "Amazon VPC",
-          "AWS Config"
+        "openFor": [
+          "aws"
         ],
-        "reviewed": "2026-08-11",
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-13",
         "leverage": 7
       },
       {
@@ -1462,130 +1560,6 @@
         "leverage": 6
       },
       {
-        "controlId": "ia-5.6",
-        "displayId": "IA-05 (06)",
-        "family": "IA",
-        "ksis": [
-          "KSI-IAM-APM",
-          "KSI-IAM-ELP",
-          "KSI-SVC-ASM"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Secret scanning and push protection give a narrow but real slice: credentials committed to, or blocked from, the repositories in scope, with alert and block records. The control is broader in two directions this plane cannot see. Authenticators also live in secret stores, images, CI variables and operator laptops, and commensurate with the security category of the information the authenticator permits access to is a judgement that requires knowing what the credential opens. KSI-SVC-ASM's rotation limb is likewise not a scanning result. The scanning platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 6
-      },
-      {
-        "controlId": "sa-2",
-        "displayId": "SA-02",
-        "family": "SA",
-        "ksis": [
-          "KSI-PIY-RIS"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "openFor": [
-          "aws",
-          "pipeline"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
-      },
-      {
-        "controlId": "sa-5",
-        "displayId": "SA-05",
-        "family": "SA",
-        "ksis": [
-          "KSI-SVC-ACM"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": null,
-        "rationale": null,
-        "sourcesConsidered": [],
-        "openFor": [
-          "aws",
-          "pipeline"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": null,
-        "leverage": 6
-      },
-      {
-        "controlId": "sa-8",
-        "displayId": "SA-08",
-        "family": "SA",
-        "ksis": [
-          "KSI-PIY-RSD"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "SA-8 requires the principles to be applied in specification, design, development, implementation and modification, and the implementation limb is the one a pipeline can see: an IaC policy rule that fails a world-readable bucket or an over-broad role is telemetry about a layered-protection or least-privilege principle actually holding in the artifact being deployed. Rated partial rather than narrative for that limb alone. The gap is the rest of the control and it is most of it — which organization-defined principles were selected, and how they were applied in specification and design, is an SDLC document, and a passing rule evidences a principle without naming the one that was chosen. KSI-PIY-RSD asks whether the effectiveness of that selection is persistently reviewed, which is a review record. The platform running the policy pack is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 6
-      },
-      {
-        "controlId": "sa-22",
-        "displayId": "SA-22",
-        "family": "SA",
-        "ksis": [
-          "KSI-SCR-MIT"
-        ],
-        "classes": [
-          "b",
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Dependency and base-image scanning identifies components past end of support, which is the control's detection half and the half that rots fastest. The decision half — that an unsupported component is replaced, or that continued use carries documented justification and approval — is a human record. The scanned population is also narrower than the control's: firmware, appliances and managed-service versions that never appear in a manifest are outside it. The scanning platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 6
-      },
-      {
         "controlId": "si-4.4",
         "displayId": "SI-04 (04)",
         "family": "SI",
@@ -1608,32 +1582,6 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
-        "leverage": 6
-      },
-      {
-        "controlId": "si-7.7",
-        "displayId": "SI-07 (07)",
-        "family": "SI",
-        "ksis": [
-          "KSI-MLA-EVC",
-          "KSI-MLA-LET",
-          "KSI-MLA-OSM"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Attestation verification detects the unauthorized change: `gh attestation verify` over a named artifact is a command with an exit status, and it is the strongest signal this plane has. The control asks for something on top of detection — that it be incorporated into the organizational incident response capability — and an exit status does not show that a failure raises an incident, is triaged, or reaches anyone. The gap is the integration, not the detection, and the authoring batch should not read the strength of the command as covering the clause it does not touch. Note for that batch: this control is reached by KSI-MLA-EVC, KSI-MLA-LET and KSI-MLA-OSM, NOT by KSI-SVC-VRI. The build platform issuing the attestation is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
         "leverage": 6
       },
       {
@@ -1708,56 +1656,6 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
-        "leverage": 5
-      },
-      {
-        "controlId": "cm-3.4",
-        "displayId": "CM-03 (04)",
-        "family": "CM",
-        "ksis": [
-          "KSI-CMT-RVP",
-          "KSI-PIY-RSD"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "This is the closest the plane comes to a membership claim it can check: CODEOWNERS, required-reviewer branch protection and per-PR approval records show that a designated reviewer approved each change, with identities and timestamps. What the telemetry cannot establish is that those identities are the security and privacy representatives the control requires on the change control element — that mapping lives in the CCB charter, and a repository team named security is an assertion about a name. The gap is an identity mapping rather than a missing signal. The platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 5
-      },
-      {
-        "controlId": "cm-4.2",
-        "displayId": "CM-04 (02)",
-        "family": "CM",
-        "ksis": [
-          "KSI-CMT-LMC",
-          "KSI-CMT-VTD"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "KSI-CMT-VTD asks for automated testing and validation of changes throughout deployment, and a pipeline run record is exactly that: post-change test and policy-gate outcomes, per change. The control's own words keep it partial — the impacted controls, operating as intended, producing the desired outcome — because which controls a change impacts, and whether a passing test verifies one, is a human mapping from test to control. A pipeline that publishes such a mapping is publishing an authored artifact, not a measurement. The CI platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -1951,31 +1849,6 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
-        "leverage": 5
-      },
-      {
-        "controlId": "si-10",
-        "displayId": "SI-10",
-        "family": "SI",
-        "ksis": [
-          "KSI-CNA-MAT",
-          "KSI-PIY-RSD"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Taint-tracking SAST is genuine telemetry about input validation: injection sinks reachable from untrusted sources are what the control is about, and a scan record names the rules that ran. Two things keep it short of full. The control is scoped to organization-defined information inputs and that list is human, so a clean scan says no sink the ruleset knows about rather than every defined input is checked. And a clean result means nothing until the scan is shown to have run, recently, over the repositories inside the boundary — an empty alert list is equally consistent with a scanner that never ran. The platform running it is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
         "leverage": 5
       },
       {
@@ -2578,6 +2451,30 @@
         "leverage": 4
       },
       {
+        "controlId": "sa-15.3",
+        "displayId": "SA-15 (03)",
+        "family": "SA",
+        "ksis": [
+          "KSI-SCR-MIT"
+        ],
+        "classes": [
+          "c",
+          "d"
+        ],
+        "disposition": "narrative",
+        "rationale": "The control asks the developer to perform a criticality analysis at defined decision points and at a defined level of rigor. No pipeline emits one: the analysis names which components are critical to mission function, which is a judgement about the mission rather than a property of the build. A dependency graph enumerates components and ranks none of them. A 3PAO reads the criticality analysis itself and the decision points recorded in the SDLC documentation.",
+        "sourcesConsidered": [
+          "pipeline"
+        ],
+        "openFor": [
+          "aws"
+        ],
+        "coveredBy": [],
+        "candidateServices": [],
+        "reviewed": "2026-08-13",
+        "leverage": 4
+      },
+      {
         "controlId": "sc-2",
         "displayId": "SC-02",
         "family": "SC",
@@ -2781,78 +2678,6 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-04",
-        "leverage": 3
-      },
-      {
-        "controlId": "sa-10",
-        "displayId": "SA-10",
-        "family": "SA",
-        "ksis": [
-          "KSI-SCR-MIT"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Version control is where developer configuration management actually happens: branch protection, required reviews, signed commits and merge records show that only approved changes reached the mainline and that the integrity of each change was tracked, which is most of the control's document-manage-and-control limb. The gap is what counts as organization-approved — the CM plan naming the approving authority and the change classes it covers is a document, and a merge record cannot show that the approver held that authority. The platform holding those records is itself an external system, so adopting it to collect this raises SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 3
-      },
-      {
-        "controlId": "sa-11",
-        "displayId": "SA-11",
-        "family": "SA",
-        "ksis": [
-          "KSI-SCR-MIT"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "SAST and dependency scan records in CI evidence that testing ran, with what ruleset, and what it found, and KSI-SCR-MIT's identify-review-mitigate reads directly onto that. What no scanner emits is the developer's security assessment plan, the depth-and-coverage determination the control requires that plan to state, or the judgement that a flaw was remediated rather than dismissed; a 3PAO reads those in the plan and the flaw remediation record. The scanning platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 3
-      },
-      {
-        "controlId": "sa-15.3",
-        "displayId": "SA-15 (03)",
-        "family": "SA",
-        "ksis": [
-          "KSI-SCR-MIT"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "narrative",
-        "rationale": "The control asks the developer to perform a criticality analysis at defined decision points and at a defined level of rigor. No pipeline emits one: the analysis names which components are critical to mission function, which is a judgement about the mission rather than a property of the build. A dependency graph enumerates components and ranks none of them. A 3PAO reads the criticality analysis itself and the decision points recorded in the SDLC documentation.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
         "leverage": 3
       },
       {
@@ -3810,56 +3635,6 @@
         "leverage": 6
       },
       {
-        "controlId": "cm-3.4",
-        "displayId": "CM-03 (04)",
-        "family": "CM",
-        "ksis": [
-          "KSI-CMT-RVP",
-          "KSI-PIY-RSD"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "This is the closest the plane comes to a membership claim it can check: CODEOWNERS, required-reviewer branch protection and per-PR approval records show that a designated reviewer approved each change, with identities and timestamps. What the telemetry cannot establish is that those identities are the security and privacy representatives the control requires on the change control element — that mapping lives in the CCB charter, and a repository team named security is an assertion about a name. The gap is an identity mapping rather than a missing signal. The platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 5
-      },
-      {
-        "controlId": "cm-4.2",
-        "displayId": "CM-04 (02)",
-        "family": "CM",
-        "ksis": [
-          "KSI-CMT-LMC",
-          "KSI-CMT-VTD"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "KSI-CMT-VTD asks for automated testing and validation of changes throughout deployment, and a pipeline run record is exactly that: post-change test and policy-gate outcomes, per change. The control's own words keep it partial — the impacted controls, operating as intended, producing the desired outcome — because which controls a change impacts, and whether a passing test verifies one, is a human mapping from test to control. A pipeline that publishes such a mapping is publishing an authored artifact, not a measurement. The CI platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 5
-      },
-      {
         "controlId": "cm-7.2",
         "displayId": "CM-07 (02)",
         "family": "CM",
@@ -4497,32 +4272,6 @@
         ],
         "reviewed": "2026-08-04",
         "leverage": 7
-      },
-      {
-        "controlId": "ia-5.6",
-        "displayId": "IA-05 (06)",
-        "family": "IA",
-        "ksis": [
-          "KSI-IAM-APM",
-          "KSI-IAM-ELP",
-          "KSI-SVC-ASM"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Secret scanning and push protection give a narrow but real slice: credentials committed to, or blocked from, the repositories in scope, with alert and block records. The control is broader in two directions this plane cannot see. Authenticators also live in secret stores, images, CI variables and operator laptops, and commensurate with the security category of the information the authenticator permits access to is a judgement that requires knowing what the credential opens. KSI-SVC-ASM's rotation limb is likewise not a scanning result. The scanning platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 6
       },
       {
         "controlId": "ia-6",
@@ -5167,7 +4916,7 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
-        "leverage": 6
+        "leverage": 7
       },
       {
         "controlId": "sa-3",
@@ -5193,7 +4942,7 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-11",
-        "leverage": 7
+        "leverage": 8
       },
       {
         "controlId": "sa-5",
@@ -5217,7 +4966,7 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": null,
-        "leverage": 6
+        "leverage": 7
       },
       {
         "controlId": "sa-8",
@@ -5242,7 +4991,7 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-13",
-        "leverage": 6
+        "leverage": 7
       },
       {
         "controlId": "sa-9",
@@ -5273,55 +5022,7 @@
           "AWS Config"
         ],
         "reviewed": "2026-08-11",
-        "leverage": 7
-      },
-      {
-        "controlId": "sa-10",
-        "displayId": "SA-10",
-        "family": "SA",
-        "ksis": [
-          "KSI-SCR-MIT"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Version control is where developer configuration management actually happens: branch protection, required reviews, signed commits and merge records show that only approved changes reached the mainline and that the integrity of each change was tracked, which is most of the control's document-manage-and-control limb. The gap is what counts as organization-approved — the CM plan naming the approving authority and the change classes it covers is a document, and a merge record cannot show that the approver held that authority. The platform holding those records is itself an external system, so adopting it to collect this raises SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 3
-      },
-      {
-        "controlId": "sa-11",
-        "displayId": "SA-11",
-        "family": "SA",
-        "ksis": [
-          "KSI-SCR-MIT"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "SAST and dependency scan records in CI evidence that testing ran, with what ruleset, and what it found, and KSI-SCR-MIT's identify-review-mitigate reads directly onto that. What no scanner emits is the developer's security assessment plan, the depth-and-coverage determination the control requires that plan to state, or the judgement that a flaw was remediated rather than dismissed; a 3PAO reads those in the plan and the flaw remediation record. The scanning platform is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 3
+        "leverage": 8
       },
       {
         "controlId": "sa-15.3",
@@ -5345,7 +5046,7 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-13",
-        "leverage": 3
+        "leverage": 4
       },
       {
         "controlId": "sa-22",
@@ -5370,7 +5071,7 @@
         "coveredBy": [],
         "candidateServices": [],
         "reviewed": "2026-08-13",
-        "leverage": 6
+        "leverage": 7
       },
       {
         "controlId": "sc-2",
@@ -5674,32 +5375,6 @@
         "leverage": 6
       },
       {
-        "controlId": "si-7.7",
-        "displayId": "SI-07 (07)",
-        "family": "SI",
-        "ksis": [
-          "KSI-MLA-EVC",
-          "KSI-MLA-LET",
-          "KSI-MLA-OSM"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Attestation verification detects the unauthorized change: `gh attestation verify` over a named artifact is a command with an exit status, and it is the strongest signal this plane has. The control asks for something on top of detection — that it be incorporated into the organizational incident response capability — and an exit status does not show that a failure raises an incident, is triaged, or reaches anyone. The gap is the integration, not the detection, and the authoring batch should not read the strength of the command as covering the clause it does not touch. Note for that batch: this control is reached by KSI-MLA-EVC, KSI-MLA-LET and KSI-MLA-OSM, NOT by KSI-SVC-VRI. The build platform issuing the attestation is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 6
-      },
-      {
         "controlId": "si-8",
         "displayId": "SI-08",
         "family": "SI",
@@ -5745,31 +5420,6 @@
         "candidateServices": [],
         "reviewed": null,
         "leverage": 4
-      },
-      {
-        "controlId": "si-10",
-        "displayId": "SI-10",
-        "family": "SI",
-        "ksis": [
-          "KSI-CNA-MAT",
-          "KSI-PIY-RSD"
-        ],
-        "classes": [
-          "c",
-          "d"
-        ],
-        "disposition": "partial",
-        "rationale": "Taint-tracking SAST is genuine telemetry about input validation: injection sinks reachable from untrusted sources are what the control is about, and a scan record names the rules that ran. Two things keep it short of full. The control is scoped to organization-defined information inputs and that list is human, so a clean scan says no sink the ruleset knows about rather than every defined input is checked. And a clean result means nothing until the scan is shown to have run, recently, over the repositories inside the boundary — an empty alert list is equally consistent with a scanner that never ran. The platform running it is itself an external system, raising SA-09 and CA-03.",
-        "sourcesConsidered": [
-          "pipeline"
-        ],
-        "openFor": [
-          "aws"
-        ],
-        "coveredBy": [],
-        "candidateServices": [],
-        "reviewed": "2026-08-13",
-        "leverage": 5
       },
       {
         "controlId": "si-11",

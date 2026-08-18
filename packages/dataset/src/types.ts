@@ -118,3 +118,77 @@ export const AwsRecipe = z
   })
   .passthrough();
 export type AwsRecipe = z.infer<typeof AwsRecipe>;
+
+/**
+ * Upstream's evidence plan, read for one thing only: **which controls upstream
+ * has already authored a recipe over, and on which plane**.
+ *
+ * This slice is the handshake that closes the hole batch 1's audit could not
+ * see. Ground rule 10 is enforced against `automation-frontier.json`, which is
+ * the UNCOVERED set — so it fires where upstream *adjudicated* a control and is
+ * structurally blind where upstream *answered* one, because an answered control
+ * leaves the frontier entirely. Three controls (`ia-5.6`, `sa-11`, `si-10`)
+ * were being claimed by a recipe on both planes with neither side declaring it,
+ * and no check on either side could have noticed: they are on nobody's frontier.
+ *
+ * The plan is the right file to read rather than upstream's `data/overlays/`
+ * source, because it is their *published* surface — the same posture ground
+ * rule 2 takes everywhere else. Shape is deliberately minimal and passthrough:
+ * a recipe id, the plane that wrote it, and the controls it claims.
+ *
+ * `provesControls` is scoped per certification class, so the same recipe
+ * appears under several classes with the list populated in some and empty in
+ * others. The union across classes is the mapping; a single class is not.
+ */
+export const EvidencePlanItem = z
+  .object({
+    recipeId: z.string(),
+    /** the plane that authored it — `aws` or `pipeline` in the pinned snapshot */
+    source: z.string(),
+    /** canonical control ids this recipe claims, WITHIN the enclosing class */
+    provesControls: z.array(z.string()).default([]),
+  })
+  .passthrough();
+export type EvidencePlanItem = z.infer<typeof EvidencePlanItem>;
+
+/**
+ * One evidence plane, with the overlay version it was derived under. Upstream
+ * versions its planes independently — `aws` at 1.6.1 and `pipeline` at 0.5.1
+ * from one `dataset_version` — which is the same fact that made a single global
+ * overlay pin wrong in `pins.ts`, arriving one level further down.
+ */
+export const EvidencePlanPlane = z
+  .object({
+    source: z.string(),
+    version: z.string().optional(),
+  })
+  .passthrough();
+export type EvidencePlanPlane = z.infer<typeof EvidencePlanPlane>;
+
+export const EvidencePlanData = z
+  .object({
+    classes: z
+      .array(
+        z
+          .object({
+            planes: z.array(EvidencePlanPlane).default([]),
+            themes: z
+              .array(
+                z
+                  .object({ items: z.array(EvidencePlanItem).default([]) })
+                  .passthrough(),
+              )
+              .default([]),
+          })
+          .passthrough(),
+      )
+      .default([]),
+  })
+  .passthrough();
+export type EvidencePlanData = z.infer<typeof EvidencePlanData>;
+
+/** an upstream recipe claiming a control, and the plane that authored it */
+export interface UpstreamRecipeRef {
+  recipeId: string;
+  plane: string;
+}

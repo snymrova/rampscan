@@ -5,7 +5,7 @@
   "disposition": "partial",
   "rationale": "A public disclosure program is a published intake channel plus a commitment to act on what arrives through it, and the published channel is a file. SECURITY.md at a repository root and security.txt under .well-known are the two canonical forms, and both are committed: a checkout shows that the channel exists, where reports are meant to go, what is in scope, whether a safe-harbour or a response timeline is promised, and what the published text hashes to — anchored, so that a change to the promise kills the evidence rather than passing quietly. What this record originally called its own contribution was currency, and the audit on this batch found no collector that can produce it: nothing in the set reads git history metadata, and repo-facts hashes files at fixed paths rather than dating them. A disclosure policy naming a contact address that stopped working two years ago is a real failure and this plane cannot presently date it; the honest claim is the published text and its integrity, not its age.",
   "source": "commit",
-  "recipeIds": [],
+  "recipeIds": ["security-disclosure-published"],
   "candidateCollectors": ["repo-facts"],
   "remainder": {
     "control": "The programme, as against its front door — and, until a history collector exists, the front door's age. Nothing in a commit shows that a report arrived, that anyone answered it, or that a finding was resolved inside the timeline the document promises — and a published channel with no operating history behind it is precisely the artifact this control exists to look past. A file also cannot show that the address it names is monitored, which is the cheapest way for a compliant-looking policy to be inert.",

@@ -19,5 +19,25 @@
         "description": "the console's re-implementations of engine logic are the console's own, kept honest by twin tests; an engine package importing one would make the twin a cycle instead of a check"
       }
     ]
-  }
+  },
+  "documents": [
+    {
+      "id": "architecture-reference",
+      "kind": "system-documentation",
+      "path": "docs/ARCHITECTURE.md",
+      "description": "components, the scan pipeline end to end, stores, trust boundaries and the evidence lifecycle — the reference an operator reads before running or extending this system"
+    },
+    {
+      "id": "spec",
+      "kind": "system-documentation",
+      "path": "docs/SPEC.md",
+      "description": "the working spec: tech, architecture, dataflow, primitives and UI, and the document that wins any architecture dispute"
+    },
+    {
+      "id": "operator-readme",
+      "kind": "system-documentation",
+      "path": "README.md",
+      "description": "installation, the commands this system exposes and how its tools resolve — the shortest path from a checkout to a scan"
+    }
+  ]
 }

@@ -1,0 +1,37 @@
+{
+  "id": "system-documentation-present",
+  "ksi_ids": ["KSI-SVC-ACM"],
+  "control_ids": ["sa-5"],
+  "evidence": "Every system documentation file the repository declares in rampscan.config.json — administrator, user and operations documentation — exists at its declared path and is non-empty, with the declaration and each document content-anchored to the commit",
+  "collection": { "kind": "pipeline", "collector": "documents" },
+  "expected_output": "One observation row per declared system-documentation document: document_id, kind, path, present, bytes, non_empty",
+  "assertions": [
+    {
+      "field": "present",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "present", "op": "eq", "value": false }],
+      "controls": ["sa-5"],
+      "description": "No declared system documentation file is missing from the checkout."
+    },
+    {
+      "field": "non_empty",
+      "op": "count_eq",
+      "value": 0,
+      "where": [{ "field": "non_empty", "op": "eq", "value": false }],
+      "controls": ["sa-5"],
+      "description": "No declared system documentation file is an empty file."
+    }
+  ],
+  "cadence": "monthly",
+  "automatable": "partial",
+  "caveats": "Existence and integrity, never distribution or completeness. SA-05 requires the documentation to reach defined personnel, and no commit records that anyone received or read it. An evidenced row also means the documents named at these paths are there — never that the documentation set is complete, since the administrator guide may live in a second repository nobody pointed rampscan at. SA-05's adjudication carries both limbs.",
+  "notes": "Empty-set discipline — Guard and Negative witness: a repository that declares no documents at all makes the collector SKIP with a stated reason, and one that declares documents of the other kind only leaves this recipe's observation key omitted — both read unevidenced. A declared document that is missing emits a row with present:false and violates rather than being silently dropped. `non_empty` is a byte count and nothing more — whether the guide describes secure configuration, installation and operation is the adequacy limb this recipe does not claim.",
+  "empty_means": "unevidenced",
+  "plain": {
+    "checks": "Reads the list of system documentation this repository declares in rampscan.config.json — the administrator guide, the operations runbook, the architecture reference — and checks each one exists and is not empty, recording what each hashes to.",
+    "violation": "The repository names documentation that is not there. An operator following the declaration during an incident finds a path and no document, which is the moment this control exists to prevent.",
+    "fix": "Write the missing document, or point the declaration at where the real one lives. If the guide is genuinely maintained outside this repository, drop the declaration and record where it is — an undeclared document is an honest gap, and a declared missing one is a broken promise."
+  },
+  "anchor": "commit"
+}

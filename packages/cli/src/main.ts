@@ -346,6 +346,11 @@ async function main(): Promise<void> {
         collectors: allCollectors,
         datasetVersion: dataset.version(),
         ksiReachedControls: dataset.ksiReachedControls(),
+        // ground rule 10's catalog arm: upstream's own recipes, which the
+        // frontier cannot report because a control upstream has answered has
+        // left it. Passed from here rather than read inside `buildFrontier`
+        // so the derivation stays pure and testable without a dataset.
+        upstreamRecipesFor: (controlId) => dataset.upstreamRecipesFor(controlId),
       });
       if (values.json) console.log(JSON.stringify(map, null, 2));
       else console.log(renderFrontier(map, useColor));

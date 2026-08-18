@@ -172,15 +172,31 @@ describe("no recipe passes vacuously on the barren fixture (N0-T4)", () => {
   it.skipIf(!installed("gitleaks") || !installed("syft") || !installed("osv-scanner"))(
     "the verdict split is pinned against the recorded baseline",
     () => {
-      // 5 evidenced · 4 violated · 8 unevidenced, recorded 2026-08-16 from
-      // e2e/.smoke/out-bare/scan-result.json. Pinned so that movement is
-      // deliberate and reviewed rather than discovered: a recipe added under
-      // N1 that changes what the barren repo says has to come here and say so.
+      // 5 evidenced · 5 violated · 10 unevidenced, moved 2026-08-17 by N1b
+      // wave 1 from the 5/4/8 recorded 2026-08-16. Pinned so that movement is
+      // deliberate and reviewed rather than discovered — which is what this
+      // paragraph is: three recipes landed and the barren repo answers all
+      // three without any of them passing.
+      //
+      //   security-disclosure-published  → VIOLATED. bare-app publishes no
+      //     channel, and the Witness row says so. An absent SECURITY.md is a
+      //     real answer, not a missing observation, so violated is the honest
+      //     verdict and unevidenced would have been the soft one.
+      //   access-control-policy-present  → UNEVIDENCED, and
+      //   system-documentation-present   → UNEVIDENCED. bare-app has no
+      //     rampscan.config.json at all, so the collector SKIPS with a stated
+      //     reason: a repository that declared nothing has not failed a
+      //     documentation control, it has made no claim.
+      //
+      // The pair is the reason the two patterns are different patterns. The
+      // channel is a convention a reporter finds without being told, so its
+      // absence is a finding; the documents are a declaration, so their absence
+      // is a silence.
       expect({
         evidenced: result.summary.evidenced,
         violated: result.summary.violated,
         unevidenced: result.summary.unevidenced,
-      }).toEqual({ evidenced: 5, violated: 4, unevidenced: 8 });
+      }).toEqual({ evidenced: 5, violated: 5, unevidenced: 10 });
     },
   );
 });

@@ -5,6 +5,7 @@ import {
   DEFAULT_OVERLAY_PINS,
   DatasetVersionMismatchError,
   OverlayVersionMismatchError,
+  PlaneVersionMismatchError,
   loadLocalDataset,
   loadPinnedDataset,
   sliceOverlayVersion,
@@ -129,6 +130,57 @@ describe("overlay_version pinning", () => {
 
     const ds = await loadLocalDataset(derivedDir, PIN);
     expect(ds.frontierOverlayVersion()).toBe(DEFAULT_OVERLAY_PINS["automation-frontier.json"]);
+  });
+});
+
+describe("the plane pin — the third one, over upstream's own recipes", () => {
+  it("reads upstream's pipeline recipes by the control each claims", async () => {
+    // The map the frontier structurally cannot hold: a control upstream has
+    // ANSWERED has left the uncovered set, taking with it the fact that this
+    // catalog also claims it. Three controls were in exactly that state.
+    const ds = await loadLocalDataset(derivedDir, PIN);
+    expect(ds.upstreamRecipesFor("ia-5.6")).toContainEqual({
+      plane: "pipeline",
+      recipeId: "secret-exposure-detection-and-push-protection",
+    });
+    expect(ds.upstreamRecipesFor("sa-11")).toContainEqual({
+      plane: "pipeline",
+      recipeId: "static-analysis-coverage-and-flaw-disposition",
+    });
+    expect(ds.upstreamRecipesFor("no-such-control")).toEqual([]);
+  });
+
+  it("unions provesControls across classes, because one class under-reports", async () => {
+    // `provesControls` is scoped per certification class, so the same recipe
+    // appears under several classes with the list populated in some and empty
+    // in others. Reading one class would silently under-report — and this is a
+    // check about undeclared overlap, where under-reporting IS the failure.
+    const ds = await loadLocalDataset(derivedDir, PIN);
+    const pipeline = ["ia-5.6", "sa-11", "si-10", "si-7.7", "cm-4.2", "sa-10", "cm-3.4", "sr-6", "sr-8"];
+    for (const control of pipeline) {
+      expect(
+        ds.upstreamRecipesFor(control).some((r) => r.plane === "pipeline"),
+        `${control} should carry a pipeline recipe`,
+      ).toBe(true);
+    }
+  });
+
+  it("refuses when upstream's plane moves, and says to re-read the catalog rather than the records", async () => {
+    // A plane bump means upstream authored or withdrew recipes, so WHICH
+    // controls are claimed on both planes may have moved — a different job from
+    // the one an overlay_version bump calls for, and the message has to name it
+    // or the reader does the other one.
+    const moved = loadLocalDataset(derivedDir, PIN, DEFAULT_OVERLAY_PINS, { pipeline: "9.9.9" });
+    await expect(moved).rejects.toThrow(PlaneVersionMismatchError);
+    await expect(moved).rejects.toThrow(/Re-read the CATALOG/);
+
+    const absent = loadLocalDataset(derivedDir, PIN, DEFAULT_OVERLAY_PINS, { endpoint: "0.1.0" });
+    await expect(absent).rejects.toThrow(/carries no such plane/);
+  });
+
+  it("reports every plane upstream stamps, read rather than assumed", async () => {
+    const ds = await loadLocalDataset(derivedDir, PIN);
+    expect(ds.upstreamPlaneVersions()).toMatchObject({ aws: "1.6.1", pipeline: "0.5.1" });
   });
 });
 

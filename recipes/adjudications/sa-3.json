@@ -14,6 +14,20 @@
     "note": "Upstream's is the sharpest refusal in their pass and this record ended up conceding it rather than contesting it, which is worth stating plainly because the contest was attempted first. Their argument: a pipeline execution record names no lifecycle, assigns no role and integrates no risk decision, so it is evidence of a different thing that happens to run alongside — the lifecycle definition, the role assignments and the phase gates live in the SSP and the acquisition record. The distinction this record tried to draw was between a run and the committed rule that governs whether anything may merge, and the distinction is real; what defeated it is that the rule is not committed. It lives in the hosting platform's settings, which is exactly the trust model this plane declines to read. That makes upstream's conclusion correct for a reason their rationale does not state and this one can: the gate is not merely unreported by an estate API, it is unreadable from the source too, because it was never a file. A reader holding both overlays gets one refusal from each and, from this one, the additional fact that the obvious commit-plane counter-argument has been tried and does not hold."
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. That is also the reason this record refuses rather than reaches: the branch-protection state that would answer the control is available only through a hosting platform's API, and acquiring it would mean granting an evidence path repository-settings access — adding to the authorization boundary the exact class of external system this plane exists to avoid, in order to evidence a control about how the system is developed.",
+  "remainderAnsweredBy": [
+    {
+      "plane": "pipeline",
+      "recipeId": "developer-change-control-and-integrity",
+      "control": "sa-10",
+      "note": "This record refuses SA-03 because the gate that governs entry into the system is not a file: branch protection, required status checks and rulesets are platform API state, and no collector reads repository settings. Upstream's SA-10 recipe reads precisely that state — the rules that made every change to the mainline arrive through a reviewed pull request, as a signed commit, onto a history that cannot be rewritten, together with when those rules themselves last changed. So the unreadable half of this refusal is not unreadable in general, it is unreadable from a checkout, and there is a published recipe over it on a plane that takes the trust model this one declines. What stays missing after following the pointer is the lifecycle itself: their recipe evidences the enforcement, not the phases, the assigned security roles or the risk decisions integrated into each one, which is what SA-03 actually asks for and what a 3PAO reads out of the SSP."
+    },
+    {
+      "plane": "pipeline",
+      "recipeId": "change-verification-status-checks-and-run-records",
+      "control": "cm-4.2",
+      "note": "The second half of the same unreadable limb, and it is worth naming separately because this record's original argument turned on it specifically. The withdrawn draft claimed required status checks are the lifecycle's phase gates in enforced form; the audit found the artifact is not in the checkout. Upstream's CM-04 (02) recipe collects it — for every change that reached the assessed branch, which workflows ran, on which commit, what each concluded, and the two facts that decide whether those runs were a condition of the merge rather than decoration alongside it. That is the evidence the contest needed and could not get. Naming it here is what turns a withdrawal into a division of labour rather than a dead end."
+    }
+  ],
   "reviewed": "2026-08-17",
   "datasetVersion": "2026.07.14.01"
 }

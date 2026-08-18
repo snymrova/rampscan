@@ -117,7 +117,7 @@ FedRAMP's schema constrains every id form except one: ODP parameter ids are type
 - `data/derived/checks.json` — Per-KSI collector scaffold: statement, terms, controls, classes in scope and the class vulnerability-response clock.
 - `data/derived/aws-evidence.json` — AUTHORED overlay: AWS calls that collect evidence per KSI/control, with cadence, GovCloud notes and an automatable-honesty rating. Versioned separately from the dataset.
 - `data/derived/automation-frontier.json` — AUTHORED overlay: per-control dispositions for KSI-reached controls no AWS recipe covers — automatable, partial, or honestly closed as narrative, each with a stated reason. Versioned separately from the dataset.
-- `data/derived/evidence-plan.json` — The Evidence Plan: per class, authored AWS recipes grouped by KSI theme (densest first), the class clock, and the orphan/narrative register.
+- `data/derived/evidence-plan.json` — The Evidence Plan: per class, authored recipes from every evidence plane grouped by KSI theme (densest first), the class clock, and the orphan/narrative register. Each item carries the `source` plane that produced it; each class carries one version stamp per contributing plane.
 - `data/derived/obligations.json` — Every timeframed deadline, PAIN grid, notification and rollout date.
 - `data/derived/evidence.json` — Every artifact the rules demand, by requirement and deduplicated by artifact.
 - `data/derived/crosswalk.json` — Bidirectional KSI to NIST 800-53 control mapping.

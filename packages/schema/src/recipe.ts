@@ -104,6 +104,54 @@ export type PlainLanguage = z.infer<typeof PlainLanguage>;
 export const EmptyMeans = z.enum(["clean", "unevidenced"]);
 export type EmptyMeans = z.infer<typeof EmptyMeans>;
 
+/**
+ * Ground rule 10, at the CATALOG rather than at the record — the arm the
+ * adjudication's `citesUpstream` structurally cannot reach.
+ *
+ * `citesUpstream` is checked against `automation-frontier.json`, which is the
+ * UNCOVERED set. So it fires wherever upstream *adjudicated* a control and is
+ * blind wherever upstream *answered* one, because an answered control leaves
+ * the frontier and takes the fact with it. Three controls had reached that
+ * state undetected — `ia-5.6`, `sa-11` and `si-10` each carry a recipe on
+ * upstream's `pipeline` plane AND one in this catalog, on nobody's frontier,
+ * with neither project saying a word about the other. Risk 7 does not care
+ * which file the silence lives in.
+ *
+ * `relation` is the same two-valued judgement `citesUpstream.agreement` makes,
+ * named for recipes rather than verdicts:
+ *
+ * - `corroborates` — two artifacts, one control, same answer. This is the good
+ *   case and the common one, and it is worth *more* than a single claim, not
+ *   less: upstream reads the platform's alert store, this plane reads the
+ *   committed bytes, and a control answered twice from two evidence paths is
+ *   the strongest statement either project can make about it. Left undeclared
+ *   it reads instead as two projects duplicating each other.
+ * - `contests` — the two artifacts disagree about what the control needs or
+ *   about whether this evidence reaches it. A contest must ARGUE, for the same
+ *   reason a divergent citation must: an undeclared disagreement leaves a
+ *   reader holding both catalogs with two confident claims and no way to choose.
+ */
+export const UpstreamOverlapRelation = z.enum(["corroborates", "contests"]);
+export type UpstreamOverlapRelation = z.infer<typeof UpstreamOverlapRelation>;
+
+export const UpstreamOverlap = z.object({
+  /** which of THIS recipe's controls the overlap is on */
+  control: z.string(),
+  /** upstream's plane that authored the other recipe — their names, not ours */
+  plane: z.enum(["aws", "pipeline"]),
+  /** upstream's recipe id, so a reader can open both sides */
+  recipeId: z.string(),
+  relation: UpstreamOverlapRelation,
+  /**
+   * What the two artifacts are, and why one control needs both — or, on a
+   * contest, the argument. A floor rather than a shape, for the reason the
+   * divergence notes carry one: a citation short enough to be a label is a
+   * label, and the whole failure being guarded is a claim nobody reasoned about.
+   */
+  note: z.string().min(80),
+});
+export type UpstreamOverlap = z.infer<typeof UpstreamOverlap>;
+
 export const PipelineRecipe = z.object({
   id: z.string(),
   ksi_ids: z.array(z.string()).min(1),
@@ -133,6 +181,18 @@ export const PipelineRecipe = z.object({
    * policy's.
    */
   empty_means: EmptyMeans.optional(),
+  /**
+   * Where upstream has authored a recipe over a control this one claims.
+   * OPTIONAL in the shape and REQUIRED-WHEN-APPLICABLE in the catalog, which is
+   * a weaker rule than `plain` and `empty_means` carry and deliberately so:
+   * those are owed by every recipe, this is owed only by a recipe that overlaps,
+   * and whether it overlaps is a fact about UPSTREAM's file rather than about
+   * this one. A schema cannot see that file, so `frontier.ts` checks it against
+   * the pinned evidence plan — the same split as `citesUpstream`, whose
+   * "required on a live record whose control upstream has adjudicated" is
+   * likewise enforced where the other file can be read.
+   */
+  upstream_overlap: z.array(UpstreamOverlap).optional(),
   anchor: z.literal("commit"),
 });
 export type PipelineRecipe = z.infer<typeof PipelineRecipe>;

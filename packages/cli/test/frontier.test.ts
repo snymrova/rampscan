@@ -5,8 +5,11 @@ import { describe, expect, it } from "vitest";
 import { allCollectors } from "@rampscan/collectors";
 import type { FrontierControl } from "@rampscan/dataset";
 import { DEFAULT_DATASET_PIN, loadLocalDataset } from "@rampscan/dataset";
-import type { CommitAdjudication } from "@rampscan/schema";
-import { CommitAdjudication as AdjudicationSchema } from "@rampscan/schema";
+import type { CommitAdjudication, PipelineRecipe } from "@rampscan/schema";
+import {
+  CommitAdjudication as AdjudicationSchema,
+  PipelineRecipe as RecipeSchema,
+} from "@rampscan/schema";
 import { loadAdjudications } from "../src/adjudications.js";
 import type { FrontierRow } from "../src/frontier.js";
 import { UNATTRIBUTED, buildFrontier, renderFrontier, unreviewedControls } from "../src/frontier.js";
@@ -36,6 +39,11 @@ async function realMap() {
     collectors: allCollectors,
     datasetVersion: dataset.version(),
     ksiReachedControls: dataset.ksiReachedControls(),
+    // Wired here exactly as `main.ts` wires it, so "names no broken link" below
+    // covers ground rule 10's CATALOG arm on the real catalog rather than only
+    // its record arm. Leaving it off would have left the arm passing on an
+    // input it never received — the shape of the hole it was built to close.
+    upstreamRecipesFor: (controlId) => dataset.upstreamRecipesFor(controlId),
   });
 }
 
@@ -72,14 +80,24 @@ async function mapWith(adjudications: CommitAdjudication[]) {
 }
 
 describe("the overlay as it stands", () => {
-  it("reads the frontier under the pin, and it is the 119", async () => {
-    // 121 until the re-pin to overlay 0.7.2 (N1a′-T1's second half). Upstream
-    // authored two pipeline recipes and `sr-6` and `sr-8` left the uncovered
-    // set — the frontier is upstream's file and it shrinks when upstream
-    // answers something, which is the whole reason the number is read here
-    // rather than typed anywhere.
+  it("reads the whole frontier under the pin, losing no row to the join", async () => {
+    // The number is NOT typed here, and the reason is the same one that
+    // reshaped the overlap pin in batch 1: a literal is a snapshot wearing an
+    // assertion's clothes. It was 121 at overlay 0.6.0, 119 at 0.7.2 and 112 at
+    // 0.7.5 — three values inside two days, every move upstream's to make,
+    // because the frontier is the UNCOVERED set and it shrinks whenever
+    // upstream answers something. A typed count fails on upstream's work rather
+    // than on ours, and it fails second: `DEFAULT_OVERLAY_PINS` already refuses
+    // to load a moved overlay at all, so the literal caught nothing the loader
+    // had not already caught and cost an edit in a second file every re-pin.
+    //
+    // What is worth asserting is the property the literal was standing in for —
+    // that the map is a lossless fold of the pinned file, so no row is dropped
+    // between upstream's frontier and our rollup.
+    const dataset = await loadLocalDataset(DERIVED, DEFAULT_DATASET_PIN);
     const map = await realMap();
-    expect(map.rollup.frontierTotal).toBe(119);
+    expect(map.rollup.frontierTotal).toBe(dataset.frontier().length);
+    expect(map.rows.length).toBe(dataset.frontier().length);
     expect(map.datasetVersion).toBe(DEFAULT_DATASET_PIN);
     // upstream's denominator, read rather than typed — every ceiling figure
     // this repository publishes divides by this number
@@ -156,10 +174,16 @@ describe("the overlay as it stands", () => {
   });
 
   it("renders the same text twice — this is a document people diff", async () => {
-    const a = renderFrontier(await realMap(), false);
+    const map = await realMap();
+    const a = renderFrontier(map, false);
     const b = renderFrontier(await realMap(), false);
     expect(a).toBe(b);
-    expect(a).toContain("frontier 119 uncovered controls");
+    // The header quotes the map's own total rather than a literal, for the
+    // reason given on the first test in this file: what is being checked is
+    // that the rendered document reports the number it computed, which is
+    // ground rule 9 at the point of display. A typed count here would assert
+    // upstream's overlay version a second time and nothing else.
+    expect(a).toContain(`frontier ${map.rollup.frontierTotal} uncovered controls`);
   });
 });
 
@@ -369,6 +393,38 @@ describe("the checker notices a broken overlay", () => {
       record({ disposition: "automatable", recipeIds: ["dependency-update-automation"] }),
     ]);
     expect(map.problems.join(" ")).toContain("does not claim this control");
+  });
+
+  it("a catalog recipe claiming a control our record does not claim back", async () => {
+    // The same link walked the other way, and the direction that had never been
+    // checked: `api-spec-lint-clean` has claimed SA-05 since the H phase, and
+    // until wave 1 wrote SA-05's first recipeIds nothing compared the two
+    // sides. The frontier derives them independently — `catalogRecipeIds` from
+    // the catalog, `commit.recipeIds` from the record — which is the only
+    // reason a disagreement is visible at all.
+    //
+    // ac-1 rather than sa-2 for the synthetic: it is a control the catalog now
+    // claims (`access-control-policy-present`), so a record that names no
+    // recipe for it is exactly the understatement this check is for.
+    const map = await mapWith([
+      record({
+        controlId: "ac-1",
+        displayId: "AC-01",
+        family: "AC",
+        disposition: "partial",
+        remainder: REMAINDER,
+        candidateCollectors: ["documents"],
+        recipeIds: [],
+        citesUpstream: {
+          source: "aws",
+          disposition: "narrative",
+          agreement: "diverges",
+          note: "a synthetic record, cited so the ground-rule-10 check is not the one that fires here — the divergence being tested lives between our record and our own catalog",
+        },
+      }),
+    ]);
+    expect(map.problems.join(" ")).toContain("disagree about what is already answered");
+    expect(map.problems.join(" ")).toContain("access-control-policy-present");
   });
 
   it("an adjudication naming a collector nobody has scoped", async () => {
@@ -618,5 +674,216 @@ describe("where upstream has spoken, the record says whether it agrees", () => {
       citesUpstream: CITE,
     });
     expect(none).toContain("upstream's file carries none on this control");
+  });
+});
+
+// Ground rule 10's CATALOG arm, added after the 0.7.5 re-pin.
+//
+// The record arm above is checked against the frontier — the uncovered set —
+// which means it is structurally blind to a control upstream has ANSWERED,
+// because answering it takes it off the frontier. That is where `ia-5.6`,
+// `sa-11` and `si-10` came to be claimed by a recipe on both planes with
+// neither project saying so: not a check that failed, a check pointed at the
+// one file where the fact cannot appear.
+describe("where upstream has authored, the recipe says how the two relate", () => {
+  const OVERLAP = {
+    control: "sa-11",
+    plane: "pipeline" as const,
+    recipeId: "static-analysis-coverage-and-flaw-disposition",
+    relation: "corroborates" as const,
+    note:
+      "Upstream proves the analysis ran and what it covered; this proves a result at one commit, " +
+      "gated on reachability, which their alert list does not carry. Neither contains the other.",
+  };
+
+  function recipe(over: Record<string, unknown> = {}): PipelineRecipe {
+    return RecipeSchema.parse({
+      id: "a-recipe",
+      ksi_ids: ["KSI-SVC-ACM"],
+      control_ids: ["sa-11"],
+      evidence: "something the repository proves",
+      collection: { kind: "pipeline", collector: "repo-facts" },
+      expected_output: "one row",
+      cadence: "weekly",
+      automatable: "full",
+      anchor: "commit",
+      ...over,
+    });
+  }
+
+  /** upstream answers sa-11 on the pipeline plane and si-10 on aws */
+  const upstream = (controlId: string) =>
+    controlId === "sa-11"
+      ? [{ plane: "pipeline", recipeId: "static-analysis-coverage-and-flaw-disposition" }]
+      : controlId === "si-10"
+        ? [{ plane: "aws", recipeId: "config-something" }]
+        : [];
+
+  function problemsFor(recipes: PipelineRecipe[], lookup = upstream) {
+    return buildFrontier({
+      frontier: [],
+      adjudications: [],
+      recipes,
+      collectors: allCollectors,
+      datasetVersion: DEFAULT_DATASET_PIN,
+      ksiReachedControls: 209,
+      upstreamRecipesFor: lookup,
+    }).problems;
+  }
+
+  it("an undeclared overlap with upstream's pipeline plane is a broken link", () => {
+    const problems = problemsFor([recipe()]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('upstream\'s "pipeline" plane already answers');
+    expect(problems[0]).toContain("static-analysis-coverage-and-flaw-disposition");
+  });
+
+  it("declaring it clears the link, and the declaration has to match all three fields", () => {
+    expect(problemsFor([recipe({ upstream_overlap: [OVERLAP] })])).toEqual([]);
+    // a declaration naming a different recipe of theirs does not discharge this one
+    const wrongId = problemsFor([
+      recipe({ upstream_overlap: [{ ...OVERLAP, recipeId: "some-other-recipe" }] }),
+    ]);
+    expect(wrongId.some((p) => p.includes("already answers"))).toBe(true);
+    expect(wrongId.some((p) => p.includes("does not carry"))).toBe(true);
+  });
+
+  it("a declaration pointing at a recipe upstream does not publish is itself a broken link", () => {
+    // the same failure `citationProblems` names for a moved disposition: a
+    // citation nobody can check reads exactly like one nobody did
+    const problems = problemsFor([
+      recipe({
+        control_ids: ["sa-11", "cm-3.2"],
+        upstream_overlap: [OVERLAP, { ...OVERLAP, control: "cm-3.2" }],
+      }),
+    ]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("does not carry");
+  });
+
+  it("a declaration on a control the recipe does not claim", () => {
+    const problems = problemsFor([recipe({ upstream_overlap: [{ ...OVERLAP, control: "ac-1" }] })]);
+    expect(problems.some((p) => p.includes("not one of its own control_ids"))).toBe(true);
+  });
+
+  it("the AWS plane is deliberately out of scope, and that is a decision not an oversight", () => {
+    // Unscoped this check reports 25 overlaps with `aws` on the real catalog,
+    // every one of them the product's own thesis rather than a finding: an API
+    // over a running estate and a file in a checkout are different evidence by
+    // construction. A gate red on its first run for reasons nobody acts on is
+    // the gate N2a was held back to avoid becoming.
+    expect(problemsFor([recipe({ control_ids: ["si-10"] })])).toEqual([]);
+  });
+
+  it("without the lookup the arm does not run, rather than passing everything silently", () => {
+    // the absence is visible in the test above it: same recipe, lookup wired,
+    // one problem. Here there is no upstream file to read at all.
+    const problems = buildFrontier({
+      frontier: [],
+      adjudications: [],
+      recipes: [recipe()],
+      collectors: allCollectors,
+      datasetVersion: DEFAULT_DATASET_PIN,
+      ksiReachedControls: 209,
+    }).problems;
+    expect(problems).toEqual([]);
+  });
+
+  it("the three real overlaps are declared by name, because a corroboration is a claim too", async () => {
+    // The mirror of the divergence pin: `agrees` is recounted mechanically, but
+    // WHICH controls both projects answer is a fact about upstream's file that
+    // only a human decided to look at. Pinning the set by name means a fourth
+    // one arriving cannot land without someone noticing it did.
+    const recipes = await loadRecipes(join(REPO_ROOT, "recipes/commit"));
+    const declared = recipes
+      .flatMap((r) => (r.upstream_overlap ?? []).map((o) => `${r.id} → ${o.control}`))
+      .sort();
+    expect(declared).toEqual([
+      "no-reachable-dangerous-code → sa-11",
+      "no-reachable-dangerous-code → si-10",
+      "no-secrets-in-history → ia-5.6",
+      "tests-in-ci → sa-11",
+    ]);
+    for (const r of recipes) {
+      for (const o of r.upstream_overlap ?? []) {
+        expect(o.relation).toBe("corroborates");
+        expect(o.note.length).toBeGreaterThan(200);
+      }
+    }
+  });
+});
+
+// A refusal that names who CAN answer the limb it refuses (added with the
+// catalog arm). The pointer is the most useful thing this overlay can do with a
+// `narrative` — it turns N1d's ceiling from a list of apologies into a division
+// of labour — and it is only worth anything if it is checked, which is
+// N1a′-T5's finding applied one file over.
+describe("a refusal points somewhere, and the pointer is recounted", () => {
+  const REF = {
+    plane: "pipeline" as const,
+    recipeId: "developer-change-control-and-integrity",
+    control: "sa-10",
+    note:
+      "Upstream's SA-10 recipe reads the branch rules this record refuses for not being a file, so the " +
+      "unreadable half is unreadable from a checkout rather than unreadable in general.",
+  };
+
+  const lookup = (controlId: string) =>
+    controlId === "sa-10"
+      ? [{ plane: "pipeline", recipeId: "developer-change-control-and-integrity" }]
+      : [];
+
+  async function problemsFor(over: Partial<CommitAdjudication>) {
+    const dataset = await loadLocalDataset(DERIVED, DEFAULT_DATASET_PIN);
+    return buildFrontier({
+      frontier: dataset.frontier(),
+      adjudications: [record({ controlId: "sa-2", displayId: "SA-02", ...over })],
+      recipes: [],
+      collectors: allCollectors,
+      datasetVersion: DEFAULT_DATASET_PIN,
+      ksiReachedControls: dataset.ksiReachedControls(),
+      upstreamRecipesFor: lookup,
+    }).problems;
+  }
+
+  it("a pointer upstream's plan carries is clean", async () => {
+    expect(await problemsFor({ remainderAnsweredBy: [REF] })).toEqual([]);
+  });
+
+  it("a pointer at a recipe upstream does not publish fails", async () => {
+    const problems = await problemsFor({
+      remainderAnsweredBy: [{ ...REF, recipeId: "a-recipe-they-withdrew" }],
+    });
+    expect(problems.some((p) => p.includes("does not carry"))).toBe(true);
+    expect(problems.some((p) => p.includes("stopped being checkable"))).toBe(true);
+  });
+
+  it("…and so does a pointer filed under the wrong control of theirs", async () => {
+    // the recipe id is real; the control it is filed under is not the one
+    // upstream files it under, so the reference resolves to nothing
+    const problems = await problemsFor({ remainderAnsweredBy: [{ ...REF, control: "cm-4.2" }] });
+    expect(problems.some((p) => p.includes("does not carry"))).toBe(true);
+  });
+
+  it("an automatable record has no remainder to hand over", async () => {
+    const problems = await problemsFor({
+      disposition: "automatable",
+      recipeIds: [],
+      candidateCollectors: ["repo-facts"],
+      remainderAnsweredBy: [REF],
+    });
+    expect(problems.some((p) => p.includes("no remainder to hand over"))).toBe(true);
+  });
+
+  it("the real pointers resolve against upstream's pinned plan, by name", async () => {
+    const records = await loadAdjudications(join(REPO_ROOT, "recipes/adjudications"));
+    const pointers = records
+      .flatMap((r) => (r.remainderAnsweredBy ?? []).map((p) => `${r.controlId} → ${p.control}`))
+      .sort();
+    // Pinned by name for the reason the divergence list is: which of our
+    // refusals hands a limb to upstream is a claim somebody decided to make,
+    // and a mechanical recount of the recipe ids cannot tell that a new one
+    // was added without anyone arguing for it.
+    expect(pointers).toEqual(["sa-3 → cm-4.2", "sa-3 → sa-10", "sr-10 → si-7.7"]);
   });
 });

@@ -1,16 +1,28 @@
 {
   "id": "tests-in-ci",
-  "ksi_ids": ["KSI-SCR-MIT", "KSI-CMT-VTD"],
-  "control_ids": ["sa-11", "cm-3.2"],
+  "ksi_ids": [
+    "KSI-SCR-MIT",
+    "KSI-CMT-VTD"
+  ],
+  "control_ids": [
+    "sa-11",
+    "cm-3.2"
+  ],
   "evidence": "The CI pipeline runs an automated test suite on changes before they merge or deploy",
-  "collection": { "kind": "pipeline", "collector": "repo-facts" },
+  "collection": {
+    "kind": "pipeline",
+    "collector": "repo-facts"
+  },
   "expected_output": "One observation row with workflow_count and test_step_count",
   "assertions": [
     {
       "field": "test_step_count",
       "op": "gte",
       "value": 1,
-      "controls": ["sa-11", "cm-3.2"],
+      "controls": [
+        "sa-11",
+        "cm-3.2"
+      ],
       "description": "At least one workflow step runs a recognized test command — changes are tested, not just built."
     }
   ],
@@ -24,5 +36,14 @@
     "violation": "Changes reach the default branch with nothing checking that they work. Every other control that rests on “the pipeline would have caught it” is resting on a pipeline that does not look.",
     "fix": "Add a test step to the workflow that runs on pull requests, and require it to pass before merge. A suite that runs only on a developer's machine is not part of the pipeline."
   },
+  "upstream_overlap": [
+    {
+      "control": "sa-11",
+      "plane": "pipeline",
+      "recipeId": "static-analysis-coverage-and-flaw-disposition",
+      "relation": "corroborates",
+      "note": "SA-11 asks for developer testing AND evaluation, and this pairing splits on that word. Upstream's recipe is entirely about the evaluation limb — static analysis configured, scoped, scheduled and dispositioned. This one is about the testing limb: a workflow step runs a recognised test command, so changes are tested before they merge rather than only built. The two are complementary rather than competing, and the overlap is declared rather than left implicit because a reader seeing one control id on two catalogs has no way to tell a split limb from a duplicated claim. What this recipe does not establish, and their route does, is that the testing reaches every repository in the boundary — this is one checkout's workflow file, and the repository set is named by a human."
+    }
+  ],
   "anchor": "commit"
 }

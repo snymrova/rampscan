@@ -1,13 +1,15 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
-import { DEFAULT_OVERLAY_PINS } from "./pins.js";
+import { DEFAULT_OVERLAY_PINS, DEFAULT_PLANE_PINS } from "./pins.js";
 import {
   AwsRecipe,
   CrosswalkControl,
   CrosswalkIndicator,
+  EvidencePlanData,
   FrontierControl,
   SliceEnvelope,
+  type UpstreamRecipeRef,
   sliceOverlayVersion,
 } from "./types.js";
 
@@ -54,6 +56,18 @@ export interface DatasetClient {
    * whole of N1a′-T1 is that a reader who sees one of them believes both.
    */
   frontierOverlayVersion(): string | undefined;
+  /**
+   * Upstream recipes that claim a control, with the plane that authored each.
+   *
+   * The frontier cannot answer this and never could: it is the UNCOVERED set,
+   * so a control upstream has answered has left it. That blind spot is where
+   * `ia-5.6`, `sa-11` and `si-10` came to be claimed by a recipe on both planes
+   * with neither project declaring it — not a check that failed, a check that
+   * was looking at the only file where the fact is structurally absent.
+   */
+  upstreamRecipesFor(controlId: string): UpstreamRecipeRef[];
+  /** the overlay version each upstream plane's recipes were derived under */
+  upstreamPlaneVersions(): Readonly<Record<string, string>>;
 }
 
 export class DatasetVersionMismatchError extends Error {
@@ -93,6 +107,38 @@ export class OverlayVersionMismatchError extends Error {
           `Re-read the adjudications keyed to this slice, then re-pin.`,
     );
     this.name = "OverlayVersionMismatchError";
+  }
+}
+
+/**
+ * The third pin's failure, and a third class rather than a reuse of the second
+ * for the reason the second was not a reuse of the first: the reading it calls
+ * for is different again. A `dataset_version` move re-bases the register; an
+ * `overlay_version` move re-bases upstream's reasoning about it; a PLANE move
+ * means upstream has authored or withdrawn recipes, so the set of controls
+ * answered on both planes at once may have changed — and that set is the one
+ * ground rule 10's new arm is about. The right response is not to re-read our
+ * dispositions but to re-read the CATALOG against upstream's, which is a
+ * different job the message has to name or the reader will do the other one.
+ */
+export class PlaneVersionMismatchError extends Error {
+  constructor(
+    readonly plane: string,
+    readonly expected: string,
+    readonly actual: string | undefined,
+    readonly where: string,
+  ) {
+    super(
+      actual === undefined
+        ? `plane "${plane}" is pinned at ${expected} but ${where} carries no such plane. ` +
+          `Refusing to run — either upstream withdrew the plane or the snapshot predates it; ` +
+          `drop the entry from DEFAULT_PLANE_PINS or refresh the snapshot.`
+        : `plane "${plane}" version mismatch in ${where}: pinned ${expected}, loaded ${actual}. ` +
+          `Refusing to run — upstream's recipes on that plane moved, so which controls are ` +
+          `claimed on both planes at once may have moved with them. Re-read the CATALOG against ` +
+          `upstream's recipes (ground rule 10), then re-pin.`,
+    );
+    this.name = "PlaneVersionMismatchError";
   }
 }
 
@@ -137,6 +183,7 @@ export async function loadLocalDataset(
   derivedDir: string,
   pin: string,
   overlayPins: Readonly<Record<string, string>> = DEFAULT_OVERLAY_PINS,
+  planePins: Readonly<Record<string, string>> = DEFAULT_PLANE_PINS,
 ): Promise<DatasetClient> {
   // index.json carries the snapshot's own version claim; check it first so a
   // wholesale-stale snapshot fails on one file, not partway through.
@@ -155,6 +202,44 @@ export async function loadLocalDataset(
   );
   const frontier = FrontierData.parse(frontierPayload);
   const frontierOverlay = sliceOverlayVersion(frontierPayload);
+
+  // The evidence plan is read for the recipe→control map alone, and it is NOT
+  // in `overlayPins`: it carries no root `overlay_version` to pin, by upstream's
+  // own deliberate removal. Its versions live one level down, per plane, and
+  // `planePins` is what checks them.
+  const plan = EvidencePlanData.parse(
+    await loadSlice(derivedDir, "evidence-plan.json", pin, overlayPins),
+  );
+  const planeVersions: Record<string, string> = {};
+  // `provesControls` is scoped per certification class, so one recipe appears
+  // under several classes with the list populated in some and empty in others.
+  // The union across classes is the mapping — reading a single class would
+  // under-report, which on a check about undeclared overlap fails silent.
+  const upstreamByControl = new Map<string, UpstreamRecipeRef[]>();
+  const seen = new Set<string>();
+  for (const cls of plan.classes) {
+    for (const plane of cls.planes) {
+      if (plane.version !== undefined) planeVersions[plane.source] = plane.version;
+    }
+    for (const theme of cls.themes) {
+      for (const item of theme.items) {
+        for (const controlId of item.provesControls) {
+          const key = `${controlId} ${item.source} ${item.recipeId}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const refs = upstreamByControl.get(controlId) ?? [];
+          refs.push({ recipeId: item.recipeId, plane: item.source });
+          upstreamByControl.set(controlId, refs);
+        }
+      }
+    }
+  }
+  for (const [plane, expected] of Object.entries(planePins)) {
+    const actual = planeVersions[plane];
+    if (actual !== expected) {
+      throw new PlaneVersionMismatchError(plane, expected, actual, "evidence-plan.json");
+    }
+  }
 
   const recipesById = new Map(awsEvidence.recipes.map((r) => [r.id, r]));
 
@@ -175,6 +260,8 @@ export async function loadLocalDataset(
     frontier: () => [...frontier.frontier],
     ksiReachedControls: () => frontier.rollup.ksiReachedControls,
     frontierOverlayVersion: () => frontierOverlay,
+    upstreamRecipesFor: (controlId) => [...(upstreamByControl.get(controlId) ?? [])],
+    upstreamPlaneVersions: () => ({ ...planeVersions }),
   };
 }
 

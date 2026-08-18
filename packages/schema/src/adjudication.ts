@@ -165,6 +165,57 @@ export const CommitAdjudication = z
       })
       .optional(),
     /**
+     * The refusal's other half: a limb this plane cannot reach that upstream
+     * has PUBLISHED A RECIPE OVER — named, so the refusal points somewhere.
+     *
+     * `citesUpstream` compares two verdicts about ONE control. This compares a
+     * gap in our answer with an answer somebody else authored, usually filed
+     * under a different control id, and it is the most useful thing this
+     * overlay can do with a `narrative`. N1d's ceiling is a list of what a
+     * commit cannot prove; a ceiling that also names who can prove each entry
+     * is a different document — it stops reading as an apology and starts
+     * reading as a division of labour, which is what it actually is.
+     *
+     * The empirical basis is worth stating because it is not a guess. Every one
+     * of upstream's nine pipeline recipes collects through `gh api` over
+     * organization and repository state — rulesets, code-security
+     * configurations, alert stores, approval records. Not one reads a file in a
+     * checkout. So the boundary between the two planes fell out of the evidence
+     * rather than being agreed: they read platform state, this plane reads
+     * committed bytes, and the limbs this overlay refuses for being "platform
+     * API state, never a file" are disproportionately the limbs their recipes
+     * answer. `sa-3` refuses branch protection and required status checks;
+     * their `sa-10` and `cm-4.2` read exactly those. `sr-10` names
+     * verification-before-consumption as unbuilt; their `si-7.7` is that
+     * verification.
+     *
+     * Structured rather than prose for the same reason `citesUpstream` is: a
+     * pointer nobody can check is a norm, and N1a′-T5's whole finding was that
+     * ground rule 10 had been a norm since the day it was written. The
+     * reference is recounted against upstream's pinned evidence plan in
+     * `rampscan frontier`, so naming a recipe they have withdrawn fails rather
+     * than ages.
+     */
+    remainderAnsweredBy: z
+      .array(
+        z.object({
+          /** upstream's plane — `aws` or `pipeline` */
+          plane: z.enum(["aws", "pipeline"]),
+          /** their recipe id, checked against their published plan */
+          recipeId: z.string().min(1),
+          /** the control THEY file it under, which is usually not this one */
+          control: z.string().min(1),
+          /**
+           * Which limb of this record's remainder it answers, and what is still
+           * missing once it does. A floor rather than a shape: a pointer short
+           * enough to be a cross-reference has not said why the reader should
+           * follow it.
+           */
+          note: z.string().min(80),
+        }),
+      )
+      .optional(),
+    /**
      * What adopting this evidence path adds to the authorization boundary, and
      * on this plane the answer is the NEGATIVE one — which is the single
      * strongest thing this overlay can say that upstream's cannot. Three of the

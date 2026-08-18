@@ -44,6 +44,15 @@
 //       reach an auth check, and GET /health (fault 5) does not — the same
 //       unauthed route, now ALSO a violation of the repo's own declaration
 //
+// And the document family (plan N1b wave 1), which is the one place this
+// fixture is deliberately WELL BEHAVED:
+//   12. two declared documents that really exist (docs/access-control-policy.md
+//       and docs/admin-guide.md) plus a published SECURITY.md — the three
+//       document recipes need a repository where they reach `evidenced`, and
+//       the broken cases (declared-but-missing, empty, undeclared) are unit
+//       tests rather than planted faults, because each needs the fixture broken
+//       in exactly one way
+//
 // The inner repo carries its own git history, which the outer repo cannot
 // commit (nested .git); this generator is the committed artifact instead.
 // It is deterministic — fixed timestamps and identity — so the fixture's
@@ -283,6 +292,42 @@ paths:
           description: ok
 `,
 );
+// The governed documents (N1b wave 1): declared, and — unlike almost
+// everything else in this fixture — HONESTLY PRESENT. The three document-family
+// recipes need a repository where they can reach `evidenced`, and the fixture
+// that plants a fault in every other plane is the one that has to carry the
+// passing case here; the missing, empty and undeclared cases are unit tests in
+// packages/collectors/test/documents.test.ts, where a temp directory can be
+// broken in one specific way at a time.
+write(
+  "docs/access-control-policy.md",
+  `# Access control policy
+
+Who may reach what in vulnerable-app, and on whose authority. Fixture content:
+this document exists so a declaration can be satisfied honestly, and rampscan
+reads its path, its size and its hash — never its argument.
+`,
+);
+write(
+  "docs/admin-guide.md",
+  `# Administrator guide
+
+Installing, configuring and operating vulnerable-app. Fixture content, present
+for the same reason as the policy beside it.
+`,
+);
+write(
+  "SECURITY.md",
+  `# Security policy
+
+Report a vulnerability to security@vulnerable-app.invalid. In scope: this
+repository. We answer within 5 working days.
+
+Fixture content — the address is deliberately unroutable, which is exactly the
+limb RA-05 (11)'s record leaves in its remainder: a committed channel is not a
+monitored one.
+`,
+);
 // The architecture contract (faults 10 and 11): the repo's OWN declared
 // intent, which the code above deliberately breaks. No `graph` block — entry
 // points stay inferred from package.json, which the J5 smoke pins on screen.
@@ -307,6 +352,20 @@ write(
           },
         ],
       },
+      documents: [
+        {
+          id: "access-control-policy",
+          kind: "access-control-policy",
+          path: "docs/access-control-policy.md",
+          description: "the policy governing who may reach what in this service",
+        },
+        {
+          id: "admin-guide",
+          kind: "system-documentation",
+          path: "docs/admin-guide.md",
+          description: "installation, configuration and operation for an administrator",
+        },
+      ],
     },
     null,
     2,
