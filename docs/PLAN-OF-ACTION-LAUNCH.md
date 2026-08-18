@@ -96,7 +96,9 @@ No code. Two of these need the owner and cannot be defaulted.
   > security report, not a bug report** — a compliance tool that passes a control
   > it cannot prove is issuing a false attestation, and someone will hand it to an
   > assessor.
-- [ ] **P0-6. Repository name, description, topics, visibility.** Public from the first push — a repository created private and flipped later carries its whole private history into public visibility at the moment of the flip, which is a worse version of the P1 problem.
+- [~] **P0-6. Repository name, description, topics, visibility.** Public from the first push — a repository created private and flipped later carries its whole private history into public visibility at the moment of the flip, which is a worse version of the P1 problem.
+
+  > **Decided 2026-08-18: the name is `rampscan`, so the slug is `snymrova/rampscan`.** Description and topics stay open and are P5-5, which is after the push and cheap to change. Visibility stands at the item's own reasoning: public from the first push.
 
 **Exit:** six decisions recorded in this document's session log with their reasoning. No files written.
 
@@ -183,7 +185,7 @@ Today `smoke.yml` runs the Playwright console smoke and **nothing else**. The 69
 
 ## 8. Phase P5 — the push
 
-- [ ] **P5-0. The three placeholders that must be closed before the push, not after.** Each is a file that is already correct except for a fact P0-6 has not decided, and each fails silently rather than loudly. (a) `NOTICE` states that `docs/context/ramprules/` is CC BY 4.0 — **decided 2026-08-18, and not yet applied in the sibling repository.** Until a `LICENSE` lands there, `NOTICE` cites a licence that does not exist, which is worse than the missing-licence problem it was written to fix. (b) `.github/ISSUE_TEMPLATE/config.yml` carries `OWNER/REPO` in two absolute URLs — GitHub's issue-form schema takes no relative link — and one of them is the *report a vulnerability* link, the first thing a security reader clicks. (c) ~~`CODEOWNERS` is unwritten because it needs a GitHub handle.~~ **Closed 2026-08-18** — the handle is `@snymrova`, read off the sibling ramprules remote rather than guessed, and it is the same person who authors every commit here. It is one line to change if rampscan lands under an organisation instead.
+- [ ] **P5-0. The three placeholders that must be closed before the push, not after.** Each is a file that is already correct except for a fact P0-6 has not decided, and each fails silently rather than loudly. (a) `NOTICE` states that `docs/context/ramprules/` is CC BY 4.0 — **decided 2026-08-18, and not yet applied in the sibling repository.** Until a `LICENSE` lands there, `NOTICE` cites a licence that does not exist, which is worse than the missing-licence problem it was written to fix. (b) ~~`.github/ISSUE_TEMPLATE/config.yml` carries `OWNER/REPO` in two absolute URLs~~ **Closed 2026-08-18: `snymrova/rampscan`.** The hard-coding is inherent — GitHub's issue-form schema takes no relative link — so the comment now says which two lines break on a rename rather than which two are unfinished. (c) ~~`CODEOWNERS` is unwritten because it needs a GitHub handle.~~ **Closed 2026-08-18** — the handle is `@snymrova`, read off the sibling ramprules remote rather than guessed, and it is the same person who authors every commit here. It is one line to change if rampscan lands under an organisation instead.
 - [ ] **P5-1. Create the remote** (public, per P0-6) and push `main`.
 - [ ] **P5-2. Watch the first CI run** and fix forward per P3-4.
 - [ ] **P5-3. Handle secret-scanning.** Push protection may still flag the fixture's remaining intentional plants even after P1. If it blocks, the resolution is the allowlist and a dismissal with a reason — never a quiet weakening of the fixture, which is load-bearing for the product's own tests.
