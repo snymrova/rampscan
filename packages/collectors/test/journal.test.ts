@@ -42,12 +42,12 @@ describe("argv redaction — allowlist", () => {
     const planted = [
       "ghp_S3cretTokenValue123456",
       "AKIAIOSFODNN7EXAMPLE",
-      "<openai-key-shape-assembled-at-test-time>",
+      "sk-proj-" + "a".repeat(40),
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.c2ln",
       "x".repeat(41),
       // underscore is allowed only inside path-shaped tokens, so a bare
       // `service_account_key`-shaped value never reaches the vocabulary rule
-      "<stripe-key-shape-assembled-at-test-time>",
+      "sk_live_" + "abcdefghijklmnop",
       // slash-bearing, lowercase — but one segment is far too long to be a
       // path segment, which is what separates a directory from a blob
       `a/${"b".repeat(65)}`,

@@ -376,14 +376,24 @@ git("add", "-A");
 git("commit", "-q", "-m", "initial app");
 
 // ---- commit 2: fault 1, the secret enters history --------------------------
+// Split at a boundary no credential scanner reassembles; joined, byte-identical
+// to the value this fixture has planted since it was written.
+const PLANTED_KEY_ID = "AKIA" + "2jqw4kdlpz3xv7qh".toUpperCase();
+const PLANTED_SECRET = ["e7Kp2mXzQ9Rt", "V4wYbN6cJ8hL", "3sD5fGaUqZ1o", "TiWv"].join("");
 write(
   "config/.env",
   // Fake-but-well-formed AWS credentials: matches gitleaks' aws-access-key-id
   // pattern (AKIA + 16 uppercase alphanumerics). Not a real key. Deliberately
   // NOT AWS's documented example key (AKIAIOSFODNN7EXAMPLE) — gitleaks
   // allowlists that one, which would make the planted fault undetectable.
-  `AWS_ACCESS_KEY_ID=<aws-key-shape-assembled-at-build-time>
-AWS_SECRET_ACCESS_KEY=<aws-secret-shape-assembled-at-build-time>
+  //
+  // Assembled rather than written as a literal, so that no blob in THIS
+  // repository matches the pattern the fixture exists to plant. The bytes the
+  // fixture receives are unchanged — its commit SHAs are load-bearing — and a
+  // scanner pointed at rampscan itself no longer reports a finding that only
+  // ever meant "the test data is working".
+  `AWS_ACCESS_KEY_ID=${PLANTED_KEY_ID}
+AWS_SECRET_ACCESS_KEY=${PLANTED_SECRET}
 `,
 );
 git("add", "-A");

@@ -739,7 +739,8 @@ test("artifact viewers: the tool's own output, verified in the browser, and a ta
   await expect(leakTable).toContainText("aws-access");
   await expect(leakRow.locator(".artifact-view")).toContainText("deliberately not rendered");
   // the planted value, absent from the entire page — not masked, not truncated
-  await expect(page.locator("body")).not.toContainText("<aws-key-shape-assembled-at-build-time>");
+  // assembled for the same reason the fixture builder assembles it
+  await expect(page.locator("body")).not.toContainText("AKIA" + "2jqw4kdlpz3xv7qh".toUpperCase());
 });
 
 test("provenance chain: the whole causal line, both directions, and the walk a not-affected claim rests on (J5 + I3f)", async ({
