@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-9",
+  "displayId": "PS-09",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "Position descriptions requires that security and privacy roles and responsibilities be incorporated into organizational position descriptions. It is the closest call in batch 2 and the one that most needs its reasoning written, because it is a document control in a family of event controls — and batch 2 rates two document controls partial. CP-02 and PL-08 go the other way, so the line between them and this one has to hold. It does, on the identity of the document. Those two controls ask the SYSTEM to produce an artifact — develop a contingency plan, develop a security architecture description — and the artifact is the kind of thing the repository that builds the system plausibly holds, which is why a declared path can evidence its existence and integrity. PS-09 asks that an existing HR artifact, the organizational position description, INCORPORATE something. The document is not the system's to produce, it is maintained where positions are administered, and a repository that committed one would be committing an HR record. The near-miss is a committed roles-and-responsibilities document, which several projects keep: it describes the project's roles, not the organisation's positions, and even where the two overlapped, existence at a declared path would not evidence incorporation into a position description — that is the adequacy limb, and this plane reads a path, a size and a hash rather than a document.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses in one line: security roles and responsibilities are stated in position descriptions maintained entirely outside the system. The word carrying their argument is 'outside', and this record's contribution is to test it from the side where it could most plausibly have been wrong. A source pass reads exactly the class of artifact that would defeat that sentence if a position description were ever a project file, so the refusal here is a measurement rather than a restatement — the artifact was looked for, a related one was found, and it was declined because it describes project roles rather than organizational positions. Recording that as agreement matters because PS-09 is the control in this family a reader would most expect the commit plane to reach, sitting as it does beside two document controls this same batch rated partial."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Position descriptions are maintained in an HR system, and reading them would mean an evidence path into a system of record about organizational staffing. This plane adds none, and the refusal above is what keeps the two document controls in this batch from being read as a general licence to count any committed document as evidence for any control that mentions one.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

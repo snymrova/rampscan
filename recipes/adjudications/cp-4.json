@@ -1,0 +1,19 @@
+{
+  "controlId": "cp-4",
+  "displayId": "CP-04",
+  "family": "CP",
+  "disposition": "narrative",
+  "rationale": "The control asks that the contingency plan be exercised on a defined frequency using defined tests, that the results be reviewed with the participants, and that corrective actions be initiated. Upstream rates it partial on real evidence — restore-testing plans and their job history — and this plane reaches less, which is worth stating in that direction rather than hedged. The artifact that tempts a commit-plane pass is a committed disaster-recovery workflow or a restore script scheduled in CI, and it fails on the exact reading this project has already had to withdraw a claim over. A workflow file declares that something is intended to run; it is not a record that it ran, still less that the contingency PLAN was exercised, that participants reviewed the outcome, or that corrective actions followed. Discharging a control from the presence of a workflow file is the `sa-15.3` failure precisely — `workflow_count >= 1` reported evidenced from the presence of a CI directory, sat in the catalog since the H phase, and was removed this month at a cost of one control off the coverage figure. Writing the same shape into CP-04 three weeks later, in a batch whose stated risk is a wall of assertions, would be the clearest possible demonstration that the withdrawal taught nothing.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "diverges",
+    "note": "The divergence runs the unflattering way and the record is more useful for saying so plainly. Upstream reaches partial because AWS Backup restore-testing plans and their job history genuinely evidence that a technical recovery test ran on a schedule, completed, and how long it took, and they are careful to add that this is more than nothing and should not be closed as narrative. That is an execution record, and execution records are the class of evidence this plane structurally does not hold — it reads committed bytes, and a test that ran is not a byte in the checkout. So the commit plane is the weaker pass on CP-04 and its refusal should not be read as a second opinion supporting theirs. Where the two do agree is on what neither reaches: their remainder names exercising the plan, reviewing results with participants and initiating corrective actions, and this record cannot reach any of it either. The useful reading for a 3PAO is that the technical half has a published evidence path on the estate plane and none here, and that the plan-exercise half has none on either."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The negative answer costs something on this control and the record should say so rather than present it as free: the evidence that would move CP-04 is an execution record from whatever ran the test, and reaching one means an evidence path into a backup or orchestration service. This plane declines that, reaches nothing here as a result, and the trade is stated so a reader can judge it rather than discover it.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

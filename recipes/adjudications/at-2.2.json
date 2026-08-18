@@ -1,0 +1,19 @@
+{
+  "controlId": "at-2.2",
+  "displayId": "AT-02 (02)",
+  "family": "AT",
+  "disposition": "narrative",
+  "rationale": "This enhancement is the hardest of the four to refuse and the reason it still fails is worth writing carefully, because its subject really is content. The requirement is that awareness training INCLUDE recognising and reporting potential indicators of insider threat, and unlike AT-02 that is a property of the material rather than of a delivery event — which puts it in the one class of thing a repository genuinely holds. What defeats it is the second half of the same sentence. The collector reads a path, a size and a content hash; it does not read the document. So the most this plane could ever say is that a file the repository declared to be insider-threat awareness material exists, is not empty, and has not moved since it was attested, and the control asks whether the training COVERS a named topic. That is the adequacy limb, and the documents schema already says in its own comment that adequacy is the half these recipes may never claim. Declaring a third `kind` for it would therefore not produce a partial; it would produce a row with no limb of THIS control behind it, because AT-02 (02) asks only that the material cover a named topic — unlike CP-02 and PL-08 in this same batch, where developing the document is itself a limb that existence genuinely reaches. A kind declared here would report evidenced on a non-empty file with a name somebody chose and nothing of the control would have been answered, which is the over-claim the batch-1 audit caught twice and the closed enum exists to prevent. The disposition is narrative rather than partial because the fraction of this control a commit can reach is not a fraction of what it asks.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream's rationale is the sharpest sentence either pass wrote on this family — the requirement is a property of the course content, not of any system state — and the agreement is not a restatement, because that sentence is an argument FOR the commit plane before it is an argument against the AWS one. Content is not system state, and this plane's whole thesis is that it reads content rather than state. What this record adds is the measurement of how far that gets: the plane reads content as bytes and a hash, never as meaning, so a topic-coverage requirement lands in the gap between the two. That is a more useful thing for a reader to hold than a second refusal, because it marks the boundary at the exact place where a future collector that actually read documents would change the answer, and says that no collector here does."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. On this enhancement the negative answer carries an extra caution rather than a reassurance: the evidence path that would close it is a system that reads and judges document content, which is the machinery the L4/L5 on-device model tier was cancelled for — a 0.5B model, given a context stating nothing had been recorded, drafted a passing verdict. Adding a judge to close a coverage limb would add to the boundary the one component this project has already refused on evidence.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-8",
+  "displayId": "PS-08",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "Personnel sanctions requires a formal sanctions process for individuals failing to comply with security policies, and notification of defined personnel when one is initiated. There is a conventional committed file that looks like it: CODE_OF_CONDUCT.md is a real convention with real enforcement sections, found by a reader without being told, and it sits in the same class of artifact as SECURITY.md — which this catalog does read, under a recipe that already evidences a different control. It is refused on both limbs. A code of conduct states a process for community behaviour and PS-08 asks for a sanctions process for individuals with authorised access to the system who violated its security policies; those are different populations and different violations. And even where the subject matched, existence would answer only that a process is written down, while the control's second limb — that defined personnel are notified when a sanction is initiated — asks for a record that the process RAN, which is an event and leaves nothing in a checkout. This is the pattern the `security-disclosure-published` recipe is careful about in its own caveat, and that RA-05 (11) carries the remainder for: publishing a channel is a promise that someone reads what arrives, and the file is not the promise being kept.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream writes that a sanctions process is an HR procedure invoked after a violation and that nothing in an AWS account records that it ran. The clause worth citing is 'records that it ran', because it names the failure mode both passes share while this plane also has to decline the artifact that states the procedure. Upstream can see neither the procedure nor the invocation; this pass can see a committed procedure of an adjacent kind and still cannot see the invocation. Declaring that keeps the pair honest about where the ceiling actually is — not at the process document, which is reachable in principle by the same route CP-02 uses, but at the event, which no commit records."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. A sanctions record is HR case data about a named individual and an evidence path that reached it would be holding HR case data about a named individual and the disciplinary outcome applied to them. rampscan reads a checkout as files and adds nothing of the kind.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

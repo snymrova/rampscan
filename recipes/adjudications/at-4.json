@@ -1,0 +1,19 @@
+{
+  "controlId": "at-4",
+  "displayId": "AT-04",
+  "family": "AT",
+  "disposition": "narrative",
+  "rationale": "The control asks that individual training records be documented and retained for a defined period. Its subject is a record about a person and the retention applied to it, and the commit plane fails on both limbs for one reason that is worth stating precisely because it sounds like the plane's strongest suit. Retention is where a repository looks most capable: version control retains everything by construction, and a file committed today is still readable years later with a content hash proving it did not change. But retention of the RECORD is only evidence once the record exists, and an individual training record is generated where training is delivered and administered — it is personal data about an employee, it is not a project artifact, and a repository that contained one would be a finding rather than evidence. So the retention property this plane could genuinely demonstrate has nothing here to apply to. Naming it and refusing it is the point of this record: a capability that matches the verb of a control while having no access to its object is the most convincing wrong answer available on this plane.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream draws a distinction the commit plane should adopt rather than repeat: where those records are stored could be an AWS fact, but their content and completeness never are. That is a refusal with a seam in it, and this record lands on the same seam from the other side — a repository could demonstrate durable retention with integrity, and has no training record to retain. Both passes therefore hold half of a mechanism and neither holds the subject, which is a more precise thing for a reader to know than that both said no. It also marks what would have to change for either answer to move, and it is not a collector on either plane: it is the training record becoming an artifact the system holds at all."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Worth stating in the strong form here, because this is the one control in the family where a naive integration would look attractive and be actively harmful: closing it would mean pulling individual training records — personal data about named employees — into an evidence store. rampscan collects from a checkout and adds no such data to the system it reports on, and the refusal above is preferable to the alternative rather than merely forced by it.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

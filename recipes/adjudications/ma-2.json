@@ -1,0 +1,19 @@
+{
+  "controlId": "ma-2",
+  "displayId": "MA-02",
+  "family": "MA",
+  "disposition": "narrative",
+  "rationale": "Controlled maintenance asks that maintenance be scheduled, documented and reviewed; that it be approved and monitored, whether performed on site or remotely; and that records be kept of what was done, by whom and when. The artifact that tempts a commit-plane pass is a committed renovate.json or dependabot.yml, which really does declare a maintenance schedule under version control, and it fails on three separate readings rather than one. It is a declaration of intent for a bot, not a record of maintenance performed — the same distinction that sank the workflow file under CP-04. It carries no approval: the control wants maintenance approved before it happens and the records reviewed after, and a cron expression in a config file is neither. And what it schedules is dependency currency, which is already claimed in this catalog by the `dependency-update-automation` recipe under SI-02 and SI-05 — not merely adjacent, but a shipped assertion over exactly these two files — so counting it here would be one artifact discharging two families by being renamed. The rest of the control is the provider's: physical maintenance and component replacement on the hardware under a cloud system belong to the infrastructure provider's own authorization package and are not the customer's to evidence from either plane.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "diverges",
+    "note": "Another divergence where this plane is the weaker one, and it lands the same way CP-04 does. Upstream reaches partial on Systems Manager Maintenance Windows and their execution history — the schedule, the tasks, the targets and the outcome of each run — which is an execution record, the class of evidence a checkout structurally cannot hold. Their own remainder names the approval before the work, the review of records afterwards, and the physical maintenance that is AWS's responsibility, and this record cannot reach any of those either. So the honest summary for a reader holding both is that the scheduling-and-outcome limb has a published path on the estate plane and none here, the approval and review limbs have none on either plane, and the commit-plane artifact that appears to bear on the control — a committed bot schedule — is refused above for reasons that would apply just as well to their pass if they had one."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Evidencing maintenance execution means reaching whatever performed it — a systems-management service, a change management platform, or the provider's own maintenance records. This plane reaches none of them, and the resulting refusal is the cost of the trust model rather than an oversight in the pass.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

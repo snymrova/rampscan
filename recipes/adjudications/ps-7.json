@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-7",
+  "displayId": "PS-07",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "External personnel security requires that personnel security requirements be established for third-party providers, that those requirements be documented, that the provider notify the organisation of personnel changes affecting the system, and that compliance be monitored. Its subject is people employed by somebody else, and the refusal here has a sharper edge than the rest of the family because of what this repository CAN see about third parties. The collector set produces an SBOM enumerating third-party components and their versions, and the lockfile carries the integrity digest each was accepted under — the strongest supply-side claims this plane makes, and they are real ones. None of it bears on this control. A repository knows its third-party CODE and nothing about third-party PEOPLE — it cannot say who at a supplier has access, what screening that supplier applies, or that anyone was notified when one of them left. The distance is worth stating plainly rather than assumed, because SR is the family where supplier evidence is real and PS-07 sits close enough to it that a coverage push would be tempted. Supplier risk about components is not supplier risk about personnel, and the two are adjudicated in different families for that reason.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses on the ground that requirements on third-party personnel live in contracts and in provider notifications of personnel changes, not in any AWS resource. This record corroborates and supplies the fact their pass has no way to surface: the source side holds a rich, signed inventory of third-party SUPPLY — components, versions, licences, suppliers — and it is refused here rather than counted, because the control's object is the supplier's staff. That is worth declaring as agreement rather than leaving silent, since a reader who knows this catalog evidences SBOM-derived supply-chain claims might reasonably expect PS-07 to be within reach of them, and the answer is that the two share a word and not a subject."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The evidence for this control lives in contracts and in a provider's own notifications, so closing it would mean an evidence path into contract management or vendor systems belonging to a third party. This plane adds no such dependency, and it is the one control in the batch where the external system in question is not even the assessed organisation's own.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

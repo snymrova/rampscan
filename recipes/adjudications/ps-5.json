@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-5",
+  "displayId": "PS-05",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "Personnel transfer requires that when an individual is reassigned or transferred, access authorisations be reviewed and modified to match the new role, within a defined period. There is a real committed trace of this and it is the one this plane cannot read: a CODEOWNERS file changes when responsibility moves, and the sequence of those changes over time is a record of reassignment written in the repository. Nothing in the collector set reads git history metadata. That absence — no collector emits git-history metadata any assertion can read — gitleaks walks the full committed history and reports the rule, the file, the line and the commit a leak sits at, and nothing else dates a path, enumerates its edits or resolves who reviewed one — was cut from AC-01 and RA-05 (11) by the batch-1 audit, cut again from SA-05 while its recipe was being written, and named again by four records in this batch alone. PS-05 is the first control where it is not one limb among several but the FIRST of two independent reasons. Even with a history collector the residue would be thin: the control asks whether the access modification MATCHED the individual's new role, which is a judgement about a role a repository does not hold, and a CODEOWNERS edit is a change to review routing rather than to access. So this record is a refusal today for a mechanical reason and would remain one after the mechanical reason is fixed, for a substantive one — two independent defeaters, in the same shape PS-06 declares its own, and worth stating in that order so that building the history collector is not mistaken for closing this control.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "partial",
+    "agreement": "diverges",
+    "note": "Upstream reaches partial and this record does not, and the shape of their partial is instructive rather than merely stronger. Their argument is that CloudTrail records every group and policy change with a timestamp, so the reassignment ITSELF is observable, while whether it matched the individual's new role is an HR judgement. The commit plane has a structurally identical argument available — a CODEOWNERS edit with a timestamp is an observable reassignment — and cannot make it, because no collector here reads git history metadata and because a review-routing edit is not an access change. So the divergence is not about what the control asks; both passes agree the role-matching limb is an HR judgement neither can reach. It is about whether the observable half is observable from where each pass stands, and on this plane it is not. Stated that way the divergence marks a gap in this pass rather than in the control, which is the honest reading and the one a reader should get."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The general answer holds, and this control is where its cost is clearest: the observable half of PS-05 is available to upstream because CloudTrail is a network service they already read, and it is unavailable here because reading the equivalent would mean either a history collector this project has not built or a hosting platform's audit API this plane declines on principle.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

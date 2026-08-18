@@ -1,0 +1,19 @@
+{
+  "controlId": "at-3",
+  "displayId": "AT-03",
+  "family": "AT",
+  "disposition": "narrative",
+  "rationale": "Role-based training requires that people holding defined roles receive training appropriate to those roles, before authorisation and on a cycle thereafter. It compounds AT-02's problem with a second one this plane has already conceded elsewhere. The delivery limb fails exactly as AT-02's does: no committed artifact records that a person was trained. The role limb fails because a repository does not hold role assignments in the sense the control means — the closest committed artifact is CODEOWNERS, and the SA-03 record already conceded, twice and against its own first draft, that CODEOWNERS presence routes review by path and is not a role assignment. A path-to-reviewer mapping names who must approve a change to a directory; it does not name a security role, does not say who holds it, and does not survive the question of what training that role requires. So both halves of the control's subject are absent rather than partially present, and there is no artifact here whose refusal needs arguing beyond naming it.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses on the ground that an LMS maps people to courses while the AWS role a principal assumes says nothing about what they were taught. The structure of that argument is that the system holds a role but not the training, and the commit plane's failure is the mirror image: it holds neither, because the artifact a reader would reach for as a role assignment is CODEOWNERS and that is a review-routing table. Citing the pair matters more than either half, because the two rationales together answer the question a 3PAO would actually ask — if the estate knows the role and the repository knows the reviewer, does anything know the training — and the answer is no, from both directions, for reasons that do not overlap."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Reading role assignments would mean reaching an identity provider or an HR directory, and reading training completion would mean reaching an LMS. Both are systems of record about employees, and an evidence path that held credentials to either would enlarge the authorization boundary by exactly the class of external system three of upstream's four overlapping rationales warn about. This plane adds neither, and refuses the control as a consequence rather than in spite of it.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

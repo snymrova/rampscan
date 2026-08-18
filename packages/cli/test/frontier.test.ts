@@ -615,7 +615,35 @@ describe("where upstream has spoken, the record says whether it agrees", () => {
     // artifact its divergence rested on — branch protection — is platform state
     // no collector reads. It concedes upstream's refusal now, and the list is
     // shorter by exactly the record the gate caught.
-    expect(diverging).toEqual(["AC-01", "IA-06", "RA-05 (11)", "SR-10"]);
+    //
+    // Batch 2 adds five, and it is the first batch whose divergences run in
+    // BOTH directions — which is the fact worth recording here, because until
+    // now every one of them was this plane reaching further than upstream and
+    // the list could be read as a tally of wins.
+    //
+    //   CP-02, PL-08 — ours `partial` against their `narrative`. Both controls
+    //     ask the system to DEVELOP a document (a contingency plan, a security
+    //     architecture description), and upstream's refusal is correct about an
+    //     estate API and stops being correct for a pass that reads files.
+    //   CP-04, MA-02, PS-05 — ours `narrative` against their `partial`, and
+    //     here THIS PLANE IS THE WEAKER ONE. All three turn on an execution
+    //     record — a restore test that ran, a maintenance window that ran, a
+    //     group membership that changed — and an execution record is the class
+    //     of evidence a checkout structurally cannot hold. Recorded as
+    //     divergences rather than quietly filed as agreement because a reader
+    //     comparing the two overlays on these three controls should be sent to
+    //     upstream's pass, not reassured by a second refusal.
+    expect(diverging).toEqual([
+      "AC-01",
+      "CP-02",
+      "CP-04",
+      "IA-06",
+      "MA-02",
+      "PL-08",
+      "PS-05",
+      "RA-05 (11)",
+      "SR-10",
+    ]);
     // and every other overlap agrees — the link check proves the dispositions
     // match, this proves nothing sits in between the two declarations
     const others = map.rows.filter(

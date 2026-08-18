@@ -1,0 +1,19 @@
+{
+  "controlId": "cp-3",
+  "displayId": "CP-03",
+  "family": "CP",
+  "disposition": "narrative",
+  "rationale": "Contingency training is delivered to people who hold contingency roles, within a defined period of assuming the role and on a cycle after it. It is the AT family's failure wearing a CP number, and it should be refused in the same terms rather than argued afresh: the subject is a delivery event and an event leaves no artifact in a checkout. The one thing worth adding is the boundary against the record filed beside it. CP-02 is partial on this plane because a contingency PLAN is a document and a repository stores documents; CP-03 is narrative because contingency TRAINING is an act and a repository stores no acts. Those two controls sit adjacent in the same family, ride the same KSI theme in a reader's mind, and would be adjudicated identically by anyone reasoning from the family name rather than from the verb — which is precisely how a coverage push produces a wall of assertions. A committed exercise curriculum or a runbook someone is trained against is material, and material is not delivery, for the same reason a curriculum did not answer AT-02.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream's rationale — the curriculum, the roster and the completion dates, and nothing in an AWS account changes when someone is trained — is one this plane can corroborate on the roster and the completion dates while being explicit that it does NOT corroborate on the curriculum. A curriculum can be a committed file; that is the seam where the two passes differ, and it is the same seam CP-02 falls through on the other side. Saying so is the point of citing here rather than a formality, because an agreement recorded without it would imply the commit plane found nothing at all in the vicinity, and what it actually found was material it declined to count. A reader deciding whether to look for evidence in a repository should know the difference between a plane that saw nothing and a plane that saw something and refused it."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Closing this control would mean an evidence path into a learning management system holding rosters and completion dates for named individuals — a system of record about employees, added to the boundary in order to evidence a control about recovering from a disruption. rampscan reads the checkout it was handed and adds nothing.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

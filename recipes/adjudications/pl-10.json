@@ -1,0 +1,19 @@
+{
+  "controlId": "pl-10",
+  "displayId": "PL-10",
+  "family": "PL",
+  "disposition": "narrative",
+  "rationale": "Baseline selection asks that a control baseline be selected for the system, which in FedRAMP terms is the documented decision recording which baseline the authorization boundary claims and what tailoring was applied. Reaching the commit plane's answer means first correcting an error this overlay has already made once and had caught for it. The obvious thought is that a scanned repository carries a version-controlled statement of the class it is being assessed at. It does not. rampscan.config.json declares a graph block, a contract block and a documents block and nothing else, and the certification class is not committed at all: it arrives as a command-line flag read per invocation and defaulting to b. The CA-02 record states this in almost these words and states it because the batch-1 audit caught that record missing it — the class \"is NOT committed … the depth at which the assessment runs is chosen per invocation and leaves no record of who chose it\" — so writing the opposite here would have put a fact back into the overlay that an independent pass had already taken out of it. The correction makes the refusal stronger rather than weaker: there is no committed statement of the claimed baseline anywhere. What IS committed is the assessed configuration — the recipe catalog, and the contract and documents blocks — and reading any of that as PL-10 evidence would be the tool reporting its own inputs back as a decision about the system, on every repository that ever configured it, including this one. The distance from the real artifact is not narrow either: PL-10's selection is recorded in the system security plan with a rationale for the baseline chosen and for any tailoring away from it, taken by people with the authority to take it, and neither a committed config block nor a per-run flag records any of that.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses on the ground that selecting a control baseline is a documented decision recorded in the SSP and no API states which baseline an authorization boundary claims. This record agrees and contributes the fact their vantage point cannot produce: there IS a committed artifact that states which baseline is claimed — this tool's own configuration file — and it is refused here rather than counted. That is worth citing as corroboration because the two passes fail differently and the difference is instructive. Upstream looked for the claim in system state and found nothing. This plane looked in the source and found the claim written down, then refused it because a declaration of what to assess is not the decision to be assessed. A reader who takes only the first refusal might reasonably assume the commit plane would do better here, and the answer is that it found more and still concluded less."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. This control adds a caution worth stating in its own right: because the certification class is a per-invocation flag rather than a committed fact, and because the configuration that IS committed is refused above as evidence, nothing here lets the tool's own inputs become part of the authorization record it produces. An evidence path that could be tuned into a passing answer by editing its own settings would be a dependency of the worst kind, and the two refusals above are what keep it from being one.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

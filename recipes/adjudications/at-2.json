@@ -1,0 +1,19 @@
+{
+  "controlId": "at-2",
+  "displayId": "AT-02",
+  "family": "AT",
+  "disposition": "narrative",
+  "rationale": "The control asks that literacy training and awareness be provided to system users — at onboarding, on a defined cycle, and after changes that warrant it — and that awareness techniques be applied. Every limb of that is an act performed on a person, recorded wherever people are administered, and a checkout holds no record of an act. Three artifacts sit close enough to be mistaken for evidence and each fails differently. A CONTRIBUTING.md security section or a committed onboarding guide is training MATERIAL, and material is not delivery: the control's subject is that users were trained, and a file's existence says nothing about who opened it. A third `documents` kind would evidence that a curriculum exists at a declared path, is non-empty and has not moved — which is the existence-and-integrity half of a DOCUMENT, and AT-02's subject is not a document but a delivery event, so the half this plane can reach is not a half of what is being asked. And commit authorship as a proxy for the user population fails twice over: no collector emits git-history metadata any assertion can read — gitleaks walks the full committed history and reports the rule, the file, the line and the commit a leak sits at, and nothing else dates a path, enumerates its edits or resolves who reviewed one, and a contributor is not a system user in the sense PS and AC use the term. Filing any of the three as partial would be the vacuous pass ground rule 7 refuses — a claim that reports evidenced because something adjacent was found.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses because training delivery and completion live in a learning management system and AWS has no notion of a trained person. This record reaches the same verdict from the source side and the corroboration is worth stating because it closes the obvious escape route rather than restating the refusal. The natural reply to their rationale is that the LMS is not the only place training leaves a trace — the curriculum itself is often a file, and files are exactly what this plane reads. It is true and it does not help: a committed curriculum evidences that material exists, and AT-02 asks whether people received it. So the control is refused by the estate's API for want of a person and by the estate's source for want of an event, and a reader holding both overlays can see that the two passes failed for different reasons and that neither reason is a gap in the pass."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The point is worth making on a training control specifically, because the evidence path a compliance team reaches for here is an LMS integration, and integrating one means an evidence collector holding credentials to a system of record about employees. rampscan reads a checkout as files and adds no such system to the boundary — which is also precisely why it cannot answer this control.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

@@ -1,0 +1,19 @@
+{
+  "controlId": "ir-2",
+  "displayId": "IR-02",
+  "family": "IR",
+  "disposition": "narrative",
+  "rationale": "Incident response training is delivered to responders consistent with their assigned roles, within a defined period of assuming the role, and refreshed on a cycle. It refuses on this plane for the same reason AT-02, AT-03 and CP-03 do — the subject is a delivery event — and the record exists as its own file rather than as a cross-reference because the near-miss here is different from theirs and is one this repository would trip over first. Incident response is the family where the conventional committed artifact is strongest: SECURITY.md is a real convention, the `security-disclosure-published` recipe already reads it, and a repository that publishes a disclosure channel has committed something genuinely about incident handling. It does not touch this control. A disclosure channel tells a reporter how to reach the organisation; IR-02 asks whether the people who would receive that report have been trained to act on it. Reading the first as evidence of the second would take a recipe that already exists, point it at a control it was never written for, and produce an evidenced row on every repository with a SECURITY.md — which is the shape of over-claim the batch-1 audit caught twice, arriving this time through an adjudication link rather than through a config field.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream refuses on the training content, the roster of who took it and when, and any simulated-event exercise records, concluding that no AWS call reports a trained responder. This record corroborates and adds the artifact their vantage point cannot see and a source pass must actively decline: a published disclosure channel, committed and already evidenced under a different control by a recipe in this catalog. That is a stronger form of agreement than a second refusal, because the risk on this control was never that a reader would expect an API to know who was trained — it is that a reader looking at a repository with a SECURITY.md would conclude something about incident response readiness was thereby demonstrated. Both passes say no; this one says no while holding the thing that most looks like a yes."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Evidencing responder training means reaching a learning management system or an incident platform's on-call and exercise records, and both are systems of record about named people. This plane adds neither. The observation generalises across the four training controls in this batch and is stated on each rather than once, because a differentiator recorded on one record out of four is one nobody can count.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

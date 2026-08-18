@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-6",
+  "displayId": "PS-06",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "Access agreements require that individuals sign appropriate agreements before being granted access, and that the agreements be reviewed and re-signed on a cycle. This is the closest any control in the PS family comes to being answerable from a checkout, and the artifact is worth naming precisely because it is genuinely a signed acknowledgement committed to the repository: a Developer Certificate of Origin sign-off appears as a Signed-off-by trailer on the commit itself, and a contributor licence agreement is often recorded as a committed file or an assent checked by a bot before a merge. Two things defeat it and they are independent, so closing either would not help. No collector emits a commit trailer any assertion can read. The nearest thing is gitleaks, which walks the full committed history — commit messages included — and reports only the rule, the file, the line and the commit a leak sits at; nothing parses a trailer, and that is the same absence PS-05 turns on. And the agreement is the wrong agreement: a DCO certifies the provenance and licensing of a contribution, and PS-06 asks for an access agreement — rules of behaviour, a non-disclosure agreement, an acceptable use policy — signed by a person as a condition of being given access to the system. A repository that collected a sign-off on every commit would have evidence that contributors asserted something about their code, and none that anyone accepted the terms of their access.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream writes that a signed access agreement is a document a 3PAO reads and that AWS holds no signature and no acknowledgement. The phrase 'no signature' is where the two passes genuinely part company and the agreement is worth citing for that reason rather than despite it: a repository DOES hold signatures — DCO trailers, and on some projects cryptographically signed commits — so the premise that makes their refusal easy is false here, and this record still refuses. It refuses because the signatures present attest to the wrong thing, which is a materially different argument arriving at the same verdict. A reader holding both overlays should not conclude that no committed signature exists; they should conclude that the ones that exist certify contributions rather than access, and that the distinction is what PS-06 turns on."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Evidencing signed access agreements means reaching whatever holds them — an HR platform, a GRC tool or a document management system — and each is a system of record about named individuals. This plane adds none, which is also why the signatures it can see are the ones about code rather than the ones about people.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

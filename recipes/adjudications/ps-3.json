@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-3",
+  "displayId": "PS-03",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "Personnel screening requires that individuals be screened before access is authorised and rescreened on a defined condition and frequency. It is refused here on ordering rather than on subject matter, which is what distinguishes it from the rest of its family. The control's whole content is a sequence — screening happens, and only then is access granted — so evidence for it must establish that two events occurred in that order. A repository records neither event. It holds the artifacts a person produced after they already had access, which is the far side of the sequence and says nothing about what preceded it. The near-miss worth naming is the contributor allowlist or CLA-bot configuration some repositories commit, because it genuinely is a gate placed before a contribution is accepted: it fails because it gates the CONTRIBUTION, not the access, and because what it checks is a licensing assent rather than a background investigation. A repository that merged code from someone tells you they had access; nothing in it tells you what was established before they did.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream writes that screening happens in an HR or vendor system and AWS sees only the principal that results, and the phrase 'only the principal that results' is the one this record borrows and extends. Their pass sees the downstream artifact of a screening decision — an identity that now exists — and cannot see the decision. A source pass sees an artifact one step further downstream still: work committed by a person who by then already had access. So the two overlays describe a chain in which both observers stand after the event, at different distances, and neither can see it. That is a stronger statement of the ceiling than either refusal alone, and it is the kind of thing N1d's published ceiling should be able to say about a whole family rather than control by control."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Closing this would mean an evidence path into an HR or background-screening vendor, holding results of investigations into named individuals. That is the single most sensitive integration available anywhere in this control set, and this plane's answer is that it neither has it nor wants it.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}

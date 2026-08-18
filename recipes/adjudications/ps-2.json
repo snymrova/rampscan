@@ -1,0 +1,19 @@
+{
+  "controlId": "ps-2",
+  "displayId": "PS-02",
+  "family": "PS",
+  "disposition": "narrative",
+  "rationale": "The control asks that a risk designation be assigned to every organizational position, that screening criteria be established for each designation, and that the designations be reviewed on a cycle. Its object is a POSITION, and a position is not a thing a repository has any representation of. The artifact a source pass would reach for is CODEOWNERS, on the reasoning that it is the one committed file expressing who is trusted with what, and it is refused here on the ground the SA-03 record already established against its own first draft: a path-to-reviewer mapping routes review by directory and is not a role assignment, let alone a designation of the risk attached to a role. The gap is wider than that concession makes it sound. PS-02 designates positions and then derives screening criteria from the designation, so an artifact that would bear on it has to distinguish a position from a person and rank positions by the harm the holder could do. CODEOWNERS names GitHub handles against paths and does neither: it cannot say whether a handle is an employee, a contractor or a bot, which is the first question a risk designation asks.",
+  "source": "commit",
+  "recipeIds": [],
+  "candidateCollectors": [],
+  "citesUpstream": {
+    "source": "aws",
+    "disposition": "narrative",
+    "agreement": "agrees",
+    "note": "Upstream's refusal ends on eight words that are exactly right — no AWS API knows what a position is — and the corroboration this record adds is that no repository knows either, for a reason worth separating from theirs. An estate API is missing the concept; a checkout is missing the concept AND holds an artifact that impersonates it. That is the more dangerous of the two states, because a pass that finds nothing writes narrative without effort while a pass that finds CODEOWNERS has to decide, and this overlay has already had one disposition withdrawn and one recipe's control claim removed for deciding that kind of question the wrong way. Recording the agreement together with the artifact that was refused to reach it is what makes the agreement checkable rather than merely concurrent."
+  },
+  "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Position risk designations live in an HR system, and an evidence path that read them would hold credentials to a system of record about employees and their assessed trustworthiness — an external system holding assessed judgements about how much harm each position could do. rampscan reads a checkout as files and adds none of it.",
+  "reviewed": "2026-08-18",
+  "datasetVersion": "2026.07.14.01"
+}
