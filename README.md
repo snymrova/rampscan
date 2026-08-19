@@ -1,5 +1,8 @@
 # rampscan
 
+[![test](https://github.com/snymrova/rampscan/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/snymrova/rampscan/actions/workflows/test.yml)
+[![smoke](https://github.com/snymrova/rampscan/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/snymrova/rampscan/actions/workflows/smoke.yml)
+
 Pipeline-source evidence for FedRAMP 20x: a scan harness deployed **inside the client's AWS account** that fetches their repositories, scans code / IaC / CI, and produces signed, commit-anchored evidence — keyed to [ramprules](https://ramprules.com) recipe and control IDs — on the MVX re-verification clock (7 days class b, 3 days class c).
 
 ramprules answers *what is owed* and *what AWS APIs can prove*. rampscan supplies the other half: *what the repository and pipeline can prove* — the `pipeline` evidence source that ramprules' automation frontier reserves and currently holds at zero.
