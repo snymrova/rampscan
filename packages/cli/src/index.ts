@@ -2,6 +2,8 @@ export { scan } from "./scan.js";
 export type { ScanOptions, ScanOutcome, EvidenceRecord } from "./scan.js";
 export { check, renderCheck, dryRunnable, treeDelta, DRY_RUN_LABEL, DRY_RUN_NOT_EVIDENCE } from "./check.js";
 export type { CheckOptions, DryRunOutcome, DryRunRow, RefusedGate, TreeDelta } from "./check.js";
+export { renderCheckComment, movementOf, COMMENT_MARKER } from "./check-comment.js";
+export type { CommentOptions, Movement } from "./check-comment.js";
 export { loadRecipes, validateRecipeIds } from "./recipes.js";
 export { renderSummary } from "./summary.js";
 export { verify } from "./verify.js";

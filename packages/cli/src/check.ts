@@ -17,7 +17,7 @@ import { loadLocalDataset } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import { windowMsFor } from "@rampscan/scheduler";
-import type { AssertionResult, Verdict } from "@rampscan/schema";
+import type { AssertionResult, PlainLanguage, Verdict } from "@rampscan/schema";
 import { loadRecipes, validateRecipeIds } from "./recipes.js";
 
 const execFileAsync = promisify(execFile);
@@ -211,6 +211,31 @@ export interface DryRunRow {
    * and the reader is entitled to see both rather than their difference.
    */
   boardState?: RegisterState | "absent";
+  /**
+   * The recipe's authored plain-language paragraphs (K1), joined from the
+   * catalog exactly as the board's own rows join them — AUTHORED prose about
+   * the CHECK, never about this run. It rides on the row because the surfaces
+   * that render a dry run for a READER (the PR comment, N2a) need the sentence
+   * a human wrote about fixing this recipe, and the alternative is every such
+   * surface re-reading the recipe directory to find it.
+   *
+   * Unsigned, deliberately, for the same reason `RegisterRow.plain` is: a
+   * definition maintained in the catalog is not a fact about a tree.
+   */
+  plain?: PlainLanguage;
+  /**
+   * The board's violated streak for this cell (I2c), copied off the register
+   * row when one was readable: the first commit rampscan SAW the violation at,
+   * and when. Present only when the board row is itself violated, which is the
+   * only state the projector records a streak for.
+   *
+   * It is here so a reader can be told that a violation predates the tree in
+   * front of them. A dry run cannot compute that fact — it has one board and
+   * one worktree, not two folds — so it carries the board's own answer rather
+   * than inventing one.
+   */
+  introducedAt?: string; // ISO 8601
+  introducingCommit?: string;
 }
 
 export interface DryRunOutcome {
@@ -348,6 +373,7 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
   }
 
   const gateNames = new Set(gates.map((c) => c.manifest.name));
+  const catalog = new Map(recipes.map((r) => [r.id, r]));
 
   const rows: DryRunRow[] = [];
   for (const result of joined) {
@@ -362,7 +388,14 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
       assertions: result.assertions,
     };
     if (result.reason !== undefined) row.reason = result.reason;
-    if (board !== undefined) row.boardState = board.get(result.recipe_id)?.state ?? "absent";
+    const recipe = catalog.get(result.recipe_id);
+    if (recipe?.plain !== undefined) row.plain = recipe.plain;
+    const cell = board?.get(result.recipe_id);
+    if (board !== undefined) row.boardState = cell?.state ?? "absent";
+    // the streak travels with the state it belongs to; a cell the board does
+    // not hold as violated has no streak to carry, and none is invented
+    if (cell?.introducedAt !== undefined) row.introducedAt = cell.introducedAt;
+    if (cell?.introducingCommit !== undefined) row.introducingCommit = cell.introducingCommit;
     rows.push(row);
   }
 
