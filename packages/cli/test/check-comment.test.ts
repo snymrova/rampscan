@@ -24,7 +24,6 @@ function row(over: Partial<DryRunRow> = {}): DryRunRow {
       {
         description: "Zero import edges cross a declared boundary.",
         passed: false,
-        controls: ["ac-4"],
         offenders: [
           {
             file: "packages/cli/src/serve.ts",
@@ -116,7 +115,9 @@ describe("renderCheckComment", () => {
     // the gate reads these three numbers off the marker, and folding
     // `no-baseline` into `introduced` would fail every pull request in any job
     // that has no ledger to read — calling old debt a regression
-    const noLedger = renderCheckComment(outcome({ rows: [row({ boardState: undefined })] }));
+    // the key ABSENT is the no-ledger case — `check` omits `boardState`
+    // entirely when it could not read a ledger, rather than setting it undefined
+    const noLedger = renderCheckComment(outcome({ rows: [row()] }));
     expect(noLedger).toContain("introduced=0 inherited=0 unknown=1");
     expect(noLedger).toContain("none of these can be called new");
 
@@ -155,12 +156,11 @@ describe("renderCheckComment", () => {
         {
           description: "Zero import edges cross a declared boundary.",
           passed: false,
-          controls: ["ac-4"],
           offenders: Array.from({ length: 9 }, (_, i) => ({ file: `src/f${i}.ts`, line: i })),
           offender_count: 40,
         },
       ],
-    } as Partial<DryRunRow>);
+    });
     const body = renderCheckComment(outcome({ rows: [many] }), { offenderLimit: 5 });
     expect(body).toContain("src/f4.ts:4");
     expect(body).not.toContain("src/f5.ts");
@@ -174,12 +174,11 @@ describe("renderCheckComment", () => {
         {
           description: "CODEOWNERS names an owner for every path.",
           passed: false,
-          controls: ["cm-3"],
           offenders: [],
           offender_count: 2,
         },
       ],
-    } as Partial<DryRunRow>);
+    });
     const body = renderCheckComment(outcome({ rows: [empty] }));
     expect(body).toContain("2 failing row(s), none carrying a file or check to point at");
     expect(body).not.toContain("… and");
@@ -192,7 +191,7 @@ describe("movementOf", () => {
   });
 
   it("treats a missing ledger and a missing cell the same way — no baseline", () => {
-    expect(movementOf(row({ boardState: undefined }))).toEqual({ kind: "no-baseline" });
+    expect(movementOf(row())).toEqual({ kind: "no-baseline" });
     expect(movementOf(row({ boardState: "absent" }))).toEqual({ kind: "no-baseline" });
   });
 
