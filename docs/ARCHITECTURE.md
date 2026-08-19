@@ -32,7 +32,7 @@ rampscan is a **single-tenant appliance deployed inside the client's AWS account
                                   └────────────────────────────────┘
 ```
 
-The division of labor with ramprules, stated once: **ramprules answers *what is owed* and *what AWS APIs can prove*; rampscan supplies *what the repository and pipeline can prove*** — the `pipeline` evidence source that ramprules' automation frontier reserves and currently holds at zero (209 KSI-reached controls, 88 AWS-covered, 121 uncovered). Executing ramprules' AWS recipes is out of scope, as is any SaaS control plane.
+The division of labor with ramprules, stated once: **ramprules answers *what is owed* and *what AWS APIs can prove*; rampscan supplies *what the repository and pipeline can prove*** — the `pipeline` evidence source that ramprules' automation frontier reserves (pinned rollup: 209 KSI-reached controls, 97 covered — 88 aws · 9 pipeline — 112 uncovered). Executing ramprules' AWS recipes is out of scope, as is any SaaS control plane.
 
 Two consequences that shape everything below:
 

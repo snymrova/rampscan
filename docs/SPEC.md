@@ -10,7 +10,7 @@
 
 A single-tenant appliance, deployed by Terraform module into a client's AWS account, that fetches the client's repositories read-only, scans code / IaC / CI configuration inside an egress-restricted sandbox, and emits **signed, commit-anchored evidence bundles** keyed to ramprules recipe, KSI, and control IDs. A scheduler re-verifies every bundle inside the FedRAMP 20x MVX window for the client's class (7 days at class b, 3 at class c), and evidence whose code anchor changed **dies automatically** rather than lingering as a stale claim. A console shows three registers — evidenced, violated, unevidenced — and exports assessor-ready artifacts.
 
-The one-line differentiation: ramprules' automation frontier counts 209 KSI-reached controls, 88 covered by AWS API recipes, 121 uncovered, and a `pipeline` evidence source at zero. rampscan is the pipeline source.
+The one-line differentiation: ramprules' automation frontier counts 209 KSI-reached controls, 97 covered (88 by AWS API recipes, 9 by pipeline evidence), 112 uncovered. rampscan is the pipeline source.
 
 ---
 
@@ -207,9 +207,9 @@ rampscan/
 Phase 0 is data work, no infrastructure, and it is done when:
 
 1. `packages/schema` defines the **pipeline recipe** type mirroring `aws-evidence.json`'s recipe shape (`ksi_ids`, `control_ids`, `evidence`, `collection` with `kind: "pipeline"`, `expected_output`, `assertions`, `cadence`, `automatable`, `notes`, and `caveats` — the one deliberate rename, generalizing aws-evidence's partition-specific `govcloud` field) plus `anchor: commit`.
-2. `recipes/adjudications/` holds a disposition for **each of the 121 uncovered controls** — `automatable | partial | narrative`, with one paragraph of reasoning each, in ramprules' frontier vocabulary so the overlay can be contributed upstream.
+2. `recipes/adjudications/` holds a disposition for **each of the 112 uncovered controls** — `automatable | partial | narrative`, with one paragraph of reasoning each, in ramprules' frontier vocabulary so the overlay can be contributed upstream.
 3. `recipes/commit/` holds drafted recipes for every control adjudicated `automatable` or `partial` — the honest pipeline ceiling, computed before any scanner exists.
-4. A generated `docs/FRONTIER-PIPELINE.md` states the numbers: how many of 121 the pipeline source can cover, fully or partially, and what remains narrative forever.
+4. A generated `docs/FRONTIER-PIPELINE.md` states the numbers: how many of 112 the pipeline source can cover, fully or partially, and what remains narrative forever.
 
 That document is simultaneously rampscan's scope definition, its first marketing artifact, and a contribution ramprules' automation-frontier register is structured to receive.
 
