@@ -176,7 +176,7 @@ function Runs() {
               {" "}
               · how each tool resolved across the {filtered.length} recorded run
               {filtered.length === 1 ? "" : "s"} — history, not a live probe:{" "}
-              <span className="mono">pnpm doctor</span> is what answers whether a tool can run right
+              <span className="mono">pnpm run doctor</span> is what answers whether a tool can run right
               now
             </span>
           </div>
