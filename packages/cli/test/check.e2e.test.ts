@@ -19,6 +19,7 @@ import {
   treeDelta,
 } from "../src/index.js";
 import type { DryRunOutcome, DryRunRow } from "../src/index.js";
+import { renderCheckComment } from "../src/check-comment.js";
 
 // The L3a exit test over a REAL scanned world: an app that declares its own
 // architecture contract, scanned for real (signed evidence, a real board), then
@@ -436,5 +437,94 @@ describe("a dry run writes nothing", () => {
     // hand anyone: the scratch path never appears in the output either
     expect(Object.keys(outcome)).not.toContain("artifacts");
     expect(JSON.stringify(outcome)).not.toContain("rampscan-check-");
+  });
+});
+
+describe("the pull-request comment (N2a), over the same real world", () => {
+  // The exit test's clauses, against signed evidence and a real worktree
+  // rather than a fixture literal. One clause is deliberately NOT here: the
+  // `evidenced → violated` movement. Every row this fixture's scan reached is
+  // violated on its board — the scan and the dry run read the same tree — so
+  // producing an evidenced row would take a second full scan of a repaired
+  // tree, two more minutes of suite for a sentence that check-comment.test.ts
+  // already pins exactly. The movement vocabulary is unit-tested; what is
+  // tested HERE is what only a real world can show: that the offenders, the
+  // streak and the authored sentence all arrive on the right row.
+
+  it("says the breaches are inherited, not caused, and names the streak's commit", async () => {
+    const body = renderCheckComment(await dry());
+    expect(body).toBeDefined();
+    expect(body).toContain("Inherited, not introduced here");
+    expect(body).toContain("This pull request did not cause it");
+    // every row this fixture reaches is already violated on its board, so the
+    // headline must not read as an accusation against the tree in front of it
+    expect(body).toContain("None of these is introduced by this tree");
+    const head = git(appRoot, "rev-parse", "HEAD");
+    expect(body).toContain(`violated since \`${head.slice(0, 12)}\``);
+  });
+
+  it("quotes the recipe's own fix sentence, read from the catalog and not paraphrased", async () => {
+    const body = renderCheckComment(await dry());
+    const recipe = recipes.find((r) => r.id === BOUNDARY);
+    expect(recipe?.plain?.fix).toBeDefined();
+    expect(body).toContain(recipe!.plain!.fix);
+    expect(body).toContain(recipe!.plain!.violation);
+  });
+
+  it("points at the offending file and the import chain that reaches it", async () => {
+    const body = renderCheckComment(await dry());
+    // the committed breach: render.js reaches into billing, and the pointer
+    // carries the chain rather than the file alone
+    expect(body).toMatch(/src\/render\.js/);
+    // `call_path` is the chain, not the file: the reader is told which edge
+    // reaches the boundary, which is the difference between a pointer and a shrug
+    expect(body).toContain("src/render.js » src/billing.js");
+  });
+
+  it("carries an UNTRACKED breach into the comment — the thing a scan cannot see", async () => {
+    await withFile("src/sneaky.js", 'const { invoice } = require("./billing");\nmodule.exports = { invoice };\n', async () => {
+      const body = renderCheckComment(await dry());
+      expect(body).toContain("src/sneaky.js");
+    });
+  });
+
+  it("drops a row the worktree fixes, while the board still holds it violated", async () => {
+    await withFile("src/render.js", RENDER_CLEAN, async () => {
+      const outcome = await dry();
+      expect(row(outcome, BOUNDARY).wouldBe).toBe("evidenced");
+      expect(row(outcome, BOUNDARY).boardState).toBe("violated");
+      const body = renderCheckComment(outcome);
+      // the board's violation is real and stays on the board; this comment is
+      // about the tree in front of the reader, and the tree fixed it
+      expect(body).not.toContain(`#### \`${BOUNDARY}\``);
+    });
+  });
+
+  it("renders no comment at all when nothing in the tree would be violated", () => {
+    // the whole-comment case, over a hand-shaped outcome: this fixture always
+    // has something violated (it has no CODEOWNERS and no lockfile), so the
+    // empty world is constructed rather than scanned
+    const clean: DryRunOutcome = {
+      dryRun: true,
+      notEvidence: DRY_RUN_NOT_EVIDENCE,
+      repo: "l3a-app",
+      headCommit: "0".repeat(40),
+      tree: { modified: [], untracked: [], deleted: [], differsFromHead: false },
+      gatesRun: ["repo-facts", "graph", "contract"],
+      gatesRefused: [],
+      rows: [],
+      summary: { evidenced: 3, violated: 0, unevidenced: 0 },
+      wouldViolate: false,
+      datasetVersion: DEFAULT_DATASET_PIN,
+    };
+    expect(renderCheckComment(clean)).toBeUndefined();
+  });
+
+  it("leaves the ledger byte-identical across a comment render", async () => {
+    const before = await readFile(join(ledgerDir, "index.jsonl"), "utf8");
+    const body = renderCheckComment(await dry());
+    expect(body).toBeDefined();
+    const after = await readFile(join(ledgerDir, "index.jsonl"), "utf8");
+    expect(after).toBe(before);
   });
 });

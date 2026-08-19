@@ -11,7 +11,7 @@ Out of scope, deliberately: executing ramprules' AWS evidence recipes (the clien
 
 ## Status
 
-**`v0.1.0-beta`.** Eleven CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 695 tests across 59 files — 692 pass on a fresh clone and 3 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 695 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
+**`v0.1.0-beta`.** Eleven CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 715 tests across 60 files — 712 pass on a fresh clone and 3 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 715 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
@@ -58,7 +58,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 692 passed | 3 skipped (695) — the 3 want PocketBase, see below
+pnpm test               # 712 passed | 3 skipped (715) — the 3 want PocketBase, see below
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard
@@ -130,6 +130,25 @@ Both violations are real and both are left standing on purpose.
 `ci-provenance-present` wants a workflow step that attests a build. This repository **publishes no artifact** — every package is private, the CLI runs from a clone — so a provenance step here would attest nothing and the recipe would pass on it. Passing a control you cannot prove is not a wrong answer, it is a false attestation, and it is the one thing [`SECURITY.md`](SECURITY.md) asks you to report as a vulnerability. It flips when there is something to attest.
 
 `iac-baseline-clean` is checkov flagging the deliberately faulty workflow inside the generated test fixture — which raises a genuine scope question, whether a checkout scan should read paths the repository gitignores, that is open rather than answered.
+
+## It gates its own pull requests
+
+Every pull request against this repository runs [`.github/workflows/check.yml`](.github/workflows/check.yml), which is [`rampscan check`](.github/actions/rampscan-check/action.yml) over the branch's working tree. When a change breaks a boundary this repository declared in [`rampscan.config.json`](rampscan.config.json), the run leaves a comment naming the file, the import chain that reaches across the boundary, and the recipe's own authored fix sentence — then fails the job.
+
+```
+#### `arch-boundaries-hold`
+
+**This tree would move the row: `evidenced` → `violated` (newly-violated).**
+
+- `assert` No file outside a declared boundary's allow-list imports the guarded module (…).
+  - `packages/projector/src/breach-demo.ts` — packages/projector/src/breach-demo.ts » packages/signer/src/index.ts
+
+**Fix.** Route the access through an allowed importer, move the offending code inside the boundary, or — if the design genuinely changed — widen the allow-list in rampscan.config.json, where the change is reviewed like any other.
+```
+
+Three properties are worth more than the comment itself. A pull request that breaks nothing gets **no** comment, and a run that finds a breach fixed deletes the one its predecessor left. A row that was already violated before the branch existed is described as **inherited**, with the commit its streak started at — and does not fail the job, because a gate that goes red for debt the pull request never created is a gate people learn to ignore. And nothing in the run is evidence: the dry run reads a working tree no commit can name, so it signs nothing, appends nothing, and leaves the ledger byte-identical. The comment says so in its own body.
+
+The action installs no tool binaries and pulls no images, because the dry run refuses every collector that spawns one.
 
 ## Documentation
 

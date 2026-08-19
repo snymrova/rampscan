@@ -13,6 +13,7 @@ import { computeBoardAsOf } from "./board-asof.js";
 import { computeBoardDiff } from "./board-diff.js";
 import { loadAdjudications } from "./adjudications.js";
 import { check, renderCheck } from "./check.js";
+import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
@@ -101,6 +102,9 @@ function usage(): never {
       "  --report-out <path>  report: output file (default: docs/FRONTIER-PIPELINE.md)",
       "  --json            board/check/tools/model: the JSON instead of the text reading (for `model`,",
       "                    the canonical bytes a scan's run record attests)",
+      "  --markdown        check: the pull-request comment (N2a) instead of the text reading —",
+      "                    EMPTY when nothing would be violated, because a clean run gets no comment",
+      "  --run-url <url>   check --markdown: the CI run to link in the comment footer",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -134,6 +138,8 @@ async function main(): Promise<void> {
       result: { type: "string" },
       "report-out": { type: "string" },
       json: { type: "boolean" },
+      markdown: { type: "boolean" },
+      "run-url": { type: "string" },
       "no-color": { type: "boolean" },
     },
   });
@@ -186,7 +192,15 @@ async function main(): Promise<void> {
         log: (line) => console.error(`· ${line}`),
       });
       if (values.json) console.log(JSON.stringify(outcome, null, 2));
-      else console.log(renderCheck(outcome, useColor));
+      else if (values.markdown) {
+        // The comment or nothing. An empty stdout is the signal the action
+        // reads for "no comment belongs on this pull request" — it is not a
+        // failure to render, it is the rendering of a clean tree.
+        const body = renderCheckComment(outcome, {
+          ...(values["run-url"] !== undefined ? { runUrl: values["run-url"] } : {}),
+        });
+        if (body !== undefined) console.log(body);
+      } else console.log(renderCheck(outcome, useColor));
       // The one place in this CLI where a violation IS a nonzero exit, and the
       // difference from `scan` is deliberate: a scan RECORDS a fact, so a
       // violation is a true result and not a failure, while `check` is a

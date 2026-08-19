@@ -1,0 +1,130 @@
+# N2a — `rampscan check` as a GitHub Action.
+#
+# What it wraps is the DRY RUN, not a scan, and the distinction is the whole
+# design: a scan signs evidence anchored to a commit's content hashes, and a
+# pull request is a tree that has no such commit yet. So this action reads the
+# working tree, signs nothing, appends nothing, and produces two things — an
+# exit code and a comment body.
+#
+# It installs no tool binaries and pulls no images, because the dry run refuses
+# every collector that spawns one (see `dryRunnable` in packages/cli/src/check.ts).
+# That is why this job is seconds where a scan is minutes, and why it can run on
+# every push to every pull request without anyone resenting it.
+#
+# The comment is written to a FILE rather than posted here. Posting needs a
+# token this action should not have to reason about — a fork's pull request gets
+# a read-only one — so the caller decides what to do with the body, and the
+# workflow in this repository shows one way.
+name: rampscan check
+description: >-
+  Dry-run this repository's declared boundaries over the working tree and render
+  the result as a pull-request comment, in each recipe's own words.
+
+inputs:
+  path:
+    description: the checkout to dry-run
+    required: false
+    default: "."
+  ledger:
+    description: >-
+      An append-only evidence ledger, read ONLY. With one, the comment can tell
+      a breach this pull request introduced from a breach it merely inherited;
+      without one it says plainly that there is no board row to compare against,
+      which is the honest answer and not a silent omission.
+    required: false
+    default: ""
+  comment-path:
+    description: where the rendered comment body is written (empty file = nothing to say)
+    required: false
+    default: rampscan-check-comment.md
+  run-url:
+    description: a CI run URL to link in the comment footer
+    required: false
+    default: ""
+  node-version:
+    description: Node version
+    required: false
+    default: "22"
+  pnpm-version:
+    description: pnpm version
+    required: false
+    default: "11.21.0"
+
+outputs:
+  would-violate:
+    description: '"true" when at least one recipe would be violated over this tree'
+    value: ${{ steps.check.outputs.would-violate }}
+  would-introduce:
+    description: >-
+      "true" when at least one of those violations is INTRODUCED OR MOVED by
+      this tree, rather than inherited from a board row that was already
+      violated. This is the number a gate should fail on: a job that goes red
+      for debt the pull request never touched is a job people learn to ignore.
+    value: ${{ steps.check.outputs.would-introduce }}
+  comment-path:
+    description: the file the comment body was written to
+    value: ${{ steps.check.outputs.comment-path }}
+  has-comment:
+    description: '"true" when the body is non-empty — i.e. there is something to post'
+    value: ${{ steps.check.outputs.has-comment }}
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+
+    - id: check
+      shell: bash
+      env:
+        RAMPSCAN_PATH: ${{ inputs.path }}
+        RAMPSCAN_LEDGER: ${{ inputs.ledger }}
+        COMMENT_PATH: ${{ inputs.comment-path }}
+        RUN_URL: ${{ inputs.run-url }}
+      run: |
+        set -uo pipefail
+        args=("$RAMPSCAN_PATH")
+        [ -n "$RAMPSCAN_LEDGER" ] && args+=(--ledger "$RAMPSCAN_LEDGER")
+        [ -n "$RUN_URL" ] && args+=(--run-url "$RUN_URL")
+
+        # The human reading, into the log: whoever opens the job wants the same
+        # text the CLI prints locally, not a summary of it.
+        pnpm run --silent rampscan check "${args[@]}" --no-color || true
+
+        # The comment body. `check` exits 1 on a would-be violation — that IS
+        # the answer, so it is captured rather than allowed to fail the step
+        # here; the caller's own step decides whether a violation fails the job.
+        set +e
+        pnpm run --silent rampscan check "${args[@]}" --markdown > "$COMMENT_PATH"
+        code=$?
+        set -e
+        if [ "$code" -ne 0 ] && [ "$code" -ne 1 ]; then
+          echo "::error::rampscan check failed to run (exit $code)"
+          cat "$COMMENT_PATH" || true
+          exit "$code"
+        fi
+
+        [ "$code" -eq 1 ] && violate=true || violate=false
+        # empty body = a clean tree = no comment belongs on the pull request
+        if [ -s "$COMMENT_PATH" ]; then has=true; else has=false; fi
+
+        # How many rows this tree made WORSE, read off the comment's own marker
+        # (`<!-- rampscan-check introduced=1 inherited=3 -->`) rather than by
+        # running the whole dry run a second time to ask it one number.
+        introduced=$(head -n 1 "$COMMENT_PATH" | sed -n 's/.*introduced=\([0-9][0-9]*\).*/\1/p')
+        introduced=${introduced:-0}
+        [ "$introduced" -gt 0 ] && introduce=true || introduce=false
+
+        echo "would-violate=$violate" >> "$GITHUB_OUTPUT"
+        echo "would-introduce=$introduce" >> "$GITHUB_OUTPUT"
+        echo "has-comment=$has" >> "$GITHUB_OUTPUT"
+        echo "comment-path=$COMMENT_PATH" >> "$GITHUB_OUTPUT"
