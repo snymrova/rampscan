@@ -11,7 +11,7 @@ Out of scope, deliberately: executing ramprules' AWS evidence recipes (the clien
 
 ## Status
 
-**`v0.1.0-beta`.** Eleven CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 715 tests across 60 files — 712 pass on a fresh clone and 3 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 715 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
+**`v0.1.0-beta`.** Eleven CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 723 tests across 60 files — 720 pass on a fresh clone and 3 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 723 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
@@ -58,7 +58,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 712 passed | 3 skipped (715) — the 3 want PocketBase, see below
+pnpm test               # 720 passed | 3 skipped (723) — the 3 want PocketBase, see below
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard
@@ -145,6 +145,8 @@ Every pull request against this repository runs [`.github/workflows/check.yml`](
 
 **Fix.** Route the access through an allowed importer, move the offending code inside the boundary, or — if the design genuinely changed — widen the allow-list in rampscan.config.json, where the change is reviewed like any other.
 ```
+
+That excerpt is trimmed for width; the [comment it came from](https://github.com/snymrova/rampscan/pull/18#issuecomment-5353906519) is on a real pull request against this repository. [#18](https://github.com/snymrova/rampscan/pull/18) is a branch written to be failed — `packages/projector/src/breach-demo.ts` reaches into `packages/signer`, which [`rampscan.config.json`](rampscan.config.json) reserves to the CLI on the grounds that the CLI is the only surface holding a key. The dependency and the project reference are wired the way a developer breaching a boundary for real would wire them, so `tsc --build` has nothing to say and the suite passes: on that pull request `test` and `console-smoke` are green and `check` is red, which is the contract objecting and nothing else.
 
 Three properties are worth more than the comment itself. A pull request that breaks nothing gets **no** comment, and a run that finds a breach fixed deletes the one its predecessor left. A row that was already violated before the branch existed is described as **inherited**, with the commit its streak started at — and does not fail the job, because a gate that goes red for debt the pull request never created is a gate people learn to ignore. And nothing in the run is evidence: the dry run reads a working tree no commit can name, so it signs nothing, appends nothing, and leaves the ledger byte-identical. The comment says so in its own body.
 
