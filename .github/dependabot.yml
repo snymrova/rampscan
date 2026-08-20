@@ -37,6 +37,20 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # TypeScript 7 is the native port and no longer exports the compiler API
+    # from the package root. `packages/graph/src/extract.ts` has 67 `ts.*` call
+    # sites, and the import edges it walks are what `arch-boundaries-hold`
+    # asserts over — the recipe that gates every pull request against this
+    # repository. #7 went red on both `test` and `console-smoke`, the second at
+    # runtime: `ts.forEachChild` was undefined, the graph collector failed, and
+    # everything downstream of it unravelled. The migration target is a subpath
+    # the vendor itself calls `unstable`, so a gate built on it would move
+    # whenever that API moves. This pin moves deliberately or not at all.
+    # Unignore when the AST API drops `unstable`, or when the walker goes
+    # behind an interface that makes the backend swappable. Diagnosis: #29.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       # One PR for the churn, so it does not drown the bumps that need reading.
       # Majors are excluded deliberately: `dependency-type: development` states
