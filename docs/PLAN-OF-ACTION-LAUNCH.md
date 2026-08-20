@@ -254,6 +254,23 @@ The launch argument for jumping is narrow and strong: it is the only remaining i
 
 **Exit test:** unchanged from the depth plan's N2a — a PR that breaches a declared boundary gets a comment naming the file, the import chain and the authored fix sentence, and exits 1; a PR that breaches nothing gets no comment and exits 0; a PR touching an already-violated row is described as inheriting it, not causing it; the ledger is byte-identical across the run.
 
+> **Corrected 2026-08-20, after the exit test had been ticked: the second clause
+> is worded wrongly, and the gate is right.** "A PR that breaches nothing gets no
+> comment and exits 0" conflates two different thresholds. `renderCheckComment`
+> returns nothing when **no row would be violated at all**
+> (`check-comment.ts:213`); the introduced-vs-inherited split governs the **exit
+> code**, not whether a body is rendered. So a pull request that introduces
+> nothing but inherits `ci-provenance-present` gets a comment *and* a green tick
+> — which is what #21 did (`introduced=0 inherited=1`), and it is the correct
+> behaviour: failing on inherited debt trains people to ignore the gate, and
+> suppressing it would let known debt read as a pass.
+>
+> The clause's intent held and its wording did not, which is only visible once a
+> clean pull request runs against a repository that carries a standing violation.
+> Neither #17 nor #20 exposed it. The README carried the same conflation in
+> present tense and is corrected in the same commit.
+
+
 ---
 
 ## 10. Risks worth naming
