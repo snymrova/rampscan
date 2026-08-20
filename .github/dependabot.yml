@@ -17,17 +17,31 @@ updates:
   #
   # `/` is NOT every action reference in this repository. It covers
   # `.github/workflows/` plus an `action.yml` at the ROOT, and nothing else —
-  # so the composite action at `.github/actions/rampscan-check/` was invisible
-  # here, and it pins `pnpm/action-setup` and `actions/setup-node` too. #3 and
-  # #4 proved it by rebasing onto a main that contained that file and still not
-  # touching it. Left unlisted, merging those two would have split each pin in
-  # half — new SHA in the workflows, old SHA in the action, and no PR ever
-  # again to say so, which is the exact silent staleness this block exists to
-  # prevent. Any future composite action needs its directory added here.
+  # so the composite action at `.github/actions/rampscan-check/` is invisible
+  # to this entry, and it pins `pnpm/action-setup` and `actions/setup-node`
+  # too. #3 and #4 proved it: rebased onto a main containing that file, they
+  # picked up the new `check.yml` and still did not touch the action. Left
+  # uncovered, merging them would split each pin in half — new SHA in the
+  # workflows, old SHA in the action that runs on every pull request, and no
+  # PR ever again to say so.
+  #
+  # The composite action gets its own entry rather than joining this one in a
+  # `directories:` list, and that is deliberate. #22 tried the list, and
+  # dependabot keys an open PR to the entry that created it — by ecosystem AND
+  # directory — so rewriting `directory: "/"` into `directories: [...]` read as
+  # deleting the entry. All four open bumps were disowned with *"the
+  # dependabot.yml entry that created this PR has been deleted"* and refused to
+  # rebase. Keeping this entry byte-identical is what lets them survive.
   - package-ecosystem: github-actions
-    directories:
-      - "/"
-      - "/.github/actions/rampscan-check"
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # the composite action `check.yml` calls on every pull request. A separate
+  # entry, per the note above. Any future composite action needs one too.
+  - package-ecosystem: github-actions
+    directory: "/.github/actions/rampscan-check"
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
