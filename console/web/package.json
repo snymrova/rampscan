@@ -12,7 +12,7 @@
     "@rampscan/cli": "workspace:*",
     "@rampscan/projector": "workspace:*",
     "next": "^15.4.0",
-    "pocketbase": "^0.26.2",
+    "pocketbase": "^0.27.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
