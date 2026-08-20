@@ -14,8 +14,20 @@ updates:
   # the workflows above pin every action by SHA, which is what
   # `ci-actions-pinned` requires and what makes a pinned action go stale
   # silently. This is the thing that unsticks them.
+  #
+  # `/` is NOT every action reference in this repository. It covers
+  # `.github/workflows/` plus an `action.yml` at the ROOT, and nothing else —
+  # so the composite action at `.github/actions/rampscan-check/` was invisible
+  # here, and it pins `pnpm/action-setup` and `actions/setup-node` too. #3 and
+  # #4 proved it by rebasing onto a main that contained that file and still not
+  # touching it. Left unlisted, merging those two would have split each pin in
+  # half — new SHA in the workflows, old SHA in the action, and no PR ever
+  # again to say so, which is the exact silent staleness this block exists to
+  # prevent. Any future composite action needs its directory added here.
   - package-ecosystem: github-actions
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/rampscan-check"
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
