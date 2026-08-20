@@ -36,8 +36,8 @@ importers:
         specifier: ^15.4.0
         version: 15.5.23(@playwright/test@1.62.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       pocketbase:
-        specifier: ^0.26.2
-        version: 0.26.9
+        specifier: ^0.27.3
+        version: 0.27.3
       react:
         specifier: ^19.1.0
         version: 19.2.8
@@ -857,8 +857,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  pocketbase@0.26.9:
-    resolution: {integrity: sha512-Tiv1/hNuUzRdvT0d8hF03dfzuefQ1WdSRp1A1q3wzFC/WYhQcbU/Qlaubl/3ZDo6xvFXBS8JAgBS/L+ms7nkVQ==}
+  pocketbase@0.27.3:
+    resolution: {integrity: sha512-n2rtQrg3kTF44066B+2eVvQdiYRGZ+RI7isIZqmAptfElLCSDIZrEKLhSrIQA2k5pvQM29Gx5JqGv5n+gtm6dg==}
 
   postcss@8.4.31:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
@@ -1513,7 +1513,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.2
 
-  pocketbase@0.26.9: {}
+  pocketbase@0.27.3: {}
 
   postcss@8.4.31:
     dependencies:
