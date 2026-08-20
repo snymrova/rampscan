@@ -53,6 +53,13 @@ jobs:
         uses: ./.github/actions/rampscan-check
         with:
           path: .
+          # The baseline, and the reason this job can fail at all. `rampscan
+          # check` classifies a violation as introduced only against something
+          # to compare with, and the ledger — the other candidate — is
+          # gitignored and therefore never present in CI. Without this input
+          # every violation lands in `unknown`, `would-introduce` is
+          # structurally always false, and the gate below is unreachable (#19).
+          baseline-ref: ${{ github.event.pull_request.base.sha }}
           run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       # the token-free surface, always

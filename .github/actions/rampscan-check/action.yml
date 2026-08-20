@@ -33,6 +33,17 @@ inputs:
       which is the honest answer and not a silent omission.
     required: false
     default: ""
+  baseline-ref:
+    description: >-
+      A git ref whose TREE is dry-run a second time as the baseline — a pull
+      request's base commit is the intended argument. Without it the ledger is
+      the only possible baseline, and a CI job has no ledger (it is gitignored),
+      so every violation is reported as found rather than caused and a gate that
+      fails on what a tree MADE WORSE can never fail at all (#19). The checkout
+      must contain the ref: `fetch-depth: 0`, or at least deep enough to reach
+      the base commit.
+    required: false
+    default: ""
   comment-path:
     description: where the rendered comment body is written (empty file = nothing to say)
     required: false
@@ -88,12 +99,14 @@ runs:
       env:
         RAMPSCAN_PATH: ${{ inputs.path }}
         RAMPSCAN_LEDGER: ${{ inputs.ledger }}
+        RAMPSCAN_BASELINE: ${{ inputs.baseline-ref }}
         COMMENT_PATH: ${{ inputs.comment-path }}
         RUN_URL: ${{ inputs.run-url }}
       run: |
         set -uo pipefail
         args=("$RAMPSCAN_PATH")
         [ -n "$RAMPSCAN_LEDGER" ] && args+=(--ledger "$RAMPSCAN_LEDGER")
+        [ -n "$RAMPSCAN_BASELINE" ] && args+=(--baseline-ref "$RAMPSCAN_BASELINE")
         [ -n "$RUN_URL" ] && args+=(--run-url "$RUN_URL")
 
         # The human reading, into the log: whoever opens the job wants the same

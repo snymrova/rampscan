@@ -236,6 +236,25 @@ export interface DryRunRow {
    */
   introducedAt?: string; // ISO 8601
   introducingCommit?: string;
+  /**
+   * What a dry run over the BASE TREE reached for this recipe, when the caller
+   * named a baseline ref. `absent` means the base tree produced no row at all —
+   * a recipe the head's catalog answers and the base's collectors did not.
+   *
+   * This exists because the board cannot answer the question a CI gate asks.
+   * The board is a fold of SIGNED evidence about some commit rampscan happened
+   * to scan; a pull request's base is a commit it may never have seen. Worse,
+   * `rampscan-ledger/` is gitignored, so a CI job reads no board at all and
+   * every violation lands in `no-baseline` — which is how a gate that fails
+   * only on what a tree MADE WORSE comes to be structurally incapable of
+   * failing (#19).
+   *
+   * A second dry run over the base tree is the like-for-like comparison: same
+   * command, same catalog, same gates, two trees. It is not evidence either,
+   * and the comment says which of the two baselines it used rather than letting
+   * a reader assume the stronger one.
+   */
+  baselineWouldBe?: Verdict | "absent";
 }
 
 export interface DryRunOutcome {
@@ -252,6 +271,12 @@ export interface DryRunOutcome {
   summary: { evidenced: number; violated: number; unevidenced: number };
   /** true when at least one row would be violated — what a hook or CI job exits on */
   wouldViolate: boolean;
+  /**
+   * The base tree this run was compared against, when the caller named one.
+   * Both the ref as given and the commit it resolved to, because a ref moves
+   * and a comment outlives the run that wrote it.
+   */
+  baseline?: { ref: string; commit: string };
   datasetVersion: string;
 }
 
@@ -268,6 +293,18 @@ export interface CheckOptions {
    * the dry run still answers, it just cannot say whether the state moved.
    */
   ledgerDir?: string;
+  /**
+   * A git ref — a branch, a tag, or a SHA — whose TREE is dry-run a second time
+   * to serve as the baseline. Handed the base commit of a pull request, this
+   * answers "what did this tree make worse" from git alone, with no ledger and
+   * no signed evidence in reach.
+   *
+   * The cost is honest: it materialises that ref in a temporary git worktree
+   * and runs the whole dry run again over it. The `check` job is seconds, so
+   * the second pass is not a budget question, and it buys the one thing a gate
+   * needs and could not otherwise get in CI.
+   */
+  baselineRef?: string;
   certClass?: CertClass;
   now?: Date;
   log?: (line: string) => void;
@@ -399,6 +436,16 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
     rows.push(row);
   }
 
+  // the second tree, when the caller named one
+  let baseline: { ref: string; commit: string } | undefined;
+  if (options.baselineRef !== undefined) {
+    const base = await baselineDryRun(options, options.baselineRef, log);
+    baseline = { ref: options.baselineRef, commit: base.commit };
+    for (const row of rows) {
+      row.baselineWouldBe = base.verdicts.get(row.recipeId) ?? "absent";
+    }
+  }
+
   const count = (verdict: Verdict) => rows.filter((r) => r.wouldBe === verdict).length;
   return {
     dryRun: true,
@@ -415,8 +462,82 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
       unevidenced: count("unevidenced"),
     },
     wouldViolate: rows.some((r) => r.wouldBe === "violated"),
+    ...(baseline !== undefined ? { baseline } : {}),
     datasetVersion: dataset.version(),
   };
+}
+
+/**
+ * The baseline half: the same dry run, over the tree at `ref`.
+ *
+ * It recurses into `check` deliberately rather than reimplementing a cheaper
+ * approximation. A baseline computed by a second code path could disagree with
+ * the head's answer for reasons that have nothing to do with the two trees, and
+ * a gate whose two sides are computed differently is a gate that blames the
+ * wrong commit. Same command, same catalog, same gates — the tree is the only
+ * variable, which is the property the whole comparison rests on.
+ *
+ * The base tree is materialised in a temporary git worktree and removed
+ * afterwards. That writes worktree metadata under `.git` for the duration,
+ * which is the one thing this command touches outside its scratch dir, and it
+ * is stated here rather than left for a reader to discover: no object is
+ * written, no ref moves, the index is untouched, and the ledger is not opened
+ * at all — the baseline is a TREE, not a board, and the inner run is handed no
+ * ledger precisely so it cannot become one.
+ *
+ * A ref that will not resolve throws. The temptation is to degrade quietly to
+ * "no baseline", and that temptation is exactly the defect this function was
+ * written to close (#19): a gate that loses its baseline without saying so goes
+ * green forever and everybody believes it.
+ */
+async function baselineDryRun(
+  options: CheckOptions,
+  ref: string,
+  log: (line: string) => void,
+): Promise<{ commit: string; verdicts: Map<string, Verdict> }> {
+  const root = resolve(options.path);
+  // mkdtemp makes the PARENT: `git worktree add` insists on creating the leaf
+  // itself and refuses a path that already exists
+  const parent = await mkdtemp(join(tmpdir(), "rampscan-baseline-"));
+  const dir = join(parent, "tree");
+  try {
+    try {
+      await execFileAsync("git", ["worktree", "add", "--detach", "--quiet", dir, ref], {
+        cwd: root,
+        maxBuffer: 64 * 1024 * 1024,
+      });
+    } catch (error) {
+      throw new Error(
+        `could not check out the baseline ref \`${ref}\`: ` +
+          `${error instanceof Error ? error.message : String(error)}. ` +
+          "A shallow clone is the usual cause — the base commit is not in it. " +
+          "The baseline is not optional once asked for: a gate that silently loses it passes everything.",
+      );
+    }
+    log(`baseline: dry-running the tree at ${ref}`);
+    // no ledger and no baseline ref: the inner run answers about ONE tree, and
+    // the omissions are what stop it recursing or reaching for a board
+    const inner = await check({
+      path: dir,
+      datasetDir: options.datasetDir,
+      datasetPin: options.datasetPin,
+      recipesDir: options.recipesDir,
+      collectors: options.collectors,
+      ...(options.certClass !== undefined ? { certClass: options.certClass } : {}),
+      ...(options.now !== undefined ? { now: options.now } : {}),
+      log: (line) => log(`baseline · ${line}`),
+    });
+    log(`baseline ${ref} resolves to ${inner.headCommit.slice(0, 12)}`);
+    return {
+      commit: inner.headCommit,
+      verdicts: new Map(inner.rows.map((r) => [r.recipeId, r.wouldBe])),
+    };
+  } finally {
+    await execFileAsync("git", ["worktree", "remove", "--force", dir], { cwd: root }).catch(
+      () => {},
+    );
+    await rm(parent, { recursive: true, force: true });
+  }
 }
 
 export function renderCheck(outcome: DryRunOutcome, useColor: boolean): string {
@@ -429,7 +550,12 @@ export function renderCheck(outcome: DryRunOutcome, useColor: boolean): string {
 
   const lines: string[] = [
     bold(`DRY RUN — ${outcome.repo}`),
-    dim(`worktree on top of ${outcome.headCommit.slice(0, 12)} · dataset ${outcome.datasetVersion}`),
+    dim(
+      `worktree on top of ${outcome.headCommit.slice(0, 12)} · dataset ${outcome.datasetVersion}` +
+        (outcome.baseline !== undefined
+          ? ` · baseline ${outcome.baseline.ref} at ${outcome.baseline.commit.slice(0, 12)}`
+          : ""),
+    ),
     "",
     dim(DRY_RUN_LABEL),
     "",
@@ -474,14 +600,23 @@ export function renderCheck(outcome: DryRunOutcome, useColor: boolean): string {
     if (rows.length === 0) continue;
     lines.push(`${colorFor[verdict](label[verdict])} (${rows.length})`);
     for (const row of rows) {
+      // the base tree first, for the same reason `movementOf` prefers it: it is
+      // the like-for-like comparison, and the label says which one is speaking
+      const base = row.baselineWouldBe;
       const moved =
-        row.boardState === undefined
-          ? ""
-          : row.boardState === "absent"
-            ? dim("  (no row on the board yet)")
-            : row.boardState === verdict
-              ? dim(`  (board: ${row.boardState} — unchanged)`)
-              : `  ${yellow(`(board: ${row.boardState} → would be ${verdict})`)}`;
+        base !== undefined && base !== "absent"
+          ? base === verdict
+            ? dim(`  (base: ${base} — unchanged)`)
+            : `  ${yellow(`(base: ${base} → would be ${verdict})`)}`
+          : row.boardState === undefined
+            ? base === "absent"
+              ? dim("  (no row on the base tree)")
+              : ""
+            : row.boardState === "absent"
+              ? dim("  (no row on the board yet)")
+              : row.boardState === verdict
+                ? dim(`  (board: ${row.boardState} — unchanged)`)
+                : `  ${yellow(`(board: ${row.boardState} → would be ${verdict})`)}`;
       lines.push(`  ${row.recipeId.padEnd(36)}${moved}`);
       if (row.reason !== undefined) lines.push(dim(`      ${row.reason}`));
       for (const assertion of row.assertions.filter((a) => !a.passed)) {

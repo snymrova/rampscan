@@ -19,7 +19,7 @@ import {
   treeDelta,
 } from "../src/index.js";
 import type { DryRunOutcome, DryRunRow } from "../src/index.js";
-import { renderCheckComment } from "../src/check-comment.js";
+import { movementOf, renderCheckComment } from "../src/check-comment.js";
 
 // The L3a exit test over a REAL scanned world: an app that declares its own
 // architecture contract, scanned for real (signed evidence, a real board), then
@@ -93,6 +93,46 @@ const RENDER_BREACHING =
 const RENDER_CLEAN =
   "function render(x) { return JSON.stringify({ shown: x }); }\nmodule.exports = { render };\n";
 
+/**
+ * The fixture app, written into `root` with `render.js` supplied by the caller
+ * — breaching or clean. Extracted so the baseline suite below builds the SAME
+ * app the rest of this file scans: a second hand-written copy would drift, and
+ * a baseline test that drifts from its subject proves nothing about it.
+ */
+async function writeApp(root: string, render: string): Promise<void> {
+  await mkdir(join(root, "src"), { recursive: true });
+  await writeFile(
+    join(root, "package.json"),
+    JSON.stringify({ name: "l3a-app", version: "1.0.0", main: "src/index.js" }, null, 2),
+  );
+  await writeFile(
+    join(root, "src", "billing.js"),
+    "function invoice(x) { return { total: 0, x }; }\nmodule.exports = { invoice };\n",
+  );
+  await writeFile(
+    join(root, "src", "index.js"),
+    'const { render } = require("./render");\nfunction handle(i) { return render(i); }\nmodule.exports = { handle };\n',
+  );
+  await writeFile(join(root, "src", "render.js"), render);
+  await writeFile(
+    join(root, "src", "auth.js"),
+    "function requireAuth(req, res, next) { return next(); }\nmodule.exports = { requireAuth };\n",
+  );
+  await writeFile(
+    join(root, "src", "server.js"),
+    [
+      'const express = require("express");',
+      'const { requireAuth } = require("./auth");',
+      'const { invoice } = require("./billing");',
+      "const app = express();",
+      'app.get("/health", (req, res) => res.send("ok"));',
+      'app.get("/invoice", requireAuth, (req, res) => res.send(invoice(req.query)));',
+      "module.exports = { app };",
+    ].join("\n") + "\n",
+  );
+  await writeFile(join(root, "rampscan.config.json"), CONTRACT);
+}
+
 let base: string;
 let appRoot: string;
 let ledgerDir: string;
@@ -131,7 +171,16 @@ async function dry(opts: { noLedger?: boolean } = {}): Promise<DryRunOutcome> {
 
 /** run `body` with a file replaced, then put the original bytes back */
 async function withFile(rel: string, contents: string, body: () => Promise<void>): Promise<void> {
-  const path = join(appRoot, rel);
+  return withFileIn(appRoot, rel, contents, body);
+}
+
+async function withFileIn(
+  root: string,
+  rel: string,
+  contents: string,
+  body: () => Promise<void>,
+): Promise<void> {
+  const path = join(root, rel);
   const original = await readFile(path, "utf8").catch(() => undefined);
   await writeFile(path, contents);
   try {
@@ -147,38 +196,7 @@ beforeAll(async () => {
   appRoot = join(base, "app");
   ledgerDir = join(base, "ledger");
   outDir = join(base, "out");
-  await mkdir(join(appRoot, "src"), { recursive: true });
-
-  await writeFile(
-    join(appRoot, "package.json"),
-    JSON.stringify({ name: "l3a-app", version: "1.0.0", main: "src/index.js" }, null, 2),
-  );
-  await writeFile(
-    join(appRoot, "src", "billing.js"),
-    "function invoice(x) { return { total: 0, x }; }\nmodule.exports = { invoice };\n",
-  );
-  await writeFile(
-    join(appRoot, "src", "index.js"),
-    'const { render } = require("./render");\nfunction handle(i) { return render(i); }\nmodule.exports = { handle };\n',
-  );
-  await writeFile(join(appRoot, "src", "render.js"), RENDER_BREACHING);
-  await writeFile(
-    join(appRoot, "src", "auth.js"),
-    "function requireAuth(req, res, next) { return next(); }\nmodule.exports = { requireAuth };\n",
-  );
-  await writeFile(
-    join(appRoot, "src", "server.js"),
-    [
-      'const express = require("express");',
-      'const { requireAuth } = require("./auth");',
-      'const { invoice } = require("./billing");',
-      "const app = express();",
-      'app.get("/health", (req, res) => res.send("ok"));',
-      'app.get("/invoice", requireAuth, (req, res) => res.send(invoice(req.query)));',
-      "module.exports = { app };",
-    ].join("\n") + "\n",
-  );
-  await writeFile(join(appRoot, "rampscan.config.json"), CONTRACT);
+  await writeApp(appRoot, RENDER_BREACHING);
 
   git(appRoot, "init", "-q", "-b", "main");
   git(appRoot, "add", "-A");
@@ -526,5 +544,104 @@ describe("the pull-request comment (N2a), over the same real world", () => {
     expect(body).toBeDefined();
     const after = await readFile(join(ledgerDir, "index.jsonl"), "utf8");
     expect(after).toBe(before);
+  });
+});
+
+// #19 — the baseline a CI job can actually obtain.
+//
+// The gate shipped failing only on what a tree MADE WORSE, which is the right
+// question, and then had nothing to ask it against: `rampscan-ledger/` is
+// gitignored, so a pull-request job reads no board, every violation classifies
+// as `no-baseline`, and `would-introduce` is false on every run that has ever
+// executed. PR #18 breached a declared boundary in public and the job went
+// green.
+//
+// So this suite runs under the CI condition rather than the fixture's: NO
+// LEDGER ANYWHERE. The baseline is a second dry run over the base ref's tree —
+// same command, same catalog, two trees — and the only thing that can tell an
+// introduced breach from an inherited one.
+describe("check --baseline-ref: the gate's missing half", () => {
+  let repo: string;
+
+  beforeAll(async () => {
+    repo = join(await mkdtemp(join(tmpdir(), "rampscan-gate-")), "app");
+    await writeApp(repo, RENDER_CLEAN);
+    git(repo, "init", "-q", "-b", "main");
+    git(repo, "add", "-A");
+    git(repo, "commit", "-qm", "an app that respects the boundary it declares");
+  });
+
+  /** the dry run as CI runs it: a base ref, and deliberately no ledger */
+  async function against(ref: string): Promise<DryRunOutcome> {
+    return check({
+      path: repo,
+      datasetDir,
+      datasetPin: DEFAULT_DATASET_PIN,
+      recipesDir,
+      collectors: allCollectors,
+      baselineRef: ref,
+      now: new Date("2026-08-20T10:00:00Z"),
+    });
+  }
+
+  it("calls a breach this tree adds INTRODUCED, with no ledger in reach", async () => {
+    await withFileIn(repo, "src/render.js", RENDER_BREACHING, async () => {
+      const outcome = await against("main");
+      const boundary = row(outcome, BOUNDARY);
+
+      // the CI condition, asserted rather than assumed: no board, at all
+      expect(boundary.boardState).toBeUndefined();
+      expect(outcome.wouldViolate).toBe(true);
+      expect(boundary.wouldBe).toBe("violated");
+      // and the base tree answers where the board could not
+      expect(boundary.baselineWouldBe).toBe("evidenced");
+      expect(movementOf(boundary)).toEqual({
+        kind: "changed",
+        source: "base-tree",
+        change: "newly-violated",
+        from: "evidenced",
+      });
+      expect(outcome.baseline?.ref).toBe("main");
+      expect(outcome.baseline?.commit).toBe(git(repo, "rev-parse", "main"));
+
+      // the number the gate reads, and the whole point: it is not zero
+      const body = renderCheckComment(outcome);
+      expect(body).toContain("introduced=1");
+      expect(body).toContain("src/render.js");
+    });
+  });
+
+  it("leaves the baseline worktree behind on neither success nor failure", async () => {
+    // a dry run that litters `.git/worktrees` would break the next run of the
+    // same command, and the cleanup is in a `finally` precisely so a throwing
+    // inner run cannot skip it. One line = the main worktree and nothing else;
+    // matching on the temp prefix would match this fixture's own directory.
+    expect(git(repo, "worktree", "list").split("\n")).toHaveLength(1);
+  });
+
+  it("refuses to go quiet when the baseline ref will not resolve", async () => {
+    // The defect this whole suite exists for was a baseline that vanished
+    // without saying so. A shallow clone is the realistic way to lose one, and
+    // degrading to "nothing was introduced" would restore the bug exactly.
+    await expect(against("no-such-ref")).rejects.toThrow(/could not check out the baseline ref/);
+  });
+
+  it("calls a breach the base tree already carries INHERITED, not caused", async () => {
+    // both trees breach now: the pull request found it rather than wrote it
+    await writeFile(join(repo, "src", "render.js"), RENDER_BREACHING);
+    git(repo, "add", "-A");
+    git(repo, "commit", "-qm", "the breach, committed");
+
+    const outcome = await against("HEAD");
+    const boundary = row(outcome, BOUNDARY);
+    expect(boundary.wouldBe).toBe("violated");
+    expect(boundary.baselineWouldBe).toBe("violated");
+    expect(movementOf(boundary)).toEqual({ kind: "inherited", source: "base-tree" });
+
+    const body = renderCheckComment(outcome);
+    expect(body).toContain("introduced=0");
+    expect(body).toContain("Inherited, not introduced here.");
+    // the board's streak sentence belongs to the board and there is no board
+    expect(body).not.toContain("The board already holds");
   });
 });

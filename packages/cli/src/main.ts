@@ -105,6 +105,10 @@ function usage(): never {
       "  --markdown        check: the pull-request comment (N2a) instead of the text reading —",
       "                    EMPTY when nothing would be violated, because a clean run gets no comment",
       "  --run-url <url>   check --markdown: the CI run to link in the comment footer",
+      "  --baseline-ref <ref>  check: a git ref whose TREE is dry-run as the baseline, so the",
+      "                    comment can tell a violation this tree introduced from one it inherited.",
+      "                    A pull request's base commit is the intended argument. Without it the",
+      "                    board is the baseline, and with no ledger there is none at all",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -140,6 +144,7 @@ async function main(): Promise<void> {
       json: { type: "boolean" },
       markdown: { type: "boolean" },
       "run-url": { type: "string" },
+      "baseline-ref": { type: "string" },
       "no-color": { type: "boolean" },
     },
   });
@@ -188,6 +193,9 @@ async function main(): Promise<void> {
         recipesDir,
         collectors: allCollectors,
         ledgerDir,
+        ...(values["baseline-ref"] !== undefined
+          ? { baselineRef: values["baseline-ref"] }
+          : {}),
         certClass,
         log: (line) => console.error(`· ${line}`),
       });
