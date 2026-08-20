@@ -29,3 +29,6 @@ playwright-report/
 console/web/.impeccable/
 console/web/DESIGN.md
 console/web/PRODUCT.md
+
+# local tool permissions, not repository configuration
+.claude/
