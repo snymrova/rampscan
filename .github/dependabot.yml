@@ -38,7 +38,17 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
-      # one PR for the noisy, low-risk churn; anything else arrives alone and
-      # gets read on its own
+      # One PR for the churn, so it does not drown the bumps that need reading.
+      # Majors are excluded deliberately: `dependency-type: development` states
+      # where a package sits in package.json, not what breaks if it changes.
+      # #26 grouped an `@types/node` bump with vitest 3 -> 4 — the runner that
+      # executes all 723 tests, and the thing both CI jobs depend on — under a
+      # title naming neither package. Nothing broke, but the grouping did not
+      # guarantee that; a hand-read did. Minors and patches only, so anything
+      # larger arrives alone and gets read on its own, which is what this
+      # comment claimed before it was true. See #28.
       dev-dependencies:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
