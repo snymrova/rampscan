@@ -85,8 +85,8 @@ importers:
         specifier: workspace:*
         version: link:../signer
       zod:
-        specifier: ^3.24.0
-        version: 3.25.76
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/collectors:
     dependencies:
@@ -103,8 +103,8 @@ importers:
         specifier: ^2.6.0
         version: 2.9.0
       zod:
-        specifier: ^3.24.0
-        version: 3.25.76
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/core:
     dependencies:
@@ -115,8 +115,8 @@ importers:
   packages/dataset:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.76
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/graph:
     dependencies:
@@ -124,8 +124,8 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
       zod:
-        specifier: ^3.24.0
-        version: 3.25.76
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/ledger:
     dependencies:
@@ -157,8 +157,8 @@ importers:
   packages/schema:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.76
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/signer:
     dependencies:
@@ -1042,8 +1042,8 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
 snapshots:
 
@@ -1687,4 +1687,4 @@ snapshots:
 
   yaml@2.9.0: {}
 
-  zod@3.25.76: {}
+  zod@4.4.3: {}
