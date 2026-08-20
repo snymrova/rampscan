@@ -127,7 +127,9 @@ runs:
         fi
 
         [ "$code" -eq 1 ] && violate=true || violate=false
-        # empty body = a clean tree = no comment belongs on the pull request
+        # empty body = NOTHING would be violated = no comment belongs here. Not the
+        # same as "introduced nothing": a tree that only inherits a violation still
+        # renders a body, and still passes — see the introduced= read below.
         if [ -s "$COMMENT_PATH" ]; then has=true; else has=false; fi
 
         # How many rows this tree made WORSE, read off the comment's own marker
