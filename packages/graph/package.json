@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "typescript": "^5.7.0",
+    "typescript": "^7.0.2",
     "zod": "^4.4.3"
   }
 }
