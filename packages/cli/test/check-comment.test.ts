@@ -105,10 +105,44 @@ describe("renderCheckComment", () => {
     expect(body).toContain("1 would be introduced or moved by this tree");
   });
 
-  it("says plainly when there is no board row to compare against", () => {
+  it("says plainly when there is no baseline to compare against", () => {
     const body = renderCheckComment(outcome({ rows: [row({ boardState: "absent" })] }));
-    expect(body).toContain("No board row to compare against");
+    expect(body).toContain("No baseline to compare against");
     expect(body).not.toContain("Inherited");
+  });
+
+  it("counts a breach against the BASE TREE as introduced, with no ledger anywhere", () => {
+    // The regression test for #19. A CI job reads no ledger — `rampscan-ledger/`
+    // is gitignored — so every row arrived here with no `boardState` at all,
+    // landed in `unknown`, and the gate that fails on `introduced` could never
+    // fire. The base tree is the baseline a CI job can actually obtain.
+    const body = renderCheckComment(
+      outcome({
+        baseline: { ref: "main", commit: "b".repeat(40) },
+        rows: [row({ baselineWouldBe: "evidenced" })],
+      }),
+    );
+    expect(body).toContain("introduced=1 inherited=0 unknown=0");
+    expect(body).toContain("1 would be introduced or moved by this tree");
+    // and it says which baseline answered, because a dry run is not evidence
+    // and the board sentence would claim it was
+    expect(body).toContain("the base tree at `bbbbbbbbbbbb`");
+    expect(body).not.toContain("The board already holds");
+    expect(body).toContain("baseline `main` at `bbbbbbbbbbbb`");
+  });
+
+  it("calls a row the base tree already violates inherited, not caused", () => {
+    const body = renderCheckComment(
+      outcome({
+        baseline: { ref: "main", commit: "b".repeat(40) },
+        rows: [row({ baselineWouldBe: "violated" })],
+      }),
+    );
+    expect(body).toContain("introduced=0 inherited=1 unknown=0");
+    expect(body).toContain("Inherited, not introduced here.");
+    expect(body).toContain("reaches `violated` too");
+    // the board's streak sentence must not appear over a base-tree answer
+    expect(body).not.toContain("violated since");
   });
 
   it("counts a missing baseline as unknown, never as introduced", () => {
@@ -187,7 +221,10 @@ describe("renderCheckComment", () => {
 
 describe("movementOf", () => {
   it("never calls an equal pair a change", () => {
-    expect(movementOf(row({ boardState: "violated" }))).toEqual({ kind: "inherited" });
+    expect(movementOf(row({ boardState: "violated" }))).toEqual({
+      kind: "inherited",
+      source: "board",
+    });
   });
 
   it("treats a missing ledger and a missing cell the same way — no baseline", () => {
@@ -198,8 +235,34 @@ describe("movementOf", () => {
   it("classifies a real movement with the projector's own classifier", () => {
     expect(movementOf(row({ boardState: "unevidenced" }))).toEqual({
       kind: "changed",
+      source: "board",
       change: "newly-violated",
       from: "unevidenced",
     });
+  });
+
+  it("prefers the base tree over the board, and says which one answered", () => {
+    // like-for-like beats better-provenance: the board describes whatever
+    // commit was last scanned, which is not this pull request's base
+    expect(movementOf(row({ boardState: "violated", baselineWouldBe: "evidenced" }))).toEqual({
+      kind: "changed",
+      source: "base-tree",
+      change: "newly-violated",
+      from: "evidenced",
+    });
+    expect(movementOf(row({ boardState: "evidenced", baselineWouldBe: "violated" }))).toEqual({
+      kind: "inherited",
+      source: "base-tree",
+    });
+  });
+
+  it("falls back to the board for a recipe the base tree has no row for", () => {
+    expect(movementOf(row({ boardState: "evidenced", baselineWouldBe: "absent" }))).toEqual({
+      kind: "changed",
+      source: "board",
+      change: "newly-violated",
+      from: "evidenced",
+    });
+    expect(movementOf(row({ baselineWouldBe: "absent" }))).toEqual({ kind: "no-baseline" });
   });
 });

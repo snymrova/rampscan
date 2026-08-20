@@ -58,28 +58,78 @@ export const COMMENT_MARKER = "<!-- rampscan-check";
  * a recipe with no cell for this repo yet. There is nothing to compare, and
  * "this PR introduced it" is a claim the data does not support.
  */
-export type Movement = { kind: "inherited" | "no-baseline" } | {
-  kind: "changed";
-  change: RegisterChangeKind;
-  from: RegisterState;
-};
+/**
+ * WHICH baseline answered. The two are not interchangeable and the prose must
+ * not pretend they are: the board is a fold of signed evidence about a commit
+ * rampscan scanned, while the base tree is a second dry run — not evidence,
+ * nothing signed, and the comment says so about itself already.
+ *
+ * Naming the source is the difference between "the board already holds this
+ * row as violated" and "the base tree reaches the same result". The first is a
+ * claim about recorded evidence. Saying it when a dry run produced the answer
+ * would be the most persuasive wrong sentence in the system.
+ */
+export type BaselineSource = "board" | "base-tree";
 
+export type Movement =
+  | { kind: "no-baseline" }
+  | { kind: "inherited"; source: BaselineSource }
+  | {
+    kind: "changed";
+    source: BaselineSource;
+    change: RegisterChangeKind;
+    from: RegisterState;
+  };
+
+/**
+ * The base tree wins over the board when both are present, and the reason is
+ * the question being asked. A gate asks what THIS pull request made worse,
+ * which is a comparison against its own base; the board answers about whatever
+ * commit was last scanned, which may be far behind the base, far ahead of it,
+ * or on another branch entirely. Like-for-like beats better-provenance here,
+ * and the comment names which one it used either way.
+ */
 export function movementOf(row: DryRunRow): Movement {
+  const base = row.baselineWouldBe;
+  if (base !== undefined && base !== "absent") {
+    if (base === row.wouldBe) return { kind: "inherited", source: "base-tree" };
+    return {
+      kind: "changed",
+      source: "base-tree",
+      change: classifyChange(base, row.wouldBe),
+      from: base,
+    };
+  }
   const board = row.boardState;
   if (board === undefined || board === "absent") return { kind: "no-baseline" };
-  if (board === row.wouldBe) return { kind: "inherited" };
+  if (board === row.wouldBe) return { kind: "inherited", source: "board" };
   // the projector's own classifier, over a worktree instead of a second fold:
   // the states are the same alphabet, so the vocabulary a reader learned on the
   // board's `--since` diff is the vocabulary they meet here
-  return { kind: "changed", change: classifyChange(board, row.wouldBe), from: board };
+  return { kind: "changed", source: "board", change: classifyChange(board, row.wouldBe), from: board };
 }
 
 /** short commit, the way every other surface in this repository writes one */
 const short = (commit: string) => commit.slice(0, 12);
 
-function sentenceFor(row: DryRunRow, movement: Movement): string {
+function sentenceFor(
+  row: DryRunRow,
+  movement: Movement,
+  baseline: { ref: string; commit: string } | undefined,
+): string {
+  const baseTree =
+    baseline !== undefined
+      ? `the base tree at \`${short(baseline.commit)}\``
+      : "the base tree";
   switch (movement.kind) {
     case "inherited": {
+      if (movement.source === "base-tree") {
+        return (
+          `**Inherited, not introduced here.** The same dry run over ${baseTree} reaches ` +
+          "`violated` too, so this pull request found the breach rather than caused it. Fixing it " +
+          "is not this pull request's debt — but nothing in the tree resolves it either."
+        );
+      }
       const since =
         row.introducingCommit !== undefined
           ? ` — violated since \`${short(row.introducingCommit)}\`${
@@ -93,6 +143,14 @@ function sentenceFor(row: DryRunRow, movement: Movement): string {
       );
     }
     case "changed":
+      if (movement.source === "base-tree") {
+        return (
+          `**This tree would move the row: \`${movement.from}\` → \`violated\` (${movement.change}).** ` +
+          `The same command over ${baseTree} reaches \`${movement.from}\`, so the tree in front of ` +
+          "you is the only difference between the two answers. Neither side is evidence; both are " +
+          "dry runs, which is what makes them comparable."
+        );
+      }
       return (
         `**This tree would move the row: \`${movement.from}\` → \`violated\` (${movement.change}).** ` +
         "The board's state comes from signed evidence about a commit; the right-hand side is a dry " +
@@ -100,8 +158,8 @@ function sentenceFor(row: DryRunRow, movement: Movement): string {
       );
     case "no-baseline":
       return (
-        "**No board row to compare against**, so whether this is new cannot be said from here — " +
-        "the ledger holds no cell for this recipe on this repository yet."
+        "**No baseline to compare against**, so whether this is new cannot be said from here — " +
+        "no base tree was named and the ledger holds no cell for this recipe on this repository yet."
       );
   }
 }
@@ -160,19 +218,27 @@ export function renderCheckComment(
   const inherited = kinds.filter((k) => k === "inherited").length;
   const unknown = kinds.filter((k) => k === "no-baseline").length;
 
+  // Where the inherited half came from. With a base tree in play the sources
+  // can be mixed — a row the base tree has no answer for falls back to the
+  // board — so the summary says "the baseline" rather than naming a source it
+  // would sometimes get wrong. The per-row sentences below name theirs exactly.
+  const at = outcome.baseline !== undefined ? "at the baseline" : "on the board";
+  const noRow =
+    outcome.baseline !== undefined ? "with no baseline row" : "with no board row";
+
   // the headline counts the kinds separately, because "3 violations" over a
   // branch that introduced none is a number that reads as an accusation
   const headline =
     introduced > 0
       ? `${introduced} would be introduced or moved by this tree` +
-        (inherited > 0 ? ` · ${inherited} already violated on the board` : "") +
-        (unknown > 0 ? ` · ${unknown} with no board row to compare against` : "")
+        (inherited > 0 ? ` · ${inherited} already violated ${at}` : "") +
+        (unknown > 0 ? ` · ${unknown} ${noRow} to compare against` : "")
       : inherited > 0 && unknown === 0
-        ? `None of these is introduced by this tree — all ${inherited} are already violated on the board`
+        ? `None of these is introduced by this tree — all ${inherited} are already violated ${at}`
         : unknown > 0 && inherited === 0
-          ? `No board was readable, so none of these can be called new: ${unknown} row(s) are reported as found, not as caused`
-          : `None of these is introduced by this tree — ${inherited} already violated on the board, ` +
-            `${unknown} with no board row to compare against`;
+          ? `No baseline was readable, so none of these can be called new: ${unknown} row(s) are reported as found, not as caused`
+          : `None of these is introduced by this tree — ${inherited} already violated ${at}, ` +
+            `${unknown} ${noRow} to compare against`;
 
   const lines: string[] = [
     `${COMMENT_MARKER} introduced=${introduced} inherited=${inherited} unknown=${unknown} -->`,
@@ -189,7 +255,7 @@ export function renderCheckComment(
       lines.push(`*${row.plain.checks}*`, "");
       lines.push(`**What a violation means.** ${row.plain.violation}`, "");
     }
-    lines.push(sentenceFor(row, movement), "");
+    lines.push(sentenceFor(row, movement, outcome.baseline), "");
     const offenders = offenderLines(row, limit);
     if (offenders.length > 0) lines.push(...offenders, "");
     if (row.plain !== undefined) {
@@ -223,6 +289,11 @@ export function renderCheckComment(
     `> ${DRY_RUN_NOT_EVIDENCE}`,
     "",
     `<sub>worktree on top of \`${short(outcome.headCommit)}\` · dataset \`${outcome.datasetVersion}\`` +
+      `${
+        outcome.baseline !== undefined
+          ? ` · baseline \`${outcome.baseline.ref}\` at \`${short(outcome.baseline.commit)}\``
+          : ""
+      }` +
       ` · gates: ${outcome.gatesRun.join(", ")}` +
       `${options.runUrl !== undefined ? ` · [run](${options.runUrl})` : ""}</sub>`,
   );
