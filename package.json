@@ -15,9 +15,9 @@
     "rampscan": "tsx packages/cli/src/main.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
-    "@types/node": "^26.2.0",
-    "tsx": "^4.19.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.0",
     "vitest": "^4.1.10"
   }
