@@ -1,5 +1,5 @@
 import type { MethodRegisterRow } from "@rampscan/core";
-import type { KsiCatalog, OfferingClass, ValidationWindow } from "@rampscan/dataset";
+import type { HistoryFloor, KsiCatalog, OfferingClass, ValidationWindow } from "@rampscan/dataset";
 import type { PipelineMethod } from "@rampscan/schema";
 import type { FrontierMap } from "./frontier.js";
 
@@ -27,8 +27,12 @@ export interface KsiRegisterRowView {
   floorMet: boolean | null;
   /** freshest live evidence across the KSI's methods; absent when none */
   freshest?: string; // ISO 8601
-  /** worst gap class computable today — G3+ land in Q3 */
-  worstGap?: "G1" | "G2";
+  /** where this KSI's ledger history begins (Q3.1); absent when it holds nothing */
+  historySince?: string; // ISO 8601
+  /** the FRC-CSX-MOT judgment; null exactly when the class owes no months */
+  historyMet: boolean | null;
+  /** worst gap class computable today — G3, G5+ land later in Q3 */
+  worstGap?: "G1" | "G2" | "G4";
   methodIds: string[];
 }
 
@@ -54,10 +58,14 @@ export interface KsiRegisterView {
   rows: KsiRegisterRowView[];
   /** the MVX window for the reporting class; null when the rules define none (class d) */
   window: ValidationWindow | null;
+  /** the FRC-CSX-MOT floor for the reporting class — the history meter's rule (Q3.1) */
+  history: HistoryFloor;
   summary: {
     floorMet: number;
     atLeastOneAutomated: number;
     noMethod: number;
+    /** rows whose ledger history reaches the MOT floor; null when the class owes none */
+    historyMet: number | null;
     total: number;
   };
   /** the G8 adjudication queue: unreviewed frontier controls, by leverage */
@@ -79,6 +87,7 @@ export interface KsiRegisterInput {
 
 export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
   const floor = input.catalog.floors[input.offeringClass].minPerKsi;
+  const history = input.catalog.historyFloors[input.offeringClass];
 
   // The evidence column reads ONE repo's ledger. More than one scanned repo
   // in a local ledger is the daemon-multi-target case the board handles;
@@ -114,11 +123,19 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       automated,
       floor,
       floorMet: floor === null ? null : automated >= floor,
+      // With a fold, the projector's judgment (computed against the ledger
+      // and the same reporting class — main.ts folds with it). Without one,
+      // the honest number for a ledger that holds nothing: zero months,
+      // which meets no floor — never null, because the class still owes.
+      historyMet:
+        folded?.historyMet ?? (history.months === null ? null : false),
       methodIds,
     };
     if (folded?.freshAsOf !== undefined) row.freshest = folded.freshAsOf;
+    if (folded?.historySince !== undefined) row.historySince = folded.historySince;
     if (total === 0) row.worstGap = "G1";
     else if (floor !== null && automated < floor) row.worstGap = "G2";
+    else if (row.historyMet === false) row.worstGap = "G4";
     return row;
   });
 
@@ -144,10 +161,13 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     ...(repo !== undefined ? { repo } : {}),
     rows,
     window: input.catalog.windows[input.offeringClass],
+    history,
     summary: {
       floorMet: rows.filter((r) => r.floorMet === true).length,
       atLeastOneAutomated: rows.filter((r) => r.automated > 0).length,
       noMethod: rows.filter((r) => r.methods === 0).length,
+      historyMet:
+        history.months === null ? null : rows.filter((r) => r.historyMet === true).length,
       total: rows.length,
     },
     queue,
@@ -219,7 +239,13 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     // artifacts print –/5 until Q3 models them: unmeasured, never a fake 0
     // that implies measurement (§12.5 rule 3)
     const gapCol =
-      row.worstGap === "G1" ? red("G1 coverage") : row.worstGap === "G2" ? red("G2 methods") : dim("—");
+      row.worstGap === "G1"
+        ? red("G1 coverage")
+        : row.worstGap === "G2"
+          ? red("G2 methods")
+          : row.worstGap === "G4"
+            ? red("G4 history")
+            : dim("—");
     lines.push(`  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${"–/5".padEnd(10)}  ${gapCol}`);
   }
 
@@ -232,6 +258,15 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     dim(
       `  covering all ${s.total} — a row that says "nothing evidences this from a pipeline" is a row`,
     ),
+    // the history meter (Q3.1, FRC-CSX-MOT): counted from the ledger, so a
+    // young ledger prints a young number — never a claim it cannot back
+    view.history.months === null
+      ? dim(
+          `  history: no floor at class ${view.offeringClass} — ${view.history.requirementId} (${view.history.force}, unquantified)`,
+        )
+      : dim(
+          `  history: ${s.historyMet} of ${s.total} KSIs hold ≥${view.history.months}mo of persistent validation — ${view.history.requirementId} (${view.history.force})`,
+        ),
     "",
   );
 

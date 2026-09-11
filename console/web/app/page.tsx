@@ -38,6 +38,7 @@ export default function KsiBoardPage() {
 function gapPill(gap: MethodRegisterRecord["gap"]): { cls: string; label: string } | null {
   if (gap === "G1") return { cls: "unevidenced", label: "G1 coverage" };
   if (gap === "G2") return { cls: "violated", label: "G2 methods" };
+  if (gap === "G4") return { cls: "violated", label: "G4 history" };
   return null;
 }
 
@@ -233,6 +234,20 @@ function KsiRowView({
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {/* the history meter (Q3.1, FRC-CSX-MOT): counted from the
+                ledger's chains, dead bundles included — a young ledger
+                states a young number, never a claim it cannot back */}
+            {register && register.history_floor_months !== null && (
+              <p className="muted" style={{ margin: "4px 0" }}>
+                persistent-validation history:{" "}
+                {register.history_since
+                  ? `since ${new Date(register.history_since).toLocaleDateString()}`
+                  : "none in the ledger"}{" "}
+                — floor ≥{register.history_floor_months}mo (FRC-CSX-MOT)
+                {register.history_met === true ? " · met" : " · not yet met"}
+              </p>
             )}
 
             {/* the crosswalk drawer: controls demoted to annotation — the

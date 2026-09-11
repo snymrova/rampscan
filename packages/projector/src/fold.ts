@@ -137,6 +137,29 @@ export interface FoldOptions {
    * class owes no number (class a).
    */
   methodFloor?: number | null;
+  /**
+   * The FRC-CSX-MOT history floor for the configured class, in months —
+   * owed-side DATA (`KsiCatalog.historyFloors[class].months`), never typed
+   * here. Null when the class owes no number (a and b: unquantified).
+   */
+  historyFloorMonths?: number | null;
+}
+
+/**
+ * The instant `months` calendar months before `iso`, day clamped so the
+ * subtraction never rolls into an adjacent month (Mar 31 − 1mo → Feb 28).
+ * Calendar arithmetic because FRC-CSX-MOT says "the past N months" — a
+ * 30-day approximation would judge a legal floor met up to ~3 days early
+ * at 18 months. Pure: same inputs, same instant, on every fold.
+ */
+export function monthsBefore(iso: string, months: number): string {
+  const d = new Date(iso);
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() - months);
+  const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, lastDay));
+  return d.toISOString();
 }
 
 export function foldEntries(
@@ -386,6 +409,11 @@ export function foldEntries(
     ].sort();
     const registerByCell = new Map(registers.map((r) => [`${r.repo} ${r.recipeId}`, r]));
     const floor = options.methodFloor ?? null;
+    const historyFloor = options.historyFloorMonths ?? null;
+    // the FRC-CSX-MOT threshold instant, computed once per fold: history
+    // reaching at or before it satisfies the floor (Q3.1)
+    const historyThreshold =
+      historyFloor === null ? null : monthsBefore(projectedAt, historyFloor);
     for (const repo of repos) {
       for (const ksi of ksiUniverse) {
         const cells: MethodCell[] = [...(methodsByKsi.get(ksi) ?? [])]
@@ -412,6 +440,20 @@ export function foldEntries(
             return cell;
           });
         const automatedMethods = cells.filter((c) => c.automated).length;
+        // G4 history (Q3.1): where this KSI's validation history begins —
+        // the earliest bundle across its methods' chains, dead bundles
+        // included, because the superseded record IS the history the
+        // FRC-CSX-MOT meter counts. The data was always in the ledger;
+        // this is the counting.
+        let historySince: string | undefined;
+        for (const cell of cells) {
+          if (cell.recipeId === undefined) continue;
+          const first = groups.get(`${repo} ${cell.recipeId}`)?.[0];
+          const t = first?.bundle.predicate.timestamp;
+          if (t !== undefined && (historySince === undefined || t < historySince)) {
+            historySince = t;
+          }
+        }
         const row: MethodRegisterRow = {
           repo,
           ksi,
@@ -419,7 +461,13 @@ export function foldEntries(
           automatedMethods,
           methodFloor: floor,
           floorMet: floor === null ? null : automatedMethods >= floor,
+          historyFloorMonths: historyFloor,
+          historyMet:
+            historyThreshold === null
+              ? null
+              : historySince !== undefined && historySince <= historyThreshold,
         };
+        if (historySince !== undefined) row.historySince = historySince;
         const freshAsOf = cells
           .map((c) => c.freshAsOf)
           .filter((t): t is string => t !== undefined)
@@ -428,6 +476,7 @@ export function foldEntries(
         if (freshAsOf !== undefined) row.freshAsOf = freshAsOf;
         if (cells.length === 0) row.gap = "G1";
         else if (floor !== null && automatedMethods < floor) row.gap = "G2";
+        else if (row.historyMet === false) row.gap = "G4";
         methodRegisters.push(row);
       }
     }
@@ -552,6 +601,8 @@ export function createProjector(options: ProjectorOptions = {}): Projector {
       if (options.methods !== undefined) foldOptions.methods = options.methods;
       if (options.ksiIds !== undefined) foldOptions.ksiIds = options.ksiIds;
       if (options.methodFloor !== undefined) foldOptions.methodFloor = options.methodFloor;
+      if (options.historyFloorMonths !== undefined)
+        foldOptions.historyFloorMonths = options.historyFloorMonths;
       return foldEntries(await ledger.list(), now().toISOString(), foldOptions);
     },
   };

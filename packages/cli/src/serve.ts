@@ -83,6 +83,7 @@ export async function serve(options: ServeOptions): Promise<void> {
     methods,
     ksiIds: catalog.ksis.map((k) => k.id),
     methodFloor: catalog.floors[options.certClass].minPerKsi,
+    historyFloorMonths: catalog.historyFloors[options.certClass].months,
   });
   const settings: ProjectionSettings = {
     certClass: options.certClass,

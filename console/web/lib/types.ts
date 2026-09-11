@@ -168,7 +168,13 @@ export interface MethodRegisterRecord {
   method_floor: number | null;
   floor_met: boolean | null;
   fresh_as_of: string;
-  gap: "" | "G1" | "G2";
+  /** where this KSI's ledger history begins (Q3.1); "" when it holds nothing */
+  history_since: string;
+  /** the FRC-CSX-MOT floor in months; null when the class owes no number */
+  history_floor_months: number | null;
+  /** null exactly when history_floor_months is null */
+  history_met: boolean | null;
+  gap: "" | "G1" | "G2" | "G4";
 }
 
 /**
