@@ -125,6 +125,68 @@ export interface RollupRecord {
   counts: RollupCounts;
 }
 
+/**
+ * Scan scope as declared method provenance (SPEC §12.6): what the method's
+ * mechanism walked — the axis an assessor pulls on when a green depends on
+ * what was NOT read.
+ */
+export interface MethodScopeRecord {
+  population: "checkout" | "checkout+generated";
+  history: boolean;
+  gitignored: "excluded" | "included";
+}
+
+/**
+ * One validation method's standing (Q2.3), as the projector folds it inside
+ * a method_registers row. A pipeline method's state is its recipe cell's
+ * state — one bundle evidences every method its recipe derives.
+ */
+export interface MethodCellRecord {
+  methodId: string;
+  source: "pipeline" | "aws-ingested" | "attestation";
+  automated: boolean;
+  standing: "full" | "partial" | "narrative";
+  recipeId?: string;
+  collector?: string;
+  scope?: MethodScopeRecord;
+  state: RegisterState;
+  bundleDigest?: string;
+  freshAsOf?: string;
+}
+
+/**
+ * One (repo, KSI) row of the method register — the board's row after the
+ * pivot (SPEC §12.1 invariant 4′: 46 rows, always). Floor and floor_met are
+ * null when the class owes no number; never coerced to 0/false.
+ */
+export interface MethodRegisterRecord {
+  id: string;
+  repo: string;
+  ksi: string;
+  methods: MethodCellRecord[];
+  automated_methods: number;
+  method_floor: number | null;
+  floor_met: boolean | null;
+  fresh_as_of: string;
+  gap: "" | "G1" | "G2";
+}
+
+/**
+ * The owed-side KSI catalog as `rampscan serve` mirrors it (Q2.5): the
+ * crosswalk drawer's source — read from the pinned dataset port, never
+ * typed into this app.
+ */
+export interface KsiCatalogRecord {
+  id: string;
+  ksi: string;
+  theme_key: string;
+  theme_name: string;
+  name: string;
+  /** null where the rules vary the statement by class at this pin */
+  statement: string | null;
+  controls: string[];
+}
+
 export interface CoverageRecord {
   id: string;
   repo: string;

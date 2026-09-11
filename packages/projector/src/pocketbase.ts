@@ -382,6 +382,63 @@ export const DAEMON_STATUS_COLLECTION: CollectionSpec = {
   deleteRule: null,
 };
 
+/**
+ * The owed-side KSI catalog, mirrored for the console (Q2.5): id, theme,
+ * name, statement, and the controls crosswalk — the drawer the board's rows
+ * expand into. This is REFERENCE data from the pinned dataset, not a
+ * projection of the ledger: `rampscan serve` writes it once at startup from
+ * the KsiCatalog port, and the console reads it exactly as it reads the
+ * projection — never a hand-typed list in the web app. Rows are generic here
+ * so the projector does not grow a dataset dependency.
+ */
+export const KSI_CATALOG_COLLECTION: CollectionSpec = {
+  name: "ksi_catalog",
+  type: "base",
+  fields: [
+    text("ksi", true),
+    text("theme_key", true),
+    text("theme_name", true),
+    text("name", true),
+    // json for the population/floor reason: a class-varied statement is NULL
+    // at this pin (the honest shared surface), and null must survive
+    json("statement"),
+    json("controls"),
+  ],
+  listRule: AUTHED,
+  viewRule: AUTHED,
+  createRule: null,
+  updateRule: null,
+  deleteRule: null,
+};
+
+export interface KsiCatalogRow {
+  ksi: string;
+  themeKey: string;
+  themeName: string;
+  name: string;
+  statement: string | null;
+  controls: readonly string[];
+}
+
+/** Drop-and-refill the owed-side mirror — one writer, same as the projection. */
+export async function writeKsiCatalogPocketBase(
+  rows: KsiCatalogRow[],
+  pb: PocketBaseAdmin,
+): Promise<void> {
+  await pb.ensureCollection(KSI_CATALOG_COLLECTION);
+  await pb.truncate(KSI_CATALOG_COLLECTION.name);
+  for (const row of rows) {
+    await pb.create(KSI_CATALOG_COLLECTION.name, {
+      ksi: row.ksi,
+      theme_key: row.themeKey,
+      theme_name: row.themeName,
+      name: row.name,
+      statement: row.statement,
+      controls: row.controls,
+    });
+  }
+}
+
 /** Console settings the projector stamps into meta — written by one hand only. */
 export interface ProjectionSettings {
   certClass: "b" | "c";

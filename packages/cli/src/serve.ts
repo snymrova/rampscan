@@ -7,15 +7,18 @@ import {
   DAEMON_EVENTS_COLLECTION,
   DAEMON_STATUS_COLLECTION,
   createProjector,
+  writeKsiCatalogPocketBase,
   writeProjectionPocketBase,
 } from "@rampscan/projector";
 import type { ProjectionSettings } from "@rampscan/projector";
+import { allCollectors } from "@rampscan/collectors";
+import { loadKsiCatalogFromSlices } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import type { CertClass } from "@rampscan/core";
 import { windowMsFor } from "@rampscan/scheduler";
 import { DAEMON_STATUS_FILE } from "./daemon.js";
 import { mirrorDaemonStatus, tailDaemonEvents } from "./events.js";
-import { loadRecipes } from "./recipes.js";
+import { deriveCatalogMethods, loadRecipes } from "./recipes.js";
 import { DEMO_PASSWORD, DEMO_USERS, bootstrapConsole, startPocketBase } from "./pocketbase.js";
 
 // `rampscan serve` (plan M3 E2): PocketBase + the Next.js console, locally.
@@ -66,7 +69,21 @@ export async function serve(options: ServeOptions): Promise<void> {
   await bootstrapConsole(pb.admin, log);
 
   const recipes = await loadRecipes(options.recipesDir);
-  const projector = createProjector({ recipes, windowMs: windowMsFor(options.certClass) });
+  // The KSI pivot's inputs (Q2.5): the owed catalog and the derived methods,
+  // so every fold this serve writes carries the method register — and the
+  // console's board can be keyed the way the product is.
+  const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+  const methods = deriveCatalogMethods(
+    recipes,
+    allCollectors.map((c) => c.manifest),
+  );
+  const projector = createProjector({
+    recipes,
+    windowMs: windowMsFor(options.certClass),
+    methods,
+    ksiIds: catalog.ksis.map((k) => k.id),
+    methodFloor: catalog.floors[options.certClass].minPerKsi,
+  });
   const settings: ProjectionSettings = {
     certClass: options.certClass,
     reproduceCommand: "pnpm rampscan scan <repo-path>",
@@ -101,6 +118,23 @@ export async function serve(options: ServeOptions): Promise<void> {
   }
 
   await project("startup");
+
+  // The owed-side mirror (Q2.5): the KSI catalog the board's crosswalk
+  // drawer reads — id, theme, name, statement, controls — written once from
+  // the pinned dataset port, never typed into the web app.
+  const themeNames = new Map(catalog.themes.map((t) => [t.key, t.name]));
+  await writeKsiCatalogPocketBase(
+    catalog.ksis.map((k) => ({
+      ksi: k.id,
+      themeKey: k.themeKey,
+      themeName: themeNames.get(k.themeKey) ?? k.themeKey,
+      name: k.name,
+      statement: k.statement,
+      controls: k.controls,
+    })),
+    pb.admin,
+  );
+  log(`ksi catalog mirrored: ${catalog.ksis.length} indicators at ${catalog.datasetVersion}`);
 
   // the daemon's event stream, mirrored so the console can see the machinery
   // (divergence alerts, skip reasons for the action queue, cadence warnings).
