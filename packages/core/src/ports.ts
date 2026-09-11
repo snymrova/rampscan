@@ -3,6 +3,7 @@ import type {
   ClaimBasis,
   CollectorManifest,
   CollectorRun,
+  EvidenceClass,
   Finding,
   LedgerStatement,
   MethodClock,
@@ -371,6 +372,14 @@ export interface MethodCell {
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601
   /**
+   * What kind of evidence stands live on this method (Q3.4, G6) — lifted
+   * from the live bundle's signed assertion, never inferred here. Absent
+   * when the cell holds no live evidence and when the bundle predates the
+   * assertion (pre-Q3.4): an unlabeled bundle asserts nothing, and this
+   * field states only what was signed.
+   */
+  evidenceClass?: EvidenceClass;
+  /**
    * The owed re-validation window for this method's clock family (Q3.2):
    * VDR-TFR-MVX for machine, VDR-TFR-NMV for non-machine — owed-side DATA
    * handed to the fold, never typed there. Null when the rules define none
@@ -479,8 +488,17 @@ export interface MethodRegisterRow {
   artifacts: ArtifactCell[];
   /** how many of the five are present — the G5 numerator's complement */
   artifactsPresent: number;
-  /** the worst gap class computable so far (G6+ land later in Q3) */
-  gap?: "G1" | "G2" | "G3" | "G4" | "G5";
+  /**
+   * How many of this KSI's methods hold live evidence asserting
+   * point-in-time (Q3.4) — the G6 numerator. G6 fires when such evidence
+   * stands ALONE: at least one point-in-time cell and no cell asserting
+   * process-generated beside it (FRR-PVA-AA-06's standalone rule). An
+   * unlabeled bundle (pre-Q3.4) neither triggers nor defends — an assertion
+   * that was never signed cannot be relied on either way.
+   */
+  pointInTimeMethods: number;
+  /** the worst gap class computable so far (G8/G13 land with the gap register) */
+  gap?: "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
 }
 
 /**

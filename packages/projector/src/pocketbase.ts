@@ -256,6 +256,8 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       // Q3.3: the five owed artifacts and how many are present (G5)
       json("artifacts"),
       { name: "artifacts_present", type: "number", required: false },
+      // Q3.4: the G6 numerator — a count, never null, so a plain number field
+      { name: "point_in_time_methods", type: "number", required: false },
       text("gap"),
     ],
     listRule: AUTHED,
@@ -598,6 +600,7 @@ export async function writeProjectionPocketBase(
       history_met: row.historyMet,
       artifacts: row.artifacts,
       artifacts_present: row.artifactsPresent,
+      point_in_time_methods: row.pointInTimeMethods,
       gap: row.gap ?? "",
     });
   }
@@ -737,6 +740,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
       historyMet: r.history_met ?? null,
       artifacts: r.artifacts ?? [],
       artifactsPresent: r.artifacts_present ?? 0,
+      pointInTimeMethods: r.point_in_time_methods ?? 0,
     };
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
     if (r.history_since) row.historySince = r.history_since;

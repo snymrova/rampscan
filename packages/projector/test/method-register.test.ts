@@ -35,6 +35,8 @@ function evidenceEntry(opts: {
   ksiIds?: string[];
   verdict?: "evidenced" | "violated";
   repo?: string;
+  /** the Q3.4 assertion; omitted = a pre-Q3.4 bundle that asserted nothing */
+  evidenceClass?: "process-generated" | "point-in-time";
 }): LedgerEntry {
   const bundle: EvidenceBundle = {
     _type: "https://in-toto.io/Statement/v1",
@@ -42,6 +44,7 @@ function evidenceEntry(opts: {
     predicateType: "https://rampscan.dev/evidence/v1",
     predicate: {
       recipe_id: opts.recipe,
+      ...(opts.evidenceClass !== undefined ? { evidence_class: opts.evidenceClass } : {}),
       ksi_ids: opts.ksiIds ?? ["KSI-SCR-MIT"],
       control_ids: ["si-7.1"],
       verdict: opts.verdict ?? "evidenced",
@@ -645,6 +648,113 @@ describe("G5 artifacts (Q3.3)", () => {
       1,
     );
     const dir = await mkdtemp(join(tmpdir(), "rampscan-g5-"));
+    const dbPath = join(dir, "projection.db");
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
+
+// Q3.4 — G6 evidence class (FRR-PVA-AA-06): every bundle asserts
+// process-generated vs point-in-time at ingestion, and the fold lifts the
+// SIGNED assertion onto the cell — never a convention. The gap is
+// standing-alone: point-in-time evidence with nothing process-generated
+// beside it, because that is exactly what the rule tells assessors to
+// reject. Unlabeled (pre-Q3.4) evidence neither triggers nor defends.
+describe("G6 evidence class (Q3.4)", () => {
+  /** the three judgments that clear G5, so the chain can reach the G6 arm */
+  const judged = (ksi: string) => [
+    judgmentEntry({ ksi, artifact: 1 as JudgedArtifact, timestamp: T1 }),
+    judgmentEntry({ ksi, artifact: 3 as JudgedArtifact, timestamp: T1 }),
+    judgmentEntry({ ksi, artifact: 4 as JudgedArtifact, timestamp: T1 }),
+  ];
+
+  it("lifts the signed assertion onto the cell; a pre-Q3.4 bundle leaves it absent", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1, evidenceClass: "process-generated" }),
+        evidenceEntry({ recipe: "never-scanned", timestamp: T1, ksiIds: ["KSI-CMT-CHG"] }),
+      ],
+      1,
+    );
+    const scr = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(scr.methods.find((m) => m.recipeId === "covered")!.evidenceClass).toBe(
+      "process-generated",
+    );
+    const cmt = projection.methodRegisters.find((r) => r.ksi === "KSI-CMT-CHG")!;
+    expect(cmt.methods.find((m) => m.recipeId === "never-scanned")!.evidenceClass).toBeUndefined();
+    expect(scr.pointInTimeMethods).toBe(0);
+    expect(cmt.pointInTimeMethods).toBe(0);
+  });
+
+  it("point-in-time standing alone is G6 once every earlier arm has declined", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1, evidenceClass: "point-in-time" }),
+        ...judged("KSI-SCR-MIT"),
+      ],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.artifactsPresent).toBe(5); // G5 cleared — the gap is the class
+    expect(row.pointInTimeMethods).toBe(1);
+    expect(row.gap).toBe("G6");
+  });
+
+  it("process-generated evidence beside it defends: corroborated, not standalone", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1, evidenceClass: "point-in-time" }),
+        evidenceEntry({ recipe: "two-ksis", timestamp: T1, evidenceClass: "process-generated" }),
+        ...judged("KSI-SCR-MIT"),
+      ],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.pointInTimeMethods).toBe(1); // the numerator still counts it
+    expect(row.gap).toBeUndefined(); // but nothing stands alone
+  });
+
+  it("an unlabeled bundle defends nothing — an unsigned assertion cannot be relied on", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }), // pre-Q3.4: no assertion
+        evidenceEntry({ recipe: "two-ksis", timestamp: T1, evidenceClass: "point-in-time" }),
+        ...judged("KSI-SCR-MIT"),
+      ],
+      1,
+    );
+    expect(projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!.gap).toBe("G6");
+  });
+
+  it("an unlabeled bundle triggers nothing either — no point-in-time assertion, no G6", () => {
+    const projection = foldWith(
+      [evidenceEntry({ recipe: "covered", timestamp: T1 }), ...judged("KSI-SCR-MIT")],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.pointInTimeMethods).toBe(0);
+    expect(row.gap).toBeUndefined();
+  });
+
+  it("the worst gap outranks G6: unjudged artifacts stay G5, the numerator still counted", () => {
+    const projection = foldWith(
+      [evidenceEntry({ recipe: "covered", timestamp: T1, evidenceClass: "point-in-time" })],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.gap).toBe("G5");
+    expect(row.pointInTimeMethods).toBe(1);
+  });
+
+  it("survives the sqlite round trip, the cell's class and the numerator included", async () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1, evidenceClass: "point-in-time" }),
+        ...judged("KSI-SCR-MIT"),
+      ],
+      1,
+    );
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-g6-"));
     const dbPath = join(dir, "projection.db");
     await writeProjectionSqlite(projection, dbPath);
     expect(readProjectionSqlite(dbPath)).toEqual(projection);

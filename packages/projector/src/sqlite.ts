@@ -118,7 +118,8 @@ export async function writeProjectionSqlite(
         history_met       INTEGER,          -- 0 | 1 | NULL (exactly when the floor is NULL)
         artifacts         TEXT NOT NULL,    -- JSON array of ArtifactCell (Q3.3)
         artifacts_present INTEGER NOT NULL, -- of the five owed artifacts
-        gap               TEXT              -- G1 | G2 | G3 | G4 | G5 | NULL
+        point_in_time_methods INTEGER NOT NULL, -- cells whose live evidence asserts point-in-time (Q3.4)
+        gap               TEXT              -- G1 | G2 | G3 | G4 | G5 | G6 | NULL
       )
     `);
     db.exec(`
@@ -249,8 +250,8 @@ export async function writeProjectionSqlite(
       `INSERT INTO method_registers
          (repo, ksi, methods, automated_methods, method_floor, floor_met, fresh_as_of,
           stale_methods, history_since, history_floor_months, history_met,
-          artifacts, artifacts_present, gap)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          artifacts, artifacts_present, point_in_time_methods, gap)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.methodRegisters) {
       insertMethodRegister.run(
@@ -267,6 +268,7 @@ export async function writeProjectionSqlite(
         row.historyMet === null ? null : row.historyMet ? 1 : 0,
         JSON.stringify(row.artifacts),
         row.artifactsPresent,
+        row.pointInTimeMethods,
         row.gap ?? null,
       );
     }
@@ -413,6 +415,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
         historyMet: r.history_met === null ? null : r.history_met === 1,
         artifacts: JSON.parse(r.artifacts),
         artifactsPresent: Number(r.artifacts_present),
+        pointInTimeMethods: Number(r.point_in_time_methods),
       };
       if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
       if (r.history_since) row.historySince = r.history_since;

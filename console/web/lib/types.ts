@@ -155,6 +155,13 @@ export interface MethodCellRecord {
   bundleDigest?: string;
   freshAsOf?: string;
   /**
+   * What kind of evidence stands live on this method (Q3.4, G6) — the live
+   * bundle's signed assertion, lifted by the fold. Absent when there is no
+   * live evidence or the bundle predates the assertion: this app renders
+   * only what was signed.
+   */
+  evidenceClass?: "process-generated" | "point-in-time";
+  /**
    * The owed re-validation window for this method's clock family (Q3.2) —
    * owed-side data carried by the fold, never typed into this app. Null when
    * the rules define none for the class (machine at class d).
@@ -216,7 +223,13 @@ export interface MethodRegisterRecord {
   artifacts: ArtifactCellRecord[];
   /** how many of the five are present */
   artifacts_present: number;
-  gap: "" | "G1" | "G2" | "G3" | "G4" | "G5";
+  /**
+   * Methods whose live evidence asserts point-in-time (Q3.4) — the G6
+   * numerator. G6 fires when such evidence stands alone: nothing asserting
+   * process-generated beside it (FRR-PVA-AA-06).
+   */
+  point_in_time_methods: number;
+  gap: "" | "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
 }
 
 /**

@@ -42,6 +42,7 @@ function gapPill(gap: MethodRegisterRecord["gap"]): { cls: string; label: string
   if (gap === "G3") return { cls: "violated", label: "G3 freshness" };
   if (gap === "G4") return { cls: "violated", label: "G4 history" };
   if (gap === "G5") return { cls: "violated", label: "G5 artifact" };
+  if (gap === "G6") return { cls: "violated", label: "G6 evidence" };
   return null;
 }
 
@@ -500,6 +501,9 @@ function MethodRowView({ method }: { method: MethodCellRecord }) {
         {method.source}
         {method.automated ? "" : " · not automated"}
         {method.collector ? ` · ${method.collector}` : ""}
+        {/* the evidence-class assertion (Q3.4, G6): rendered only when the
+            live bundle signed one — never inferred for unlabeled evidence */}
+        {method.evidenceClass ? ` · ${method.evidenceClass}` : ""}
       </td>
       <td className="muted">{method.standing}</td>
       <td className="faint">

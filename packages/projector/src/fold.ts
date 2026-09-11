@@ -512,6 +512,13 @@ export function foldEntries(
                 if (row.bundleDigest !== undefined) cell.bundleDigest = row.bundleDigest;
                 if (row.freshAsOf !== undefined) cell.freshAsOf = row.freshAsOf;
               }
+              // G6 (Q3.4): the evidence-class assertion, lifted from the live
+              // bundle's signed predicate. A bundle minted before the
+              // assertion carries none and the cell carries none — this fold
+              // states what was signed, never what a convention implies.
+              const live = liveByCell.get(`${repo} ${method.provenance.recipe_id}`);
+              const evidenceClass = live?.bundle.predicate.evidence_class;
+              if (evidenceClass !== undefined) cell.evidenceClass = evidenceClass;
             }
             // G3 per method (Q3.2): the owed clock, judged at projectedAt.
             // Missing evidence is false, not null — nothing is re-validating
@@ -528,6 +535,18 @@ export function foldEntries(
         // G3 freshness (Q3.2): methods whose owed clock is unmet — stale OR
         // missing evidence, per the cell judgment above
         const staleMethods = cells.filter((c) => c.freshMet === false).length;
+        // G6 evidence class (Q3.4, FRR-PVA-AA-06): point-in-time evidence is
+        // rejectable as STANDALONE evidence, so the gap is standing-alone —
+        // at least one cell asserting point-in-time and none asserting
+        // process-generated beside it. Unlabeled cells (pre-Q3.4 bundles, or
+        // no live evidence) neither trigger nor defend: an assertion that was
+        // never signed cannot be relied on in either direction.
+        const pointInTimeMethods = cells.filter(
+          (c) => c.evidenceClass === "point-in-time",
+        ).length;
+        const processMethods = cells.filter(
+          (c) => c.evidenceClass === "process-generated",
+        ).length;
         // G4 history (Q3.1): where this KSI's validation history begins —
         // the earliest bundle across its methods' chains, dead bundles
         // included, because the superseded record IS the history the
@@ -604,6 +623,7 @@ export function foldEntries(
               : historySince !== undefined && historySince <= historyThreshold,
           artifacts,
           artifactsPresent,
+          pointInTimeMethods,
         };
         if (historySince !== undefined) row.historySince = historySince;
         const freshAsOf = cells
@@ -617,6 +637,7 @@ export function foldEntries(
         else if (staleMethods > 0) row.gap = "G3";
         else if (row.historyMet === false) row.gap = "G4";
         else if (artifactsPresent < 5) row.gap = "G5";
+        else if (pointInTimeMethods > 0 && processMethods === 0) row.gap = "G6";
         methodRegisters.push(row);
       }
     }
