@@ -8,6 +8,7 @@ import type { ProjectionSettings } from "@rampscan/projector";
 import { createLocalLedger } from "@rampscan/ledger";
 import type { Projection } from "@rampscan/core";
 import { canonicalJson } from "@rampscan/schema";
+import type { ValidationMethod } from "@rampscan/schema";
 import { loadRecipes } from "./recipes.js";
 
 // `rampscan rebuild` (plan M3 E1): the projection is rebuildable from the
@@ -24,6 +25,17 @@ export interface RebuildOptions {
   dbPath: string;
   /** MVX window in ms — when present, the fold carries the cadence-gap history (I1d) */
   windowMs?: number;
+  /**
+   * The KSI pivot's fold inputs (Q2), passed exactly as `serve` passes them
+   * so the byte-equality proof covers the method register too: the derived
+   * methods, the owed catalog's KSI ids, and the class floor. Omit them and
+   * the rebuilt projection simply carries an empty register — but then the
+   * proof is over less than the projection serve writes, so `main.ts` wires
+   * them for every real invocation.
+   */
+  methods?: ValidationMethod[];
+  ksiIds?: string[];
+  methodFloor?: number | null;
   /** PocketBase target; rebuilt too when provided and healthy */
   pocketbase?: {
     url: string;
@@ -52,6 +64,9 @@ export async function rebuild(options: RebuildOptions): Promise<RebuildReport> {
   const projectorOptions: Parameters<typeof createProjector>[0] = { recipes };
   if (options.now) projectorOptions.now = options.now;
   if (options.windowMs !== undefined) projectorOptions.windowMs = options.windowMs;
+  if (options.methods !== undefined) projectorOptions.methods = options.methods;
+  if (options.ksiIds !== undefined) projectorOptions.ksiIds = options.ksiIds;
+  if (options.methodFloor !== undefined) projectorOptions.methodFloor = options.methodFloor;
   const projector = createProjector(projectorOptions);
 
   const entries = await ledger.list();

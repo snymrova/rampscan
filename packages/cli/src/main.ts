@@ -307,11 +307,20 @@ async function main(): Promise<void> {
 
     case "rebuild": {
       // PocketBase needs no flag here: `rampscan serve` re-projects it on every ledger append
+      const rebuildCatalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
       const report = await rebuild({
         ledgerDir,
         recipesDir,
         dbPath: values.db ?? "./rampscan-projection.db",
         windowMs: windowMsFor(certClass),
+        // the pivot's fold inputs (Q2), same as serve — so the byte-equality
+        // proof covers the method register rather than an empty one
+        methods: deriveCatalogMethods(
+          await loadRecipes(recipesDir),
+          allCollectors.map((c) => c.manifest),
+        ),
+        ksiIds: rebuildCatalog.ksis.map((k) => k.id),
+        methodFloor: rebuildCatalog.floors[certClass].minPerKsi,
       });
       console.log(report.lines.join("\n"));
       if (!report.ok) process.exit(1);
