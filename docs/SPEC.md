@@ -1,8 +1,8 @@
 # rampscan — working spec
 
 **Status:** draft spec, brainstorm-grade. Decisions marked **DECIDED** are settled unless contradicted by building; everything else is a recommendation with the reasoning attached.
-**Date:** 2026-08-13
-**Reads against:** `docs/COMPLIANCE-SCAN-HARNESS.md` (the founding doc — its §11 decisions bind this spec), `docs/context/ramprules/` (dataset 2026.07.14.01), `docs/context/harnessarch/` (the code-graph and domain-harness arguments).
+**Date:** 2026-08-13 · **amended 2026-09-11** (§12, the KSI pivot — the Q0 spec amendment of `docs/PLAN-KSI-PIVOT.md`)
+**Reads against:** `docs/COMPLIANCE-SCAN-HARNESS.md` (the founding doc — its §11 decisions bind this spec), `docs/context/ramprules/` (dataset 2026.07.14.01), `docs/context/harnessarch/` (the code-graph and domain-harness arguments); §12 additionally reads against `docs/RESEARCH-KSI-GAP-ENGINE.md` and `docs/RESEARCH-PARAMIFY-PILOT.md`.
 
 ---
 
@@ -222,4 +222,186 @@ That document is simultaneously rampscan's scope definition, its first marketing
 3. **Webhook vs poll for repo change detection** in enterprises where GitHub Apps with webhooks face approval friction — polling on the MVX clock may be the pragmatic floor.
 4. **How does the pipeline overlay get upstreamed?** Technically it mirrors ramprules' overlay model; organizationally it needs a review path so rampscan's adjudications meet the Hub's evidence bar ("every number rendered, never typed").
 5. **Bedrock model pinning vs drift.** Tier-3 provenance pins model IDs, but Bedrock retires models; the eval set (Phase 3's gate) must be strong enough to re-qualify a successor model without re-litigating every past finding.
-6. **What drives the scheduler at class d?** `VDR-TFR-MVX` defines windows for classes a (SHOULD, 1 month), b (MUST, 7 days), and c (MUST, 3 days) — **there is no class d entry**. The dataset's class-d clock is different in kind: tightest MUST is `VDR-TFR-MVF` (1 month), tightest overall `VDR-TFR-PSD` (SHOULD, 1 day — the tightest deadline in the whole dataset). Until this is settled, the config accepts b and c only; a class-d deployment needs its own cadence derivation from the evidence-plan clock, not a copy of the MVX one.
+6. **What drives the scheduler at class d?** `VDR-TFR-MVX` defines windows for classes a (SHOULD, 1 month), b (MUST, 7 days), and c (MUST, 3 days) — **there is no class d entry**. The dataset's class-d clock is different in kind: tightest MUST is `VDR-TFR-MVF` (1 month), tightest overall `VDR-TFR-PSD` (SHOULD, 1 day — the tightest deadline in the whole dataset). Until this is settled, the config accepts b and c only; a class-d deployment needs its own cadence derivation from the evidence-plan clock, not a copy of the MVX one. *(Still open under §12: the pivot makes class an explicit config value and lets the owed-side and reporting layers compute against all four classes, but the scheduler's refusal of d stands until RFC-0033 or a cadence derivation settles it — see §12.3.)*
+
+---
+
+## 12. The KSI pivot — the Q0 spec amendment (DECIDED 2026-09-11)
+
+This section is the spec side of `docs/PLAN-KSI-PIVOT.md` Phase Q0: the decisions that must be locked before any code changes, because one of them — the `ValidationMethod` shape — is the costly-to-reverse decision of the entire pivot. Everything in this section is **DECIDED** on merge; the plan's ground rules (announced denominators, cover ≠ automate, dual-source owed side, re-pin per batch, spec-before-schema) apply from here on.
+
+**The inversion in one sentence:** a recipe stops being the register's unit and becomes one *kind* of validation method (`source: pipeline`); the KSI becomes the row; the method count per KSI against the class floor (`FRC-CSX-VVK`) becomes the product's first-class computation; controls become the crosswalk annotation they already are in the dataset.
+
+### 12.1 Target architecture — the four planes
+
+`ARCHITECTURE.md` §3's deployment diagram (Step Functions DAG, Fargate collectors, S3 Object Lock ledger, PocketBase projection) is untouched — the pivot happens in the layer *between* the dataset port and the projection:
+
+```
+┌─ OWED (Q1) ──────────────────────────┐  ┌─ PROVEN (built; Q4 widens) ─────────┐
+│ KSI catalog port, pinned:            │  │ evidence ledger: signed, anchored,  │
+│  · 46 KSIs × statements × controls   │  │ content-addressed, append-only      │
+│    crosswalk × 5 artifacts           │  │                                     │
+│  · floors as data: VVK 1/2/4,        │  │ sources:                            │
+│    MVX 7d/3d, NMV 3mo, MOT 6/18mo    │  │  · pipeline (20 recipes, today)     │
+│  · dual-source: ramprules slices ∪   │  │  · ingested signed results of       │
+│    fedramp-consolidated-rules.json,  │  │    client-run AWS recipes (Q4)      │
+│    adjudication overlay = enrichment │  │  · human attestations, two-key (Q4) │
+│ × certification class (offering cfg) │  │ each labeled process|point-in-time  │
+└──────────────┬───────────────────────┘  │ at ingestion (G6, Q3)               │
+               │                          └──────────────┬──────────────────────┘
+               │                                         │
+               └───────────► GAP ENGINE (Q2–Q3) ◄────────┘
+                    register: KSI → ValidationMethod → evidence
+                    taxonomy G1–G13 evaluated per KSI × class,
+                    every row citing the rule ID and the evidence;
+                    the projector stays the only writer (invariant 6)
+                              │
+                              ▼
+┌─ SURFACES ─────────────────────────────────────────────────────────────────┐
+│ Q2: per-KSI board (methods n/floor · age vs window · artifacts k/5 ·       │
+│     worst gap class as row color) · frontier v2 · G8 adjudication tab      │
+│ Q3: history meter (MOT) · artifact checklist · failure→vulnerability feed  │
+│ Q5: OCR fragments + Certification Package fragments (FedRAMP/schemas       │
+│     JSON, generated from the projection like OpenVEX — no new state) ·     │
+│     package conformance check (FRC-CSO-JSN)                                │
+│ deferred: trust-center export (G11) · remediation hand-off (PR drafts)     │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+All ten `ARCHITECTURE.md` §9 invariants survive; two get sharper on Q2 merge:
+
+- **Invariant 3 (the ontology gate)** becomes: *no evidence without method ID + artifact + passing assertions + live anchor.* Stricter than the recipe-keyed form, because a method names exactly one KSI.
+- **Invariant 4** becomes per-KSI: *a KSI with zero methods is a G1 row on the board, never an absent row.* The board has 46 rows, always.
+
+### 12.2 The `ValidationMethod` entity
+
+**DECIDED: a method validates exactly one KSI — the (recipe × KSI) pair, not the recipe.** A recipe claiming two KSIs *derives* two methods. Three reasons, one comparator:
+
+1. Every owed number is per-KSI: the `FRC-CSX-VVK` floor, the five artifacts, the `FRC-CSX-MOT` history meter, the assessor's interrogation view. Keying the method the same way makes each of them a `count`/`min` over methods rather than a join with a correction factor.
+2. It makes differential standing expressible: "this recipe genuinely evidences KSI-SCR-MIT but only gestures at KSI-CMT-xxx" is two methods with different standing, not one method with a footnote.
+3. The only publicly *assessed* 20x machine-readable package agrees: Paramify's `machine-readable-package/schema.yaml` hangs `Validations[]` under exactly one KSI each, with evidence under the validation and controls nowhere in the package (`docs/RESEARCH-PARAMIFY-PILOT.md` §2). The shape below is a superset of that field-tested minimum.
+
+The shape (spec-level; `packages/schema/src/method.ts` implements it verbatim in Q2):
+
+```
+ValidationMethod = {
+  id:        string          // deterministic: `${source}:${source_ref}#${ksi}`
+                             //   e.g. "pipeline:lockfile-pinned-deps#KSI-SCR-MIT"
+  ksi:       string          // exactly one KSI id, mnemonic form
+  source:    "pipeline" | "aws-ingested" | "attestation"
+  automated: boolean         // the FRC-CSX-VVK numerator. Fixed per source today
+                             // (pipeline, aws-ingested → true; attestation → false)
+                             // but stored, not derived at read time: the numerator
+                             // of a legal floor is asserted where an assessor can
+                             // see it, and a future source may not be uniform.
+  clock:     "machine" | "non-machine"
+                             // which cadence family owns this method:
+                             // machine → VDR-TFR-MVX (7d/3d by class);
+                             // non-machine → VDR-TFR-NMV (3 months).
+                             // Follows `automated` today; stored for the same reason.
+  standing:  "full" | "partial" | "narrative"
+                             // what this method claims FOR THIS KSI — inherits the
+                             // recipe's `automatable` uniformly at derivation, with a
+                             // per-KSI override permitted (below).
+  provenance: <discriminated on source>
+    pipeline:      { recipe_id, collector, scope }        // scope: §12.6
+    aws-ingested:  { recipe_id, signer_identity, ingest_digest }
+    attestation:   { attestor_role, statement_ref }       // two-key identities live
+                                                          // in the ledger event
+}
+```
+
+**What the method does *not* carry, deliberately:**
+
+- **No window, no floor.** Those are owed-side data, `owed(clock | ksi, class)`, read from the pinned catalog at evaluation (Q1.2). Storing them on the method would be typing a number the rules JSON owns — and the number moves (RFC-0033).
+- **No `controls[]`.** The crosswalk rides the KSI in the pinned dataset; the method inherits it by its `ksi` key. Recipes keep their `control_ids` (nothing is lost from `recipe.ts`), but the register never joins through them.
+- **No run-level provenance.** Tool versions, config hash, commit — those live where they always have, in the signed bundle (invariant 8). Method provenance names the *mechanism*; bundle provenance names the *run*.
+
+**Methods are derived, never authored.** There is no methods table anyone edits. Each method is a pure function of its source artifact: `methodsOf(recipe)` maps `recipe.ksi_ids` to one method each (`source: pipeline`); an ingested bundle's contract yields its method (Q4.1); an attestation event yields its method (Q4.2). This keeps computed-never-typed intact — the register is a derivation over things that are already reviewed artifacts. `recipe.ts` gains one optional field to serve the per-KSI override: `per_ksi?: { [ksi_id]: { automatable?, notes? } }`, absent meaning uniform inheritance. That field is the *only* recipe schema change the pivot makes.
+
+**Evidence attaches to methods.** The bundle predicate gains `method_id` beside the recipe ID it already carries (a superset — nothing existing breaks), and the ontology gate reads it per invariant 3′ above.
+
+**Reviewed against the four consumers on paper** (the Q0 exit gate):
+
+| Consumer | Reads from the shape | Satisfied by |
+|---|---|---|
+| Q1 owed side | which cadence family and floor apply to a method | `clock`, `automated`, `ksi` — floors/windows stay owed-side, keyed by these |
+| Q2 projector / frontier v2 | per-KSI method counts against the floor; join to live bundles | `ksi` + `automated` (G1/G2 numerators); `id` ↔ bundle `method_id` |
+| Q3 taxonomy | freshness per (KSI, method); history per KSI; artifact linkage; failure feed | `clock` (G3 window selection); `id` as the history key (G4); artifacts hang off the method's evidence (G5); flips are bundle events joined by `method_id` (G13) |
+| Q4 ingestion | a non-pipeline result becoming a counted method with interrogable provenance | `source` discriminant + per-source provenance blocks; `automated: false` path for attestations |
+
+### 12.3 Certification class as offering config
+
+**DECIDED.** `rampscan.config.ts` carries `class: "a" | "b" | "c" | "d"` — one value per scanned offering, the multiplier on everything owed. The split of responsibilities:
+
+- **Owed-side and reporting layers accept all four classes.** Floors, windows, and history requirements are data keyed by class (Q1.2); `frontier --class d` is a legitimate what-if report against d's floors (VVK ≥4, MOT 18 months) regardless of the configured class.
+- **The scheduler continues to refuse class d** — §11 open question 6 stands unchanged: `VDR-TFR-MVX` has no d entry, and a d cadence must be *derived*, not copied. The pivot widens what is computable, not what is scheduled.
+- **Default for the fixture and the self-scan: class b.** Floors of 1 make a 20-recipe pipeline demonstrably meaningful — the honest demo. Class c is the demo that shows gaps (floors of 2 over a single-source register are mostly unmet), which is also worth printing, but not as the default first impression.
+
+### 12.4 Catalog source strategy — the dual-source contract
+
+**DECIDED** (plan ground rule 3: dual-source from birth). The KSI catalog port in `packages/dataset` exposes one surface, `KsiCatalog` — 46 KSIs × statements × controls crosswalk × the five default artifacts, plus floors and windows as data — loadable from **either** path:
+
+- **Path A — ramprules slices** (the existing client): the KSI catalog as ramprules serves it, with the adjudication overlay available.
+- **Path B — `fedramp-consolidated-rules.json` direct** (FedRAMP/rules): the same catalog parsed from the canonical upstream.
+
+Contract rules:
+
+1. **Both paths yield identical `KsiCatalog` values at the pin**, proven by a test (Q1.3). One pin covers both: ramprules' `dataset_version` *is* the FedRAMP/rules dataset version (`2026.07.14.01` verified identical — research §2.2), so `DEFAULT_DATASET_PIN` guards Path B with no fourth pin. The Paramify `CR26/` OSCAL serialization is a third leg for the equivalence test — a cross-check, never a source.
+2. **Owed facts are defined only by the rules JSON**, on either path: KSI ids, themes, statements, the controls crosswalk, the five artifacts, every floor and window (`FRC-CSX-VVK`, `FRC-CSX-MOT`, `VDR-TFR-MVX`, `VDR-TFR-NMV`). If the two paths disagree on an owed fact at the same pin, the loader hard-fails — that is a broken port, not a resolvable preference.
+3. **The overlay may only enrich, never define.** Enrichment fields: adjudications and dispositions, `leverage`, evidence-plane attributions, upstream recipe references, rationale text. An owed number arriving via overlay is refused by the loader, structurally — the enrichment type simply has no slot for one.
+4. **Overlay pins are unchanged** (`DEFAULT_OVERLAY_PINS`, `DEFAULT_PLANE_PINS` and their per-slice/per-plane discipline); Path B introduces no overlay, which is the point of having it.
+
+### 12.5 `frontier` v2 — the output format, designed before implementation
+
+**DECIDED**, because this text is the product's headline and ground rule 1 (announced denominators) governs it. Numbers in braces are computed placeholders — illustrative here, emitted by the command in life; the README quotes the command, never this spec.
+
+```
+rampscan frontier — the KSI register
+class b · dataset 2026.07.14.01 · frontier overlay 0.7.5
+
+  KSI             methods   freshest        artifacts   worst gap
+  KSI-SCR-MIT      2/1 ok    11h / 7d ok     2/5         G5 artifact
+  KSI-CMT-{…}      1/1 ok     2d / 7d ok     1/5         G5 artifact
+  KSI-CNA-{…}      0/1        —              0/5         G1 coverage
+  …                                                      ({46} rows, always)
+
+  floor met on {m} of {46} KSIs · at least one automated method on {k} · no method on {u}
+  covering all {46} — a row that says "nothing evidences this from a pipeline" is a row
+  adjudication queue: {q} unreviewed, sorted by leverage (--adjudications)
+
+  legacy view: --by-controls   ({23} of {209} controls · {38} reachable at this pin)
+```
+
+Format rules, each carrying a ground rule:
+
+1. **The headline sentence** — the one the README quotes — is the `floor met on {m} of {46}` line **followed in the same breath by the covering line**. Cover ≠ automate is stated structurally, not in a footnote (ground rule 2).
+2. **`--by-controls` prints today's view unchanged**, and v2's footer names it, so the denominator change is announced on every invocation during the transition (ground rule 1). Neither view is removed until a reviewed decision does it.
+3. **Row anatomy:** methods `n/floor` (floor from owed data for the configured class) · freshest live evidence age against the method's window · artifacts `k/5` (Q3; prints `–/5` until modeled, never a fake 0 that implies measurement) · worst gap class as the row's color in the console and its final column in text.
+4. **The G8 queue is its own section**, sorted by the dataset's `leverage` field — the unanswered question stays a first-class output, not a residue.
+5. **`--class` overrides the configured class for reporting only** — a what-if against another class's floors; it never touches the scheduler (§12.3).
+
+### 12.6 Scan scope is declared method provenance (resolves #16)
+
+**DECIDED.** "Should a checkout scan read gitignored paths?" stops being a global toggle and becomes a declared property of each pipeline method's provenance — the G7 interrogation surface. Every collector manifest declares, and every derived pipeline method inherits, a `scope` block:
+
+```
+scope: {
+  population: "checkout" | "checkout+generated"
+      // did the walked set include artifacts produced during the scan
+      // (§5's `built: true` outputs), or only what the pinned commit fetch
+      // presents?
+  history: boolean
+      // did it read git history beyond the pinned commit (gitleaks: yes)?
+  gitignored: "excluded" | "included"
+      // the #16 axis: paths a .gitignore at the pinned commit masks —
+      // relevant exactly when population is "checkout+generated", which is
+      // where ignored build outputs come into existence mid-scan
+}
+```
+
+The rule: a method that read gitignored paths *says so*; one that didn't says that. There is no repository-wide answer to #16 because the honest answer is per-mechanism — and the declaration is what an assessor pulls on when a green depends on what was *not* walked. Collector-by-collector values are set during the Q2 migration; a manifest without a `scope` block fails the catalog test, same enforcement pattern as `empty_means`.
+
+### 12.7 Adoption mechanics
+
+The plan's phases live as GitHub milestones (`Q0 — decisions locked` … `Q5 — schema-target exports`) with issues per numbered item — created at adoption, 2026-09-11. The milestones are the plan of record; this section is the specification the Q1–Q3 issues implement. Positioning (the README's first sentence, the MVX-expansion fix) changes only when `frontier` v2 prints the numbers it quotes — plan §7.5.

@@ -281,3 +281,4 @@ Per the ramprules PRODUCT.md tie-breaker — a developer told to "do FedRAMP," n
 ## Session log
 
 - **2026-09-11** — Plan drafted from `docs/RESEARCH-KSI-GAP-ENGINE.md` §7's recommended sequencing, adopted as phases Q0–Q5; pivot decision recorded the same day. Not yet adopted as plan of record: adoption = this document merged + Q-milestones created on GitHub.
+- **2026-09-11 (later)** — Adopted: merged in #46; milestones `Q0`–`Q5` created with issues #47–#71 per numbered item, RFC-0033 comment tracked as #72; existing issues re-triaged per §5. Phase Q0 drafted as `SPEC.md` §12 the same day — the ValidationMethod shape (§1.1 decision **(b)** confirmed, with the Paramify package as the assessed-in-the-wild comparator), class-as-config, the dual-source contract, frontier v2's format, and the #16 scope resolution.
