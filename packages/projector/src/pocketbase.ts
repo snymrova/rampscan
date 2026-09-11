@@ -246,6 +246,11 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       json("method_floor"),
       json("floor_met"),
       text("fresh_as_of"),
+      // Q3.1: the history meter's fields — floor and met are json for the
+      // same null-survival reason as method_floor/floor_met above
+      text("history_since"),
+      json("history_floor_months"),
+      json("history_met"),
       text("gap"),
     ],
     listRule: AUTHED,
@@ -543,6 +548,9 @@ export async function writeProjectionPocketBase(
       method_floor: row.methodFloor,
       floor_met: row.floorMet,
       fresh_as_of: row.freshAsOf ?? "",
+      history_since: row.historySince ?? "",
+      history_floor_months: row.historyFloorMonths,
+      history_met: row.historyMet,
       gap: row.gap ?? "",
     });
   }
@@ -677,8 +685,11 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
       automatedMethods: r.automated_methods,
       methodFloor: r.method_floor ?? null,
       floorMet: r.floor_met ?? null,
+      historyFloorMonths: r.history_floor_months ?? null,
+      historyMet: r.history_met ?? null,
     };
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
+    if (r.history_since) row.historySince = r.history_since;
     if (r.gap) row.gap = r.gap;
     return row;
   });

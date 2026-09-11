@@ -150,6 +150,9 @@ const foldedRegisters: MethodRegisterRow[] = [
     methodFloor: 1,
     floorMet: true,
     freshAsOf: T1,
+    historySince: T1,
+    historyFloorMonths: null,
+    historyMet: null,
   },
   {
     repo: "/repo/app",
@@ -168,6 +171,8 @@ const foldedRegisters: MethodRegisterRow[] = [
     automatedMethods: 1,
     methodFloor: 1,
     floorMet: true,
+    historyFloorMonths: null,
+    historyMet: null,
   },
   {
     repo: "/repo/app",
@@ -176,6 +181,8 @@ const foldedRegisters: MethodRegisterRow[] = [
     automatedMethods: 0,
     methodFloor: 1,
     floorMet: false,
+    historyFloorMonths: null,
+    historyMet: null,
     gap: "G1",
   },
 ];
@@ -209,6 +216,7 @@ describe("buildKsiRegister (Q2.4)", () => {
       floorMet: 2,
       atLeastOneAutomated: 2,
       noMethod: 1,
+      historyMet: null, // class b owes no months (Q3.1)
       total: 3,
     });
   });
@@ -234,6 +242,62 @@ describe("buildKsiRegister (Q2.4)", () => {
       frontier,
     });
     expect(a.rows.find((r) => r.ksi === "KSI-CMT-CHG")!.floorMet).toBeNull();
+  });
+
+  it("the history meter (Q3.1): class b owes no months — historyMet null, no G4, summary null", () => {
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: foldedRegisters,
+      frontier,
+    });
+    expect(view.history.months).toBeNull();
+    expect(view.summary.historyMet).toBeNull();
+    expect(view.rows.every((r) => r.historyMet === null)).toBe(true);
+    expect(view.rows.some((r) => r.worstGap === "G4")).toBe(false);
+  });
+
+  it("class c owes 6 months: a KSI past its method floor but short of history is G4", () => {
+    // SCR-MIT derives two methods (floor 2 met at class c); the fold judged
+    // its history short — the projector's judgment rides through untouched
+    const folded: MethodRegisterRow[] = [
+      {
+        ...foldedRegisters[0]!,
+        floorMet: true,
+        historySince: T1,
+        historyFloorMonths: 6,
+        historyMet: false,
+      },
+    ];
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "c",
+      methods,
+      methodRegisters: folded,
+      frontier,
+    });
+    const row = view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(T1);
+    expect(row.historyMet).toBe(false);
+    expect(row.worstGap).toBe("G4");
+    expect(view.history.months).toBe(6);
+  });
+
+  it("without a fold the history meter starts honest: zero months meets no floor, never null", () => {
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "c",
+      methods,
+      methodRegisters: [],
+      frontier,
+    });
+    // every row owes 6 months and the ledger holds nothing — met on none
+    expect(view.summary.historyMet).toBe(0);
+    expect(view.rows.every((r) => r.historyMet === false)).toBe(true);
+    // but the WORST gap still outranks: one-method KSIs are G2 at class c
+    expect(view.rows.find((r) => r.ksi === "KSI-CMT-CHG")!.worstGap).toBe("G2");
+    expect(view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!.worstGap).toBe("G4");
   });
 
   it("renders without a ledger: every row present, no repo named", () => {
@@ -285,6 +349,22 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
     expect(text).toMatch(/KSI-CNA-CIC\s+0\/1\s+—\s+–\/5\s+G1 coverage/);
     // –/5, never a fake 0/5 that implies measurement
     expect(text).not.toContain("0/5");
+  });
+
+  it("the history meter line names the rule even when the class owes no months (Q3.1)", () => {
+    expect(text).toContain("history: no floor at class b — FRC-CSX-MOT (SHOULD, unquantified)");
+    const cView = buildKsiRegister({
+      catalog,
+      offeringClass: "c",
+      methods,
+      methodRegisters: [],
+      frontier,
+    });
+    const cText = renderKsiRegister(cView, false, now);
+    expect(cText).toContain(
+      "history: 0 of 3 KSIs hold ≥6mo of persistent validation — FRC-CSX-MOT (MUST)",
+    );
+    expect(cText).toContain("G4 history");
   });
 
   it("the footer names the legacy view and its numbers on every invocation", () => {

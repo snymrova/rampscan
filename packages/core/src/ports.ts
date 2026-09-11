@@ -377,8 +377,26 @@ export interface MethodRegisterRow {
   floorMet: boolean | null;
   /** freshest live evidence across this KSI's methods */
   freshAsOf?: string; // ISO 8601
-  /** the worst gap class computable from the register alone (G3+ land in Q3) */
-  gap?: "G1" | "G2";
+  /**
+   * Where this KSI's validation history begins (Q3.1): the earliest evidence
+   * bundle across the KSI's methods' chains, dead bundles included — history
+   * IS the superseded record. Absent when the ledger holds nothing for it.
+   */
+  historySince?: string; // ISO 8601
+  /**
+   * The FRC-CSX-MOT floor the fold was given (owed-side data, per class, in
+   * months); null when the class owes no number (a and b: unquantified) — or
+   * when the fold was given none, which renders the same way.
+   */
+  historyFloorMonths: number | null;
+  /**
+   * historySince reaches back at least historyFloorMonths calendar months
+   * from projectedAt; null exactly when historyFloorMonths is null. The meter
+   * starts honest: a young ledger shows false until the months have passed.
+   */
+  historyMet: boolean | null;
+  /** the worst gap class computable from the register alone (G3, G5+ land later in Q3) */
+  gap?: "G1" | "G2" | "G4";
 }
 
 /**

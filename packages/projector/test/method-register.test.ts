@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { LedgerEntry } from "@rampscan/core";
 import type { EvidenceBundle, MethodScope, PipelineRecipe } from "@rampscan/schema";
 import { methodsOfRecipe } from "@rampscan/schema";
-import { foldEntries, readProjectionSqlite, writeProjectionSqlite } from "../src/index.js";
+import { foldEntries, monthsBefore, readProjectionSqlite, writeProjectionSqlite } from "../src/index.js";
 
 // Q2.3 — the projector folds per-KSI (SPEC §12.1 invariant 4′, plan §4).
 // G1 and G2 are properties of the REGISTER: computed from which methods
@@ -72,12 +72,17 @@ const recipes = [covered, twoKsis, neverScanned];
 const methods = recipes.flatMap((r) => methodsOfRecipe(r, scope));
 const KSI_IDS = ["KSI-CMT-CHG", "KSI-CNA-CIC", "KSI-SCR-MIT"];
 
-function foldWith(entries: LedgerEntry[], floor?: number | null) {
+function foldWith(
+  entries: LedgerEntry[],
+  floor?: number | null,
+  historyFloorMonths?: number | null,
+) {
   return foldEntries(entries, T2, {
     recipes,
     methods,
     ksiIds: KSI_IDS,
     ...(floor === undefined ? {} : { methodFloor: floor }),
+    ...(historyFloorMonths === undefined ? {} : { historyFloorMonths }),
   });
 }
 
@@ -159,6 +164,108 @@ describe("the method register (Q2.3)", () => {
   it("survives the sqlite round trip byte-for-byte, nulls included", async () => {
     const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], null);
     const dir = await mkdtemp(join(tmpdir(), "rampscan-methods-"));
+    const dbPath = join(dir, "projection.db");
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
+
+describe("monthsBefore — calendar months, day clamped", () => {
+  it("subtracts calendar months", () => {
+    expect(monthsBefore("2026-08-08T12:00:00.000Z", 6)).toBe("2026-02-08T12:00:00.000Z");
+    expect(monthsBefore("2026-08-08T12:00:00.000Z", 18)).toBe("2025-02-08T12:00:00.000Z");
+  });
+
+  it("clamps the day instead of rolling into the adjacent month", () => {
+    expect(monthsBefore("2026-03-31T00:00:00.000Z", 1)).toBe("2026-02-28T00:00:00.000Z");
+    expect(monthsBefore("2024-03-31T00:00:00.000Z", 1)).toBe("2024-02-29T00:00:00.000Z"); // leap
+    expect(monthsBefore("2026-07-31T00:00:00.000Z", 1)).toBe("2026-06-30T00:00:00.000Z");
+  });
+
+  it("crosses year boundaries", () => {
+    expect(monthsBefore("2026-01-15T00:00:00.000Z", 6)).toBe("2025-07-15T00:00:00.000Z");
+  });
+});
+
+// Q3.1 — G4 history (FRC-CSX-MOT): persistent-validation history per KSI,
+// counted from the ledger's chains against the class's months floor. The
+// data was always there; these tests pin the counting — and the honesty:
+// a young ledger states a young number, never a met floor it cannot back.
+describe("G4 history (Q3.1)", () => {
+  // T2 (the fold instant) is 2026-08-08; six calendar months before it is
+  // 2026-02-08 — OLD reaches past that, T1 (2026-08-01) does not.
+  const OLD = "2026-01-01T00:00:00.000Z";
+
+  it("a young ledger shows a young number: history since first evidence, floor unmet, G4", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1, 6);
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(T1);
+    expect(row.historyFloorMonths).toBe(6);
+    expect(row.historyMet).toBe(false);
+    expect(row.gap).toBe("G4"); // method floor met, history floor not
+  });
+
+  it("history reaching past the floor meets it — dead bundles included, they ARE the history", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: OLD }), // superseded below
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+      ],
+      1,
+      6,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(OLD);
+    expect(row.historyMet).toBe(true);
+    expect(row.gap).toBeUndefined();
+  });
+
+  it("history spans the KSI's methods: any method's chain extends it", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "two-ksis", timestamp: OLD, ksiIds: twoKsis.ksi_ids }),
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+      ],
+      1,
+      6,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(OLD);
+    expect(row.historyMet).toBe(true);
+  });
+
+  it("the worst gap outranks G4: below the method floor stays G2, no methods stays G1", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 3, 6);
+    expect(projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!.gap).toBe("G2");
+    expect(projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!.gap).toBe("G1");
+  });
+
+  it("a null history floor (a and b: unquantified) checks nothing: historyMet null, no G4", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1, null);
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(T1); // the fact is still stated
+    expect(row.historyFloorMonths).toBeNull();
+    expect(row.historyMet).toBeNull();
+    expect(row.gap).toBeUndefined();
+  });
+
+  it("a fold given no history floor behaves as null — nothing to check against", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1);
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historyFloorMonths).toBeNull();
+    expect(row.historyMet).toBeNull();
+  });
+
+  it("survives the sqlite round trip, history fields and nulls included", async () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: OLD }),
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+      ],
+      1,
+      6,
+    );
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-g4-"));
     const dbPath = join(dir, "projection.db");
     await writeProjectionSqlite(projection, dbPath);
     expect(readProjectionSqlite(dbPath)).toEqual(projection);

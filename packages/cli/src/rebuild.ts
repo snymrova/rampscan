@@ -36,6 +36,7 @@ export interface RebuildOptions {
   methods?: ValidationMethod[];
   ksiIds?: string[];
   methodFloor?: number | null;
+  historyFloorMonths?: number | null;
   /** PocketBase target; rebuilt too when provided and healthy */
   pocketbase?: {
     url: string;
@@ -67,6 +68,8 @@ export async function rebuild(options: RebuildOptions): Promise<RebuildReport> {
   if (options.methods !== undefined) projectorOptions.methods = options.methods;
   if (options.ksiIds !== undefined) projectorOptions.ksiIds = options.ksiIds;
   if (options.methodFloor !== undefined) projectorOptions.methodFloor = options.methodFloor;
+  if (options.historyFloorMonths !== undefined)
+    projectorOptions.historyFloorMonths = options.historyFloorMonths;
   const projector = createProjector(projectorOptions);
 
   const entries = await ledger.list();
