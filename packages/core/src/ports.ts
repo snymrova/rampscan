@@ -389,6 +389,40 @@ export interface MethodCell {
 }
 
 /**
+ * The two-key judgment currently standing on a judged artifact (Q3.3, G5) —
+ * lifted from the latest signed ArtifactJudgment for the (repo, KSI,
+ * artifact) at fold time. Carried whether it judged sufficient OR
+ * insufficient: a recorded withdrawal is a fact the checklist states, not an
+ * absence it pretends.
+ */
+export interface ArtifactJudgmentInfo {
+  digest: Digest;
+  action: "sufficient" | "insufficient";
+  justification: string;
+  proposedBy: string;
+  approvedBy: string;
+  timestamp: string; // ISO 8601
+}
+
+/**
+ * One of the five owed KSI artifacts on a board row (Q3.3, G5) — 1-based
+ * into `default_artifacts.KSI`, the rules' own order. Presence is mechanical
+ * for 2 and 5 (`basis: "computed"`): artifact 5 is the methods' own live
+ * evidence, artifact 2 the cadence record the scheduler already keeps.
+ * Sufficiency of 1, 3, and 4 is judgment (`basis: "judged"`): present only
+ * while a signed two-key event says sufficient — never a checkbox. Artifact
+ * 4 (accuracy of the measurement system) is where the #23 class of defect
+ * formally lives.
+ */
+export interface ArtifactCell {
+  artifact: 1 | 2 | 3 | 4 | 5;
+  basis: "computed" | "judged";
+  present: boolean;
+  /** judged artifacts only: the live judgment, when one is recorded */
+  judgment?: ArtifactJudgmentInfo;
+}
+
+/**
  * One (repo, KSI) row of the method register — the pivot's board row (SPEC
  * §12.1 invariant 4′: a KSI with zero methods is a G1 row, never an absent
  * row). G1 and G2 are properties of the REGISTER itself (plan §4): they are
@@ -437,8 +471,16 @@ export interface MethodRegisterRow {
    * carried so no consumer recounts a judgment the fold already made.
    */
   staleMethods: number;
-  /** the worst gap class computable so far (G5+ land later in Q3) */
-  gap?: "G1" | "G2" | "G3" | "G4";
+  /**
+   * The five owed artifacts (Q3.3, G5), ascending by index — five cells
+   * always, because "unmeasured" and "absent" are different facts and this
+   * array exists exactly to measure.
+   */
+  artifacts: ArtifactCell[];
+  /** how many of the five are present — the G5 numerator's complement */
+  artifactsPresent: number;
+  /** the worst gap class computable so far (G6+ land later in Q3) */
+  gap?: "G1" | "G2" | "G3" | "G4" | "G5";
 }
 
 /**

@@ -6,8 +6,9 @@ import { DaemonStrip } from "../components/DaemonStrip";
 import { RequireAuth } from "../components/guard";
 import { Term } from "../components/Term";
 import { formatAge } from "../lib/mvx";
-import { useCollection } from "../lib/pb";
+import { getPb, useAuth, useCollection } from "../lib/pb";
 import type {
+  ArtifactCellRecord,
   KsiCatalogRecord,
   MetaRecord,
   MethodCellRecord,
@@ -40,6 +41,7 @@ function gapPill(gap: MethodRegisterRecord["gap"]): { cls: string; label: string
   if (gap === "G2") return { cls: "violated", label: "G2 methods" };
   if (gap === "G3") return { cls: "violated", label: "G3 freshness" };
   if (gap === "G4") return { cls: "violated", label: "G4 history" };
+  if (gap === "G5") return { cls: "violated", label: "G5 artifact" };
   return null;
 }
 
@@ -186,9 +188,17 @@ function KsiRowView({
         <td className="muted">
           {register?.fresh_as_of ? `${formatAge(register.fresh_as_of)} ago` : "—"}
         </td>
-        {/* –/5 until Q3 models them: unmeasured, never a fake 0 (§12.5 rule 3) */}
-        <td className="muted" title="the five KSI default artifacts — modeled in Q3">
-          –/5
+        {/* the five owed artifacts (Q3.3): the fold's count when a scan is
+            recorded; "–/5" only when there is no ledger row to measure
+            against — unmeasured, never a fake 0 (§12.5 rule 3) */}
+        <td title="the five KSI default artifacts — 2, 5 computed · 1, 3, 4 two-key judged">
+          {register ? (
+            <span className={`pill ${register.artifacts_present === 5 ? "evidenced" : "unevidenced"}`}>
+              {register.artifacts_present}/5
+            </span>
+          ) : (
+            <span className="faint">–/5</span>
+          )}
         </td>
         <td>
           {gap ? (
@@ -251,6 +261,15 @@ function KsiRowView({
               </p>
             )}
 
+            {/* the artifact checklist (Q3.3, G5): five rows always, quoting
+                the pinned rules' own texts. Computed rows name the fact they
+                rest on; judged rows show the signed two-key judgment or the
+                honest absence — and a propose form, because the judgment
+                queue starts here, never a checkbox */}
+            {register && (register.artifacts?.length ?? 0) > 0 && (
+              <ArtifactChecklist register={register} texts={entry.artifacts ?? []} />
+            )}
+
             {/* the crosswalk drawer: controls demoted to annotation — the
                 dataset already carries them per KSI, and the register never
                 joins through them (SPEC §12.2) */}
@@ -272,6 +291,198 @@ function KsiRowView({
         </tr>
       )}
     </>
+  );
+}
+
+/**
+ * The five owed artifacts for one (repo, KSI) — default_artifacts.KSI in the
+ * rules' own order. Presence of 2 and 5 is the fold's computation; 1, 3, and
+ * 4 hold only while a signed two-key judgment says sufficient, and the form
+ * below drafts that judgment's proposal (an approver's key turn on the
+ * Approvals tab makes it real).
+ */
+function ArtifactChecklist({
+  register,
+  texts,
+}: {
+  register: MethodRegisterRecord;
+  texts: string[];
+}) {
+  return (
+    <div style={{ margin: "8px 0" }}>
+      <div className="section-title" style={{ margin: "0 0 4px" }}>
+        owed artifacts: {register.artifacts_present}/5 (default_artifacts.KSI)
+      </div>
+      <table className="reg" style={{ margin: "4px 0 8px" }}>
+        <tbody>
+          {register.artifacts.map((cell) => (
+            <ArtifactRowView
+              key={cell.artifact}
+              cell={cell}
+              text={texts[cell.artifact - 1] ?? ""}
+              repo={register.repo}
+              ksi={register.ksi}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ArtifactRowView({
+  cell,
+  text,
+  repo,
+  ksi,
+}: {
+  cell: ArtifactCellRecord;
+  text: string;
+  repo: string;
+  ksi: string;
+}) {
+  const [proposing, setProposing] = useState(false);
+  const basis =
+    cell.basis === "computed"
+      ? cell.artifact === 5
+        ? "computed — the methods' own live evidence"
+        : "computed — the scheduler's cadence record on an evidenced method"
+      : cell.judgment
+        ? `judged ${cell.judgment.action} — proposed ${cell.judgment.proposedBy}, approved ${cell.judgment.approvedBy}`
+        : "judged — no judgment recorded";
+  return (
+    <>
+      <tr>
+        <td style={{ whiteSpace: "nowrap" }}>
+          <span className={`pill ${cell.present ? "evidenced" : "unevidenced"}`}>
+            {cell.artifact} · {cell.present ? "present" : "absent"}
+          </span>
+        </td>
+        <td className="muted" style={{ fontSize: 12.5 }}>
+          {text}
+          <div className="faint" style={{ marginTop: 2 }}>
+            {basis}
+            {cell.judgment && (
+              <>
+                {" "}·{" "}
+                <Link href={`/evidence/${cell.judgment.digest}`} className="mono">
+                  {cell.judgment.digest.slice(0, 12)}…
+                </Link>
+              </>
+            )}
+            {cell.basis === "judged" && (
+              <>
+                {" "}·{" "}
+                <button
+                  className="btn"
+                  style={{ fontSize: 11.5, padding: "0 6px" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProposing((v) => !v);
+                  }}
+                >
+                  {proposing ? "cancel" : "propose judgment"}
+                </button>
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+      {proposing && (
+        <tr>
+          <td colSpan={2} onClick={(e) => e.stopPropagation()}>
+            <ProposeJudgmentForm
+              repo={repo}
+              ksi={ksi}
+              artifact={cell.artifact}
+              done={() => setProposing(false)}
+            />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function ProposeJudgmentForm({
+  repo,
+  ksi,
+  artifact,
+  done,
+}: {
+  repo: string;
+  ksi: string;
+  artifact: number;
+  done: () => void;
+}) {
+  const { user } = useAuth();
+  const [justification, setJustification] = useState("");
+  const [action, setAction] = useState<"sufficient" | "insufficient">("sufficient");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function submit() {
+    if (!user) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await getPb().collection("judgment_proposals").create({
+        repo,
+        ksi_id: ksi,
+        artifact,
+        action,
+        justification: justification.trim(),
+        status: "pending",
+        proposed_by: `${user.email} (pb:${user.id})`,
+      });
+      setSent(true);
+      setTimeout(done, 1200);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <p className="muted">proposal filed — an approver’s key turn makes it real (Approvals tab)</p>
+    );
+  }
+  return (
+    <div style={{ padding: "6px 0 10px" }}>
+      <p className="muted" style={{ margin: "0 0 8px" }}>
+        Propose artifact {artifact} of <code>{ksi}</code> as{" "}
+        <select
+          value={action}
+          onChange={(e) => setAction(e.target.value as "sufficient" | "insufficient")}
+        >
+          <option value="sufficient">sufficient</option>
+          <option value="insufficient">insufficient</option>
+        </select>{" "}
+        for <code>{repo}</code>. The justification is what the approver signs.
+      </p>
+      <textarea
+        rows={2}
+        placeholder="why this artifact is (in)sufficient for this KSI…"
+        value={justification}
+        onChange={(e) => setJustification(e.target.value)}
+      />
+      <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+        <button
+          className="btn primary"
+          disabled={busy || justification.trim().length === 0}
+          onClick={submit}
+        >
+          file proposal
+        </button>
+        <button className="btn" onClick={done}>
+          cancel
+        </button>
+      </div>
+      {error && <p className="error">{error}</p>}
+    </div>
   );
 }
 

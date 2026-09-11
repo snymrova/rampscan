@@ -161,6 +161,14 @@ const foldedRegisters: MethodRegisterRow[] = [
     historySince: T1,
     historyFloorMonths: null,
     historyMet: null,
+    artifacts: [
+      { artifact: 1, basis: "judged", present: false },
+      { artifact: 2, basis: "computed", present: true },
+      { artifact: 3, basis: "judged", present: false },
+      { artifact: 4, basis: "judged", present: false },
+      { artifact: 5, basis: "computed", present: true },
+    ],
+    artifactsPresent: 2,
     gap: "G3",
   },
   {
@@ -186,6 +194,14 @@ const foldedRegisters: MethodRegisterRow[] = [
     staleMethods: 1,
     historyFloorMonths: null,
     historyMet: null,
+    artifacts: [
+      { artifact: 1, basis: "judged", present: false },
+      { artifact: 2, basis: "computed", present: false },
+      { artifact: 3, basis: "judged", present: false },
+      { artifact: 4, basis: "judged", present: false },
+      { artifact: 5, basis: "computed", present: false },
+    ],
+    artifactsPresent: 0,
     gap: "G3",
   },
   {
@@ -198,6 +214,14 @@ const foldedRegisters: MethodRegisterRow[] = [
     staleMethods: 0,
     historyFloorMonths: null,
     historyMet: null,
+    artifacts: [
+      { artifact: 1, basis: "judged", present: false },
+      { artifact: 2, basis: "computed", present: false },
+      { artifact: 3, basis: "judged", present: false },
+      { artifact: 4, basis: "judged", present: false },
+      { artifact: 5, basis: "computed", present: false },
+    ],
+    artifactsPresent: 0,
     gap: "G1",
   },
 ];
@@ -233,6 +257,7 @@ describe("buildKsiRegister (Q2.4)", () => {
       noMethod: 1,
       everyMethodFresh: 0, // both method-bearing rows carry an unmet clock (Q3.2)
       historyMet: null, // class b owes no months (Q3.1)
+      allArtifacts: 0, // no row holds all five owed artifacts (Q3.3)
       total: 3,
     });
   });
@@ -392,11 +417,55 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
     expect(text).toContain('covering all 3 — a row that says "nothing evidences this from a pipeline" is a row');
   });
 
-  it("row anatomy: methods n/floor · age vs window · artifacts –/5 · worst gap", () => {
-    expect(text).toMatch(/KSI-SCR-MIT\s+2\/1 ok\s+11h \/ 7d ok\s+–\/5/);
-    expect(text).toMatch(/KSI-CNA-CIC\s+0\/1\s+—\s+–\/5\s+G1 coverage/);
-    // –/5, never a fake 0/5 that implies measurement
-    expect(text).not.toContain("0/5");
+  it("row anatomy: methods n/floor · age vs window · artifacts k/5 · worst gap", () => {
+    // the fold measured: 2 of 5 artifacts on SCR-MIT (Q3.3), a real 0/5 on
+    // the G1 row — measured zeros, not placeholders, because a ledger exists
+    expect(text).toMatch(/KSI-SCR-MIT\s+2\/1 ok\s+11h \/ 7d ok\s+2\/5/);
+    expect(text).toMatch(/KSI-CNA-CIC\s+0\/1\s+—\s+0\/5\s+G1 coverage/);
+  });
+
+  it("artifacts print –/5 only when no scanned repo exists — unmeasured, never a fake 0 (§12.5 rule 3)", () => {
+    const bare = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: [],
+      frontier,
+    });
+    const bareText = renderKsiRegister(bare, false, now);
+    expect(bareText).toMatch(/KSI-SCR-MIT\s+2\/1 ok\s+—\s+–\/5/);
+    expect(bareText).not.toContain("0/5");
+    expect(bareText).toContain(
+      "artifacts: unmeasured — the five owed artifacts are counted against a scanned repo's ledger",
+    );
+    expect(bare.summary.allArtifacts).toBeNull();
+  });
+
+  it("the artifact meter (Q3.3) counts rows holding all five, and names the owed source", () => {
+    expect(text).toContain(
+      "artifacts: 0 of 3 KSIs hold all five owed artifacts — default_artifacts.KSI (2, 5 computed · 1, 3, 4 two-key judged)",
+    );
+  });
+
+  it("G5 renders when everything else is met and an artifact alone is missing (Q3.3)", () => {
+    const folded: MethodRegisterRow[] = [
+      {
+        ...foldedRegisters[0]!,
+        staleMethods: 0, // clocks met — G3 must not mask the artifact gap
+        artifactsPresent: 4,
+      },
+    ];
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: folded,
+      frontier,
+    });
+    const row = view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.artifactsPresent).toBe(4);
+    expect(row.worstGap).toBe("G5");
+    expect(renderKsiRegister(view, false, now)).toContain("G5 artifact");
   });
 
   it("the history meter line names the rule even when the class owes no months (Q3.1)", () => {

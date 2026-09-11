@@ -116,7 +116,9 @@ export async function writeProjectionSqlite(
         history_since     TEXT,             -- earliest bundle across the KSI's chains (Q3.1)
         history_floor_months INTEGER,       -- NULL: the class owes no number
         history_met       INTEGER,          -- 0 | 1 | NULL (exactly when the floor is NULL)
-        gap               TEXT              -- G1 | G2 | G3 | G4 | NULL
+        artifacts         TEXT NOT NULL,    -- JSON array of ArtifactCell (Q3.3)
+        artifacts_present INTEGER NOT NULL, -- of the five owed artifacts
+        gap               TEXT              -- G1 | G2 | G3 | G4 | G5 | NULL
       )
     `);
     db.exec(`
@@ -246,8 +248,9 @@ export async function writeProjectionSqlite(
     const insertMethodRegister = db.prepare(
       `INSERT INTO method_registers
          (repo, ksi, methods, automated_methods, method_floor, floor_met, fresh_as_of,
-          stale_methods, history_since, history_floor_months, history_met, gap)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          stale_methods, history_since, history_floor_months, history_met,
+          artifacts, artifacts_present, gap)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.methodRegisters) {
       insertMethodRegister.run(
@@ -262,6 +265,8 @@ export async function writeProjectionSqlite(
         row.historySince ?? null,
         row.historyFloorMonths,
         row.historyMet === null ? null : row.historyMet ? 1 : 0,
+        JSON.stringify(row.artifacts),
+        row.artifactsPresent,
         row.gap ?? null,
       );
     }
@@ -406,6 +411,8 @@ export function readProjectionSqlite(dbPath: string): Projection {
         historyFloorMonths:
           r.history_floor_months === null ? null : Number(r.history_floor_months),
         historyMet: r.history_met === null ? null : r.history_met === 1,
+        artifacts: JSON.parse(r.artifacts),
+        artifactsPresent: Number(r.artifacts_present),
       };
       if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
       if (r.history_since) row.historySince = r.history_since;

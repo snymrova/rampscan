@@ -5,3 +5,4 @@ export * from "./assert.js";
 export * from "./join.js";
 export * from "./bundle.js";
 export * from "./scoping.js";
+export * from "./artifact-judgment.js";

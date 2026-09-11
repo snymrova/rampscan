@@ -17,6 +17,8 @@ export { rebuild } from "./rebuild.js";
 export type { RebuildOptions, RebuildReport } from "./rebuild.js";
 export { recordScoping } from "./scoping.js";
 export type { RecordScopingOptions } from "./scoping.js";
+export { recordArtifactJudgment } from "./artifact-judgment.js";
+export type { RecordArtifactJudgmentOptions } from "./artifact-judgment.js";
 export { computeScopingRegister } from "./scoping-register.js";
 export type {
   ScopingRegister,

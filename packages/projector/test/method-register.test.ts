@@ -4,7 +4,9 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ClockWindow, LedgerEntry } from "@rampscan/core";
 import type {
+  ArtifactJudgment,
   EvidenceBundle,
+  JudgedArtifact,
   MethodScope,
   PipelineRecipe,
   ScopingEvent,
@@ -131,7 +133,7 @@ describe("the method register (Q2.3)", () => {
     const scr = met.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
     expect(scr.automatedMethods).toBe(2); // covered + two-ksis both claim it
     expect(scr.floorMet).toBe(true);
-    expect(scr.gap).toBeUndefined();
+    expect(scr.gap).toBe("G5"); // no G2 — the unjudged artifacts are the worst remaining gap (Q3.3)
 
     const unmet = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 3);
     const short = unmet.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
@@ -145,7 +147,7 @@ describe("the method register (Q2.3)", () => {
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
     expect(row.methodFloor).toBeNull();
     expect(row.floorMet).toBeNull();
-    expect(row.gap).toBeUndefined();
+    expect(row.gap).toBe("G5"); // no G2 — the unjudged artifacts remain (Q3.3)
     // G1 still fires — it needs no floor
     expect(projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!.gap).toBe("G1");
   });
@@ -274,7 +276,7 @@ describe("G3 freshness (Q3.2)", () => {
       expect(cell.freshMet).toBeNull();
     }
     expect(row.staleMethods).toBe(0);
-    expect(row.gap).toBeUndefined();
+    expect(row.gap).toBe("G5"); // no G3 — the unjudged artifacts remain (Q3.3)
   });
 
   it("a fold given no windows judges nothing — Q2 folds are unchanged", () => {
@@ -313,7 +315,7 @@ describe("G3 freshness (Q3.2)", () => {
     expect(scoped.state).toBe("notApplicable");
     expect(scoped.freshMet).toBeNull();
     expect(row.staleMethods).toBe(0);
-    expect(row.gap).toBeUndefined();
+    expect(row.gap).toBe("G5"); // no G3 — the unjudged artifacts remain (Q3.3)
   });
 
   it("the worst gap outranks: G1 and G2 beat G3; G3 beats G4", () => {
@@ -433,7 +435,7 @@ describe("G4 history (Q3.1)", () => {
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
     expect(row.historySince).toBe(OLD);
     expect(row.historyMet).toBe(true);
-    expect(row.gap).toBeUndefined();
+    expect(row.gap).toBe("G5"); // no G4 — the unjudged artifacts remain (Q3.3)
   });
 
   it("history spans the KSI's methods: any method's chain extends it", () => {
@@ -462,7 +464,7 @@ describe("G4 history (Q3.1)", () => {
     expect(row.historySince).toBe(T1); // the fact is still stated
     expect(row.historyFloorMonths).toBeNull();
     expect(row.historyMet).toBeNull();
-    expect(row.gap).toBeUndefined();
+    expect(row.gap).toBe("G5"); // no G4 — the unjudged artifacts remain (Q3.3)
   });
 
   it("a fold given no history floor behaves as null — nothing to check against", () => {
@@ -482,6 +484,167 @@ describe("G4 history (Q3.1)", () => {
       6,
     );
     const dir = await mkdtemp(join(tmpdir(), "rampscan-g4-"));
+    const dbPath = join(dir, "projection.db");
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
+
+function judgmentEntry(opts: {
+  ksi: string;
+  artifact: JudgedArtifact;
+  action?: "sufficient" | "insufficient";
+  timestamp: string;
+  repo?: string;
+}): LedgerEntry {
+  const bundle: ArtifactJudgment = {
+    _type: "https://in-toto.io/Statement/v1",
+    subject: [{ name: "justification.txt", digest: { sha256: "b".repeat(64) } }],
+    predicateType: "https://rampscan.dev/artifact-judgment/v1",
+    predicate: {
+      action: opts.action ?? "sufficient",
+      ksi_id: opts.ksi,
+      artifact: opts.artifact,
+      repo: opts.repo ?? "fixtures/app",
+      justification: "reviewed against the pinned statement",
+      proposed_by: "viewer@rampscan.local (pb:u1)",
+      approved_by: "approver@rampscan.local (pb:u2)",
+      dataset_version: "2026.07.14.01",
+      timestamp: opts.timestamp,
+    },
+  };
+  return { digest: `digest-${counter++}`, bundle, appendedAt: opts.timestamp };
+}
+
+// Q3.3 — G5 artifacts (default_artifacts.KSI): five cells per (repo, KSI),
+// ascending. Presence of 2 and 5 is the fold's computation — artifact 5 is
+// the methods' own live evidence, artifact 2 the declared cadence on an
+// evidenced method; 1, 3, and 4 hold only while the live two-key judgment
+// says sufficient. Never a checkbox, and never green because empty.
+describe("G5 artifacts (Q3.3)", () => {
+  it("computes 2 and 5 from the methods' evidence: five cells always, judged ones absent without a judgment", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1);
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.artifacts.map((a) => a.artifact)).toEqual([1, 2, 3, 4, 5]);
+    expect(row.artifacts.map((a) => a.basis)).toEqual([
+      "judged",
+      "computed",
+      "judged",
+      "judged",
+      "computed",
+    ]);
+    // the test recipe declares cadence "weekly", so the evidenced method
+    // carries the scheduler's cycle record (artifact 2) and IS artifact 5
+    expect(row.artifacts.map((a) => a.present)).toEqual([false, true, false, false, true]);
+    expect(row.artifactsPresent).toBe(2);
+    // floor met, no clock or history floor given — the artifacts are the
+    // worst remaining gap, said out loud rather than a green-by-default
+    expect(row.gap).toBe("G5");
+  });
+
+  it("methods without evidence hold neither computed artifact — never green because empty", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1);
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CMT-CHG")!;
+    expect(row.methods.length).toBeGreaterThan(0); // two-ksis + never-scanned derive here
+    expect(row.artifacts.find((a) => a.artifact === 2)!.present).toBe(false);
+    expect(row.artifacts.find((a) => a.artifact === 5)!.present).toBe(false);
+    expect(row.artifactsPresent).toBe(0);
+  });
+
+  it("a sufficient two-key judgment makes a judged artifact present, identities carried", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 3, timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, timestamp: T1 }),
+      ],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.artifacts.every((a) => a.present)).toBe(true);
+    expect(row.artifactsPresent).toBe(5);
+    expect(row.gap).toBeUndefined();
+    const judged = row.artifacts.find((a) => a.artifact === 4)!;
+    expect(judged.judgment?.action).toBe("sufficient");
+    expect(judged.judgment?.approvedBy).toBe("approver@rampscan.local (pb:u2)");
+    expect(judged.judgment?.digest).toBeDefined();
+  });
+
+  it("the latest judgment wins: a signed insufficient withdraws, and the record still shows it", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, action: "insufficient", timestamp: T2 }),
+      ],
+      1,
+    );
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .artifacts.find((a) => a.artifact === 4)!;
+    expect(cell.present).toBe(false);
+    expect(cell.judgment?.action).toBe("insufficient"); // a recorded withdrawal, not an absence
+  });
+
+  it("a judgment lands per (KSI, artifact): the same index on another KSI stays absent", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
+      ],
+      1,
+    );
+    const other = projection.methodRegisters.find((r) => r.ksi === "KSI-CMT-CHG")!;
+    expect(other.artifacts.find((a) => a.artifact === 1)!.present).toBe(false);
+  });
+
+  it("a judgment can stand on a zero-method KSI — G1 still outranks G5", () => {
+    // artifact 1's own text allows "an explanation of the reason ... for not
+    // having measures", so the judgment is meaningful where nothing derives
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-CNA-CIC", artifact: 1, timestamp: T1 }),
+      ],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.artifacts.find((a) => a.artifact === 1)!.present).toBe(true);
+    expect(row.gap).toBe("G1");
+  });
+
+  it("the worst gap outranks G5: an unmet history floor stays G4", () => {
+    const projection = foldWith(
+      [evidenceEntry({ recipe: "covered", timestamp: T1 })],
+      1,
+      6, // T1 is ~1 week before the fold instant — history floor unmet
+    );
+    expect(projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!.gap).toBe("G4");
+  });
+
+  it("a judgment-only ledger introduces its repo — the signed decision is never invisible", () => {
+    const projection = foldWith(
+      [judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1, repo: "fixtures/other" })],
+      1,
+    );
+    const row = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/other" && r.ksi === "KSI-SCR-MIT",
+    )!;
+    expect(row).toBeDefined();
+    expect(row.artifacts.find((a) => a.artifact === 1)!.present).toBe(true);
+  });
+
+  it("survives the sqlite round trip, judgments included", async () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, action: "insufficient", timestamp: T2 }),
+      ],
+      1,
+    );
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-g5-"));
     const dbPath = join(dir, "projection.db");
     await writeProjectionSqlite(projection, dbPath);
     expect(readProjectionSqlite(dbPath)).toEqual(projection);

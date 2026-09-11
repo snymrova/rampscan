@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { IN_TOTO_STATEMENT_TYPE, EvidenceBundle, Subject } from "./bundle.js";
 import { RAMPSCAN_SCAN_RUN_TYPE, ScanRun } from "./scan-run.js";
+import { RAMPSCAN_ARTIFACT_JUDGMENT_TYPE, ArtifactJudgment } from "./artifact-judgment.js";
 
 // ScopingEvent: the first two-key write (plan M3 E4). A `notApplicable`
 // scoping is drafted in the console, signed by the approver's identity, and
@@ -39,10 +40,11 @@ export const ScopingEvent = z.object({
 });
 export type ScopingEvent = z.infer<typeof ScopingEvent>;
 
-/** Everything the ledger stores: evidence bundles, scoping events, run records. */
+/** Everything the ledger stores: evidence bundles, scoping events, artifact judgments, run records. */
 export const LedgerStatement = z.discriminatedUnion("predicateType", [
   EvidenceBundle,
   ScopingEvent,
+  ArtifactJudgment,
   ScanRun,
 ]);
 export type LedgerStatement = z.infer<typeof LedgerStatement>;
@@ -57,4 +59,8 @@ export function isScopingEvent(s: LedgerStatement): s is ScopingEvent {
 
 export function isScanRun(s: LedgerStatement): s is ScanRun {
   return s.predicateType === RAMPSCAN_SCAN_RUN_TYPE;
+}
+
+export function isArtifactJudgment(s: LedgerStatement): s is ArtifactJudgment {
+  return s.predicateType === RAMPSCAN_ARTIFACT_JUDGMENT_TYPE;
 }

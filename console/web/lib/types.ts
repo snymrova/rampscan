@@ -168,6 +168,29 @@ export interface MethodCellRecord {
 }
 
 /**
+ * One of the five owed KSI artifacts (Q3.3, G5), as the fold computes it
+ * inside a method_registers row. Presence of 2 and 5 is computed (artifact 5
+ * is the methods' own live evidence; artifact 2 the scheduler's cadence
+ * record); 1, 3, and 4 are present only while a signed two-key judgment
+ * says sufficient.
+ */
+export interface ArtifactCellRecord {
+  /** 1-based into default_artifacts.KSI — the rules' own order */
+  artifact: 1 | 2 | 3 | 4 | 5;
+  basis: "computed" | "judged";
+  present: boolean;
+  /** judged artifacts only: the live judgment, when one is recorded */
+  judgment?: {
+    digest: string;
+    action: "sufficient" | "insufficient";
+    justification: string;
+    proposedBy: string;
+    approvedBy: string;
+    timestamp: string;
+  };
+}
+
+/**
  * One (repo, KSI) row of the method register — the board's row after the
  * pivot (SPEC §12.1 invariant 4′: 46 rows, always). Floor and floor_met are
  * null when the class owes no number; never coerced to 0/false.
@@ -189,7 +212,11 @@ export interface MethodRegisterRecord {
   history_floor_months: number | null;
   /** null exactly when history_floor_months is null */
   history_met: boolean | null;
-  gap: "" | "G1" | "G2" | "G3" | "G4";
+  /** the five owed artifacts, ascending (Q3.3) */
+  artifacts: ArtifactCellRecord[];
+  /** how many of the five are present */
+  artifacts_present: number;
+  gap: "" | "G1" | "G2" | "G3" | "G4" | "G5";
 }
 
 /**
@@ -206,6 +233,8 @@ export interface KsiCatalogRecord {
   /** null where the rules vary the statement by class at this pin */
   statement: string | null;
   controls: string[];
+  /** the five owed artifact texts (default_artifacts.KSI), rules' order (Q3.3) */
+  artifacts: string[];
 }
 
 export interface CoverageRecord {
@@ -296,6 +325,27 @@ export interface ProposalRecord {
   proposed_by: string;
   decided_by: string;
   scoping_digest: string;
+  created: string;
+  updated: string;
+}
+
+/**
+ * An artifact-sufficiency proposal (Q3.3, G5) — the judgment queue beside
+ * the scoping one, same two-key discipline: anyone drafts, an approver's
+ * key turn appends the signed ArtifactJudgment to the ledger.
+ */
+export interface JudgmentProposalRecord {
+  id: string;
+  repo: string;
+  ksi_id: string;
+  /** 1 | 3 | 4 — the judged artifacts; 2 and 5 are computed */
+  artifact: number;
+  action: "sufficient" | "insufficient";
+  justification: string;
+  status: "pending" | "approved" | "rejected";
+  proposed_by: string;
+  decided_by: string;
+  ledger_digest: string;
   created: string;
   updated: string;
 }
