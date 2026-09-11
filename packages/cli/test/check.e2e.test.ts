@@ -318,6 +318,18 @@ describe("a dry run over a real repo answers the contract and says what it is no
     expect(offenders(outcome, ROUTE_AUTH)).not.toContain("src/billing.js");
   });
 
+  it("joins through methods (Q2.6): every row names its pipeline:<recipe>#<KSI> ids", async () => {
+    const outcome = await dry();
+    const catalog = new Map((await loadRecipes(recipesDir)).map((r) => [r.id, r]));
+    for (const r of outcome.rows) {
+      const recipe = catalog.get(r.recipeId)!;
+      // the register's own join: one method per claimed KSI, in the board's key
+      expect(r.methodIds).toEqual(
+        recipe.ksi_ids.map((ksi) => `pipeline:${r.recipeId}#${ksi}`),
+      );
+    }
+  });
+
   it("reports only the recipes its own gates answer — the rest are refused gates, not empty rows", async () => {
     const outcome = await dry();
     const answered = new Set(dryRunnable(allCollectors).run.flatMap((c) => c.manifest.recipes));

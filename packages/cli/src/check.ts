@@ -18,6 +18,7 @@ import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import { windowMsFor } from "@rampscan/scheduler";
 import type { AssertionResult, PlainLanguage, Verdict } from "@rampscan/schema";
+import { methodsOfRecipe } from "@rampscan/schema";
 import { loadRecipes, validateRecipeIds } from "./recipes.js";
 
 const execFileAsync = promisify(execFile);
@@ -181,6 +182,18 @@ export async function treeDelta(root: string): Promise<TreeDelta> {
 export interface DryRunRow {
   recipeId: string;
   collector: string;
+  /**
+   * The validation methods this recipe derives (Q2.6, SPEC §12.2) — the
+   * register's own join, stated on the gate's output: one
+   * `pipeline:<recipe>#<KSI>` id per KSI the recipe claims. This is what a
+   * would-be verdict here would move on the post-pivot board, said in the
+   * board's key rather than left for the reader to re-derive. Behavior at
+   * the gate is unchanged: the exit code still rides `wouldViolate`, and
+   * nothing else reads this field. Absent only when the recipe left the
+   * catalog or its collector's manifest declares no scope — the same silence
+   * the catalog test refuses, never papered over here with an invented one.
+   */
+  methodIds?: string[];
   /**
    * What a scan over this tree would conclude. Deliberately not named
    * `verdict`: a verdict in this system is a signed fact about a commit, and
@@ -411,6 +424,7 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
 
   const gateNames = new Set(gates.map((c) => c.manifest.name));
   const catalog = new Map(recipes.map((r) => [r.id, r]));
+  const manifestByName = new Map(options.collectors.map((c) => [c.manifest.name, c.manifest]));
 
   const rows: DryRunRow[] = [];
   for (const result of joined) {
@@ -427,6 +441,12 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
     if (result.reason !== undefined) row.reason = result.reason;
     const recipe = catalog.get(result.recipe_id);
     if (recipe?.plain !== undefined) row.plain = recipe.plain;
+    // the register's join direction (Q2.6): recipe → its methods, scope
+    // inherited from the collector's manifest exactly as the derivation does
+    const scope = manifestByName.get(recipe?.collection.collector ?? "")?.scope;
+    if (recipe !== undefined && scope !== undefined) {
+      row.methodIds = methodsOfRecipe(recipe, scope).map((m) => m.id);
+    }
     const cell = board?.get(result.recipe_id);
     if (board !== undefined) row.boardState = cell?.state ?? "absent";
     // the streak travels with the state it belongs to; a cell the board does
@@ -618,6 +638,11 @@ export function renderCheck(outcome: DryRunOutcome, useColor: boolean): string {
                 ? dim(`  (board: ${row.boardState} — unchanged)`)
                 : `  ${yellow(`(board: ${row.boardState} → would be ${verdict})`)}`;
       lines.push(`  ${row.recipeId.padEnd(36)}${moved}`);
+      // the methods this row would move (Q2.6): the post-pivot board's key,
+      // stated in the gate's own output rather than left to be re-derived
+      if (row.methodIds !== undefined && row.methodIds.length > 0) {
+        lines.push(dim(`      methods: ${row.methodIds.join(" · ")}`));
+      }
       if (row.reason !== undefined) lines.push(dim(`      ${row.reason}`));
       for (const assertion of row.assertions.filter((a) => !a.passed)) {
         lines.push(`      ${red("assert")} ${assertion.description}`);
