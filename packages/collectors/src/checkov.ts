@@ -96,6 +96,9 @@ export const checkov: Collector = {
     recipes: ["iac-baseline-clean"],
     outputs: [CHECKOV_RESULTS_ARTIFACT],
     cacheScope: ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", ".github/workflows/**", "**/*.tf", "**/*.tf.json"],
+    // Declared scan scope (SPEC §12.6): the scanned set is enumerated via
+    // `git ls-files` — tracked files only, masked paths never walked.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

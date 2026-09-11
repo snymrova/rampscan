@@ -38,6 +38,10 @@ export const syft: Collector = {
     recipes: ["sbom-exists-and-fresh"],
     outputs: [SBOM_ARTIFACT],
     cacheScope: ["@tree"], // scans the committed tree — any content change re-runs it
+    // Declared scan scope (SPEC §12.6): untracked + ignored trees are passed
+    // to syft as excludes (computed via git below) precisely because they are
+    // not commit-anchored — the exclusion is the mechanism, not the environment.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

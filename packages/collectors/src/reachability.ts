@@ -59,6 +59,9 @@ export const reachability: Collector = {
     inputs: [OSV_RESULTS_ARTIFACT, GRAPH_DB_ARTIFACT],
     outputs: [OPENVEX_ARTIFACT],
     cacheScope: ["@inputs"], // pure join of osv-results × graph.db
+    // Declared scan scope (SPEC §12.6): walks no repo path — a pure join of
+    // two declared input artifacts, each produced over the committed tree.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

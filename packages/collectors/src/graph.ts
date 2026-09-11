@@ -40,6 +40,11 @@ export const graphCollector: Collector = {
       "**/package.json",
       "rampscan.config.json", // entrypoints/authPatterns overrides change the graph
     ],
+    // Declared scan scope (SPEC §12.6): the evidence-producing walk is over
+    // the COMMITTED tree (git ls-tree HEAD) — a generated or gitignored file
+    // on disk never contributes routes or edges, a lesson the self-scan
+    // taught once already (see graph/extract.ts).
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

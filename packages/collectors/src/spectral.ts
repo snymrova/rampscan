@@ -62,6 +62,9 @@ export const spectral: Collector = {
     recipes: ["api-spec-lint-clean"],
     outputs: [SPECTRAL_RESULTS_ARTIFACT],
     cacheScope: ["**/openapi*.yaml", "**/openapi*.yml", "**/openapi*.json", "**/swagger*.yaml", "**/swagger*.yml", "**/swagger*.json"],
+    // Declared scan scope (SPEC §12.6): the linted set is enumerated via
+    // `git ls-files` — tracked files only, masked paths never walked.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

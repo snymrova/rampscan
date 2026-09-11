@@ -79,6 +79,10 @@ export const semgrep: Collector = {
     tools: ["semgrep"],
     recipes: [], // producer only — the SAST recipe is evidenced by `sast-reachability`
     outputs: [SEMGREP_RESULTS_ARTIFACT],
+    // Declared scan scope (SPEC §12.6): untracked + ignored trees are passed
+    // to semgrep as excludes (computed via git in collect) — the same
+    // mechanism-level exclusion syft makes, for the same anchoring reason.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
     // the sources the rules read; the ruleset content itself rides in the
     // cache salt (cacheKeySalt), like a tool re-pin
     cacheScope: [

@@ -22,6 +22,11 @@ export const osvScanner: Collector = {
     // keyed on the SBOM it consumes; a cached result can miss advisories
     // published since — the daemon's scheduled full scan is the corrective
     cacheScope: ["@inputs"],
+    // Declared scan scope (SPEC §12.6): walks no repo path at all — it reads
+    // exactly one declared input artifact (the SBOM), whose own walk already
+    // excluded untracked and ignored trees. What the verdict rests on is
+    // checkout content, through the declared input chain.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

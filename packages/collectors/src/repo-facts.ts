@@ -210,6 +210,13 @@ export const repoFacts: Collector = {
       "Dockerfile",
       ...DISCLOSURE_PATHS,
     ],
+    // Declared scan scope (SPEC §12.6). `gitignored: included` is the honest
+    // mechanism-level answer: this collector reads the working tree directly
+    // (readFile at declared paths, an fs walk under .github/actions) with no
+    // git filter — a masked-or-untracked file present at one of those paths
+    // WOULD be read. In the appliance's clean clone the difference vanishes;
+    // in a local working-tree scan (the self-scan) it does not.
+    scope: { population: "checkout", history: false, gitignored: "included" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

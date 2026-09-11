@@ -48,6 +48,9 @@ export const sastGate: Collector = {
     recipes: ["no-reachable-dangerous-code"],
     inputs: [SEMGREP_RESULTS_ARTIFACT, GRAPH_DB_ARTIFACT],
     cacheScope: ["@inputs"], // pure join of semgrep-results × graph.db
+    // Declared scan scope (SPEC §12.6): walks no repo path — a pure join of
+    // two declared input artifacts, each produced over the committed tree.
+    scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {
