@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { allCollectors, loadToolManifest } from "@rampscan/collectors";
 import {
   DEFAULT_DATASET_PIN,
+  DEFAULT_OVERLAY_PINS,
   OFFERING_CLASSES,
   loadKsiCatalogFromRules,
   loadKsiCatalogFromSlices,
@@ -22,11 +23,12 @@ import { loadAdjudications } from "./adjudications.js";
 import { check, renderCheck } from "./check.js";
 import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
+import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
 import { renderOwed, renderOwedKsi } from "./owed.js";
 import { rebuild } from "./rebuild.js";
-import { loadRecipes } from "./recipes.js";
+import { deriveCatalogMethods, loadRecipes } from "./recipes.js";
 import { report } from "./report.js";
 import { scan } from "./scan.js";
 import { serve } from "./serve.js";
@@ -80,9 +82,12 @@ function usage(): never {
       "  model             the repo model: repos, recipes, controls, KSIs, collectors, tools,",
       "                    contract rules and the walked graph, as typed nodes and links.",
       "                    `--json` prints the artifact a scan attests, byte-for-byte",
-      "  frontier          the commit plane's coverage of ramprules' uncovered controls:",
-      "                    catalog × adjudications × the pinned frontier, nothing probed. Exits 1",
-      "                    on a broken link; --strict also exits 1 on any unreviewed control",
+      "  frontier          the KSI register (SPEC §12.5): one row per KSI — methods against the",
+      "                    class floor, freshest evidence against the window, worst gap class —",
+      "                    plus the G8 adjudication queue by leverage. Exits 1 on a broken link;",
+      "                    --strict also exits 1 on any unreviewed control",
+      "  frontier --by-controls  the legacy control view, unchanged: catalog × adjudications ×",
+      "                    the pinned frontier (ground rule 1 — both denominators stay printable)",
       "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
       "                    method floor, validation window, artifact count — every number read",
       "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
@@ -101,7 +106,9 @@ function usage(): never {
       "  --adjudications <dir>  frontier: per-control disposition dir (default: recipes/adjudications)",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b).",
-      "                    owed only: also accepts a and d (reporting what-if, SPEC §12.3)",
+      "                    owed and frontier: also accept a and d — reporting is a what-if",
+      "                    against that class's floors (SPEC §12.3/§12.5); the scheduler still",
+      "                    refuses d",
       "  --rules <file>    owed: load the canonical fedramp-consolidated-rules.json (Path B",
       "                    of the dual-source contract) instead of the ramprules slices",
       "  --as-of <iso>     board: fold only statements at or before this instant (I1b)",
@@ -146,6 +153,7 @@ async function main(): Promise<void> {
       rules: { type: "string" },
       adjudications: { type: "string" },
       strict: { type: "boolean" },
+      "by-controls": { type: "boolean" },
       class: { type: "string" },
       "as-of": { type: "string" },
       since: { type: "string" },
@@ -175,10 +183,12 @@ async function main(): Promise<void> {
   const adjudicationsDir = values.adjudications ?? join(REPO_ROOT, "recipes/adjudications");
   const useColor = values["no-color"] ? false : (process.stdout.isTTY ?? false);
   const certClass = (values.class ?? "b") as CertClass;
-  // `owed` reports against all four classes (SPEC §12.3 — a what-if, not a
-  // schedule); every other consumer of --class drives the scheduler, whose
-  // refusal of a and d stands until §11 q6 is settled.
-  if (command !== "owed" && certClass !== "b" && certClass !== "c") usage();
+  // `owed` and `frontier` report against all four classes (SPEC §12.3/§12.5
+  // — a what-if, not a schedule); every other consumer of --class drives the
+  // scheduler, whose refusal of a and d stands until §11 q6 is settled.
+  if (command !== "owed" && command !== "frontier" && certClass !== "b" && certClass !== "c") {
+    usage();
+  }
 
   switch (command) {
     case "scan": {
@@ -381,10 +391,11 @@ async function main(): Promise<void> {
       // × adjudications × the pinned frontier, nothing probed, nothing
       // written, non-zero exit on a broken link.
       const dataset = await loadLocalDataset(datasetDir, datasetPin);
+      const recipes = await loadRecipes(recipesDir);
       const map = buildFrontier({
         frontier: dataset.frontier(),
         adjudications: await loadAdjudications(adjudicationsDir),
-        recipes: await loadRecipes(recipesDir),
+        recipes,
         collectors: allCollectors,
         datasetVersion: dataset.version(),
         ksiReachedControls: dataset.ksiReachedControls(),
@@ -394,8 +405,42 @@ async function main(): Promise<void> {
         // so the derivation stays pure and testable without a dataset.
         upstreamRecipesFor: (controlId) => dataset.upstreamRecipesFor(controlId),
       });
-      if (values.json) console.log(JSON.stringify(map, null, 2));
-      else console.log(renderFrontier(map, useColor));
+      if (values["by-controls"]) {
+        // the legacy view, unchanged (ground rule 1: neither view is removed
+        // until a reviewed decision does it)
+        if (values.json) console.log(JSON.stringify(map, null, 2));
+        else console.log(renderFrontier(map, useColor));
+      } else {
+        // frontier v2 (SPEC §12.5): the KSI register — the owed side (Q1) ×
+        // the derived methods (Q2.2) × the projector's method register over
+        // the local ledger (Q2.3). The broken-link and --strict gates below
+        // run on the SAME control map either way: the register view changes
+        // the denominator, never the checks.
+        const registerClass = (values.class ?? "b") as OfferingClass;
+        if (!OFFERING_CLASSES.includes(registerClass)) usage();
+        const catalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+        const methods = deriveCatalogMethods(
+          recipes,
+          allCollectors.map((c) => c.manifest),
+        );
+        const projector = createProjector({
+          recipes,
+          methods,
+          ksiIds: catalog.ksis.map((k) => k.id),
+          methodFloor: catalog.floors[registerClass].minPerKsi,
+        });
+        const projection = await projector.fold(createLocalLedger(ledgerDir));
+        const view = buildKsiRegister({
+          catalog,
+          offeringClass: registerClass,
+          methods,
+          methodRegisters: projection.methodRegisters,
+          frontier: map,
+        });
+        view.frontierOverlay = DEFAULT_OVERLAY_PINS["automation-frontier.json"] ?? "";
+        if (values.json) console.log(JSON.stringify(view, null, 2));
+        else console.log(renderKsiRegister(view, useColor, new Date()));
+      }
       if (map.problems.length > 0) {
         console.error(
           `\n${map.problems.length} broken link(s) in the adjudication overlay:\n` +
