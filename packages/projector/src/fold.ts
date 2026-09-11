@@ -5,6 +5,8 @@ import type {
   EvidenceStatus,
   LedgerEntry,
   LedgerStore,
+  MethodCell,
+  MethodRegisterRow,
   Projection,
   Projector,
   RegisterRow,
@@ -18,6 +20,7 @@ import type {
   PipelineRecipe,
   ScanRun,
   ScopingEvent,
+  ValidationMethod,
 } from "@rampscan/schema";
 import { isEvidenceBundle, isScanRun, isScopingEvent } from "@rampscan/schema";
 
@@ -115,6 +118,25 @@ export interface FoldOptions {
    * interval where a cell's evidence sat past 1.0 of the window unrefreshed.
    */
   windowMs?: number;
+  /**
+   * The derived method register (Q2.3, SPEC §12.2): `deriveCatalogMethods`'
+   * output, passed in like the recipe catalog — the fold joins, it never
+   * derives, so the register stays a function of reviewed artifacts the
+   * caller can name.
+   */
+  methods?: ValidationMethod[];
+  /**
+   * The owed catalog's KSI ids (46 at the pin). When present, every scanned
+   * repo gets a method-register row for every one of them — a KSI no method
+   * touches is a G1 row, never an absent row (invariant 4′).
+   */
+  ksiIds?: string[];
+  /**
+   * The FRC-CSX-VVK floor for the configured class — owed-side DATA
+   * (`KsiCatalog.floors[class].minPerKsi`), never typed here. Null when the
+   * class owes no number (class a).
+   */
+  methodFloor?: number | null;
 }
 
 export function foldEntries(
@@ -345,6 +367,71 @@ export function foldEntries(
   const controls = rollup(registers, (row) => row.controlIds);
   const ksis = rollup(registers, (row) => row.ksiIds);
 
+  // The method register (Q2.3): (repo, KSI) → derived methods joined to the
+  // register rows they evidence through. A pipeline method's state IS its
+  // recipe cell's state — one bundle evidences every method its recipe
+  // derives (§1.1 decision (b), rendered at fold time). G1 and G2 are
+  // properties of the register itself: computed from which methods exist,
+  // not from what the ledger holds — missing or stale evidence is G3 (Q3).
+  const methodRegisters: MethodRegisterRow[] = [];
+  if (options.methods !== undefined) {
+    const methodsByKsi = new Map<string, ValidationMethod[]>();
+    for (const method of options.methods) {
+      (methodsByKsi.get(method.ksi) ?? methodsByKsi.set(method.ksi, []).get(method.ksi)!).push(
+        method,
+      );
+    }
+    const ksiUniverse = [
+      ...new Set([...(options.ksiIds ?? []), ...methodsByKsi.keys()]),
+    ].sort();
+    const registerByCell = new Map(registers.map((r) => [`${r.repo} ${r.recipeId}`, r]));
+    const floor = options.methodFloor ?? null;
+    for (const repo of repos) {
+      for (const ksi of ksiUniverse) {
+        const cells: MethodCell[] = [...(methodsByKsi.get(ksi) ?? [])]
+          .sort((a, b) => a.id.localeCompare(b.id))
+          .map((method) => {
+            const cell: MethodCell = {
+              methodId: method.id,
+              source: method.source,
+              automated: method.automated,
+              standing: method.standing,
+              state: "unevidenced",
+            };
+            if (method.source === "pipeline") {
+              cell.recipeId = method.provenance.recipe_id;
+              cell.collector = method.provenance.collector;
+              const row = registerByCell.get(`${repo} ${method.provenance.recipe_id}`);
+              if (row !== undefined) {
+                cell.state = row.state;
+                if (row.bundleDigest !== undefined) cell.bundleDigest = row.bundleDigest;
+                if (row.freshAsOf !== undefined) cell.freshAsOf = row.freshAsOf;
+              }
+            }
+            return cell;
+          });
+        const automatedMethods = cells.filter((c) => c.automated).length;
+        const row: MethodRegisterRow = {
+          repo,
+          ksi,
+          methods: cells,
+          automatedMethods,
+          methodFloor: floor,
+          floorMet: floor === null ? null : automatedMethods >= floor,
+        };
+        const freshAsOf = cells
+          .map((c) => c.freshAsOf)
+          .filter((t): t is string => t !== undefined)
+          .sort()
+          .at(-1);
+        if (freshAsOf !== undefined) row.freshAsOf = freshAsOf;
+        if (cells.length === 0) row.gap = "G1";
+        else if (floor !== null && automatedMethods < floor) row.gap = "G2";
+        methodRegisters.push(row);
+      }
+    }
+  }
+
   // Cadence-adherence history (I1d): bundle chains × the MVX window. Every
   // consecutive pair whose refresh landed after the window closed is a gap;
   // an unrefreshed tail whose window closed before projectedAt is an ongoing
@@ -407,6 +494,7 @@ export function foldEntries(
     drift,
     controls,
     ksis,
+    methodRegisters,
     gaps,
     scanRuns,
     datasetVersion: newest?.bundle.predicate.dataset_version ?? "",
@@ -460,6 +548,9 @@ export function createProjector(options: ProjectorOptions = {}): Projector {
       if (options.recipes) foldOptions.recipes = options.recipes;
       if (options.asOf !== undefined) foldOptions.asOf = options.asOf;
       if (options.windowMs !== undefined) foldOptions.windowMs = options.windowMs;
+      if (options.methods !== undefined) foldOptions.methods = options.methods;
+      if (options.ksiIds !== undefined) foldOptions.ksiIds = options.ksiIds;
+      if (options.methodFloor !== undefined) foldOptions.methodFloor = options.methodFloor;
       return foldEntries(await ledger.list(), now().toISOString(), foldOptions);
     },
   };
