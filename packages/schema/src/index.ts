@@ -1,5 +1,6 @@
 export * from "./finding.js";
 export * from "./recipe.js";
+export * from "./method.js";
 export * from "./adjudication.js";
 export * from "./bundle.js";
 export * from "./scan-run.js";

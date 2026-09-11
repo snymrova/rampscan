@@ -13,24 +13,25 @@ import { absentReason, resolveTool } from "./tools.js";
 // building requires the full app context; the base image is where the OS
 // packages live. Graceful skip when there is no Dockerfile.
 
-const GrypeReport = z
-  .object({
-    matches: z.array(
-      z.object({
-        vulnerability: z.object({
-          id: z.string(),
-          severity: z.string().optional(),
-          fix: z.object({ state: z.string().optional() }).passthrough().optional(),
-        }).passthrough(),
-        artifact: z.object({
-          name: z.string(),
-          version: z.string().optional(),
-          type: z.string().optional(),
-        }).passthrough(),
-      }).passthrough(),
-    ),
-  })
-  .passthrough();
+// exported for the schema hard-edge pin (#31): loose parsing must RETAIN
+// unknown vendor fields, and only a test that asserts it would notice a zod
+// major quietly degrading retention to stripping
+export const GrypeReport = z.looseObject({
+  matches: z.array(
+    z.looseObject({
+      vulnerability: z.looseObject({
+        id: z.string(),
+        severity: z.string().optional(),
+        fix: z.looseObject({ state: z.string().optional() }).optional(),
+      }),
+      artifact: z.looseObject({
+        name: z.string(),
+        version: z.string().optional(),
+        type: z.string().optional(),
+      }),
+    }),
+  ),
+});
 
 /** the base image of the final stage: last FROM line, alias stripped */
 export function finalBaseImage(dockerfile: string): string | undefined {

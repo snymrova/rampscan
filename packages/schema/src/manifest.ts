@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MethodScope } from "./method.js";
 
 // Collector manifest — SPEC §7 (Tool Interfaces): a collector is a program
 // plus a manifest declaring inputs, dirty-set depth, the recipe IDs it can
@@ -37,5 +38,14 @@ export const CollectorManifest = z.object({
    * Absent → the collector is never cached and always runs.
    */
   cacheScope: z.array(z.string()).optional(),
+  /**
+   * What this collector's mechanisms walk (SPEC §12.6): declared here, once
+   * per collector, and inherited by every pipeline method derived from the
+   * recipes this manifest claims. OPTIONAL in the shape and REQUIRED in the
+   * shipped catalog — the Q2 migration sets collector-by-collector values and
+   * the catalog test refuses a manifest without one, same enforcement pattern
+   * as `empty_means`. Shape is schema's job; completeness is policy's.
+   */
+  scope: MethodScope.optional(),
 });
 export type CollectorManifest = z.infer<typeof CollectorManifest>;

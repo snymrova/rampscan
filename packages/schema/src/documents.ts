@@ -38,15 +38,14 @@ export type DocumentKind = z.infer<typeof DocumentKind>;
  * declaration means while looking like it declared something.
  */
 export const DeclaredDocument = z
-  .object({
+  .strictObject({
     /** unique within the block; how the document is named everywhere it renders */
     id: z.string().min(1),
     kind: DocumentKind,
     /** repo-relative path, no globs — a declaration names a file, not a pattern */
     path: z.string().min(1),
     description: declaredDescription,
-  })
-  .strict();
+  });
 export type DeclaredDocument = z.infer<typeof DeclaredDocument>;
 
 /**

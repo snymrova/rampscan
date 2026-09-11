@@ -29,28 +29,24 @@ export const SEMGREP_RULES_PATH = join(
   "../semgrep-rules.yaml",
 );
 
-const RawSemgrepOutput = z
-  .object({
-    version: z.string().optional(),
-    results: z.array(
-      z
-        .object({
-          check_id: z.string(),
-          path: z.string(),
-          start: z.object({ line: z.number() }).passthrough(),
-          end: z.object({ line: z.number() }).passthrough(),
-          extra: z
-            .object({
-              severity: z.string(),
-              message: z.string(),
-            })
-            .passthrough(),
-        })
-        .passthrough(),
-    ),
-    errors: z.array(z.object({}).passthrough()),
-  })
-  .passthrough();
+// exported for the schema hard-edge pin (#31): loose parsing must retain
+// unknown vendor fields
+export const RawSemgrepOutput = z.looseObject({
+  version: z.string().optional(),
+  results: z.array(
+    z.looseObject({
+      check_id: z.string(),
+      path: z.string(),
+      start: z.looseObject({ line: z.number() }),
+      end: z.looseObject({ line: z.number() }),
+      extra: z.looseObject({
+        severity: z.string(),
+        message: z.string(),
+      }),
+    }),
+  ),
+  errors: z.array(z.looseObject({})),
+});
 
 export const SemgrepResults = z.object({
   tool: z.literal("semgrep"),
