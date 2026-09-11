@@ -60,6 +60,13 @@ export const grype: Collector = {
     // cached result can miss newly published CVEs — the scheduled full scan
     // is the corrective
     cacheScope: ["Dockerfile", "**/Dockerfile"],
+    // Declared scan scope (SPEC §12.6): the repo read is a direct readFile of
+    // the Dockerfile from the working tree, no git filter — hence `included`,
+    // same reasoning as repo-facts. The scanned base image is external
+    // registry content, which this block deliberately does not describe: scope
+    // declares what was walked IN THE REPO, and the image is named by it, not
+    // in it.
+    scope: { population: "checkout", history: false, gitignored: "included" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

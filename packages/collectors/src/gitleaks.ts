@@ -27,6 +27,10 @@ export const gitleaks: Collector = {
     tools: ["gitleaks"],
     recipes: ["no-secrets-in-history"],
     cacheScope: ["@commit"], // scans the full history — any new commit re-runs it
+    // Declared scan scope (SPEC §12.6): `gitleaks git` reads COMMITTED history
+    // — the one collector with history: true — and never the working tree, so
+    // masked paths are structurally out of reach.
+    scope: { population: "checkout", history: true, gitignored: "excluded" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

@@ -120,6 +120,11 @@ export const documents: Collector = {
     // declared document and spawns nothing.
     cacheScope: [GRAPH_CONFIG_FILE, "@tree"],
     tools: [],
+    // Declared scan scope (SPEC §12.6): the config and every declared
+    // document are direct readFile/stat of the working tree, no git filter —
+    // a masked-or-untracked file at a declared path would be read and
+    // hashed. Hence `included`, the repo-facts reasoning.
+    scope: { population: "checkout", history: false, gitignored: "included" },
   },
 
   async collect(ctx): Promise<CollectOutput> {

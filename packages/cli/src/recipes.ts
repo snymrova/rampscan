@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { PipelineRecipe } from "@rampscan/schema";
+import { PipelineRecipe, methodsOfRecipe } from "@rampscan/schema";
+import type { CollectorManifest, PipelineMethod } from "@rampscan/schema";
 import type { DatasetClient } from "@rampscan/dataset";
 
 // Recipe loading and dataset validation (plan C3): every recipe's KSI and
@@ -24,6 +25,49 @@ export async function loadRecipes(dir: string): Promise<PipelineRecipe[]> {
     ids.add(r.id);
   }
   return recipes;
+}
+
+/**
+ * The register's derivation (SPEC §12.2, plan Q2.2): every recipe in the
+ * catalog becomes its pipeline methods — one per claimed KSI, `ksi_ids` as
+ * the primary key of the join — with each method's scope inherited from the
+ * manifest of the collector the recipe names. Pure over two reviewed
+ * artifacts (the recipe files, the collector manifests); there is no methods
+ * table anyone edits.
+ *
+ * Three refusals, all the same failure class: a recipe naming a collector no
+ * manifest declares, a manifest with no scope block (§12.6 — a method whose
+ * provenance cannot say what was walked is not interrogable), and a duplicate
+ * method id (a recipe listing one KSI twice would mint two identical rows
+ * that count once everywhere but read as two).
+ */
+export function deriveCatalogMethods(
+  recipes: PipelineRecipe[],
+  manifests: CollectorManifest[],
+): PipelineMethod[] {
+  const byName = new Map(manifests.map((m) => [m.name, m]));
+  const methods: PipelineMethod[] = [];
+  const seen = new Set<string>();
+  for (const recipe of recipes) {
+    const manifest = byName.get(recipe.collection.collector);
+    if (manifest === undefined) {
+      throw new Error(
+        `recipe ${recipe.id} names collector "${recipe.collection.collector}", which no manifest declares`,
+      );
+    }
+    if (manifest.scope === undefined) {
+      throw new Error(
+        `collector "${manifest.name}" declares no scope block (SPEC §12.6) — ` +
+          `its methods cannot say what was walked, so none can be derived`,
+      );
+    }
+    for (const method of methodsOfRecipe(recipe, manifest.scope)) {
+      if (seen.has(method.id)) throw new Error(`duplicate method id "${method.id}"`);
+      seen.add(method.id);
+      methods.push(method);
+    }
+  }
+  return methods;
 }
 
 /** every KSI resolves in the crosswalk, and every control is reachable from the recipe's KSIs */

@@ -144,6 +144,12 @@ export const contract: Collector = {
     // in scope: a contract edit must miss the cache even when the graph did not
     // change shape
     cacheScope: ["@inputs", GRAPH_CONFIG_FILE],
+    // Declared scan scope (SPEC §12.6): graph.db rides the committed tree,
+    // but the declared rules are a direct readFile of the config from the
+    // working tree, no git filter — hence `included`, the repo-facts
+    // reasoning. The config's bytes are content-hashed into the anchor, so
+    // what was read is at least always what was signed.
+    scope: { population: "checkout", history: false, gitignored: "included" },
     tools: [],
   },
 
