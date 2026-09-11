@@ -246,6 +246,8 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       json("method_floor"),
       json("floor_met"),
       text("fresh_as_of"),
+      // Q3.2: the G3 numerator — a count, never null, so a plain number field
+      { name: "stale_methods", type: "number", required: false },
       // Q3.1: the history meter's fields — floor and met are json for the
       // same null-survival reason as method_floor/floor_met above
       text("history_since"),
@@ -548,6 +550,7 @@ export async function writeProjectionPocketBase(
       method_floor: row.methodFloor,
       floor_met: row.floorMet,
       fresh_as_of: row.freshAsOf ?? "",
+      stale_methods: row.staleMethods,
       history_since: row.historySince ?? "",
       history_floor_months: row.historyFloorMonths,
       history_met: row.historyMet,
@@ -685,6 +688,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
       automatedMethods: r.automated_methods,
       methodFloor: r.method_floor ?? null,
       floorMet: r.floor_met ?? null,
+      staleMethods: r.stale_methods ?? 0,
       historyFloorMonths: r.history_floor_months ?? null,
       historyMet: r.history_met ?? null,
     };

@@ -6,7 +6,7 @@ import {
 } from "@rampscan/projector";
 import type { ProjectionSettings } from "@rampscan/projector";
 import { createLocalLedger } from "@rampscan/ledger";
-import type { Projection } from "@rampscan/core";
+import type { ClockWindow, Projection } from "@rampscan/core";
 import { canonicalJson } from "@rampscan/schema";
 import type { ValidationMethod } from "@rampscan/schema";
 import { loadRecipes } from "./recipes.js";
@@ -37,6 +37,8 @@ export interface RebuildOptions {
   ksiIds?: string[];
   methodFloor?: number | null;
   historyFloorMonths?: number | null;
+  machineWindow?: ClockWindow | null;
+  nonMachineWindow?: ClockWindow | null;
   /** PocketBase target; rebuilt too when provided and healthy */
   pocketbase?: {
     url: string;
@@ -70,6 +72,10 @@ export async function rebuild(options: RebuildOptions): Promise<RebuildReport> {
   if (options.methodFloor !== undefined) projectorOptions.methodFloor = options.methodFloor;
   if (options.historyFloorMonths !== undefined)
     projectorOptions.historyFloorMonths = options.historyFloorMonths;
+  if (options.machineWindow !== undefined)
+    projectorOptions.machineWindow = options.machineWindow;
+  if (options.nonMachineWindow !== undefined)
+    projectorOptions.nonMachineWindow = options.nonMachineWindow;
   const projector = createProjector(projectorOptions);
 
   const entries = await ledger.list();

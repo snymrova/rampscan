@@ -1,5 +1,6 @@
 import type {
   CadenceGap,
+  ClockWindow,
   CoverageRow,
   DriftEvent,
   EvidenceStatus,
@@ -143,6 +144,19 @@ export interface FoldOptions {
    * here. Null when the class owes no number (a and b: unquantified).
    */
   historyFloorMonths?: number | null;
+  /**
+   * The VDR-TFR-MVX window for the configured class (Q3.2) — owed-side DATA
+   * (`KsiCatalog.windows[class]`, number and unit only), never typed here.
+   * Null when the rules define none (class d — SPEC §11 q6): machine-clock
+   * methods then get no freshness judgment, honestly, rather than a window
+   * borrowed from a class the offering is not.
+   */
+  machineWindow?: ClockWindow | null;
+  /**
+   * The VDR-TFR-NMV window (Q3.2) — owed-side DATA
+   * (`KsiCatalog.nonMachineWindow`), flat across classes, in months.
+   */
+  nonMachineWindow?: ClockWindow | null;
 }
 
 /**
@@ -160,6 +174,19 @@ export function monthsBefore(iso: string, months: number): string {
   const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
   d.setUTCDate(Math.min(day, lastDay));
   return d.toISOString();
+}
+
+/**
+ * The instant one owed window before `iso` (Q3.2): evidence timestamped at
+ * or after it is inside the window. Days are exact ms arithmetic; months go
+ * through `monthsBefore` — VDR-TFR-NMV says "every 3 months", and the same
+ * calendar honesty that G4 owes FRC-CSX-MOT applies here.
+ */
+export function windowThreshold(iso: string, window: ClockWindow): string {
+  if (window.unit === "days") {
+    return new Date(Date.parse(iso) - window.num * 86_400_000).toISOString();
+  }
+  return monthsBefore(iso, window.num);
 }
 
 export function foldEntries(
@@ -395,7 +422,8 @@ export function foldEntries(
   // recipe cell's state — one bundle evidences every method its recipe
   // derives (§1.1 decision (b), rendered at fold time). G1 and G2 are
   // properties of the register itself: computed from which methods exist,
-  // not from what the ledger holds — missing or stale evidence is G3 (Q3).
+  // not from what the ledger holds. Missing or stale evidence is G3 (Q3.2):
+  // each method judged against its own clock family's owed window.
   const methodRegisters: MethodRegisterRow[] = [];
   if (options.methods !== undefined) {
     const methodsByKsi = new Map<string, ValidationMethod[]>();
@@ -414,17 +442,42 @@ export function foldEntries(
     // reaching at or before it satisfies the floor (Q3.1)
     const historyThreshold =
       historyFloor === null ? null : monthsBefore(projectedAt, historyFloor);
+    // The owed windows per clock family (Q3.2), and their threshold instants
+    // computed once per fold: evidence at or after a threshold is fresh.
+    // Stripped to number + unit even when a caller hands the catalog's own
+    // richer object — the projection's bytes carry the judged fact, and the
+    // rule id stays on the owed side where it lives.
+    const strip = (w: ClockWindow | null | undefined): ClockWindow | null =>
+      w == null ? null : { num: w.num, unit: w.unit };
+    const windowByClock: Record<"machine" | "non-machine", ClockWindow | null> = {
+      machine: strip(options.machineWindow),
+      "non-machine": strip(options.nonMachineWindow),
+    };
+    const thresholdByClock = {
+      machine:
+        windowByClock.machine === null
+          ? null
+          : windowThreshold(projectedAt, windowByClock.machine),
+      "non-machine":
+        windowByClock["non-machine"] === null
+          ? null
+          : windowThreshold(projectedAt, windowByClock["non-machine"]),
+    };
     for (const repo of repos) {
       for (const ksi of ksiUniverse) {
         const cells: MethodCell[] = [...(methodsByKsi.get(ksi) ?? [])]
           .sort((a, b) => a.id.localeCompare(b.id))
           .map((method) => {
+            const window = windowByClock[method.clock];
             const cell: MethodCell = {
               methodId: method.id,
               source: method.source,
               automated: method.automated,
+              clock: method.clock,
               standing: method.standing,
               state: "unevidenced",
+              window,
+              freshMet: null,
             };
             if (method.source === "pipeline") {
               cell.recipeId = method.provenance.recipe_id;
@@ -437,9 +490,21 @@ export function foldEntries(
                 if (row.freshAsOf !== undefined) cell.freshAsOf = row.freshAsOf;
               }
             }
+            // G3 per method (Q3.2): the owed clock, judged at projectedAt.
+            // Missing evidence is false, not null — nothing is re-validating
+            // this method at any cadence; null is reserved for "no window
+            // owed" and for a live two-key scoping (a signed N/A is not a
+            // lapsed clock), which are different facts.
+            const threshold = thresholdByClock[method.clock];
+            if (threshold !== null && cell.state !== "notApplicable") {
+              cell.freshMet = cell.freshAsOf !== undefined && cell.freshAsOf >= threshold;
+            }
             return cell;
           });
         const automatedMethods = cells.filter((c) => c.automated).length;
+        // G3 freshness (Q3.2): methods whose owed clock is unmet — stale OR
+        // missing evidence, per the cell judgment above
+        const staleMethods = cells.filter((c) => c.freshMet === false).length;
         // G4 history (Q3.1): where this KSI's validation history begins —
         // the earliest bundle across its methods' chains, dead bundles
         // included, because the superseded record IS the history the
@@ -461,6 +526,7 @@ export function foldEntries(
           automatedMethods,
           methodFloor: floor,
           floorMet: floor === null ? null : automatedMethods >= floor,
+          staleMethods,
           historyFloorMonths: historyFloor,
           historyMet:
             historyThreshold === null
@@ -476,6 +542,7 @@ export function foldEntries(
         if (freshAsOf !== undefined) row.freshAsOf = freshAsOf;
         if (cells.length === 0) row.gap = "G1";
         else if (floor !== null && automatedMethods < floor) row.gap = "G2";
+        else if (staleMethods > 0) row.gap = "G3";
         else if (row.historyMet === false) row.gap = "G4";
         methodRegisters.push(row);
       }
@@ -603,6 +670,9 @@ export function createProjector(options: ProjectorOptions = {}): Projector {
       if (options.methodFloor !== undefined) foldOptions.methodFloor = options.methodFloor;
       if (options.historyFloorMonths !== undefined)
         foldOptions.historyFloorMonths = options.historyFloorMonths;
+      if (options.machineWindow !== undefined) foldOptions.machineWindow = options.machineWindow;
+      if (options.nonMachineWindow !== undefined)
+        foldOptions.nonMachineWindow = options.nonMachineWindow;
       return foldEntries(await ledger.list(), now().toISOString(), foldOptions);
     },
   };

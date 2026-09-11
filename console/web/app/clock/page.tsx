@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
-import { MVX_WINDOW_DAYS, clockState, formatDuration } from "../../lib/mvx";
-import type { GapRecord, MetaRecord, RegisterRecord } from "../../lib/types";
+import { formatDuration, windowClockState, windowLabel } from "../../lib/mvx";
+import type { GapRecord, MetaRecord, MethodRegisterRecord } from "../../lib/types";
 
-// The clock view (SPEC §8.2): every live bundle's age against the class's
-// MVX window (b=7d, c=3d), expiring-soon first. This is the screen that
-// exists because the regulation demands the loop — stale is visually loud.
+// The clock view, re-keyed to (KSI, method) — Q3.2, plan §4 G3. One row per
+// method with a running clock: its evidence age against ITS OWN owed window,
+// carried on the cell by the fold (machine → VDR-TFR-MVX per class,
+// non-machine → VDR-TFR-NMV) — read from the pinned rules, never typed into
+// this app. Expiring-soon first; stale is visually loud. A method that owes
+// a clock but has no evidence to run it is said out loud above the table —
+// that is G3 too (missing, not just stale), and the board pill agrees.
 //
 // Below it, the cadence-gap timeline (plan I3d over I1d): every interval
 // where a cell's evidence sat past the window UNREFRESHED, read straight
@@ -26,7 +30,9 @@ export default function ClockPage() {
 }
 
 function Clock() {
-  const { records } = useCollection<RegisterRecord>("registers");
+  const { records } = useCollection<MethodRegisterRecord>("method_registers", {
+    sort: "repo,ksi",
+  });
   const gaps = useCollection<GapRecord>("gaps", { sort: "repo,recipe_id,gap_start" });
   const meta = useCollection<MetaRecord>("meta");
   const [now, setNow] = useState(() => Date.now());
@@ -36,22 +42,44 @@ function Clock() {
     return () => clearInterval(timer);
   }, []);
 
-  const certClass = meta.records[0]?.settings?.certClass ?? "b";
-  const live = records
-    .filter((r) => (r.state === "evidenced" || r.state === "violated") && r.fresh_as_of)
-    .map((r) => ({ row: r, clock: clockState(r.fresh_as_of, certClass, now) }))
-    .sort((a, b) => a.clock.remainingMs - b.clock.remainingMs);
+  // (KSI, method) rows with a clock to run: live evidence AND an owed window
+  const live = useMemo(
+    () =>
+      records
+        .flatMap((row) =>
+          row.methods
+            .filter((cell) => cell.freshAsOf !== undefined && cell.window !== null)
+            .map((cell) => ({ repo: row.repo, ksi: row.ksi, cell })),
+        )
+        .map((r) => ({
+          ...r,
+          clock: windowClockState(r.cell.freshAsOf!, r.cell.window!, now),
+        }))
+        .sort((a, b) => a.clock.remainingMs - b.clock.remainingMs),
+    [records, now],
+  );
   const expired = live.filter((e) => e.clock.status === "expired").length;
   const expiring = live.filter((e) => e.clock.status === "expiring").length;
+  // methods whose owed clock has NO evidence to run it — G3's missing half
+  const unstarted = records.reduce(
+    (sum, row) =>
+      sum +
+      row.methods.filter(
+        (cell) => cell.window !== null && cell.freshAsOf === undefined && cell.freshMet === false,
+      ).length,
+    0,
+  );
 
   return (
     <>
       <h1>Clock</h1>
       <p className="subtitle">
-        class {certClass} → {MVX_WINDOW_DAYS[certClass]}-day MVX window · {live.length} live
-        bundle(s)
+        {live.length} method clock(s), each against its owed window
         {expired > 0 && <> · <span style={{ color: "var(--violated)" }}>{expired} EXPIRED</span></>}
         {expiring > 0 && <> · <span style={{ color: "var(--unevidenced)" }}>{expiring} expiring</span></>}
+        {unstarted > 0 && (
+          <> · <span style={{ color: "var(--unevidenced)" }}>{unstarted} owed with no evidence</span></>
+        )}
       </p>
 
       <div className="panel">
@@ -60,15 +88,16 @@ function Clock() {
             <tr>
               <th>Remaining</th>
               <th style={{ width: 180 }}>Window</th>
-              <th>Recipe</th>
+              <th>KSI</th>
+              <th>Method</th>
               <th>Repo</th>
               <th>State</th>
               <th>Fresh as of</th>
             </tr>
           </thead>
           <tbody>
-            {live.map(({ row, clock }) => (
-              <tr key={row.id}>
+            {live.map(({ repo, ksi, cell, clock }) => (
+              <tr key={`${repo} ${cell.methodId}`}>
                 <td className={`remaining ${clock.status}`}>
                   {clock.remainingMs <= 0
                     ? `expired ${formatDuration(clock.remainingMs)} ago`
@@ -78,20 +107,30 @@ function Clock() {
                   <div className={`clockbar clock-${clock.status}`}>
                     <div style={{ width: `${Math.min(100, clock.fractionUsed * 100)}%` }} />
                   </div>
+                  <div className="faint" style={{ fontSize: 12, marginTop: 2 }}>
+                    {windowLabel(cell.window!)} · {cell.clock}
+                  </div>
                 </td>
+                <td className="mono">{ksi}</td>
                 <td className="mono">
-                  <Link href={`/evidence/${row.bundle_digest}`}>{row.recipe_id}</Link>
+                  {cell.bundleDigest ? (
+                    <Link href={`/evidence/${cell.bundleDigest}`}>
+                      {cell.recipeId ?? cell.methodId}
+                    </Link>
+                  ) : (
+                    (cell.recipeId ?? cell.methodId)
+                  )}
                 </td>
-                <td className="muted">{row.repo}</td>
+                <td className="muted">{repo}</td>
                 <td>
-                  <span className={`pill ${row.state}`}>{row.state}</span>
+                  <span className={`pill ${cell.state}`}>{cell.state}</span>
                 </td>
-                <td className="muted">{new Date(row.fresh_as_of).toLocaleString()}</td>
+                <td className="muted">{new Date(cell.freshAsOf!).toLocaleString()}</td>
               </tr>
             ))}
             {live.length === 0 && (
               <tr>
-                <td colSpan={6} className="empty">
+                <td colSpan={7} className="empty">
                   no live evidence yet — scan something
                 </td>
               </tr>
