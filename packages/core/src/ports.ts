@@ -517,6 +517,35 @@ export interface CadenceGap {
   ongoing: boolean;
 }
 
+/**
+ * One vulnerability-shaped record (Q3.5, G13 — VDR-CSO-FAV): a validation
+ * entering `violated` IS a vulnerability with detection-and-response
+ * obligations, so the fold emits the record instead of leaving the flip a
+ * drift footnote. Detection is the violating bundle's own timestamp — the
+ * instant the failed validation was signed, never a wall clock. Resolution
+ * is the first later bundle in the same cell's chain whose verdict is
+ * `evidenced`: a violated chain that merely dies (anchor drift, nothing
+ * replacing it) resolves NOTHING — evidence that died unfixed is not a fix,
+ * and the record stays open saying so.
+ */
+export interface ValidationVulnerability {
+  repo: string;
+  recipeId: string;
+  /** what the failed validation implicates, from the violating predicate */
+  ksiIds: string[];
+  /** the violating bundle's timestamp — when detection happened */
+  detectedAt: string; // ISO 8601
+  /** the commit the violation was detected at */
+  commit: string;
+  /** the violating bundle — this record's evidence digest */
+  bundleDigest: Digest;
+  status: "open" | "resolved";
+  /** resolved only: the first evidenced bundle after the violation */
+  resolvedAt?: string; // ISO 8601
+  resolvingDigest?: Digest;
+  resolvingCommit?: string;
+}
+
 /** One movement the drift view explains: evidence born, died, or flipped. */
 export interface DriftEvent {
   at: string; // ISO 8601 — when the change was observed
@@ -622,6 +651,12 @@ export interface Projection {
   methodRegisters: MethodRegisterRow[];
   /** cadence-adherence history: MVX-window lapses, empty when no window was given (I1d) */
   gaps: CadenceGap[];
+  /**
+   * The failure→vulnerability feed (Q3.5, G13): every episode of a cell
+   * standing `violated`, open or resolved — computed from the same chains
+   * the drift view reads, so a verdict flip is never only a footnote.
+   */
+  vulnerabilities: ValidationVulnerability[];
   /**
    * The run records, newest first, capped (J1): the ledger keeps every run,
    * the projection keeps the newest N — the projection is rebuildable and the

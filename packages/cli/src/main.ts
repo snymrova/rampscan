@@ -23,6 +23,7 @@ import { loadAdjudications } from "./adjudications.js";
 import { check, renderCheck } from "./check.js";
 import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
+import { buildGapRegister, renderGapRegister } from "./gaps.js";
 import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
@@ -88,6 +89,9 @@ function usage(): never {
       "                    --strict also exits 1 on any unreviewed control",
       "  frontier --by-controls  the legacy control view, unchanged: catalog × adjudications ×",
       "                    the pinned frontier (ground rule 1 — both denominators stay printable)",
+      "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
+      "                    G13 row, each citing its rule id and the evidence digest where",
+      "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
       "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
       "                    method floor, validation window, artifact count — every number read",
       "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
@@ -186,7 +190,13 @@ async function main(): Promise<void> {
   // `owed` and `frontier` report against all four classes (SPEC §12.3/§12.5
   // — a what-if, not a schedule); every other consumer of --class drives the
   // scheduler, whose refusal of a and d stands until §11 q6 is settled.
-  if (command !== "owed" && command !== "frontier" && certClass !== "b" && certClass !== "c") {
+  if (
+    command !== "owed" &&
+    command !== "frontier" &&
+    command !== "gaps" &&
+    certClass !== "b" &&
+    certClass !== "c"
+  ) {
     usage();
   }
 
@@ -478,6 +488,59 @@ async function main(): Promise<void> {
       return;
     }
 
+    case "gaps": {
+      // The gap register as a computation (plan Q3 exit gate): the same
+      // joins the frontier makes — owed side × derived methods × the fold
+      // over the local ledger × the control frontier — rendered as one row
+      // per gap instance, each citing its rule id and the evidence digest
+      // where evidence exists. Nothing probed, nothing typed.
+      const dataset = await loadLocalDataset(datasetDir, datasetPin);
+      const recipes = await loadRecipes(recipesDir);
+      const map = buildFrontier({
+        frontier: dataset.frontier(),
+        adjudications: await loadAdjudications(adjudicationsDir),
+        recipes,
+        collectors: allCollectors,
+        datasetVersion: dataset.version(),
+        ksiReachedControls: dataset.ksiReachedControls(),
+        upstreamRecipesFor: (controlId) => dataset.upstreamRecipesFor(controlId),
+      });
+      const registerClass = (values.class ?? "b") as OfferingClass;
+      if (!OFFERING_CLASSES.includes(registerClass)) usage();
+      const catalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      const methods = deriveCatalogMethods(
+        recipes,
+        allCollectors.map((c) => c.manifest),
+      );
+      const projector = createProjector({
+        recipes,
+        methods,
+        ksiIds: catalog.ksis.map((k) => k.id),
+        methodFloor: catalog.floors[registerClass].minPerKsi,
+        historyFloorMonths: catalog.historyFloors[registerClass].months,
+        machineWindow: catalog.windows[registerClass],
+        nonMachineWindow: catalog.nonMachineWindow,
+      });
+      const projection = await projector.fold(createLocalLedger(ledgerDir));
+      const view = buildGapRegister({
+        catalog,
+        offeringClass: registerClass,
+        methods,
+        methodRegisters: projection.methodRegisters,
+        vulnerabilities: projection.vulnerabilities,
+        frontier: map,
+      });
+      if (values.json) console.log(JSON.stringify(view, null, 2));
+      else console.log(renderGapRegister(view, useColor));
+      if (map.problems.length > 0) {
+        console.error(
+          `\n${map.problems.length} broken link(s) in the adjudication overlay:\n` +
+            map.problems.map((p) => `  - ${p}`).join("\n"),
+        );
+        process.exit(1);
+      }
+      return;
+    }
     case "owed": {
       // The Q1 exit gate: the owed state for any (KSI, class) pair, every
       // number read from the pinned JSON. Both legs of the dual-source

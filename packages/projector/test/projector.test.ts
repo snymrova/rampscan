@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import type { LedgerEntry } from "@rampscan/core";
 import type { EvidenceBundle } from "@rampscan/schema";
-import { foldEntries, writeProjectionSqlite } from "../src/index.js";
+import { foldEntries, readProjectionSqlite, writeProjectionSqlite } from "../src/index.js";
 
 // Anchor death is the point of M2: nothing "expires" by human memory — the
 // fold computes it. Synthetic entries here; the CLI e2e proves it end to end.
@@ -154,5 +154,112 @@ describe("sqlite projection", () => {
     const meta = db.prepare("SELECT * FROM meta").all() as Array<Record<string, unknown>>;
     expect(meta[0]!["dataset_version"]).toBe("2026.07.14.01");
     db.close();
+  });
+});
+
+// Q3.5 — the failure→vulnerability feed (G13, VDR-CSO-FAV): a validation
+// entering `violated` IS a vulnerability, so the fold emits the record —
+// detection at the violating bundle's own timestamp, resolution only by a
+// later evidenced bundle in the same chain. Never a wall clock, never a
+// drift footnote.
+describe("the failure→vulnerability feed (Q3.5, G13)", () => {
+  const T3 = "2026-08-15T00:00:00.000Z";
+  const f = (hash: string) => [{ path: "f", contentHash: hash }];
+
+  it("a bundle born violated opens a record at its own timestamp", () => {
+    const violated = entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "violated" });
+    const projection = foldEntries([violated], T2);
+    expect(projection.vulnerabilities).toEqual([
+      {
+        repo: "fixtures/app",
+        recipeId: "r",
+        ksiIds: ["KSI-SCR-MIT"],
+        detectedAt: T1,
+        commit: C1,
+        bundleDigest: violated.digest,
+        status: "open",
+      },
+    ]);
+  });
+
+  it("a flip to violated opens a record; the earlier evidenced bundle opens none", () => {
+    const projection = foldEntries(
+      [
+        entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "evidenced" }),
+        entry({ recipe: "r", timestamp: T2, commit: C2, anchors: f(HASH_B), verdict: "violated" }),
+      ],
+      T2,
+    );
+    expect(projection.vulnerabilities).toHaveLength(1);
+    expect(projection.vulnerabilities[0]!.detectedAt).toBe(T2);
+    expect(projection.vulnerabilities[0]!.status).toBe("open");
+  });
+
+  it("a later evidenced bundle resolves the episode, and says which bundle did", () => {
+    const fixing = entry({ recipe: "r", timestamp: T2, commit: C2, anchors: f(HASH_B), verdict: "evidenced" });
+    const projection = foldEntries(
+      [entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "violated" }), fixing],
+      T2,
+    );
+    const record = projection.vulnerabilities[0]!;
+    expect(record.status).toBe("resolved");
+    expect(record.resolvedAt).toBe(T2);
+    expect(record.resolvingDigest).toBe(fixing.digest);
+    expect(record.resolvingCommit).toBe(C2);
+  });
+
+  it("a violated re-key continues the episode — one record, not one per bundle", () => {
+    const projection = foldEntries(
+      [
+        entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "violated" }),
+        entry({ recipe: "r", timestamp: T2, commit: C2, anchors: f(HASH_B), verdict: "violated" }),
+      ],
+      T2,
+    );
+    expect(projection.vulnerabilities).toHaveLength(1);
+    expect(projection.vulnerabilities[0]!.detectedAt).toBe(T1);
+    expect(projection.vulnerabilities[0]!.status).toBe("open");
+  });
+
+  it("violated → evidenced → violated is two episodes: one resolved, one open", () => {
+    const projection = foldEntries(
+      [
+        entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "violated" }),
+        entry({ recipe: "r", timestamp: T2, commit: C2, anchors: f(HASH_B), verdict: "evidenced" }),
+        entry({ recipe: "r", timestamp: T3, commit: C2, anchors: f(HASH_B), verdict: "violated" }),
+      ],
+      T3,
+    );
+    expect(projection.vulnerabilities.map((v) => v.status)).toEqual(["resolved", "open"]);
+    expect(projection.vulnerabilities.map((v) => v.detectedAt)).toEqual([T1, T3]);
+  });
+
+  it("a violated chain that merely dies stays open — evidence that died unfixed is not a fix", () => {
+    const projection = foldEntries(
+      [
+        entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "violated" }),
+        // another recipe later observes the same anchor changed: r's evidence
+        // dies of anchor drift, with no successor in r's own chain
+        entry({ recipe: "s", timestamp: T2, commit: C2, anchors: f(HASH_B), verdict: "evidenced" }),
+      ],
+      T2,
+    );
+    const dead = projection.rows.find((r) => r.recipeId === "r")!;
+    expect(dead.status.state).toBe("dead");
+    expect(projection.vulnerabilities.find((v) => v.recipeId === "r")!.status).toBe("open");
+  });
+
+  it("survives the sqlite round trip", async () => {
+    const dbPath = join(await mkdtemp(join(tmpdir(), "rampscan-g13-")), "projection.db");
+    const projection = foldEntries(
+      [
+        entry({ recipe: "r", timestamp: T1, commit: C1, anchors: f(HASH_A), verdict: "violated" }),
+        entry({ recipe: "r", timestamp: T2, commit: C2, anchors: f(HASH_B), verdict: "evidenced" }),
+      ],
+      T2,
+    );
+    expect(projection.vulnerabilities).toHaveLength(1);
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
   });
 });

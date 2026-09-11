@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
-import type { DriftRecord } from "../../lib/types";
+import type { DriftRecord, VulnerabilityRecord } from "../../lib/types";
 
 // The drift view (SPEC §8.3): what died since the last window and why —
 // anchor changed, assertion flipped, scoped away. Movement is the finding.
@@ -33,12 +33,17 @@ function describe(event: DriftRecord): string {
 
 function Drift() {
   const { records, loading } = useCollection<DriftRecord>("drift", { sort: "-at" });
+  const { records: vulnerabilities } = useCollection<VulnerabilityRecord>("vulnerabilities", {
+    sort: "-detected_at",
+  });
 
   const byDay = new Map<string, DriftRecord[]>();
   for (const event of records) {
     const day = event.at.slice(0, 10);
     (byDay.get(day) ?? byDay.set(day, []).get(day)!).push(event);
   }
+  const open = vulnerabilities.filter((v) => v.vuln_status === "open");
+  const resolved = vulnerabilities.length - open.length;
 
   return (
     <>
@@ -47,6 +52,40 @@ function Drift() {
         every movement the ledger records: evidence born, dead, flipped, or scoped — with its
         cause. Nothing here is typed; it is all computed from bundle chains.
       </p>
+
+      {/* the failure→vulnerability feed (Q3.5, G13 — VDR-CSO-FAV): a failed
+          validation is a vulnerability with detection-and-response
+          obligations, so the open episodes lead the drift page rather than
+          hiding among its footnotes */}
+      {vulnerabilities.length > 0 && (
+        <>
+          <div className="drift-day">
+            failure → vulnerability (VDR-CSO-FAV): {open.length} open · {resolved} resolved
+          </div>
+          <div className="panel">
+            {open.map((v) => (
+              <div className="drift-event" key={v.id}>
+                <span className="drift-kind verdict-flipped">open</span>
+                <span className="mono">
+                  <Link href={`/evidence/${v.bundle_digest}`}>{v.recipe_id}</Link>
+                </span>
+                <span className="muted">
+                  {v.ksi_ids.join(" ")} — detected {new Date(v.detected_at).toLocaleString()}
+                </span>
+                <span className="faint mono">at {v.commit_sha.slice(0, 12)}</span>
+                <span className="nav-spacer" />
+              </div>
+            ))}
+            {open.length === 0 && (
+              <div className="drift-event">
+                <span className="muted">
+                  no open records — every violated episode has a later evidenced bundle
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {[...byDay.entries()].map(([day, events]) => (
         <div key={day}>

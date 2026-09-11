@@ -10,6 +10,7 @@ import type {
   RegisterRow,
   RollupRow,
   ScanRunRow,
+  ValidationVulnerability,
 } from "@rampscan/core";
 
 // SQLite persistence for the projection. The database is disposable by
@@ -34,6 +35,7 @@ export async function writeProjectionSqlite(
       "ksis",
       "method_registers",
       "gaps",
+      "vulnerabilities",
       "scan_runs",
       "meta",
     ]) {
@@ -131,6 +133,22 @@ export async function writeProjectionSqlite(
         gap_end        TEXT NOT NULL,
         duration_ms    INTEGER NOT NULL,
         ongoing        INTEGER NOT NULL -- 0 | 1
+      )
+    `);
+    // the failure→vulnerability feed (Q3.5, G13 — VDR-CSO-FAV): one row per
+    // episode of a cell standing violated, open or resolved
+    db.exec(`
+      CREATE TABLE vulnerabilities (
+        repo             TEXT NOT NULL,
+        recipe_id        TEXT NOT NULL,
+        ksi_ids          TEXT NOT NULL, -- JSON array, from the violating predicate
+        detected_at      TEXT NOT NULL, -- the violating bundle's own timestamp
+        commit_sha       TEXT NOT NULL,
+        bundle_digest    TEXT NOT NULL,
+        status           TEXT NOT NULL, -- open | resolved
+        resolved_at      TEXT,
+        resolving_digest TEXT,
+        resolving_commit TEXT
       )
     `);
     // the run records (J1) — `trigger` is a SQLite keyword, hence trigger_kind
@@ -270,6 +288,27 @@ export async function writeProjectionSqlite(
         row.artifactsPresent,
         row.pointInTimeMethods,
         row.gap ?? null,
+      );
+    }
+
+    const insertVulnerability = db.prepare(
+      `INSERT INTO vulnerabilities
+         (repo, recipe_id, ksi_ids, detected_at, commit_sha, bundle_digest, status,
+          resolved_at, resolving_digest, resolving_commit)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const record of projection.vulnerabilities) {
+      insertVulnerability.run(
+        record.repo,
+        record.recipeId,
+        JSON.stringify(record.ksiIds),
+        record.detectedAt,
+        record.commit,
+        record.bundleDigest,
+        record.status,
+        record.resolvedAt ?? null,
+        record.resolvingDigest ?? null,
+        record.resolvingCommit ?? null,
       );
     }
 
@@ -422,6 +461,23 @@ export function readProjectionSqlite(dbPath: string): Projection {
       if (r.gap) row.gap = r.gap;
       return row;
     });
+    const vulnerabilities: ValidationVulnerability[] = (
+      db.prepare("SELECT * FROM vulnerabilities").all() as any[]
+    ).map((r) => {
+      const record: ValidationVulnerability = {
+        repo: r.repo,
+        recipeId: r.recipe_id,
+        ksiIds: JSON.parse(r.ksi_ids),
+        detectedAt: r.detected_at,
+        commit: r.commit_sha,
+        bundleDigest: r.bundle_digest,
+        status: r.status,
+      };
+      if (r.resolved_at) record.resolvedAt = r.resolved_at;
+      if (r.resolving_digest) record.resolvingDigest = r.resolving_digest;
+      if (r.resolving_commit) record.resolvingCommit = r.resolving_commit;
+      return record;
+    });
     const gaps: CadenceGap[] = (db.prepare("SELECT * FROM gaps").all() as any[]).map((r) => ({
       repo: r.repo,
       recipeId: r.recipe_id,
@@ -454,6 +510,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
       ksis: readRollup("ksis"),
       methodRegisters,
       gaps,
+      vulnerabilities,
       scanRuns,
       datasetVersion: meta?.dataset_version ?? "",
       projectedAt: meta?.projected_at ?? "",
