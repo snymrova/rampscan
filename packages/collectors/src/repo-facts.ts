@@ -66,6 +66,20 @@ interface ParsedWorkflow {
   steps: WorkflowStep[];
 }
 
+function stepsFrom(raws: unknown[]): WorkflowStep[] {
+  const steps: WorkflowStep[] = [];
+  for (const raw of raws) {
+    if (raw && typeof raw === "object") {
+      const s = raw as Record<string, unknown>;
+      const step: WorkflowStep = {};
+      if (typeof s["uses"] === "string") step.uses = s["uses"];
+      if (typeof s["run"] === "string") step.run = s["run"];
+      steps.push(step);
+    }
+  }
+  return steps;
+}
+
 async function readWorkflows(root: string): Promise<ParsedWorkflow[]> {
   const dir = join(root, ".github", "workflows");
   let names: string[];
@@ -77,24 +91,66 @@ async function readWorkflows(root: string): Promise<ParsedWorkflow[]> {
   const out: ParsedWorkflow[] = [];
   for (const name of names.sort()) {
     const rel = join(".github", "workflows", name);
-    const steps: WorkflowStep[] = [];
+    let steps: WorkflowStep[] = [];
     try {
       const doc = parseYaml(await readFile(join(root, rel), "utf8")) as {
         jobs?: Record<string, { steps?: unknown[] }>;
       };
-      for (const job of Object.values(doc?.jobs ?? {})) {
-        for (const raw of job?.steps ?? []) {
-          if (raw && typeof raw === "object") {
-            const s = raw as Record<string, unknown>;
-            const step: WorkflowStep = {};
-            if (typeof s["uses"] === "string") step.uses = s["uses"];
-            if (typeof s["run"] === "string") step.run = s["run"];
-            steps.push(step);
-          }
-        }
-      }
+      steps = Object.values(doc?.jobs ?? {}).flatMap((job) => stepsFrom(job?.steps ?? []));
     } catch {
       // unparseable workflow: still counts as a workflow file, zero steps
+    }
+    out.push({ file: rel, steps });
+  }
+  return out;
+}
+
+/**
+ * Composite actions under `.github/actions/**` — the files #23 proved this
+ * collector was not reading while `ci-actions-pinned`'s sentence claimed it
+ * read every action reference. A `uses:` inside one runs with the calling
+ * workflow's credentials exactly like a workflow step does, so the pinning
+ * discipline is the same; the recipe's promise was right and the walk was
+ * short, which under the pivot is a G7 measurement-system defect (the
+ * "accuracy of the measurement system" artifact), not a scoping preference.
+ *
+ * Recursive because an action is any directory holding an `action.yml` —
+ * upstream's own convention — and one flat level would be the same mistake
+ * one directory deeper.
+ */
+async function readCompositeActions(root: string): Promise<ParsedWorkflow[]> {
+  const base = join(root, ".github", "actions");
+  const files: string[] = [];
+  const walk = async (relDir: string): Promise<void> => {
+    let entries;
+    try {
+      entries = await readdir(join(root, relDir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const rel = join(relDir, entry.name);
+      if (entry.isDirectory()) await walk(rel);
+      else if (/^action\.ya?ml$/.test(entry.name)) files.push(rel);
+    }
+  };
+  try {
+    await stat(base);
+  } catch {
+    return [];
+  }
+  await walk(join(".github", "actions"));
+  const out: ParsedWorkflow[] = [];
+  for (const rel of files.sort()) {
+    let steps: WorkflowStep[] = [];
+    try {
+      const doc = parseYaml(await readFile(join(root, rel), "utf8")) as {
+        runs?: { steps?: unknown[] };
+      };
+      // only a composite action carries steps; node/docker actions parse to []
+      steps = stepsFrom(doc?.runs?.steps ?? []);
+    } catch {
+      // unparseable action file: still a file we read, zero steps
     }
     out.push({ file: rel, steps });
   }
@@ -139,6 +195,8 @@ export const repoFacts: Collector = {
       ...LOCKFILES,
       ".github/workflows/*.yml",
       ".github/workflows/*.yaml",
+      ".github/actions/**/action.yml",
+      ".github/actions/**/action.yaml",
       ".github/dependabot.yml",
       ".github/dependabot.yaml",
       "renovate.json",
@@ -212,10 +270,35 @@ export const repoFacts: Collector = {
 
     // ---- CI workflows: pinning, provenance, tests -------------------------
     const workflows = await readWorkflows(root);
+    const composites = await readCompositeActions(root);
+
+    // Pinning is a property of the FILE: an unpinned ref in a composite no
+    // workflow calls yet is one `uses: ./…` away from running with secrets,
+    // so every action file is in the population (#23). Provenance and test
+    // PRESENCE is a property of what CI actually runs, so those counters add
+    // only the composites a workflow reaches through a repo-local `uses:` —
+    // counting an orphaned composite's test step would be the vacuous green
+    // in the other direction.
+    const reachable = new Set<string>();
+    for (const wf of workflows) {
+      for (const step of wf.steps) {
+        if (step.uses?.startsWith("./")) {
+          const dir = step.uses.slice(2).replace(/\/+$/, "");
+          for (const action of composites) {
+            if (action.file === join(dir, "action.yml") || action.file === join(dir, "action.yaml")) {
+              reachable.add(action.file);
+            }
+          }
+        }
+      }
+    }
+    const reachedComposites = composites.filter((a) => reachable.has(a.file));
+
     const usesRows: ObservationRows = [];
     let provenanceSteps = 0;
     let testSteps = 0;
-    for (const wf of workflows) {
+    for (const wf of [...workflows, ...composites]) {
+      const counts = wf.file.startsWith(join(".github", "workflows")) || reachable.has(wf.file);
       for (const step of wf.steps) {
         if (step.uses) {
           const pinned = pinnedToSha(step.uses);
@@ -224,7 +307,7 @@ export const repoFacts: Collector = {
             action: step.uses,
             pinned_to_sha: pinned,
           });
-          if (PROVENANCE_USES.test(step.uses)) provenanceSteps++;
+          if (counts && PROVENANCE_USES.test(step.uses)) provenanceSteps++;
           if (!pinned) {
             findings.push(
               makeFinding(
@@ -247,16 +330,20 @@ export const repoFacts: Collector = {
             );
           }
         }
-        if (step.run) {
+        if (step.run && counts) {
           if (PROVENANCE_RUN.test(step.run)) provenanceSteps++;
           if (TEST_RUN.test(step.run)) testSteps++;
         }
       }
     }
 
+    // Guard unchanged: the empty-set gate stays keyed to WORKFLOWS, because a
+    // repo whose only action files are composites has no CI that runs them —
+    // rows over such files with no workflow would re-open the vacuous pass.
     if (workflows.length > 0) {
       observations["ci-actions-pinned"] = usesRows;
       for (const wf of workflows) await anchor("ci-actions-pinned", wf.file);
+      for (const action of composites) await anchor("ci-actions-pinned", action.file);
     }
 
     observations["ci-provenance-present"] = [
@@ -265,7 +352,7 @@ export const repoFacts: Collector = {
     observations["tests-in-ci"] = [
       { workflow_count: workflows.length, test_step_count: testSteps },
     ];
-    for (const wf of workflows) {
+    for (const wf of [...workflows, ...reachedComposites]) {
       await anchor("ci-provenance-present", wf.file);
       await anchor("tests-in-ci", wf.file);
     }

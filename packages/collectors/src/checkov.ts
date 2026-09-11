@@ -22,7 +22,12 @@ interface FrameworkMatch {
 
 const FRAMEWORKS: FrameworkMatch[] = [
   { framework: "dockerfile", test: (p) => /(^|\/)Dockerfile([^/]*)?$|\.dockerfile$/.test(p) },
-  { framework: "github_actions", test: (p) => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(p) },
+  {
+    framework: "github_actions",
+    // composite actions included since #23: the same framework, one directory
+    // over, and the same secrets when a workflow calls them
+    test: (p) => /^\.github\/(workflows\/[^/]+|actions\/.+\/action)\.ya?ml$/.test(p),
+  },
   { framework: "terraform", test: (p) => /\.tf$|\.tf\.json$/.test(p) },
 ];
 
