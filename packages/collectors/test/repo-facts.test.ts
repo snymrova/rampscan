@@ -32,10 +32,17 @@ describe("repo-facts on the fixture", () => {
     ]);
   });
 
-  it("catches both unpinned CI actions (tag refs, not SHAs)", () => {
+  it("catches the unpinned CI actions, including the one inside a composite (#23)", () => {
     const rows = out.observations["ci-actions-pinned"]!;
-    expect(rows).toHaveLength(2);
-    expect(rows.every((r) => r["pinned_to_sha"] === false)).toBe(true);
+    // ci.yml: checkout@v4, setup-node@v4 (unpinned), ./.github/actions/lint
+    // (repo-local: pinned); lint composite: cache@v4 (unpinned)
+    expect(rows).toHaveLength(4);
+    expect(rows.filter((r) => r["pinned_to_sha"] === false)).toHaveLength(3);
+    expect(rows).toContainEqual({
+      workflow: ".github/actions/lint/action.yml",
+      action: "actions/cache@v4",
+      pinned_to_sha: false,
+    });
   });
 
   it("sees CI but no provenance step", () => {
@@ -44,7 +51,10 @@ describe("repo-facts on the fixture", () => {
     ]);
   });
 
-  it("finds no recognized test step (a bare `node -e` is not a test suite)", () => {
+  it("finds no recognized test step — the orphaned composite's `npm test` does not run", () => {
+    // `node -e` in ci.yml is not a test suite, and the orphan composite's
+    // real test step is reachable from no workflow: counting it would claim
+    // CI runs tests that nothing invokes.
     expect(out.observations["tests-in-ci"]).toEqual([
       { workflow_count: 1, test_step_count: 0 },
     ]);

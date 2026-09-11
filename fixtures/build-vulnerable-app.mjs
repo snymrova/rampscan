@@ -276,7 +276,37 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: node -e "require('./src/index.js')"
+      - uses: ./.github/actions/lint
       # FAULT: no provenance/attestation step anywhere in the workflow
+`,
+);
+write(
+  // a composite action the workflow above reaches through the repo-local
+  // `uses:` — the #23 blind spot: its steps run with the workflow's secrets
+  ".github/actions/lint/action.yml",
+  `name: lint
+description: composite action invoked from ci.yml
+runs:
+  using: composite
+  steps:
+    # FAULT: unpinned action INSIDE a composite — invisible before #23
+    - uses: actions/cache@v4
+    - run: echo lint
+      shell: bash
+`,
+);
+write(
+  // an ORPHANED composite no workflow references: its unpinned ref still
+  // belongs to the pinning population (one \`uses: ./…\` from running), but
+  // its test step must NOT count toward tests-in-ci — nothing runs it
+  ".github/actions/orphan/action.yml",
+  `name: orphan
+description: composite action nothing references
+runs:
+  using: composite
+  steps:
+    - run: npm test
+      shell: bash
 `,
 );
 write(

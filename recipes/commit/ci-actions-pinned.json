@@ -4,7 +4,7 @@
   "control_ids": ["sr-5", "si-7.1"],
   "evidence": "Every third-party CI action reference resolves to an immutable commit SHA, not a movable tag",
   "collection": { "kind": "pipeline", "collector": "repo-facts" },
-  "expected_output": "One observation row per `uses:` reference across all workflows, with workflow, action, pinned_to_sha",
+  "expected_output": "One observation row per `uses:` reference across all workflows AND all composite actions under .github/actions, with workflow, action, pinned_to_sha",
   "assertions": [
     {
       "field": "pinned_to_sha",
@@ -16,10 +16,10 @@
   ],
   "cadence": "weekly",
   "automatable": "full",
-  "notes": "Repo-local actions (./…) move with the commit and count as pinned; unevidenced when the repo has no CI workflows at all. Empty-set discipline — Guard: repo-facts omits this recipe's observation key entirely when the repo has no workflows, because `pinned_to_sha eq true` over zero rows would pass vacuously.",
+  "notes": "Repo-local actions (./…) move with the commit and count as pinned; unevidenced when the repo has no CI workflows at all. Empty-set discipline — Guard: repo-facts omits this recipe's observation key entirely when the repo has no workflows, because `pinned_to_sha eq true` over zero rows would pass vacuously. Composite actions under .github/actions are in the population since #23 — including ones no workflow references yet, because a committed action file is one `uses: ./…` away from running with this repository's secrets. Before that fix the collector read one directory while this sentence claimed all of CI: a measurement-system defect (the green was true only of what was walked), kept here as the worked example of a scope an assessor should interrogate.",
   "empty_means": "unevidenced",
   "plain": {
-    "checks": "Looks at every third-party step your CI workflows call and asks whether it is pinned to an exact commit rather than to a moving name like @v3.",
+    "checks": "Looks at every third-party step your CI calls — workflow files and the composite actions your repository defines under .github/actions — and asks whether it is pinned to an exact commit rather than to a moving name like @v3.",
     "violation": "A name can be repointed at new code by whoever owns it. Your pipeline would then run that code with your secrets, against your repository, without a single change on your side — pinning to a commit removes that possibility.",
     "fix": "Replace each tag reference with the full 40-character commit it points at today, keeping the human-readable version in a trailing comment. Steps in your own repository (./…) move with the commit already and need no change."
   },
