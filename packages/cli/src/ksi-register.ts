@@ -31,8 +31,14 @@ export interface KsiRegisterRowView {
   historySince?: string; // ISO 8601
   /** the FRC-CSX-MOT judgment; null exactly when the class owes no months */
   historyMet: boolean | null;
-  /** worst gap class computable today — G3, G5+ land later in Q3 */
-  worstGap?: "G1" | "G2" | "G4";
+  /**
+   * Methods whose owed clock is unmet (Q3.2) — stale OR missing evidence,
+   * each judged against its own family's window (machine → VDR-TFR-MVX,
+   * non-machine → VDR-TFR-NMV). Zero when the class defines no window.
+   */
+  staleMethods: number;
+  /** worst gap class computable today — G5+ land later in Q3 */
+  worstGap?: "G1" | "G2" | "G3" | "G4";
   methodIds: string[];
 }
 
@@ -64,6 +70,12 @@ export interface KsiRegisterView {
     floorMet: number;
     atLeastOneAutomated: number;
     noMethod: number;
+    /**
+     * Rows with methods, all of them inside their owed window (Q3.2); null
+     * when the rules define no machine window for the class (d) — today's
+     * methods are all machine-clocked, so there is nothing to meter.
+     */
+    everyMethodFresh: number | null;
     /** rows whose ledger history reaches the MOT floor; null when the class owes none */
     historyMet: number | null;
     total: number;
@@ -129,12 +141,20 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       // which meets no floor — never null, because the class still owes.
       historyMet:
         folded?.historyMet ?? (history.months === null ? null : false),
+      // Same honesty for the clocks (Q3.2): without a fold, every method's
+      // evidence is missing, so every method whose family has an owed window
+      // is unmet. Derived methods are all machine today (source: pipeline) —
+      // judged by the class's MVX window, which class d defines none of.
+      staleMethods:
+        folded?.staleMethods ??
+        (input.catalog.windows[input.offeringClass] === null ? 0 : derived.length),
       methodIds,
     };
     if (folded?.freshAsOf !== undefined) row.freshest = folded.freshAsOf;
     if (folded?.historySince !== undefined) row.historySince = folded.historySince;
     if (total === 0) row.worstGap = "G1";
     else if (floor !== null && automated < floor) row.worstGap = "G2";
+    else if (row.staleMethods > 0) row.worstGap = "G3";
     else if (row.historyMet === false) row.worstGap = "G4";
     return row;
   });
@@ -166,6 +186,10 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       floorMet: rows.filter((r) => r.floorMet === true).length,
       atLeastOneAutomated: rows.filter((r) => r.automated > 0).length,
       noMethod: rows.filter((r) => r.methods === 0).length,
+      everyMethodFresh:
+        input.catalog.windows[input.offeringClass] === null
+          ? null
+          : rows.filter((r) => r.methods > 0 && r.staleMethods === 0).length,
       historyMet:
         history.months === null ? null : rows.filter((r) => r.historyMet === true).length,
       total: rows.length,
@@ -243,9 +267,11 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
         ? red("G1 coverage")
         : row.worstGap === "G2"
           ? red("G2 methods")
-          : row.worstGap === "G4"
-            ? red("G4 history")
-            : dim("—");
+          : row.worstGap === "G3"
+            ? red("G3 freshness")
+            : row.worstGap === "G4"
+              ? red("G4 history")
+              : dim("—");
     lines.push(`  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${"–/5".padEnd(10)}  ${gapCol}`);
   }
 
@@ -258,6 +284,15 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     dim(
       `  covering all ${s.total} — a row that says "nothing evidences this from a pipeline" is a row`,
     ),
+    // the clock meter (Q3.2): every method judged against its own family's
+    // owed window at fold time — the count is the fold's, never this render's
+    view.window === null || view.summary.everyMethodFresh === null
+      ? dim(
+          `  clocks: no machine window at class ${view.offeringClass} — VDR-TFR-MVX defines none (§11 q6)`,
+        )
+      : dim(
+          `  clocks: ${view.summary.everyMethodFresh} of ${view.summary.total} KSIs hold every method inside its owed window — ${view.window.requirementId} (${view.window.force})`,
+        ),
     // the history meter (Q3.1, FRC-CSX-MOT): counted from the ledger, so a
     // young ledger prints a young number — never a claim it cannot back
     view.history.months === null

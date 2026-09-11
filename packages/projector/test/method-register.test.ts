@@ -2,10 +2,22 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { LedgerEntry } from "@rampscan/core";
-import type { EvidenceBundle, MethodScope, PipelineRecipe } from "@rampscan/schema";
+import type { ClockWindow, LedgerEntry } from "@rampscan/core";
+import type {
+  EvidenceBundle,
+  MethodScope,
+  PipelineRecipe,
+  ScopingEvent,
+  ValidationMethod,
+} from "@rampscan/schema";
 import { methodsOfRecipe } from "@rampscan/schema";
-import { foldEntries, monthsBefore, readProjectionSqlite, writeProjectionSqlite } from "../src/index.js";
+import {
+  foldEntries,
+  monthsBefore,
+  readProjectionSqlite,
+  windowThreshold,
+  writeProjectionSqlite,
+} from "../src/index.js";
 
 // Q2.3 — the projector folds per-KSI (SPEC §12.1 invariant 4′, plan §4).
 // G1 and G2 are properties of the REGISTER: computed from which methods
@@ -76,13 +88,22 @@ function foldWith(
   entries: LedgerEntry[],
   floor?: number | null,
   historyFloorMonths?: number | null,
+  windows?: {
+    machineWindow?: ClockWindow | null;
+    nonMachineWindow?: ClockWindow | null;
+    methods?: ValidationMethod[];
+  },
 ) {
   return foldEntries(entries, T2, {
     recipes,
-    methods,
+    methods: windows?.methods ?? methods,
     ksiIds: KSI_IDS,
     ...(floor === undefined ? {} : { methodFloor: floor }),
     ...(historyFloorMonths === undefined ? {} : { historyFloorMonths }),
+    ...(windows?.machineWindow === undefined ? {} : { machineWindow: windows.machineWindow }),
+    ...(windows?.nonMachineWindow === undefined
+      ? {}
+      : { nonMachineWindow: windows.nonMachineWindow }),
   });
 }
 
@@ -167,6 +188,201 @@ describe("the method register (Q2.3)", () => {
     const dbPath = join(dir, "projection.db");
     await writeProjectionSqlite(projection, dbPath);
     expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
+
+function scopingEntry(opts: { recipe: string; timestamp: string; repo?: string }): LedgerEntry {
+  const bundle: ScopingEvent = {
+    _type: "https://in-toto.io/Statement/v1",
+    subject: [{ name: "justification.txt", digest: { sha256: "f".repeat(64) } }],
+    predicateType: "https://rampscan.dev/scoping/v1",
+    predicate: {
+      action: "notApplicable",
+      recipe_id: opts.recipe,
+      ksi_ids: ["KSI-SCR-MIT"],
+      control_ids: ["si-7.1"],
+      repo: opts.repo ?? "fixtures/app",
+      justification: "does not apply here",
+      proposed_by: "viewer@rampscan.local (pb:u1)",
+      approved_by: "approver@rampscan.local (pb:u2)",
+      dataset_version: "2026.07.14.01",
+      timestamp: opts.timestamp,
+    },
+  };
+  return { digest: `digest-${counter++}`, bundle, appendedAt: opts.timestamp };
+}
+
+// Q3.2 — G3 freshness: every method judged against its own clock family's
+// owed window (machine → VDR-TFR-MVX, non-machine → VDR-TFR-NMV), handed to
+// the fold as data. Missing evidence judges false — a method nothing
+// re-validates is G3 exactly as a stale one is; null is reserved for "no
+// window owed" (class d machine) and a live two-key scoping.
+describe("G3 freshness (Q3.2)", () => {
+  // T2 (the fold instant) is 2026-08-08; seven days before it is T1 exactly —
+  // evidence at T1 is on the boundary and inside; STALE is not.
+  const MVX7: ClockWindow = { num: 7, unit: "days" };
+  const NMV3: ClockWindow = { num: 3, unit: "months" };
+  const STALE = "2026-07-25T00:00:00.000Z";
+
+  const attestation: ValidationMethod = {
+    id: "attestation:incident-review#KSI-CNA-CIC",
+    ksi: "KSI-CNA-CIC",
+    automated: false,
+    clock: "non-machine",
+    standing: "narrative",
+    source: "attestation",
+    provenance: { attestor_role: "ciso", statement_ref: "st-1" },
+  };
+
+  it("evidence inside the window: freshMet true, window echoed on the cell, no G3", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1, null, {
+      machineWindow: MVX7,
+      nonMachineWindow: NMV3,
+    });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    const cell = row.methods.find((m) => m.recipeId === "covered")!;
+    expect(cell.clock).toBe("machine");
+    expect(cell.window).toEqual(MVX7);
+    expect(cell.freshMet).toBe(true);
+    // the sibling method (two-ksis) was never scanned — missing is false
+    expect(row.methods.find((m) => m.recipeId === "two-ksis")!.freshMet).toBe(false);
+    expect(row.staleMethods).toBe(1);
+    expect(row.gap).toBe("G3");
+  });
+
+  it("stale evidence: freshMet false, G3 on the row", () => {
+    const projection = foldWith(
+      [evidenceEntry({ recipe: "covered", timestamp: STALE })],
+      null,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.methods.find((m) => m.recipeId === "covered")!.freshMet).toBe(false);
+    expect(row.staleMethods).toBe(2); // stale + the never-scanned sibling
+    expect(row.gap).toBe("G3");
+  });
+
+  it("no machine window (class d — the rules define none): freshMet null, never a borrowed judgment", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: STALE })], null, null, {
+      machineWindow: null,
+      nonMachineWindow: NMV3,
+    });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    for (const cell of row.methods) {
+      expect(cell.window).toBeNull();
+      expect(cell.freshMet).toBeNull();
+    }
+    expect(row.staleMethods).toBe(0);
+    expect(row.gap).toBeUndefined();
+  });
+
+  it("a fold given no windows judges nothing — Q2 folds are unchanged", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: STALE })], 1);
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    for (const cell of row.methods) expect(cell.freshMet).toBeNull();
+    expect(row.staleMethods).toBe(0);
+  });
+
+  it("a non-machine method runs on the NMV clock: no evidence yet (Q4) judges false", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], null, null, {
+      machineWindow: MVX7,
+      nonMachineWindow: NMV3,
+      methods: [...methods, attestation],
+    });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    const cell = row.methods.find((m) => m.methodId === attestation.id)!;
+    expect(cell.clock).toBe("non-machine");
+    expect(cell.window).toEqual(NMV3);
+    expect(cell.freshMet).toBe(false);
+    expect(row.gap).toBe("G3");
+  });
+
+  it("a live two-key scoping is not a lapsed clock: the scoped cell judges null", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "two-ksis", timestamp: T1, ksiIds: twoKsis.ksi_ids }),
+        scopingEntry({ recipe: "covered", timestamp: T1 }),
+      ],
+      null,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    const scoped = row.methods.find((m) => m.recipeId === "covered")!;
+    expect(scoped.state).toBe("notApplicable");
+    expect(scoped.freshMet).toBeNull();
+    expect(row.staleMethods).toBe(0);
+    expect(row.gap).toBeUndefined();
+  });
+
+  it("the worst gap outranks: G1 and G2 beat G3; G3 beats G4", () => {
+    const stale = [evidenceEntry({ recipe: "covered", timestamp: STALE })];
+    // below the method floor AND stale → G2
+    expect(
+      foldWith(stale, 3, 6, { machineWindow: MVX7 }).methodRegisters.find(
+        (r) => r.ksi === "KSI-SCR-MIT",
+      )!.gap,
+    ).toBe("G2");
+    // floor met, stale, history short → G3, not G4
+    expect(
+      foldWith(stale, 1, 6, { machineWindow: MVX7 }).methodRegisters.find(
+        (r) => r.ksi === "KSI-SCR-MIT",
+      )!.gap,
+    ).toBe("G3");
+    // no methods at all stays G1
+    expect(
+      foldWith(stale, 1, 6, { machineWindow: MVX7 }).methodRegisters.find(
+        (r) => r.ksi === "KSI-CNA-CIC",
+      )!.gap,
+    ).toBe("G1");
+  });
+
+  it("the catalog's richer window object is stripped to number + unit in the projection", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], null, null, {
+      machineWindow: {
+        num: 7,
+        unit: "days",
+        requirementId: "VDR-TFR-MVX",
+        force: "MUST",
+      } as ClockWindow,
+    });
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .methods.find((m) => m.recipeId === "covered")!;
+    expect(cell.window).toEqual({ num: 7, unit: "days" });
+  });
+
+  it("survives the sqlite round trip, windows and judgments included", async () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: STALE })], 1, 6, {
+      machineWindow: MVX7,
+      nonMachineWindow: NMV3,
+      methods: [...methods, attestation],
+    });
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-g3-"));
+    const dbPath = join(dir, "projection.db");
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
+
+describe("windowThreshold — days exact, months calendar", () => {
+  it("days are exact ms arithmetic", () => {
+    expect(windowThreshold("2026-08-08T00:00:00.000Z", { num: 7, unit: "days" })).toBe(
+      "2026-08-01T00:00:00.000Z",
+    );
+    expect(windowThreshold("2026-08-08T12:30:00.000Z", { num: 3, unit: "days" })).toBe(
+      "2026-08-05T12:30:00.000Z",
+    );
+  });
+
+  it("months go through monthsBefore — calendar months, day clamped", () => {
+    expect(windowThreshold("2026-08-08T00:00:00.000Z", { num: 3, unit: "months" })).toBe(
+      "2026-05-08T00:00:00.000Z",
+    );
+    expect(windowThreshold("2026-05-31T00:00:00.000Z", { num: 3, unit: "months" })).toBe(
+      "2026-02-28T00:00:00.000Z",
+    );
   });
 });
 

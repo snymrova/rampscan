@@ -145,6 +145,8 @@ export interface MethodCellRecord {
   methodId: string;
   source: "pipeline" | "aws-ingested" | "attestation";
   automated: boolean;
+  /** which cadence family owns this method (Q3.2): machine → VDR-TFR-MVX, non-machine → VDR-TFR-NMV */
+  clock: "machine" | "non-machine";
   standing: "full" | "partial" | "narrative";
   recipeId?: string;
   collector?: string;
@@ -152,6 +154,17 @@ export interface MethodCellRecord {
   state: RegisterState;
   bundleDigest?: string;
   freshAsOf?: string;
+  /**
+   * The owed re-validation window for this method's clock family (Q3.2) —
+   * owed-side data carried by the fold, never typed into this app. Null when
+   * the rules define none for the class (machine at class d).
+   */
+  window: { num: number; unit: "days" | "months" } | null;
+  /**
+   * Inside the window at the fold's projected_at; null when no window is
+   * owed or the cell is scoped notApplicable. Missing evidence judges false.
+   */
+  freshMet: boolean | null;
 }
 
 /**
@@ -168,13 +181,15 @@ export interface MethodRegisterRecord {
   method_floor: number | null;
   floor_met: boolean | null;
   fresh_as_of: string;
+  /** methods whose owed clock is unmet — stale or missing evidence (Q3.2) */
+  stale_methods: number;
   /** where this KSI's ledger history begins (Q3.1); "" when it holds nothing */
   history_since: string;
   /** the FRC-CSX-MOT floor in months; null when the class owes no number */
   history_floor_months: number | null;
   /** null exactly when history_floor_months is null */
   history_met: boolean | null;
-  gap: "" | "G1" | "G2" | "G4";
+  gap: "" | "G1" | "G2" | "G3" | "G4";
 }
 
 /**

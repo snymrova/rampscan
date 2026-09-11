@@ -322,6 +322,8 @@ async function main(): Promise<void> {
         ksiIds: rebuildCatalog.ksis.map((k) => k.id),
         methodFloor: rebuildCatalog.floors[certClass].minPerKsi,
         historyFloorMonths: rebuildCatalog.historyFloors[certClass].months,
+        machineWindow: rebuildCatalog.windows[certClass],
+        nonMachineWindow: rebuildCatalog.nonMachineWindow,
       });
       console.log(report.lines.join("\n"));
       if (!report.ok) process.exit(1);
@@ -439,6 +441,8 @@ async function main(): Promise<void> {
           ksiIds: catalog.ksis.map((k) => k.id),
           methodFloor: catalog.floors[registerClass].minPerKsi,
           historyFloorMonths: catalog.historyFloors[registerClass].months,
+          machineWindow: catalog.windows[registerClass],
+          nonMachineWindow: catalog.nonMachineWindow,
         });
         const projection = await projector.fold(createLocalLedger(ledgerDir));
         const view = buildKsiRegister({

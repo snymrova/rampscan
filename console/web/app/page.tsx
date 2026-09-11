@@ -38,6 +38,7 @@ export default function KsiBoardPage() {
 function gapPill(gap: MethodRegisterRecord["gap"]): { cls: string; label: string } | null {
   if (gap === "G1") return { cls: "unevidenced", label: "G1 coverage" };
   if (gap === "G2") return { cls: "violated", label: "G2 methods" };
+  if (gap === "G3") return { cls: "violated", label: "G3 freshness" };
   if (gap === "G4") return { cls: "violated", label: "G4 history" };
   return null;
 }

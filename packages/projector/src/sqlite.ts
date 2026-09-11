@@ -112,10 +112,11 @@ export async function writeProjectionSqlite(
         method_floor      INTEGER,          -- NULL: the class owes no number
         floor_met         INTEGER,          -- 0 | 1 | NULL (exactly when floor is NULL)
         fresh_as_of       TEXT,
+        stale_methods     INTEGER NOT NULL, -- cells whose owed clock is unmet (Q3.2)
         history_since     TEXT,             -- earliest bundle across the KSI's chains (Q3.1)
         history_floor_months INTEGER,       -- NULL: the class owes no number
         history_met       INTEGER,          -- 0 | 1 | NULL (exactly when the floor is NULL)
-        gap               TEXT              -- G1 | G2 | G4 | NULL
+        gap               TEXT              -- G1 | G2 | G3 | G4 | NULL
       )
     `);
     db.exec(`
@@ -245,8 +246,8 @@ export async function writeProjectionSqlite(
     const insertMethodRegister = db.prepare(
       `INSERT INTO method_registers
          (repo, ksi, methods, automated_methods, method_floor, floor_met, fresh_as_of,
-          history_since, history_floor_months, history_met, gap)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          stale_methods, history_since, history_floor_months, history_met, gap)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.methodRegisters) {
       insertMethodRegister.run(
@@ -257,6 +258,7 @@ export async function writeProjectionSqlite(
         row.methodFloor,
         row.floorMet === null ? null : row.floorMet ? 1 : 0,
         row.freshAsOf ?? null,
+        row.staleMethods,
         row.historySince ?? null,
         row.historyFloorMonths,
         row.historyMet === null ? null : row.historyMet ? 1 : 0,
@@ -400,6 +402,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
         automatedMethods: Number(r.automated_methods),
         methodFloor: r.method_floor === null ? null : Number(r.method_floor),
         floorMet: r.floor_met === null ? null : r.floor_met === 1,
+        staleMethods: Number(r.stale_methods),
         historyFloorMonths:
           r.history_floor_months === null ? null : Number(r.history_floor_months),
         historyMet: r.history_met === null ? null : r.history_met === 1,

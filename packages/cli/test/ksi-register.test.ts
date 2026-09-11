@@ -120,6 +120,7 @@ const frontier: FrontierMap = {
 };
 
 const T1 = "2026-09-10T00:00:00.000Z";
+const MVX_B = { num: 7, unit: "days" } as const;
 const foldedRegisters: MethodRegisterRow[] = [
   {
     repo: "/repo/app",
@@ -129,30 +130,38 @@ const foldedRegisters: MethodRegisterRow[] = [
         methodId: "pipeline:covered#KSI-SCR-MIT",
         source: "pipeline",
         automated: true,
+        clock: "machine",
         standing: "full",
         recipeId: "covered",
         collector: "repo-facts",
         state: "evidenced",
         bundleDigest: "d1",
         freshAsOf: T1,
+        window: MVX_B,
+        freshMet: true,
       },
       {
         methodId: "pipeline:both#KSI-SCR-MIT",
         source: "pipeline",
         automated: true,
+        clock: "machine",
         standing: "full",
         recipeId: "both",
         collector: "repo-facts",
         state: "unevidenced",
+        window: MVX_B,
+        freshMet: false, // missing evidence — G3's other half (Q3.2)
       },
     ],
     automatedMethods: 2,
     methodFloor: 1,
     floorMet: true,
     freshAsOf: T1,
+    staleMethods: 1,
     historySince: T1,
     historyFloorMonths: null,
     historyMet: null,
+    gap: "G3",
   },
   {
     repo: "/repo/app",
@@ -162,17 +171,22 @@ const foldedRegisters: MethodRegisterRow[] = [
         methodId: "pipeline:both#KSI-CMT-CHG",
         source: "pipeline",
         automated: true,
+        clock: "machine",
         standing: "full",
         recipeId: "both",
         collector: "repo-facts",
         state: "unevidenced",
+        window: MVX_B,
+        freshMet: false,
       },
     ],
     automatedMethods: 1,
     methodFloor: 1,
     floorMet: true,
+    staleMethods: 1,
     historyFloorMonths: null,
     historyMet: null,
+    gap: "G3",
   },
   {
     repo: "/repo/app",
@@ -181,6 +195,7 @@ const foldedRegisters: MethodRegisterRow[] = [
     automatedMethods: 0,
     methodFloor: 1,
     floorMet: false,
+    staleMethods: 0,
     historyFloorMonths: null,
     historyMet: null,
     gap: "G1",
@@ -216,6 +231,7 @@ describe("buildKsiRegister (Q2.4)", () => {
       floorMet: 2,
       atLeastOneAutomated: 2,
       noMethod: 1,
+      everyMethodFresh: 0, // both method-bearing rows carry an unmet clock (Q3.2)
       historyMet: null, // class b owes no months (Q3.1)
       total: 3,
     });
@@ -265,6 +281,7 @@ describe("buildKsiRegister (Q2.4)", () => {
       {
         ...foldedRegisters[0]!,
         floorMet: true,
+        staleMethods: 0, // every clock met — G3 must not mask the history gap
         historySince: T1,
         historyFloorMonths: 6,
         historyMet: false,
@@ -295,9 +312,40 @@ describe("buildKsiRegister (Q2.4)", () => {
     // every row owes 6 months and the ledger holds nothing — met on none
     expect(view.summary.historyMet).toBe(0);
     expect(view.rows.every((r) => r.historyMet === false)).toBe(true);
-    // but the WORST gap still outranks: one-method KSIs are G2 at class c
+    // but the WORST gap still outranks: one-method KSIs are G2 at class c,
+    // and a floor-met KSI with no evidence is G3 (nothing runs its clocks —
+    // Q3.2), which outranks the history it also lacks
     expect(view.rows.find((r) => r.ksi === "KSI-CMT-CHG")!.worstGap).toBe("G2");
-    expect(view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!.worstGap).toBe("G4");
+    expect(view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!.worstGap).toBe("G3");
+  });
+
+  it("G3 freshness (Q3.2): the fold's per-method judgment rides through, floor met or not", () => {
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: foldedRegisters,
+      frontier,
+    });
+    const scr = view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(scr.staleMethods).toBe(1); // "both" has no evidence — missing counts
+    expect(scr.floorMet).toBe(true);
+    expect(scr.worstGap).toBe("G3");
+    expect(view.summary.everyMethodFresh).toBe(0);
+  });
+
+  it("class d defines no machine window: no clock judgment, no G3, meter null", () => {
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "d",
+      methods,
+      methodRegisters: [],
+      frontier,
+    });
+    expect(view.window).toBeNull();
+    expect(view.summary.everyMethodFresh).toBeNull();
+    expect(view.rows.every((r) => r.staleMethods === 0)).toBe(true);
+    expect(view.rows.some((r) => r.worstGap === "G3")).toBe(false);
   });
 
   it("renders without a ledger: every row present, no repo named", () => {
@@ -364,7 +412,44 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
     expect(cText).toContain(
       "history: 0 of 3 KSIs hold ≥6mo of persistent validation — FRC-CSX-MOT (MUST)",
     );
-    expect(cText).toContain("G4 history");
+    // no scan → nothing runs the clocks: G3 outranks the history gap (Q3.2)
+    expect(cText).toContain("G3 freshness");
+  });
+
+  it("the clock meter (Q3.2): counted at the fold, named by rule; class d prints its missing window", () => {
+    expect(text).toContain(
+      "clocks: 0 of 3 KSIs hold every method inside its owed window — VDR-TFR-MVX (MUST)",
+    );
+    expect(text).toContain("G3 freshness");
+    const dView = buildKsiRegister({
+      catalog,
+      offeringClass: "d",
+      methods,
+      methodRegisters: [],
+      frontier,
+    });
+    const dText = renderKsiRegister(dView, false, now);
+    expect(dText).toContain("clocks: no machine window at class d — VDR-TFR-MVX defines none");
+    expect(dText).not.toContain("G3 freshness");
+  });
+
+  it("G4 renders when the clocks are met and history alone is short", () => {
+    const folded: MethodRegisterRow[] = [
+      {
+        ...foldedRegisters[0]!,
+        staleMethods: 0,
+        historyFloorMonths: 6,
+        historyMet: false,
+      },
+    ];
+    const view4 = buildKsiRegister({
+      catalog,
+      offeringClass: "c",
+      methods,
+      methodRegisters: folded,
+      frontier,
+    });
+    expect(renderKsiRegister(view4, false, now)).toContain("G4 history");
   });
 
   it("the footer names the legacy view and its numbers on every invocation", () => {

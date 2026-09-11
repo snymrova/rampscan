@@ -5,6 +5,7 @@ import type {
   CollectorRun,
   Finding,
   LedgerStatement,
+  MethodClock,
   MethodScope,
   MethodSource,
   MethodStanding,
@@ -328,6 +329,18 @@ export interface RollupRow {
 }
 
 /**
+ * A validation window as the fold receives it (Q3.2): the owed side's
+ * number and unit, nothing more — `requirementId` and `force` stay on the
+ * catalog, because the fold judges against the number and the register
+ * names the rule. Months are calendar months (see `monthsBefore` in the
+ * projector), never a 30-day approximation.
+ */
+export interface ClockWindow {
+  num: number;
+  unit: "days" | "months";
+}
+
+/**
  * One validation method's current standing on the board (Q2.3, SPEC §12.2).
  * A pipeline method's state is its recipe cell's state — one bundle evidences
  * every method its recipe derives, which is exactly the §1.1 decision (b)
@@ -338,6 +351,12 @@ export interface MethodCell {
   source: MethodSource;
   /** the FRC-CSX-VVK numerator, stored on the method, echoed here */
   automated: boolean;
+  /**
+   * Which cadence family owns this method (Q3.2, §12.2): machine →
+   * VDR-TFR-MVX, non-machine → VDR-TFR-NMV. Echoed from the method so the
+   * clock view can say which rule a row's window came from.
+   */
+  clock: MethodClock;
   standing: MethodStanding;
   /** the pipeline join key; absent for non-pipeline sources (Q4) */
   recipeId?: string;
@@ -351,6 +370,22 @@ export interface MethodCell {
   state: RegisterState;
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601
+  /**
+   * The owed re-validation window for this method's clock family (Q3.2):
+   * VDR-TFR-MVX for machine, VDR-TFR-NMV for non-machine — owed-side DATA
+   * handed to the fold, never typed there. Null when the rules define none
+   * for the class (machine at class d — SPEC §11 q6) or the fold was given
+   * none, which renders the same way: nothing to judge against.
+   */
+  window: ClockWindow | null;
+  /**
+   * This method's evidence is inside its owed window at projectedAt. Null
+   * when `window` is null and when the cell is scoped notApplicable — a
+   * signed two-key N/A is not a lapsed clock. MISSING evidence judges
+   * false, not null: a method with no live evidence is not being validated
+   * at any cadence, which is G3's business exactly as stale evidence is.
+   */
+  freshMet: boolean | null;
 }
 
 /**
@@ -395,8 +430,15 @@ export interface MethodRegisterRow {
    * starts honest: a young ledger shows false until the months have passed.
    */
   historyMet: boolean | null;
-  /** the worst gap class computable from the register alone (G3, G5+ land later in Q3) */
-  gap?: "G1" | "G2" | "G4";
+  /**
+   * How many of this KSI's methods sit outside their owed window at
+   * projectedAt — cells whose `freshMet` is false (Q3.2). Missing evidence
+   * counts, per the cell's rule. The G3 numerator; derivable from `methods`,
+   * carried so no consumer recounts a judgment the fold already made.
+   */
+  staleMethods: number;
+  /** the worst gap class computable so far (G5+ land later in Q3) */
+  gap?: "G1" | "G2" | "G3" | "G4";
 }
 
 /**
