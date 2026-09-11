@@ -152,6 +152,16 @@ export const AnchorPath = z.object({
 export const EvidencePredicate = z.object({
   recipe_id: z.string(),
   /**
+   * The ValidationMethod this evidence attaches to (SPEC §12.2) — the join
+   * the post-pivot register reads, beside the recipe ID it already carries.
+   * Optional because bundles minted before the pivot carry none; a superset,
+   * nothing existing breaks. Excluded from evidence identity like `offenders`
+   * (`sameEvidence` enumerates its fields): the id is derived from
+   * recipe × KSI, so keying on it would re-key every pre-pivot bundle for
+   * zero informational change.
+   */
+  method_id: z.string().optional(),
+  /**
    * The collector that produced this evidence (J5). Optional because bundles
    * minted before J5 carry no such field — but on everything minted since,
    * this is what makes the provenance chain rest on signed data rather than

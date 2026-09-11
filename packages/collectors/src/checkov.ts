@@ -65,30 +65,28 @@ export function matchIacFiles(files: string[]): { frameworks: string[]; files: s
   return { frameworks: [...frameworks].sort(), files: matched.sort() };
 }
 
-const CheckovCheck = z
-  .object({
-    check_id: z.string(),
-    check_name: z.string().optional(),
-    file_path: z.string(),
-    resource: z.string().optional(),
-    guideline: z.string().nullable().optional(),
-  })
-  .passthrough();
+const CheckovCheck = z.looseObject({
+  check_id: z.string(),
+  check_name: z.string().optional(),
+  file_path: z.string(),
+  resource: z.string().optional(),
+  guideline: z.string().nullable().optional(),
+});
 
-const CheckovReport = z
-  .object({
-    check_type: z.string(),
-    results: z
-      .object({
-        passed_checks: z.array(CheckovCheck).optional(),
-        failed_checks: z.array(CheckovCheck).optional(),
-      })
-      .passthrough(),
-  })
-  .passthrough();
+const CheckovReport = z.looseObject({
+  check_type: z.string(),
+  results: z.looseObject({
+    passed_checks: z.array(CheckovCheck).optional(),
+    failed_checks: z.array(CheckovCheck).optional(),
+  }),
+});
 
-/** checkov emits one report object for a single framework, an array for several */
-const CheckovOutput = z.union([CheckovReport, z.array(CheckovReport)]);
+/**
+ * checkov emits one report object for a single framework, an array for
+ * several. Exported for the schema hard-edge pin (#31): loose parsing must
+ * retain unknown vendor fields.
+ */
+export const CheckovOutput = z.union([CheckovReport, z.array(CheckovReport)]);
 
 export const checkov: Collector = {
   manifest: {

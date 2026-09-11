@@ -11,13 +11,13 @@ import { absentReason, resolveTool } from "./tools.js";
 
 export const SBOM_ARTIFACT = "sbom.cdx.json";
 
-const CycloneDx = z
-  .object({
-    specVersion: z.string(),
-    metadata: z.object({ timestamp: z.string().optional() }).passthrough().optional(),
-    components: z.array(z.object({}).passthrough()).optional(),
-  })
-  .passthrough();
+// exported for the schema hard-edge pin (#31): loose parsing must retain
+// unknown vendor fields
+export const CycloneDx = z.looseObject({
+  specVersion: z.string(),
+  metadata: z.looseObject({ timestamp: z.string().optional() }).optional(),
+  components: z.array(z.looseObject({})).optional(),
+});
 
 const MANIFEST_ANCHORS = [
   "package.json",

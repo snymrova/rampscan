@@ -50,7 +50,7 @@ export const declaredDescription = z
  * MUST pass, and a breach of it is a violation of the repo's own statement.
  */
 export const RouteAuthRule = z
-  .object({
+  .strictObject({
     kind: z.literal("route-auth"),
     /** unique within the contract; how the rule is named everywhere it renders */
     id: z.string().min(1),
@@ -61,8 +61,7 @@ export const RouteAuthRule = z
      */
     routes: z.string().min(1),
     description: declaredDescription,
-  })
-  .strict();
+  });
 export type RouteAuthRule = z.infer<typeof RouteAuthRule>;
 
 /**
@@ -72,7 +71,7 @@ export type RouteAuthRule = z.infer<typeof RouteAuthRule>;
  * an extension ("src/billing" guards src/billing.js and src/billing/*).
  */
 export const BoundaryRule = z
-  .object({
+  .strictObject({
     kind: z.literal("boundary"),
     id: z.string().min(1),
     /** the guarded module, as a repo-relative path prefix */
@@ -80,8 +79,7 @@ export const BoundaryRule = z
     /** path prefixes whose files may import the module; empty = nobody may */
     allowedImporters: z.array(z.string().min(1)),
     description: declaredDescription,
-  })
-  .strict();
+  });
 export type BoundaryRule = z.infer<typeof BoundaryRule>;
 
 /** exactly two rule kinds — a third kind is a schema change, not a config value */
@@ -89,10 +87,9 @@ export const ContractRule = z.discriminatedUnion("kind", [RouteAuthRule, Boundar
 export type ContractRule = z.infer<typeof ContractRule>;
 
 export const ContractConfig = z
-  .object({
+  .strictObject({
     rules: z.array(ContractRule),
   })
-  .strict()
   .refine(
     (contract) => new Set(contract.rules.map((r) => r.id)).size === contract.rules.length,
     { message: "contract rule ids must be unique" },

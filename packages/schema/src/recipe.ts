@@ -193,6 +193,26 @@ export const PipelineRecipe = z.object({
    * likewise enforced where the other file can be read.
    */
   upstream_overlap: z.array(UpstreamOverlap).optional(),
+  /**
+   * Per-KSI standing override for the method derivation (SPEC §12.2) — the
+   * ONLY recipe schema change the KSI pivot makes. Absent means uniform
+   * inheritance: every derived method's standing is this recipe's
+   * `automatable`. Present, it lets a recipe say "genuinely evidences one of
+   * its KSIs, only gestures at another" as two methods with different
+   * standing rather than one method with a footnote. Keys must name KSIs in
+   * `ksi_ids`; `methodsOfRecipe` refuses an override that applies to nothing.
+   * Strict entries for the contract-rule reason: a misspelled override field
+   * would waive the override while looking like one.
+   */
+  per_ksi: z
+    .record(
+      z.string(),
+      z.strictObject({
+        automatable: Automatable.optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .optional(),
   anchor: z.literal("commit"),
 });
 export type PipelineRecipe = z.infer<typeof PipelineRecipe>;

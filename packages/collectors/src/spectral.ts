@@ -19,17 +19,17 @@ const SPEC_FILE = /(^|\/)(openapi|swagger)[^/]*\.(ya?ml|json)$/i;
 
 const SEVERITY_NAMES = ["error", "warning", "info", "hint"] as const;
 
-const SpectralResult = z
-  .object({
-    code: z.union([z.string(), z.number()]),
-    message: z.string(),
-    severity: z.number(),
-    source: z.string().optional(),
-    path: z.array(z.union([z.string(), z.number()])).optional(),
-    range: z.object({ start: z.object({ line: z.number() }).passthrough() }).passthrough(),
-  })
-  .passthrough();
-const SpectralOutput = z.array(SpectralResult);
+const SpectralResult = z.looseObject({
+  code: z.union([z.string(), z.number()]),
+  message: z.string(),
+  severity: z.number(),
+  source: z.string().optional(),
+  path: z.array(z.union([z.string(), z.number()])).optional(),
+  range: z.looseObject({ start: z.looseObject({ line: z.number() }) }),
+});
+// exported for the schema hard-edge pin (#31): loose parsing must retain
+// unknown vendor fields
+export const SpectralOutput = z.array(SpectralResult);
 
 /** committed files via git; fs walk as the non-git fallback (unit-test roots) */
 async function listCommittedFiles(root: string): Promise<string[]> {

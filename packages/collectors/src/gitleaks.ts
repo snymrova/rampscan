@@ -8,7 +8,7 @@ import { absentReason, resolveTool } from "./tools.js";
 // gitleaks — secrets over the FULL git history (plan C2): a secret added and
 // then removed is still burned, and still in the clone every developer holds.
 
-const GitleaksLeak = z.object({
+const GitleaksLeak = z.looseObject({
   RuleID: z.string(),
   Description: z.string(),
   File: z.string(),
@@ -16,7 +16,9 @@ const GitleaksLeak = z.object({
   Commit: z.string(),
   Fingerprint: z.string().optional(),
 });
-const GitleaksReport = z.array(GitleaksLeak.passthrough());
+// exported for the schema hard-edge pin (#31): loose parsing must retain
+// unknown vendor fields
+export const GitleaksReport = z.array(GitleaksLeak);
 
 export const gitleaks: Collector = {
   manifest: {
