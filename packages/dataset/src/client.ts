@@ -156,7 +156,8 @@ const FrontierData = z.object({
   rollup: z.object({ ksiReachedControls: z.number() }).passthrough(),
 });
 
-async function loadSlice(
+/** Envelope + pin check for one derived slice; shared with the catalog port. */
+export async function loadSlice(
   dir: string,
   file: string,
   pin: string,

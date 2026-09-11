@@ -3,7 +3,14 @@ import { parseArgs } from "node:util";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { allCollectors, loadToolManifest } from "@rampscan/collectors";
-import { DEFAULT_DATASET_PIN, loadLocalDataset } from "@rampscan/dataset";
+import {
+  DEFAULT_DATASET_PIN,
+  OFFERING_CLASSES,
+  loadKsiCatalogFromRules,
+  loadKsiCatalogFromSlices,
+  loadLocalDataset,
+  type OfferingClass,
+} from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
@@ -17,6 +24,7 @@ import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
+import { renderOwed, renderOwedKsi } from "./owed.js";
 import { rebuild } from "./rebuild.js";
 import { loadRecipes } from "./recipes.js";
 import { report } from "./report.js";
@@ -75,6 +83,11 @@ function usage(): never {
       "  frontier          the commit plane's coverage of ramprules' uncovered controls:",
       "                    catalog × adjudications × the pinned frontier, nothing probed. Exits 1",
       "                    on a broken link; --strict also exits 1 on any unreviewed control",
+      "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
+      "                    method floor, validation window, artifact count — every number read",
+      "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
+      "                    the scheduler still refuses d). --rules <file> loads the canonical",
+      "                    fedramp-consolidated-rules.json instead of the ramprules slices",
       "",
       "options:",
       "  --out <dir>       scan/daemon output directory (default: ./rampscan-out);",
@@ -87,7 +100,10 @@ function usage(): never {
       "  --recipes <dir>   commit-plane recipe dir (default: recipes/commit)",
       "  --adjudications <dir>  frontier: per-control disposition dir (default: recipes/adjudications)",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
-      "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b)",
+      "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b).",
+      "                    owed only: also accepts a and d (reporting what-if, SPEC §12.3)",
+      "  --rules <file>    owed: load the canonical fedramp-consolidated-rules.json (Path B",
+      "                    of the dual-source contract) instead of the ramprules slices",
       "  --as-of <iso>     board: fold only statements at or before this instant (I1b)",
       "  --since <v>       board: lead with the diff against a baseline board — `previous`",
       "                    (the scan before the current one) or an ISO instant (I2d)",
@@ -127,6 +143,7 @@ async function main(): Promise<void> {
       dataset: { type: "string" },
       pin: { type: "string" },
       recipes: { type: "string" },
+      rules: { type: "string" },
       adjudications: { type: "string" },
       strict: { type: "boolean" },
       class: { type: "string" },
@@ -158,7 +175,10 @@ async function main(): Promise<void> {
   const adjudicationsDir = values.adjudications ?? join(REPO_ROOT, "recipes/adjudications");
   const useColor = values["no-color"] ? false : (process.stdout.isTTY ?? false);
   const certClass = (values.class ?? "b") as CertClass;
-  if (certClass !== "b" && certClass !== "c") usage();
+  // `owed` reports against all four classes (SPEC §12.3 — a what-if, not a
+  // schedule); every other consumer of --class drives the scheduler, whose
+  // refusal of a and d stands until §11 q6 is settled.
+  if (command !== "owed" && certClass !== "b" && certClass !== "c") usage();
 
   switch (command) {
     case "scan": {
@@ -394,6 +414,43 @@ async function main(): Promise<void> {
             unreviewed.join(", "),
         );
         process.exit(1);
+      }
+      return;
+    }
+
+    case "owed": {
+      // The Q1 exit gate: the owed state for any (KSI, class) pair, every
+      // number read from the pinned JSON. Both legs of the dual-source
+      // contract (SPEC §12.4) reach this one surface: the ramprules slices by
+      // default, the canonical rules JSON under --rules — same catalog value,
+      // by test.
+      const owedClass = (values.class ?? "b") as OfferingClass;
+      if (!OFFERING_CLASSES.includes(owedClass)) usage();
+      const catalog = values.rules
+        ? await loadKsiCatalogFromRules(values.rules, datasetPin)
+        : await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      if (values.json) {
+        console.log(
+          JSON.stringify(
+            target ? { class: owedClass, ksi: catalog.ksis.find((k) => k.id === target) } : catalog,
+            null,
+            2,
+          ),
+        );
+        if (target && !catalog.ksis.some((k) => k.id === target)) process.exit(1);
+        return;
+      }
+      if (target) {
+        const detail = renderOwedKsi(catalog, owedClass, target);
+        if (detail === undefined) {
+          console.error(
+            `no such KSI at this pin: ${target} (${catalog.ksis.length} ids — try \`rampscan owed\`)`,
+          );
+          process.exit(1);
+        }
+        console.log(detail);
+      } else {
+        console.log(renderOwed(catalog, owedClass));
       }
       return;
     }
