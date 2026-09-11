@@ -1,4 +1,5 @@
 import type {
+  ArtifactCell,
   CadenceGap,
   ClockWindow,
   CoverageRow,
@@ -16,6 +17,7 @@ import type {
   ScopingInfo,
 } from "@rampscan/core";
 import type {
+  ArtifactJudgment,
   EvidenceBundle,
   OffenderPointer,
   PipelineRecipe,
@@ -23,7 +25,12 @@ import type {
   ScopingEvent,
   ValidationMethod,
 } from "@rampscan/schema";
-import { isEvidenceBundle, isScanRun, isScopingEvent } from "@rampscan/schema";
+import {
+  isArtifactJudgment,
+  isEvidenceBundle,
+  isScanRun,
+  isScopingEvent,
+} from "@rampscan/schema";
 
 // Projector v2 (plan M3): still a pure fold of the ledger — identical in
 // prototype and appliance — now producing three things:
@@ -48,6 +55,9 @@ interface ScopingEntry extends LedgerEntry {
 }
 interface ScanRunEntry extends LedgerEntry {
   bundle: ScanRun;
+}
+interface ArtifactJudgmentEntry extends LedgerEntry {
+  bundle: ArtifactJudgment;
 }
 
 /**
@@ -201,6 +211,9 @@ export function foldEntries(
   const evidence = sorted.filter((e): e is EvidenceEntry => isEvidenceBundle(e.bundle));
   const scopings = sorted.filter((e): e is ScopingEntry => isScopingEvent(e.bundle));
   const scanRunEntries = sorted.filter((e): e is ScanRunEntry => isScanRun(e.bundle));
+  const judgments = sorted.filter((e): e is ArtifactJudgmentEntry =>
+    isArtifactJudgment(e.bundle),
+  );
 
   // latest observation of every (repo, path): who saw this content last, when
   const pathObservations = new Map<
@@ -311,16 +324,26 @@ export function foldEntries(
     });
   }
 
+  // Live artifact judgment per (repo, KSI, artifact) — Q3.3, G5. Sorted
+  // order → the latest wins, which is also how a judgment is withdrawn: a
+  // signed `insufficient` supersedes, never a deletion.
+  const judgmentByCell = new Map<string, ArtifactJudgmentEntry>();
+  for (const entry of judgments) {
+    const p = entry.bundle.predicate;
+    judgmentByCell.set(`${p.repo} ${p.ksi_id} ${p.artifact}`, entry);
+  }
+
   // The registers: every (scanned repo × catalog recipe), plus any ledger
   // cell whose recipe fell out of the catalog — nothing recorded ever hides.
   const recipeById = new Map((options.recipes ?? []).map((r) => [r.id, r]));
-  // Deliberately evidence + scoping only, NOT every statement: a run record
-  // names a repo too, and letting it introduce register cells would make the
-  // board partly a function of the run log. The board is folded from evidence
-  // and scoping alone, and a scan run can never move a cell (J1's standing
+  // Deliberately evidence + the two-key statements (scoping, artifact
+  // judgment), NOT every statement: a run record names a repo too, and
+  // letting it introduce register cells would make the board partly a
+  // function of the run log. The board is folded from evidence and signed
+  // decisions alone, and a scan run can never move a cell (J1's standing
   // rule — /runs renders runs, never states).
   const repos = [
-    ...new Set([...evidence, ...scopings].map((e) => e.bundle.predicate.repo)),
+    ...new Set([...evidence, ...scopings, ...judgments].map((e) => e.bundle.predicate.repo)),
   ].sort();
   const cells = new Set<string>();
   for (const repo of repos) {
@@ -519,6 +542,53 @@ export function foldEntries(
             historySince = t;
           }
         }
+        // G5 artifacts (Q3.3): the five owed artifacts per KSI, ascending.
+        // Presence is mechanical for 2 and 5 — artifact 5 IS the methods'
+        // own live evidence (a violated verdict still counts: the validation
+        // record exists; what it says is G13's business), artifact 2 the
+        // cadence record the scheduler already keeps (a declared cadence on
+        // an evidenced method — a cycle declared over evidence that does not
+        // exist explains the cycle of nothing). Sufficiency of 1, 3, and 4
+        // is judgment: present only while the live two-key event says
+        // sufficient, and never a checkbox. Artifact 4 (accuracy of the
+        // measurement system) is where the #23 class of defect lives.
+        const judged = (n: 1 | 3 | 4): ArtifactCell => {
+          const entry = judgmentByCell.get(`${repo} ${ksi} ${n}`);
+          const cell: ArtifactCell = {
+            artifact: n,
+            basis: "judged",
+            present: entry?.bundle.predicate.action === "sufficient",
+          };
+          if (entry !== undefined) {
+            const p = entry.bundle.predicate;
+            cell.judgment = {
+              digest: entry.digest,
+              action: p.action,
+              justification: p.justification,
+              proposedBy: p.proposed_by,
+              approvedBy: p.approved_by,
+              timestamp: p.timestamp,
+            };
+          }
+          return cell;
+        };
+        const evidencedCells = cells.filter((c) => c.bundleDigest !== undefined);
+        const artifacts: ArtifactCell[] = [
+          judged(1),
+          {
+            artifact: 2,
+            basis: "computed",
+            present: evidencedCells.some(
+              (c) =>
+                c.recipeId !== undefined &&
+                registerByCell.get(`${repo} ${c.recipeId}`)?.cadence !== undefined,
+            ),
+          },
+          judged(3),
+          judged(4),
+          { artifact: 5, basis: "computed", present: evidencedCells.length > 0 },
+        ];
+        const artifactsPresent = artifacts.filter((a) => a.present).length;
         const row: MethodRegisterRow = {
           repo,
           ksi,
@@ -532,6 +602,8 @@ export function foldEntries(
             historyThreshold === null
               ? null
               : historySince !== undefined && historySince <= historyThreshold,
+          artifacts,
+          artifactsPresent,
         };
         if (historySince !== undefined) row.historySince = historySince;
         const freshAsOf = cells
@@ -544,6 +616,7 @@ export function foldEntries(
         else if (floor !== null && automatedMethods < floor) row.gap = "G2";
         else if (staleMethods > 0) row.gap = "G3";
         else if (row.historyMet === false) row.gap = "G4";
+        else if (artifactsPresent < 5) row.gap = "G5";
         methodRegisters.push(row);
       }
     }

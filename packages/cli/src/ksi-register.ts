@@ -37,8 +37,15 @@ export interface KsiRegisterRowView {
    * non-machine → VDR-TFR-NMV). Zero when the class defines no window.
    */
   staleMethods: number;
-  /** worst gap class computable today — G5+ land later in Q3 */
-  worstGap?: "G1" | "G2" | "G3" | "G4";
+  /**
+   * Of the five owed artifacts (Q3.3), how many are present — 2 and 5
+   * computed by the fold, 1/3/4 by live two-key judgment. Null when no
+   * scanned repo exists to measure against: "–/5" is unmeasured, never a
+   * fake 0 that implies measurement (§12.5 rule 3).
+   */
+  artifactsPresent: number | null;
+  /** worst gap class computable today — G6+ land later in Q3 */
+  worstGap?: "G1" | "G2" | "G3" | "G4" | "G5";
   methodIds: string[];
 }
 
@@ -78,6 +85,12 @@ export interface KsiRegisterView {
     everyMethodFresh: number | null;
     /** rows whose ledger history reaches the MOT floor; null when the class owes none */
     historyMet: number | null;
+    /**
+     * Rows holding all five owed artifacts (Q3.3); null when no scanned repo
+     * exists — the artifacts are measured against a ledger, and without one
+     * there is nothing to measure, which is a different fact from zero.
+     */
+    allArtifacts: number | null;
     total: number;
   };
   /** the G8 adjudication queue: unreviewed frontier controls, by leverage */
@@ -148,6 +161,11 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       staleMethods:
         folded?.staleMethods ??
         (input.catalog.windows[input.offeringClass] === null ? 0 : derived.length),
+      // The G5 column (Q3.3): the fold's count when a scan is recorded;
+      // without one, unmeasured — the judged artifacts live in the ledger
+      // and the computed ones are facts about a repo's evidence, so a
+      // register with no repo has nothing to count, not a zero.
+      artifactsPresent: folded?.artifactsPresent ?? null,
       methodIds,
     };
     if (folded?.freshAsOf !== undefined) row.freshest = folded.freshAsOf;
@@ -156,6 +174,7 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     else if (floor !== null && automated < floor) row.worstGap = "G2";
     else if (row.staleMethods > 0) row.worstGap = "G3";
     else if (row.historyMet === false) row.worstGap = "G4";
+    else if (row.artifactsPresent !== null && row.artifactsPresent < 5) row.worstGap = "G5";
     return row;
   });
 
@@ -192,6 +211,8 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
           : rows.filter((r) => r.methods > 0 && r.staleMethods === 0).length,
       historyMet:
         history.months === null ? null : rows.filter((r) => r.historyMet === true).length,
+      allArtifacts:
+        repo === undefined ? null : rows.filter((r) => r.artifactsPresent === 5).length,
       total: rows.length,
     },
     queue,
@@ -260,8 +281,12 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
         freshestCol = `${age} / ${windowLabel(view.window)}${within ? " ok" : ""}`.padEnd(15);
       }
     }
-    // artifacts print –/5 until Q3 models them: unmeasured, never a fake 0
-    // that implies measurement (§12.5 rule 3)
+    // artifacts (Q3.3): the fold's count over the five owed artifacts;
+    // "–/5" only when no scanned repo exists to measure against — unmeasured,
+    // never a fake 0 that implies measurement (§12.5 rule 3)
+    const artifactsCol = (
+      row.artifactsPresent === null ? "–/5" : `${row.artifactsPresent}/5`
+    ).padEnd(10);
     const gapCol =
       row.worstGap === "G1"
         ? red("G1 coverage")
@@ -271,8 +296,10 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
             ? red("G3 freshness")
             : row.worstGap === "G4"
               ? red("G4 history")
-              : dim("—");
-    lines.push(`  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${"–/5".padEnd(10)}  ${gapCol}`);
+              : row.worstGap === "G5"
+                ? red("G5 artifact")
+                : dim("—");
+    lines.push(`  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}`);
   }
 
   const s = view.summary;
@@ -301,6 +328,15 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
         )
       : dim(
           `  history: ${s.historyMet} of ${s.total} KSIs hold ≥${view.history.months}mo of persistent validation — ${view.history.requirementId} (${view.history.force})`,
+        ),
+    // the artifact meter (Q3.3, default_artifacts.KSI): 2 and 5 computed by
+    // the fold, 1/3/4 by signed two-key judgment — never a checkbox
+    s.allArtifacts === null
+      ? dim(
+          `  artifacts: unmeasured — the five owed artifacts are counted against a scanned repo's ledger (default_artifacts.KSI)`,
+        )
+      : dim(
+          `  artifacts: ${s.allArtifacts} of ${s.total} KSIs hold all five owed artifacts — default_artifacts.KSI (2, 5 computed · 1, 3, 4 two-key judged)`,
         ),
     "",
   );

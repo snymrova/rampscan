@@ -253,6 +253,9 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("history_since"),
       json("history_floor_months"),
       json("history_met"),
+      // Q3.3: the five owed artifacts and how many are present (G5)
+      json("artifacts"),
+      { name: "artifacts_present", type: "number", required: false },
       text("gap"),
     ],
     listRule: AUTHED,
@@ -352,6 +355,38 @@ export const PROPOSALS_COLLECTION: CollectionSpec = {
 };
 
 /**
+ * Artifact-sufficiency proposals (Q3.3, G5) — the judgment queue beside the
+ * scoping one, same two-key discipline: any console identity drafts, only an
+ * approver's key turn appends the signed ArtifactJudgment to the ledger, and
+ * the checklist moves only when the projector folds that event. A separate
+ * collection rather than a widened `proposals` because a scoping names a
+ * recipe and a judgment names a (KSI, artifact) — sharing rows would make
+ * one of them lie about a required field.
+ */
+export const JUDGMENT_PROPOSALS_COLLECTION: CollectionSpec = {
+  name: "judgment_proposals",
+  type: "base",
+  fields: [
+    text("repo", true),
+    text("ksi_id", true),
+    { name: "artifact", type: "number", required: true, min: 1, max: 4 },
+    { name: "action", type: "select", required: true, maxSelect: 1, values: ["sufficient", "insufficient"] },
+    { name: "justification", type: "text", required: true, max: 4000 },
+    { name: "status", type: "select", required: true, maxSelect: 1, values: ["pending", "approved", "rejected"] },
+    text("proposed_by", true),
+    text("decided_by"),
+    text("ledger_digest"),
+    { name: "created", type: "autodate", onCreate: true },
+    { name: "updated", type: "autodate", onCreate: true, onUpdate: true },
+  ],
+  listRule: AUTHED,
+  viewRule: AUTHED,
+  createRule: `${AUTHED} && @request.body.status = "pending"`,
+  updateRule: null,
+  deleteRule: null,
+};
+
+/**
  * Operational telemetry, not a projection: `rampscan serve` tails the
  * daemon's events file (daemon-events.jsonl) into this collection so the
  * console can see the machinery — divergence alerts, cadence warnings, scan
@@ -410,6 +445,10 @@ export const KSI_CATALOG_COLLECTION: CollectionSpec = {
     // at this pin (the honest shared surface), and null must survive
     json("statement"),
     json("controls"),
+    // Q3.3: the five owed artifact texts (default_artifacts.KSI), in the
+    // rules' own order — repeated per row so the checklist quotes the pinned
+    // JSON, never prose typed into the web app
+    json("artifacts"),
   ],
   listRule: AUTHED,
   viewRule: AUTHED,
@@ -425,6 +464,8 @@ export interface KsiCatalogRow {
   name: string;
   statement: string | null;
   controls: readonly string[];
+  /** the five owed artifact texts (default_artifacts.KSI), rules' order */
+  artifacts: readonly string[];
 }
 
 /** Drop-and-refill the owed-side mirror — one writer, same as the projection. */
@@ -442,6 +483,7 @@ export async function writeKsiCatalogPocketBase(
       name: row.name,
       statement: row.statement,
       controls: row.controls,
+      artifacts: row.artifacts,
     });
   }
 }
@@ -554,6 +596,8 @@ export async function writeProjectionPocketBase(
       history_since: row.historySince ?? "",
       history_floor_months: row.historyFloorMonths,
       history_met: row.historyMet,
+      artifacts: row.artifacts,
+      artifacts_present: row.artifactsPresent,
       gap: row.gap ?? "",
     });
   }
@@ -691,6 +735,8 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
       staleMethods: r.stale_methods ?? 0,
       historyFloorMonths: r.history_floor_months ?? null,
       historyMet: r.history_met ?? null,
+      artifacts: r.artifacts ?? [],
+      artifactsPresent: r.artifacts_present ?? 0,
     };
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
     if (r.history_since) row.historySince = r.history_since;

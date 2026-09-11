@@ -134,6 +134,9 @@ export async function serve(options: ServeOptions): Promise<void> {
       name: k.name,
       statement: k.statement,
       controls: k.controls,
+      // the five owed artifact texts (Q3.3) — catalog-wide at this pin,
+      // carried per row so the checklist quotes the pinned JSON
+      artifacts: catalog.defaultArtifacts,
     })),
     pb.admin,
   );

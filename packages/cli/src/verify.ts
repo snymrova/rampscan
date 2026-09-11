@@ -1,4 +1,4 @@
-import { canonicalJson, isEvidenceBundle, isScanRun } from "@rampscan/schema";
+import { canonicalJson, isEvidenceBundle, isScanRun, isScopingEvent } from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
 
@@ -45,11 +45,21 @@ export async function verify(options: {
       `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
       `signed   ${p.timestamp} (started ${p.started_at}, ${p.duration_ms} ms)`,
     );
-  } else {
+  } else if (isScopingEvent(entry.bundle)) {
     const p = entry.bundle.predicate;
     lines.push(
       `scoping  ${options.digest.slice(0, 16)}…`,
       `recipe   ${p.recipe_id} → ${p.action}`,
+      `repo     ${p.repo}`,
+      `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
+    );
+  } else {
+    // an artifact-sufficiency judgment (Q3.3) verifies exactly like a
+    // scoping — same envelope, same address discipline, same two identities
+    const p = entry.bundle.predicate;
+    lines.push(
+      `judgment ${options.digest.slice(0, 16)}…`,
+      `artifact ${p.ksi_id} #${p.artifact} → ${p.action}`,
       `repo     ${p.repo}`,
       `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
     );

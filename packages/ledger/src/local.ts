@@ -10,6 +10,7 @@ import { join } from "node:path";
 import {
   LedgerStatement,
   canonicalJson,
+  isArtifactJudgment,
   isEvidenceBundle,
   isScanRun,
   isScopingEvent,
@@ -114,20 +115,23 @@ export function createLocalLedger(dir: string): LedgerStore {
 
       // Each statement kind fills the index slots it honestly has: a scoping
       // event carries no commit anchor and no verdict (its action goes in the
-      // verdict slot so list() filters keep working uniformly), and a run
-      // record (J1) is about a whole scan rather than one recipe — so its
-      // recipe_id and verdict stay EMPTY rather than being invented. That is
-      // what keeps `list({ recipeId })` from ever handing a run record to the
-      // evidence chain that asked for a recipe's bundles.
+      // verdict slot so list() filters keep working uniformly), an artifact
+      // judgment (Q3.3) likewise names no recipe and no commit — its action
+      // rides the verdict slot the same way — and a run record (J1) is about
+      // a whole scan rather than one recipe, so its recipe_id and verdict
+      // stay EMPTY rather than being invented. That is what keeps
+      // `list({ recipeId })` from ever handing a run record to the evidence
+      // chain that asked for a recipe's bundles.
       const row: IndexRow = {
         digest,
         appended_at: new Date().toISOString(),
-        recipe_id: isScanRun(parsed) ? "" : parsed.predicate.recipe_id,
+        recipe_id:
+          isEvidenceBundle(parsed) || isScopingEvent(parsed) ? parsed.predicate.recipe_id : "",
         repo: parsed.predicate.repo,
-        commit: isScopingEvent(parsed) ? "" : parsed.predicate.commit,
+        commit: isEvidenceBundle(parsed) || isScanRun(parsed) ? parsed.predicate.commit : "",
         verdict: isEvidenceBundle(parsed)
           ? parsed.predicate.verdict
-          : isScopingEvent(parsed)
+          : isScopingEvent(parsed) || isArtifactJudgment(parsed)
             ? parsed.predicate.action
             : "",
         timestamp: parsed.predicate.timestamp,

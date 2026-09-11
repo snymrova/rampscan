@@ -4,7 +4,11 @@ import { existsSync } from "node:fs";
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { PocketBaseAdmin, PROPOSALS_COLLECTION } from "@rampscan/projector";
+import {
+  JUDGMENT_PROPOSALS_COLLECTION,
+  PocketBaseAdmin,
+  PROPOSALS_COLLECTION,
+} from "@rampscan/projector";
 
 const execFileAsync = promisify(execFile);
 
@@ -111,6 +115,7 @@ export async function bootstrapConsole(pb: PocketBaseAdmin, log: (line: string) 
   }
 
   await pb.ensureCollection(PROPOSALS_COLLECTION);
+  await pb.ensureCollection(JUDGMENT_PROPOSALS_COLLECTION);
 
   for (const user of DEMO_USERS) {
     try {
