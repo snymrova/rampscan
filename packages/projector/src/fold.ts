@@ -401,6 +401,7 @@ export function foldEntries(
             if (method.source === "pipeline") {
               cell.recipeId = method.provenance.recipe_id;
               cell.collector = method.provenance.collector;
+              cell.scope = method.provenance.scope;
               const row = registerByCell.get(`${repo} ${method.provenance.recipe_id}`);
               if (row !== undefined) {
                 cell.state = row.state;

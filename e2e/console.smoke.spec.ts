@@ -38,19 +38,55 @@ async function pickRepo(page: Page, repo: string = FIXTURE_REPO): Promise<void> 
 }
 
 async function signIn(page: Page, email: string = VIEWER): Promise<void> {
-  await page.goto("/");
+  await page.goto("/login");
   // signed out, every register page bounces to the login card
   await expect(page).toHaveURL(/\/login/);
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  // login lands on the default surface — the KSI board since the pivot
+  await expect(page.getByRole("heading", { name: "KSI board" })).toBeVisible();
+  // most of this smoke exercises the recipe-keyed register, re-homed at
+  // /recipes under Q2.5 — park each test there, the way it used to start
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
 }
 
 test("login: signed out bounces to /login; a demo identity lands on the board", async ({ page }) => {
+  // the bounce, pinned on the default surface itself
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/login/);
   await signIn(page);
   // the subtitle proves a projection is loaded, not an empty shell
   await expect(page.locator("p.subtitle")).toContainText("dataset");
+});
+
+test("KSI board: 46 rows always, a covered KSI expands to the interrogation view", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "KSI board" })).toBeVisible();
+
+  // invariant 4′: one row per owed KSI, 46 at this pin — including the rows
+  // nothing evidences, which read G1 rather than vanishing
+  await expect(page.locator("table.reg > tbody > tr.rowlink")).toHaveCount(46);
+  await expect(page.locator(".pill", { hasText: "G1 coverage" }).first()).toBeVisible();
+
+  // the summary states cover and automate side by side (ground rule 2)
+  await expect(page.locator(".filters")).toContainText("floor met on");
+  await expect(page.locator(".filters")).toContainText("covering all 46");
+
+  // a KSI the fixture scan evidences: expand → methods with declared scope,
+  // the crosswalk drawer, and the hop to signed evidence (FRR-PVA-AA-06).
+  // The evidence column reads one repo; pick the tooled fixture explicitly
+  // (the board's selects are theme first, repo second).
+  await page.locator("select").nth(1).selectOption(FIXTURE_REPO);
+  const covered = page.locator("tr.rowlink", { hasText: "KSI-SCR-MIT" }).first();
+  await covered.click();
+  const drawer = page.locator("tr.plain-row").first();
+  await expect(drawer).toContainText("pipeline");
+  await expect(drawer).toContainText("checkout"); // the §12.6 scope declaration
+  await expect(drawer).toContainText("controls crosswalk");
+  await expect(drawer.getByRole("link", { name: /evidence → / }).first()).toBeVisible();
 });
 
 test("board: fixture scan rows render, flagship violated, no-daemon strip says so", async ({ page }) => {
@@ -423,7 +459,7 @@ test("export: the auditor takes the record away — package verifies offline, CS
 
   // the coverage board, and the filtered case — a CSV that ignored the
   // filters would still "match" an unfiltered screen, so filter first
-  await page.goto("/");
+  await page.goto("/recipes");
   await pickRepo(page);
   await expect(page.getByRole("row").filter({ hasText: FLAGSHIP }).first()).toBeVisible();
   const allCount = Number(await page.locator(".tabs button", { hasText: "All" }).locator(".count").innerText());
@@ -566,8 +602,8 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   await expect(page.locator(".notice")).toHaveCount(0);
 
   // ── the hop does not swallow the row's own click (I3a's stopPropagation) ──
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
@@ -576,8 +612,8 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   // Every evidenced/violated cell must carry the hop, not just the flagship:
   // a board where some rows explain themselves and others do not is the
   // failure mode this link exists to remove.
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page);
   const producedRows = page
     .locator("table.reg tbody tr")
@@ -612,8 +648,8 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
 
   // ── a scoped-out row gets no hop: its provenance is the scoping event ────
   // (the two-key flow earlier in this file left one behind)
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page);
   const naRow = page.getByRole("row").filter({ has: page.locator(".pill.notApplicable") }).first();
   if ((await naRow.count()) > 0) {
@@ -726,8 +762,8 @@ test("artifact viewers: the tool's own output, verified in the browser, and a ta
   // The fixture plants a well-formed AWS key in commit history (fault 1). The
   // gitleaks table names the rule, the file:line and the commit — and never
   // the value, which is the one column this viewer must not have.
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page);
   await page.getByRole("cell", { name: "no-secrets-in-history", exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
@@ -752,8 +788,8 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
   // The SAST recipe is the case the chain exists for: `sast-reachability`
   // spawns no tool at all, so a chain built from the collector's own tools
   // would print "no external tool" over a verdict semgrep's output produced.
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page);
   await page.getByRole("cell", { name: "no-reachable-dangerous-code", exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
@@ -827,7 +863,7 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
   expect(await callPath.locator(".hop-unmarked").count()).toBe(0);
 
   // ── and the flagship advisory's claim rests on the same stated ground ───
-  await page.goto("/");
+  await page.goto("/recipes");
   await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
@@ -871,7 +907,7 @@ test("plain language: the check explained, the jargon defined, and the empty row
   await expect(tip).toContainText("at least one assertion failed");
   // asking what a word means is not asking to navigate: the row underneath is
   // a link to the evidence page, and the board is still on screen
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   // the repo cell is not jargon and has no entry — no dotted underline, no
   // popover that opens onto nothing
   await expect(
@@ -937,7 +973,7 @@ test("plain language: the check explained, the jargon defined, and the empty row
   await expect(queueRows.filter({ hasText: "no IaC in the committed tree" })).toHaveCount(0);
 
   // ── the evidence page: expanded, and a run record gets none ─────────────
-  await page.goto("/");
+  await page.goto("/recipes");
   await pickRepo(page);
   await page.getByRole("cell", { name: FLAGSHIP, exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
@@ -1016,8 +1052,8 @@ test("architecture contract: the repo's own declaration, checked against its cod
   await expect(page.locator("body")).toContainText("rampscan.config.json");
 
   // ── the route half, whose walk errs the other way ────────────────────────
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page);
   await page.getByRole("cell", { name: "arch-route-auth-declared", exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/[0-9a-f]{64}/, { timeout: 45_000 });
@@ -1037,8 +1073,8 @@ test("architecture contract: the repo's own declaration, checked against its cod
   // ── the contract-less repo: an honest skip, in the collector's own words ──
   // bare-app declares nothing, so the gate has nothing of its kind to check —
   // which must read as an explained empty cell, never as a pass.
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Coverage board" })).toBeVisible();
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Recipe register" })).toBeVisible();
   await pickRepo(page, BARE_REPO);
   await page.locator(".tabs button", { hasText: "Unevidenced" }).click();
 

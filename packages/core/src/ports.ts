@@ -5,6 +5,7 @@ import type {
   CollectorRun,
   Finding,
   LedgerStatement,
+  MethodScope,
   MethodSource,
   MethodStanding,
   OffenderPointer,
@@ -341,6 +342,12 @@ export interface MethodCell {
   /** the pipeline join key; absent for non-pipeline sources (Q4) */
   recipeId?: string;
   collector?: string;
+  /**
+   * What this method's mechanism walked (SPEC §12.6) — lifted from the
+   * method's provenance so the interrogation view can answer "what was
+   * read?" without a second lookup. Absent for non-pipeline sources today.
+   */
+  scope?: MethodScope;
   state: RegisterState;
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601

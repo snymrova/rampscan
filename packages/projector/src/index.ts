@@ -14,8 +14,10 @@ export {
   PROPOSALS_COLLECTION,
   DAEMON_EVENTS_COLLECTION,
   DAEMON_STATUS_COLLECTION,
+  KSI_CATALOG_COLLECTION,
   ensureProjectionCollections,
   writeProjectionPocketBase,
+  writeKsiCatalogPocketBase,
   readProjectionPocketBase,
 } from "./pocketbase.js";
-export type { CollectionSpec, ProjectionSettings } from "./pocketbase.js";
+export type { CollectionSpec, KsiCatalogRow, ProjectionSettings } from "./pocketbase.js";
