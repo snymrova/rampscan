@@ -3,6 +3,7 @@ import type {
   CoverageRow,
   DriftEvent,
   LedgerEntry,
+  MethodRegisterRow,
   Projection,
   RegisterRow,
   RollupRow,
@@ -230,6 +231,30 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
     }),
   ),
   {
+    // the method register (Q2.3) — the per-KSI board's rows. `method_floor`
+    // and `floor_met` are json fields for the `population` reason: null (the
+    // class owes no number) has to survive the round trip, and PocketBase's
+    // number/bool fields coerce null to 0/false — which would state a floor
+    // of zero, trivially met, for a class that stated none.
+    name: "method_registers",
+    type: "base",
+    fields: [
+      text("repo", true),
+      text("ksi", true),
+      json("methods"),
+      { name: "automated_methods", type: "number", required: false },
+      json("method_floor"),
+      json("floor_met"),
+      text("fresh_as_of"),
+      text("gap"),
+    ],
+    listRule: AUTHED,
+    viewRule: AUTHED,
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
+  },
+  {
     name: "gaps",
     type: "base",
     fields: [
@@ -452,6 +477,18 @@ export async function writeProjectionPocketBase(
       });
     }
   }
+  for (const row of projection.methodRegisters) {
+    await pb.create("method_registers", {
+      repo: row.repo,
+      ksi: row.ksi,
+      methods: row.methods,
+      automated_methods: row.automatedMethods,
+      method_floor: row.methodFloor,
+      floor_met: row.floorMet,
+      fresh_as_of: row.freshAsOf ?? "",
+      gap: row.gap ?? "",
+    });
+  }
   for (const gap of projection.gaps) {
     await pb.create("gaps", {
       repo: gap.repo,
@@ -500,6 +537,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     driftRecords,
     controlRecords,
     ksiRecords,
+    methodRegisterRecords,
     gapRecords,
     scanRunRecords,
     metaRecords,
@@ -509,6 +547,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     pb.listAll("drift"),
     pb.listAll("controls"),
     pb.listAll("ksis"),
+    pb.listAll("method_registers"),
     pb.listAll("gaps"),
     pb.listAll("scan_runs"),
     pb.listAll("meta"),
@@ -573,6 +612,19 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     recipeIds: r.recipe_ids ?? [],
     counts: r.counts,
   });
+  const methodRegisters: MethodRegisterRow[] = methodRegisterRecords.map((r: any) => {
+    const row: MethodRegisterRow = {
+      repo: r.repo,
+      ksi: r.ksi,
+      methods: r.methods ?? [],
+      automatedMethods: r.automated_methods,
+      methodFloor: r.method_floor ?? null,
+      floorMet: r.floor_met ?? null,
+    };
+    if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
+    if (r.gap) row.gap = r.gap;
+    return row;
+  });
   const gaps: CadenceGap[] = gapRecords.map((r: any) => ({
     repo: r.repo,
     recipeId: r.recipe_id,
@@ -601,6 +653,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     drift,
     controls: controlRecords.map(toRollup),
     ksis: ksiRecords.map(toRollup),
+    methodRegisters,
     gaps,
     scanRuns,
     datasetVersion: meta?.dataset_version ?? "",

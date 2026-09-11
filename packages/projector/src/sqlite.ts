@@ -5,6 +5,7 @@ import type {
   CadenceGap,
   CoverageRow,
   DriftEvent,
+  MethodRegisterRow,
   Projection,
   RegisterRow,
   RollupRow,
@@ -31,6 +32,7 @@ export async function writeProjectionSqlite(
       "drift",
       "controls",
       "ksis",
+      "method_registers",
       "gaps",
       "scan_runs",
       "meta",
@@ -100,6 +102,19 @@ export async function writeProjectionSqlite(
         )
       `);
     }
+    // the method register (Q2.3) — the per-KSI board's rows
+    db.exec(`
+      CREATE TABLE method_registers (
+        repo              TEXT NOT NULL,
+        ksi               TEXT NOT NULL,
+        methods           TEXT NOT NULL,    -- JSON array of MethodCell
+        automated_methods INTEGER NOT NULL,
+        method_floor      INTEGER,          -- NULL: the class owes no number
+        floor_met         INTEGER,          -- 0 | 1 | NULL (exactly when floor is NULL)
+        fresh_as_of       TEXT,
+        gap               TEXT              -- G1 | G2 | NULL
+      )
+    `);
     db.exec(`
       CREATE TABLE gaps (
         repo           TEXT NOT NULL,
@@ -222,6 +237,24 @@ export async function writeProjectionSqlite(
           JSON.stringify(row.counts),
         );
       }
+    }
+
+    const insertMethodRegister = db.prepare(
+      `INSERT INTO method_registers
+         (repo, ksi, methods, automated_methods, method_floor, floor_met, fresh_as_of, gap)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const row of projection.methodRegisters) {
+      insertMethodRegister.run(
+        row.repo,
+        row.ksi,
+        JSON.stringify(row.methods),
+        row.automatedMethods,
+        row.methodFloor,
+        row.floorMet === null ? null : row.floorMet ? 1 : 0,
+        row.freshAsOf ?? null,
+        row.gap ?? null,
+      );
     }
 
     const insertGap = db.prepare(
@@ -350,6 +383,21 @@ export function readProjectionSqlite(dbPath: string): Projection {
         recipeIds: JSON.parse(r.recipe_ids),
         counts: JSON.parse(r.counts),
       }));
+    const methodRegisters: MethodRegisterRow[] = (
+      db.prepare("SELECT * FROM method_registers").all() as any[]
+    ).map((r) => {
+      const row: MethodRegisterRow = {
+        repo: r.repo,
+        ksi: r.ksi,
+        methods: JSON.parse(r.methods),
+        automatedMethods: Number(r.automated_methods),
+        methodFloor: r.method_floor === null ? null : Number(r.method_floor),
+        floorMet: r.floor_met === null ? null : r.floor_met === 1,
+      };
+      if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
+      if (r.gap) row.gap = r.gap;
+      return row;
+    });
     const gaps: CadenceGap[] = (db.prepare("SELECT * FROM gaps").all() as any[]).map((r) => ({
       repo: r.repo,
       recipeId: r.recipe_id,
@@ -380,6 +428,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
       drift,
       controls: readRollup("controls"),
       ksis: readRollup("ksis"),
+      methodRegisters,
       gaps,
       scanRuns,
       datasetVersion: meta?.dataset_version ?? "",

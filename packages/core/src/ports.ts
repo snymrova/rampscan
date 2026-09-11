@@ -5,6 +5,8 @@ import type {
   CollectorRun,
   Finding,
   LedgerStatement,
+  MethodSource,
+  MethodStanding,
   OffenderPointer,
   PlainLanguage,
   ScanRunTrigger,
@@ -325,6 +327,54 @@ export interface RollupRow {
 }
 
 /**
+ * One validation method's current standing on the board (Q2.3, SPEC §12.2).
+ * A pipeline method's state is its recipe cell's state — one bundle evidences
+ * every method its recipe derives, which is exactly the §1.1 decision (b)
+ * rendered at fold time: the same evidence, counted per KSI.
+ */
+export interface MethodCell {
+  methodId: string;
+  source: MethodSource;
+  /** the FRC-CSX-VVK numerator, stored on the method, echoed here */
+  automated: boolean;
+  standing: MethodStanding;
+  /** the pipeline join key; absent for non-pipeline sources (Q4) */
+  recipeId?: string;
+  collector?: string;
+  state: RegisterState;
+  bundleDigest?: Digest;
+  freshAsOf?: string; // ISO 8601
+}
+
+/**
+ * One (repo, KSI) row of the method register — the pivot's board row (SPEC
+ * §12.1 invariant 4′: a KSI with zero methods is a G1 row, never an absent
+ * row). G1 and G2 are properties of the REGISTER itself (plan §4): they are
+ * computed from which methods exist, not from what the ledger holds — a
+ * method's missing or stale evidence is G3's business and lands in Q3.
+ */
+export interface MethodRegisterRow {
+  repo: string;
+  ksi: string;
+  /** every method derived for this KSI, sorted by id */
+  methods: MethodCell[];
+  /** how many of them are automated — the G2 numerator */
+  automatedMethods: number;
+  /**
+   * The FRC-CSX-VVK floor the fold was given (owed-side data, per class);
+   * null when the class owes no number — or when the fold was given none,
+   * which renders the same way: nothing to check against.
+   */
+  methodFloor: number | null;
+  /** automatedMethods >= methodFloor; null exactly when methodFloor is null */
+  floorMet: boolean | null;
+  /** freshest live evidence across this KSI's methods */
+  freshAsOf?: string; // ISO 8601
+  /** the worst gap class computable from the register alone (G3+ land in Q3) */
+  gap?: "G1" | "G2";
+}
+
+/**
  * One interval where a (repo, recipe) sat past its MVX window without
  * re-verification (I1d) — derived from the bundle chain × the class window,
  * never from a wall clock. An ongoing gap ends at the fold's projectedAt.
@@ -437,6 +487,12 @@ export interface Projection {
   controls: RollupRow[];
   /** the KSI register — same rollup keyed by KSI id */
   ksis: RollupRow[];
+  /**
+   * The method register (Q2.3): (repo, KSI) → derived methods joined to
+   * their live evidence, counted against the class floor. Empty when the
+   * fold was given no methods — the pre-pivot projections still fold.
+   */
+  methodRegisters: MethodRegisterRow[];
   /** cadence-adherence history: MVX-window lapses, empty when no window was given (I1d) */
   gaps: CadenceGap[];
   /**
