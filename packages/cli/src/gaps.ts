@@ -257,14 +257,20 @@ export function buildGapRegister(input: GapRegisterInput): GapRegisterView {
     g6.unmeasured = "no scanned repo — the class of evidence that does not exist is unmeasured";
   } else {
     for (const row of folded) {
+      // Whether this point-in-time evidence STANDS ALONE is the G6 predicate
+      // itself — is there a process-generated method beside it? — not whether
+      // G6 happens to be the row's worst gap. Those differ whenever something
+      // outranks G6 under precedence (a row that is also stale reads G3), and
+      // reading the row's headline instead of the predicate told an assessor
+      // the evidence was "corroborated" on rows where nothing corroborated it.
+      const corroborated = row.methods.some((c) => c.evidenceClass === "process-generated");
       for (const cell of row.methods) {
         if (cell.evidenceClass !== "point-in-time") continue;
         g6.rows.push({
           subject: `${row.ksi} · ${cell.methodId}`,
-          detail:
-            row.gap === "G6"
-              ? "point-in-time evidence STANDING ALONE — rejectable as standalone evidence"
-              : "point-in-time evidence, corroborated by a process-generated method",
+          detail: corroborated
+            ? "point-in-time evidence, corroborated by a process-generated method"
+            : "point-in-time evidence STANDING ALONE — rejectable as standalone evidence",
           ...(cell.bundleDigest !== undefined ? { digest: cell.bundleDigest } : {}),
         });
       }

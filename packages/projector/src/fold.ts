@@ -33,7 +33,9 @@ import {
   isEvidenceBundle,
   isScanRun,
   isScopingEvent,
+  methodId,
   methodOfAttestation,
+  methodOfIngestedBundle,
 } from "@rampscan/schema";
 
 // Projector v2 (plan M3): still a pure fold of the ledger — identical in
@@ -424,7 +426,13 @@ export function foldEntries(
       row.state = p.verdict;
       row.bundleDigest = live.digest;
       row.freshAsOf = p.timestamp;
-      row.commit = p.commit;
+      // ABSENT when the evidence anchors to no commit, never an empty string:
+      // an ingested bundle carries `commit: ""` because the predicate requires
+      // the field (SPEC §12.8), and this row's `commit` is optional precisely
+      // so "there is no anchor" can be said by saying nothing. Writing "" here
+      // made the projection fail its own `projection ≡ ledger` proof, because
+      // both stores read an empty string back as absent.
+      if (p.commit !== "") row.commit = p.commit;
       // the run that produced THIS evidence, from the predicate's own claim
       row.runId = p.run_id;
       // the domain the verdict was reached over (N0-T1), lifted from the
@@ -448,7 +456,10 @@ export function foldEntries(
         while (first > 0 && chain[first - 1]!.bundle.predicate.verdict === "violated") first--;
         const intro = chain[first]!.bundle.predicate;
         row.introducedAt = intro.timestamp;
-        row.introducingCommit = intro.commit;
+        // absent rather than "" for the same reason as `commit` above: an
+        // ingested streak has no commit to name, and saying nothing is how
+        // this optional field says so
+        if (intro.commit !== "") row.introducingCommit = intro.commit;
       }
       if (scopingInfo) row.scoping = scopingInfo;
     } else if (scopingInfo) {
@@ -502,8 +513,48 @@ export function foldEntries(
       attestationEntryByMethod.set(`${p.repo} ${method.id}`, entry);
       attestationKsis.add(p.ksi_id);
     }
+    // The aws-ingested leg (Q4.3, SPEC §12.8): ledger-derived for the same
+    // reason the attestation leg is — the catalog holds OUR recipes, and an
+    // ingested result names the client's, so there is nothing to hand in.
+    //
+    // Keyed on the bundle's own method identity, never on its recipe cell:
+    // the contract mints one submission per (upstream recipe × KSI), so two
+    // KSIs evidenced by one upstream recipe share a recipe id, and joining
+    // through that cell would let one KSI's result stand in for the other's.
+    // Sorted order → the last ingestion of a method is the live one, which is
+    // the whole death model for ingested evidence: no commit anchor, so it
+    // dies superseded or goes stale, never by anchor drift (§12.8).
+    const liveIngested = new Map<string, EvidenceEntry>();
+    for (const entry of evidence) {
+      const p = entry.bundle.predicate;
+      if (p.ingest === undefined) continue;
+      // The contract guarantees exactly one KSI, and `rampscan ingest` refuses
+      // anything else before signing — this guard is what keeps a fold over a
+      // ledger somebody hand-edited from throwing instead of computing.
+      if (p.ksi_ids.length !== 1) continue;
+      liveIngested.set(`${p.repo} ${methodId("aws-ingested", p.recipe_id, p.ksi_ids[0]!)}`, entry);
+    }
+    const ingestedMethodsByCell = new Map<string, ValidationMethod[]>();
+    const ingestedEntryByMethod = new Map<string, EvidenceEntry>();
+    const ingestedKsis = new Set<string>();
+    for (const [key, entry] of liveIngested) {
+      // derived from the LIVE bundle, so the method's provenance cites the
+      // submission that currently stands — signer and digest included
+      const method = methodOfIngestedBundle(entry.bundle.predicate);
+      const cellKey = `${entry.bundle.predicate.repo} ${method.ksi}`;
+      (
+        ingestedMethodsByCell.get(cellKey) ?? ingestedMethodsByCell.set(cellKey, []).get(cellKey)!
+      ).push(method);
+      ingestedEntryByMethod.set(key, entry);
+      ingestedKsis.add(method.ksi);
+    }
     const ksiUniverse = [
-      ...new Set([...(options.ksiIds ?? []), ...methodsByKsi.keys(), ...attestationKsis]),
+      ...new Set([
+        ...(options.ksiIds ?? []),
+        ...methodsByKsi.keys(),
+        ...attestationKsis,
+        ...ingestedKsis,
+      ]),
     ].sort();
     const registerByCell = new Map(registers.map((r) => [`${r.repo} ${r.recipeId}`, r]));
     const floor = options.methodFloor ?? null;
@@ -538,6 +589,7 @@ export function foldEntries(
         const cells: MethodCell[] = [
           ...(methodsByKsi.get(ksi) ?? []),
           ...(attestationMethodsByCell.get(`${repo} ${ksi}`) ?? []),
+          ...(ingestedMethodsByCell.get(`${repo} ${ksi}`) ?? []),
         ]
           .sort((a, b) => a.id.localeCompare(b.id))
           .map((method) => {
@@ -569,6 +621,30 @@ export function foldEntries(
               const live = liveByCell.get(`${repo} ${method.provenance.recipe_id}`);
               const evidenceClass = live?.bundle.predicate.evidence_class;
               if (evidenceClass !== undefined) cell.evidenceClass = evidenceClass;
+            }
+            if (method.source === "aws-ingested") {
+              // The ingested bundle IS the evidence, so the join is to the
+              // live submission rather than through a recipe cell — and its
+              // own verdict is the cell's state, `violated` included: a failed
+              // client-run check is a validation record that exists, and what
+              // it says is G13's business (Q3.5), not a reason to read as
+              // unevidenced.
+              //
+              // `recipeId` carries the UPSTREAM id so the interrogation view
+              // can name what ran; `collector` and `scope` stay absent, since
+              // nothing of ours walked anything — the honest answer to "what
+              // was read?" here is the signer identity in the provenance.
+              cell.recipeId = method.provenance.recipe_id;
+              const live = ingestedEntryByMethod.get(`${repo} ${method.id}`);
+              if (live !== undefined) {
+                const p = live.bundle.predicate;
+                cell.state = p.verdict;
+                cell.bundleDigest = live.digest;
+                cell.freshAsOf = p.timestamp;
+                // G6 (Q3.4): the SUBMITTER's evidence-class assertion, the one
+                // fact the appliance cannot compute — quoted, never inferred.
+                if (p.evidence_class !== undefined) cell.evidenceClass = p.evidence_class;
+              }
             }
             if (method.source === "attestation") {
               // An attestation has no evidence chain to join: the signed

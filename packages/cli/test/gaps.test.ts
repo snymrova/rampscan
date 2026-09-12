@@ -305,13 +305,48 @@ describe("buildGapRegister — the Q3 exit gate", () => {
 
   it("G6: the asserted point-in-time cell is a row citing its bundle, corroboration stated", () => {
     const g6 = view.sections.find((s) => s.gapClass === "G6")!;
+    // Nothing on this row asserts process-generated — the sibling method holds
+    // no live evidence at all — so the point-in-time evidence STANDS ALONE.
+    // It reads that way even though the row's worst gap is G3: corroboration
+    // is the G6 predicate, not the row's headline (the two part whenever
+    // something outranks G6 under precedence).
+    const row = view.sections.find((s) => s.gapClass === "G3")!;
+    expect(row.rows.length).toBeGreaterThan(0);
     expect(g6.rows).toEqual([
       {
         subject: "KSI-SCR-MIT · pipeline:covered#KSI-SCR-MIT",
-        detail: "point-in-time evidence, corroborated by a process-generated method",
+        detail: "point-in-time evidence STANDING ALONE — rejectable as standalone evidence",
         digest: "d1",
       },
     ]);
+  });
+
+  it("G6: a process-generated method beside it reads as corroborated, whatever the row's worst gap", () => {
+    const corroborated: MethodRegisterRow[] = foldedRegisters.map((r) =>
+      r.ksi !== "KSI-SCR-MIT"
+        ? r
+        : {
+            ...r,
+            methods: r.methods.map((m) =>
+              m.methodId === "pipeline:both#KSI-SCR-MIT"
+                ? { ...m, state: "evidenced" as const, evidenceClass: "process-generated" as const }
+                : m,
+            ),
+          },
+    );
+    const withBoth = buildGapRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: corroborated,
+      vulnerabilities: [],
+      frontier,
+    });
+    const g6 = withBoth.sections.find((s) => s.gapClass === "G6")!;
+    expect(g6.rows).toHaveLength(1);
+    expect(g6.rows[0]!.detail).toBe(
+      "point-in-time evidence, corroborated by a process-generated method",
+    );
   });
 
   it("G8: the unreviewed controls, sorted — the unasked question stays a first-class row", () => {

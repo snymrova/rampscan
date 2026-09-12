@@ -95,9 +95,27 @@ export class PocketBaseAdmin {
     // or retyped here (that stays a deliberate, hand-written migration).
     const have = new Set((existing.fields ?? []).map((f) => f.name));
     const missing = spec.fields.filter((f) => !have.has(f["name"] as string));
-    if (missing.length > 0) {
+    // One non-additive change IS reconciled: a field the spec has RELAXED from
+    // required to optional. Relaxing can never invalidate a record already
+    // stored — everything that validated before still validates — where
+    // tightening or retyping can, which is why only this direction is
+    // automatic. Without it a spec fix cannot reach a deployment that already
+    // ran `rampscan serve`: Q4.3 found `vulnerabilities.commit_sha` required,
+    // and an ingested result anchors to no commit, so PocketBase refused the
+    // whole write with `validation_required` on any ledger holding a violated
+    // ingestion.
+    const relaxed = (existing.fields ?? []).map((field) => {
+      const wanted = spec.fields.find((f) => f["name"] === field.name);
+      const nowOptional =
+        wanted !== undefined &&
+        wanted["required"] !== true &&
+        (field as Record<string, unknown>)["required"] === true;
+      return nowOptional ? { ...field, required: false } : field;
+    });
+    const changed = relaxed.some((f, i) => f !== (existing.fields ?? [])[i]);
+    if (missing.length > 0 || changed) {
       await this.request("PATCH", `/api/collections/${spec.name}`, {
-        fields: [...(existing.fields ?? []), ...missing],
+        fields: [...relaxed, ...missing],
       });
     }
   }
@@ -295,7 +313,10 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("recipe_id", true),
       json("ksi_ids"),
       text("detected_at", true),
-      text("commit_sha", true),
+      // NOT required: an episode opened by an ingested result anchors to no
+      // commit (SPEC §12.8), so its commit is legitimately empty — and a
+      // required field here refused the entire projection write (Q4.3)
+      text("commit_sha"),
       text("bundle_digest", true),
       text("vuln_status", true), // `status` collides with PB vocabulary, like trigger/timestamp
       text("resolved_at"),
