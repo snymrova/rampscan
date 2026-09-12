@@ -23,10 +23,10 @@ import { Automatable, PipelineRecipe } from "./recipe.js";
 // Methods are DERIVED, never authored. There is no methods table anyone
 // edits: each method is a pure function of its source artifact —
 // `methodsOfRecipe` below for the pipeline source, `methodOfIngestedBundle`
-// below for the aws-ingested source (Q4.1, SPEC §12.8); an attestation event
-// yields the third (Q4.2). The register stays a derivation over things that
-// are already reviewed artifacts, so computed-never-typed holds for the
-// register itself.
+// below for the aws-ingested source (Q4.1, SPEC §12.8), and
+// `methodOfAttestation` for the attestation source (Q4.2, SPEC §12.9). The
+// register stays a derivation over things that are already reviewed
+// artifacts, so computed-never-typed holds for the register itself.
 
 export const MethodSource = z.enum(["pipeline", "aws-ingested", "attestation"]);
 export type MethodSource = z.infer<typeof MethodSource>;
@@ -243,6 +243,69 @@ export function methodOfIngestedBundle(predicate: {
       recipe_id: predicate.recipe_id,
       signer_identity: predicate.ingest.signer_identity,
       ingest_digest: predicate.ingest.ingest_digest,
+    },
+  };
+}
+
+/**
+ * The attestation derivation (SPEC §12.9, Q4.2): a signed two-key attestation
+ * yields its method — pure over the event, so the attestation register is
+ * recoverable from the ledger alone, exactly as the other two legs are.
+ *
+ * All three fixed values are fixed per source, for the reason `automated` is
+ * stored rather than derived at read time (§12.2): the numerator of a legal
+ * floor is asserted where an assessor can see it.
+ *
+ *   - `automated: false` — and this is the anti-gaming property, not a
+ *     demotion. `FRC-CSX-VVK` counts automated methods, so no number of
+ *     attestations carries a KSI to a class's floor; inventing four roles to
+ *     reach class d's ≥4 moves nothing. What an attestation does is end G1.
+ *   - `clock: "non-machine"` — `VDR-TFR-NMV`'s 3 months, the clock this whole
+ *     path exists to sit on. A standing claim nobody re-signed is G3.
+ *   - `standing: "narrative"` — what a human statement claims for a KSI.
+ *
+ * `source_ref` is the `statement_id` (the MECHANISM), never the event digest:
+ * the same programme re-signed each quarter must stay ONE method whose clock
+ * is satisfied again, or the history key (G4) and every count would read a
+ * renewal as a new mechanism.
+ *
+ * One refusal, the contract-rule class: a `withdrawn` attestation yields no
+ * method. Deriving one would count a retracted claim — and the caller that
+ * hands a withdrawn event here has skipped the supersession the fold does.
+ */
+export function methodOfAttestation(event: {
+  subject: { digest: Record<string, string> }[];
+  predicate: {
+    action: "attested" | "withdrawn";
+    statement_id: string;
+    ksi_id: string;
+    attestor_role: string;
+  };
+}): AttestationMethod {
+  const p = event.predicate;
+  if (p.action !== "attested") {
+    throw new Error(
+      `attestation ${p.statement_id}#${p.ksi_id} is ${p.action} — ` +
+        `a method derived from it would count a retracted claim`,
+    );
+  }
+  const statementRef = event.subject[0]?.digest.sha256;
+  if (statementRef === undefined) {
+    throw new Error(
+      `attestation ${p.statement_id}#${p.ksi_id} carries no sha256 subject digest — ` +
+        `its provenance could not cite the words that were signed`,
+    );
+  }
+  return {
+    id: methodId("attestation", p.statement_id, p.ksi_id),
+    ksi: p.ksi_id,
+    source: "attestation" as const,
+    automated: false,
+    clock: "non-machine" as const,
+    standing: "narrative" as const,
+    provenance: {
+      attestor_role: p.attestor_role,
+      statement_ref: statementRef,
     },
   };
 }

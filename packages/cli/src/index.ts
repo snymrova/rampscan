@@ -19,6 +19,8 @@ export { recordScoping } from "./scoping.js";
 export type { RecordScopingOptions } from "./scoping.js";
 export { recordArtifactJudgment } from "./artifact-judgment.js";
 export type { RecordArtifactJudgmentOptions } from "./artifact-judgment.js";
+export { recordAttestation } from "./attestation.js";
+export type { RecordAttestationOptions } from "./attestation.js";
 export { computeScopingRegister } from "./scoping-register.js";
 export type {
   ScopingRegister,

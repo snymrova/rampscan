@@ -7,3 +7,4 @@ export * from "./bundle.js";
 export * from "./ingest.js";
 export * from "./scoping.js";
 export * from "./artifact-judgment.js";
+export * from "./attestation.js";

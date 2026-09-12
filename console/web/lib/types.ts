@@ -386,6 +386,31 @@ export interface JudgmentProposalRecord {
 }
 
 /**
+ * An attestation proposal (Q4.2, SPEC §12.9) — the third queue, same two keys:
+ * anyone drafts, an approver's key turn appends the signed Attestation to the
+ * ledger, and a `source: attestation` method appears on the register when the
+ * projector folds it. The claim is the signed text; there is no separate
+ * justification field, because the claim is what both keys are turned for.
+ */
+export interface AttestationProposalRecord {
+  id: string;
+  repo: string;
+  /** the MECHANISM's name ("incident-review") — becomes the method's source_ref */
+  statement_id: string;
+  ksi_id: string;
+  /** the accountable role, not a person: the method survives the post-holder */
+  attestor_role: string;
+  statement: string;
+  action: "attested" | "withdrawn";
+  status: "pending" | "approved" | "rejected";
+  proposed_by: string;
+  decided_by: string;
+  ledger_digest: string;
+  created: string;
+  updated: string;
+}
+
+/**
  * One recorded scan (J1) as the projector writes the `scan_runs` collection.
  * `trigger` and `timestamp` carry suffixed field names for the same reason
  * `rollup_id` does — a store's own vocabulary claims the short ones.

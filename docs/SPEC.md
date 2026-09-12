@@ -447,3 +447,41 @@ Strict at every level, the manifest/contract rule: provenance is what an assesso
 **The tree adapter** meets clients where they already are (`docs/RESEARCH-PARAMIFY-PILOT.md` §3): `rampscan ingest <dir>` accepts an `Evidence/<family>/<KSI-ID>/<KSI-ID>.{json,csv}` tree plus an `ingest-manifest.json` the client authors — signer identity, evidence class (per-entry override permitted), cadence, and per entry the script name, exit code, and timestamp: exactly the facts the tree itself does not carry. The adapter's output IS native submissions (exit code → the single assertion; `population` = the result rows the script emitted), so the digest discipline is identical on both paths. The synthetic fixture mirrors those output shapes and is written by us — no code or fixture reuse (their repo has no license).
 
 **Refusal before append:** a KSI that does not resolve in the pinned catalog, a duplicate (recipe, KSI) within one batch, or any malformed submission refuses the WHOLE batch before anything is signed — validate-then-append, the artifact-judgment pattern applied to evidence.
+
+### 12.9 The attestation contract (Q4.2)
+
+The pipeline plane and the ingestion plane both evidence things a machine can observe. What remains after both is **acts-on-people** — the requirements no checkout walk and no AWS API call can reach, and the reason the commit plane's ceiling is a ceiling (plan §7 ground rule 1). `VDR-TFR-NMV` exists for exactly that remainder, and Q4.2 makes the path a counted method rather than an apology: a human statement, signed through the **existing two-key path**, becomes the `source: attestation` leg of §12.2's register.
+
+**The attestation is the third two-key write**, after the `notApplicable` scoping (§6) and the artifact-sufficiency judgment (Q3.3, G5). Same discipline, because it is the same mechanism: drafted by any console identity, made real by an approver's key turn, appended to the **ledger** — PocketBase never holds a fact the ledger doesn't (§6 rule 1).
+
+```
+AttestationPredicate = {
+  action:          "attested" | "withdrawn"
+  statement_id:    string      // the MECHANISM's name ("incident-review"),
+                               // slug-shaped; becomes the method's source_ref
+  ksi_id:          string      // exactly one KSI, mnemonic form; must resolve
+                               // in the pinned catalog
+  attestor_role:   string      // the accountable role ("ciso") — a role, not
+                               // a person: people change, the mechanism doesn't
+  statement:       string      // what is attested, in the attestor's words
+  repo:            string
+  proposed_by:     string      // console identity that drafted it
+  approved_by:     string      // approver whose key turn made it real
+  dataset_version: string
+  timestamp:       ISO 8601
+}
+```
+
+The statement's `subject` is `sha256(statement)` under the name `attestation.txt` — what the approver signs is the **claim**, exactly as a scoping's subject is the justification it rests on. There is no separate `justification` field: a second free-text box beside the claim invites "lgtm" to stand where reasoning belongs, and the claim is what both keys are turning for.
+
+**`statement_id` names the mechanism, not the occasion.** The method id is `attestation:<statement_id>#<ksi>`, so the same attestation programme re-signed every quarter stays **one** method whose clock is satisfied again — not a new method each time. This is the §12.2 split applied to a human process: method provenance names the mechanism, the ledger event names the run. It is also why `attestor_role` is a role: the method survives the post-holder.
+
+**The derivation** (§12.2's Q4.2 promise): `methodOfAttestation(event)` is a pure function of the signed event — `automated: false`, `clock: "non-machine"`, `standing: "narrative"`, provenance `{ attestor_role, statement_ref }` where `statement_ref` is the subject digest, the address of exactly the words that were signed. All three are fixed per source, for the same reason `aws-ingested` fixes its own: the numerator of a legal floor is asserted where an assessor can see it, not inferred at read time.
+
+**`automated: false` is the anti-gaming property, not a demotion.** `FRC-CSX-VVK` counts automated methods, so no number of attestations can ever carry a KSI to a class's floor — inventing four roles to reach class d's ≥4 moves nothing. What an attestation does is end G1: a KSI whose only validation is a signed human statement is *covered*, and the board says so while still reporting an unmet automated floor. Cover ≠ automate, kept structurally (ground rule 2) at the one place the temptation to conflate them is strongest — `docs/RESEARCH-KSI-GAP-ENGINE.md` §6 names that conflation the false-attestation failure mode.
+
+**Freshness: the attestation's own timestamp is its evidence instant.** An attestation has no evidence chain — the event *is* the evidence — so the fold joins the live attestation to its method cell and judges `freshAsOf` against `VDR-TFR-NMV`'s 3 months, the same `windowThreshold` arithmetic the machine clock gets (calendar months, day-clamped). An attestation nobody renewed is **G3**, on the same footing as a stale scan. That is the whole point of putting it on a clock: a standing human claim that no one has re-signed in a year is not evidence, and the register stops pretending otherwise without anyone filing a ticket.
+
+**Withdrawal is a decision, not a deletion.** A signed `withdrawn` supersedes a standing `attested` for the same (repo, `statement_id`, KSI) — an append-only ledger un-decides by deciding again, exactly as `insufficient` withdraws a sufficiency judgment. `methodOfAttestation` **refuses** a withdrawn event: deriving a method from a retracted claim would count it. The superseded attestation stays in the ledger, because the history it records is real.
+
+**Refusals, all the contract-rule class:** an empty statement (the approver signs reasoning, so there must be some), a `statement_id` that is not slug-shaped (it becomes part of a composite key — a `#` or `:` inside it would make the method id ambiguous while still looking like an id), a KSI that does not resolve in the pinned catalog, and a withdrawn event handed to the derivation. The check order is validate-then-sign: nothing reaches the ledger that the catalog cannot resolve.

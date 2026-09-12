@@ -413,6 +413,44 @@ export const JUDGMENT_PROPOSALS_COLLECTION: CollectionSpec = {
 };
 
 /**
+ * Attestation proposals (Q4.2, SPEC §12.9) — the third queue, same two-key
+ * discipline: any console identity drafts, only an approver's key turn appends
+ * the signed Attestation to the ledger, and the register moves only when the
+ * projector folds that event. Its own collection for the same reason the
+ * judgment queue has one: a scoping names a recipe, a judgment names a (KSI,
+ * artifact), and an attestation names a (statement_id, KSI) plus the role it
+ * rests on — sharing rows would make two of the three lie about a required
+ * field.
+ *
+ * `statement` carries the claim rather than a justification: what the two keys
+ * are turned for IS the claim, and a second free-text box beside it invites
+ * "lgtm" to stand where reasoning belongs.
+ */
+export const ATTESTATION_PROPOSALS_COLLECTION: CollectionSpec = {
+  name: "attestation_proposals",
+  type: "base",
+  fields: [
+    text("repo", true),
+    text("statement_id", true),
+    text("ksi_id", true),
+    text("attestor_role", true),
+    { name: "statement", type: "text", required: true, max: 4000 },
+    { name: "action", type: "select", required: true, maxSelect: 1, values: ["attested", "withdrawn"] },
+    { name: "status", type: "select", required: true, maxSelect: 1, values: ["pending", "approved", "rejected"] },
+    text("proposed_by", true),
+    text("decided_by"),
+    text("ledger_digest"),
+    { name: "created", type: "autodate", onCreate: true },
+    { name: "updated", type: "autodate", onCreate: true, onUpdate: true },
+  ],
+  listRule: AUTHED,
+  viewRule: AUTHED,
+  createRule: `${AUTHED} && @request.body.status = "pending"`,
+  updateRule: null,
+  deleteRule: null,
+};
+
+/**
  * Operational telemetry, not a projection: `rampscan serve` tails the
  * daemon's events file (daemon-events.jsonl) into this collection so the
  * console can see the machinery — divergence alerts, cadence warnings, scan

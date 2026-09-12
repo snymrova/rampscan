@@ -372,6 +372,68 @@ describe("renderGapRegister", () => {
     expect(text).toContain("vd1"); // the open episode's violating digest, truncated for display
   });
 
+  // Q4.2: G3 now spans two clock families, so the section's single rule id
+  // stopped covering every row. A non-machine row cites VDR-TFR-NMV beside a
+  // section headed by the machine window — the gap register's promise is that
+  // every row cites the rule that makes IT a gap.
+  it("a lapsed non-machine method cites VDR-TFR-NMV, not the section's machine rule", () => {
+    const withAttestation: MethodRegisterRow = {
+      repo: "/repo/app",
+      ksi: "KSI-CNA-CIC",
+      methods: [
+        {
+          methodId: "attestation:incident-review#KSI-CNA-CIC",
+          source: "attestation",
+          automated: false,
+          clock: "non-machine",
+          standing: "narrative",
+          state: "evidenced",
+          bundleDigest: "att-1",
+          freshAsOf: "2026-05-01T00:00:00.000Z",
+          window: { num: 3, unit: "months" },
+          freshMet: false,
+        },
+      ],
+      automatedMethods: 0,
+      methodFloor: 1,
+      floorMet: false,
+      freshAsOf: "2026-05-01T00:00:00.000Z",
+      staleMethods: 1,
+      historyFloorMonths: null,
+      historyMet: null,
+      artifacts: [
+        { artifact: 1, basis: "judged", present: false },
+        { artifact: 2, basis: "computed", present: false },
+        { artifact: 3, basis: "judged", present: false },
+        { artifact: 4, basis: "judged", present: false },
+        { artifact: 5, basis: "computed", present: true },
+      ],
+      artifactsPresent: 1,
+      pointInTimeMethods: 0,
+      gap: "G2",
+    };
+    const mixed = buildGapRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: [...foldedRegisters, withAttestation],
+      vulnerabilities: [],
+      frontier,
+    });
+    const g3 = mixed.sections.find((sec) => sec.gapClass === "G3")!;
+    // the section still heads with the machine rule, since most rows are machine
+    expect(g3.ruleId).toBe("VDR-TFR-MVX");
+    const attestationRow = g3.rows.find((r) => r.subject.includes("attestation:"))!;
+    expect(attestationRow.ruleId).toBe("VDR-TFR-NMV");
+    expect(attestationRow.detail).toContain("outside the owed 3mo window");
+    // machine rows stay silent: their rule is the section's, so repeating it
+    // on every row would be noise
+    const machineRow = g3.rows.find((r) => r.subject.includes("pipeline:"))!;
+    expect(machineRow.ruleId).toBeUndefined();
+    // and the renderer prints the divergent rule where it applies
+    expect(renderGapRegister(mixed, false)).toContain("VDR-TFR-NMV");
+  });
+
   it("an empty section prints none — measured emptiness, said out loud", () => {
     const noVulns = buildGapRegister({
       catalog,
