@@ -13,6 +13,7 @@
     "@rampscan/collectors": "workspace:*",
     "@rampscan/core": "workspace:*",
     "@rampscan/dataset": "workspace:*",
+    "@rampscan/graph": "workspace:*",
     "@rampscan/ledger": "workspace:*",
     "@rampscan/projector": "workspace:*",
     "@rampscan/scheduler": "workspace:*",

@@ -1,6 +1,8 @@
 {
   "graph": {
-    "entrypoints": ["packages/cli/src/main.ts"]
+    "entrypoints": [
+      "packages/cli/src/main.ts"
+    ]
   },
   "contract": {
     "rules": [
@@ -8,14 +10,18 @@
         "kind": "boundary",
         "id": "signer-only-through-the-cli",
         "module": "packages/signer",
-        "allowedImporters": ["packages/cli"],
+        "allowedImporters": [
+          "packages/cli"
+        ],
         "description": "only the CLI holds a signing key; every other surface reaches signing through it, and the console and the projector must never import the signer directly"
       },
       {
         "kind": "boundary",
         "id": "console-twins-stay-in-the-console",
         "module": "console/web/lib",
-        "allowedImporters": ["console/web"],
+        "allowedImporters": [
+          "console/web"
+        ],
         "description": "the console's re-implementations of engine logic are the console's own, kept honest by twin tests; an engine package importing one would make the twin a cycle instead of a check"
       }
     ]
@@ -25,7 +31,7 @@
       "id": "architecture-reference",
       "kind": "system-documentation",
       "path": "docs/ARCHITECTURE.md",
-      "description": "components, the scan pipeline end to end, stores, trust boundaries and the evidence lifecycle — the reference an operator reads before running or extending this system"
+      "description": "components, the scan pipeline end to end, stores, trust boundaries and the evidence lifecycle \u2014 the reference an operator reads before running or extending this system"
     },
     {
       "id": "spec",
@@ -37,7 +43,60 @@
       "id": "operator-readme",
       "kind": "system-documentation",
       "path": "README.md",
-      "description": "installation, the commands this system exposes and how its tools resolve — the shortest path from a checkout to a scan"
+      "description": "installation, the commands this system exposes and how its tools resolve \u2014 the shortest path from a checkout to a scan"
     }
-  ]
+  ],
+  "offering": {
+    "providerName": "rampscan (self-scan)",
+    "serviceName": "rampscan pipeline evidence plane",
+    "serviceAcronym": "rampscan",
+    "serviceDescription": "DEMONSTRATION DECLARATION, NOT A SUBMISSION. rampscan is an appliance a cloud service provider deploys inside its own AWS account to produce signed, commit-anchored pipeline evidence for FedRAMP 20x key security indicators; it is not itself a cloud service offering pursuing certification. This block exists so the self-scan exercises the Q5 schema-target exports end to end against its own ledger, the same way the repository dogfoods every other surface. A real provider replaces every field here with its own.",
+    "certificationType": "20x",
+    "fedRampPackageId": "rampscan (self-scan, no FedRAMP ID assigned)",
+    "website": "https://github.com/snymrova/rampscan",
+    "logo": "https://raw.githubusercontent.com/snymrova/rampscan/main/docs/images/controls-to-reports.svg",
+    "serviceType": [
+      "SaaS"
+    ],
+    "deploymentModel": "Government-Only Cloud",
+    "businessCategory": [
+      "Cybersecurity & Risk Management",
+      "Development Tools"
+    ],
+    "secureConfigurationGuidance": {
+      "repositoryType": [
+        "Secure Configuration Guidance"
+      ],
+      "url": "https://github.com/snymrova/rampscan/blob/main/docs/ARCHITECTURE.md",
+      "repositoryDescription": "Components, the scan pipeline end to end, stores, trust boundaries and the evidence lifecycle \u2014 the reference an operator reads before running or extending this system.",
+      "authenticationRequired": false
+    },
+    "contactInformation": [
+      {
+        "contactType": "Security",
+        "contactName": "rampscan maintainers \u2014 see SECURITY.md in the repository"
+      },
+      {
+        "contactType": "Sales",
+        "contactName": "not applicable: rampscan is not sold as a cloud service offering"
+      }
+    ],
+    "report": {
+      "certificationPackageOverviewUri": "https://github.com/snymrova/rampscan/blob/main/README.md#what-it-does",
+      "plannedCertificationDataChanges": {
+        "planningHorizonThrough": "2026-12-31",
+        "changes": [
+          "Q5.2: the package conformance check gates these exports in CI (FRC-CSO-JSN).",
+          "Q5.3: FRC-APP-FCP freshness stamping, computed from the ledger."
+        ]
+      },
+      "acceptedVulnerabilities": "None accepted. This is a demonstration declaration for the self-scan, not a certification package: no risk-acceptance determination has been made about any finding, and the validation-failure records the ledger does hold are reported as VDR-CSO-FAV records in x-rampscan.validationVulnerabilities rather than as accepted vulnerabilities.",
+      "transformativeChanges": [],
+      "updatedRecommendations": [],
+      "activeAgencies": [],
+      "reportableIncidents": {
+        "incidents": []
+      }
+    }
+  }
 }

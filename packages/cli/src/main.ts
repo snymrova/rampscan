@@ -25,6 +25,8 @@ import { ingest } from "./ingest.js";
 import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { buildGapRegister, renderGapRegister } from "./gaps.js";
+import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
+import { loadOffering } from "./offering.js";
 import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
@@ -94,6 +96,12 @@ function usage(): never {
       "                    --strict also exits 1 on any unreviewed control",
       "  frontier --by-controls  the legacy control view, unchanged: catalog × adjudications ×",
       "                    the pinned frontier (ground rule 1 — both denominators stay printable)",
+      "  exports           the two FedRAMP schema-target exports (plan Q5): a Certification",
+      "                    Package Overview (FRC-CSO-PKG) and an Ongoing Certification Report",
+      "                    (CCM-OCR-AVL) as JSON valid against the PINNED FedRAMP schemas —",
+      "                    the scanned repo's declared `offering` block joined to the fold.",
+      "                    Lands in <out>/exports/. Exits 1 on a nonconforming document",
+      "                    (FRC-CSO-JSN); every document carries its own conformance verdict",
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
@@ -117,7 +125,8 @@ function usage(): never {
       "                    the row key is never guessed)",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b).",
-      "                    owed and frontier: also accept a and d — reporting is a what-if",
+      "                    owed, frontier, gaps and exports: also accept a and d — reporting",
+      "                    is a what-if",
       "                    against that class's floors (SPEC §12.3/§12.5); the scheduler still",
       "                    refuses d",
       "  --rules <file>    owed: load the canonical fedramp-consolidated-rules.json (Path B",
@@ -202,6 +211,7 @@ async function main(): Promise<void> {
     command !== "owed" &&
     command !== "frontier" &&
     command !== "gaps" &&
+    command !== "exports" &&
     certClass !== "b" &&
     certClass !== "c"
   ) {
@@ -565,6 +575,71 @@ async function main(): Promise<void> {
         );
         process.exit(1);
       }
+      return;
+    }
+    case "exports": {
+      // The two FedRAMP schema-target exports (plan Q5.1 — G10, G12): a
+      // Certification Package Overview and an Ongoing Certification Report as
+      // JSON valid against the PINNED FedRAMP schemas. Generated exactly as
+      // OpenVEX is — an export, no new state, regenerated per scan — from the
+      // scanned repo's declared `offering` block joined to the fold over the
+      // local ledger. Exits 1 on a nonconforming document (FRC-CSO-JSN).
+      const offeringRoot = target ?? ".";
+      const offering = await loadOffering(offeringRoot);
+      if (offering === undefined) {
+        console.error(
+          `no \`offering\` block in ${join(offeringRoot, "rampscan.config.json")} — an offering nobody declared is a claim never made, and neither FedRAMP document can be generated from an evidence ledger alone (SPEC §12, plan Q5.1). Declare one to generate the Certification Package Overview`,
+        );
+        process.exit(1);
+      }
+      const exportClass = (values.class ?? "b") as OfferingClass;
+      if (!OFFERING_CLASSES.includes(exportClass)) usage();
+      const exportCatalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      const exportRecipes = await loadRecipes(recipesDir);
+      const exportProjector = createProjector({
+        recipes: exportRecipes,
+        methods: deriveCatalogMethods(
+          exportRecipes,
+          allCollectors.map((c) => c.manifest),
+        ),
+        ksiIds: exportCatalog.ksis.map((k) => k.id),
+        methodFloor: exportCatalog.floors[exportClass].minPerKsi,
+        historyFloorMonths: exportCatalog.historyFloors[exportClass].months,
+        machineWindow: exportCatalog.windows[exportClass],
+        nonMachineWindow: exportCatalog.nonMachineWindow,
+      });
+      const exportProjection = await exportProjector.fold(createLocalLedger(ledgerDir));
+      // one offering per export: when the ledger holds several repos, --repo
+      // names the one this document speaks for rather than summing strangers
+      const exportRepos = [...new Set(exportProjection.methodRegisters.map((r) => r.repo))].sort();
+      if (exportRepos.length > 1 && values.repo === undefined) {
+        console.error(
+          `the ledger holds ${exportRepos.length} offerings (${exportRepos.join(", ")}) — name the one this document speaks for with --repo. A document summing two offerings would describe neither`,
+        );
+        process.exit(1);
+      }
+      const exportRepo = values.repo ?? exportRepos[0];
+      const exportResult = await writeFedrampExports({
+        schemaRoot: REPO_ROOT,
+        exportsDir: join(values.out ?? "./rampscan-out", "exports"),
+        offering,
+        offeringClass: exportClass,
+        ...(exportRepo !== undefined ? { repo: exportRepo } : {}),
+        projectedAt: exportProjection.projectedAt,
+        datasetVersion: exportProjection.datasetVersion,
+        methodRegisters: exportProjection.methodRegisters.filter(
+          (r) => exportRepo === undefined || r.repo === exportRepo,
+        ),
+        vulnerabilities: exportProjection.vulnerabilities.filter(
+          (v) => exportRepo === undefined || v.repo === exportRepo,
+        ),
+        drift: exportProjection.drift.filter(
+          (d) => exportRepo === undefined || d.repo === exportRepo,
+        ),
+      });
+      if (values.json) console.log(JSON.stringify(exportResult, null, 2));
+      else console.log(renderFedrampExports(exportResult));
+      if (!exportResult.conformant) process.exit(1);
       return;
     }
     case "owed": {
