@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "resource": "arn:aws:iam::000000000000:user/synthetic-operator",
+      "managed_by_automation": true,
+      "access_key_age_days": 21,
+      "status": "COMPLIANT"
+    },
+    {
+      "resource": "arn:aws:iam::000000000000:user/synthetic-legacy-svc",
+      "managed_by_automation": false,
+      "access_key_age_days": 412,
+      "status": "NONCOMPLIANT"
+    }
+  ]
+}

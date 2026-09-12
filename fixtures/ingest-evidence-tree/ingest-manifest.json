@@ -1,0 +1,27 @@
+{
+  "_type": "https://rampscan.dev/ingest-manifest/v1",
+  "signer_identity": "compliance-ops@synthetic-csp.example",
+  "evidence_class": "process-generated",
+  "cadence": "daily",
+  "entries": [
+    {
+      "ksi": "KSI-CNA-RVP",
+      "script": "KSI-CNA-RVP.sh",
+      "exit_code": 0,
+      "timestamp": "2026-09-10T14:00:00Z"
+    },
+    {
+      "ksi": "KSI-SVC-SIN",
+      "script": "KSI-SVC-SIN.sh",
+      "exit_code": 0,
+      "timestamp": "2026-09-10T14:01:30Z",
+      "evidence_class": "point-in-time"
+    },
+    {
+      "ksi": "KSI-IAM-AAM",
+      "script": "KSI-IAM-AAM.sh",
+      "exit_code": 3,
+      "timestamp": "2026-09-10T14:03:00Z"
+    }
+  ]
+}

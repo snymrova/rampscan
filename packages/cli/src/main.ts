@@ -21,6 +21,7 @@ import { computeBoardAsOf } from "./board-asof.js";
 import { computeBoardDiff } from "./board-diff.js";
 import { loadAdjudications } from "./adjudications.js";
 import { check, renderCheck } from "./check.js";
+import { ingest } from "./ingest.js";
 import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { buildGapRegister, renderGapRegister } from "./gaps.js";
@@ -70,6 +71,10 @@ function usage(): never {
       "                    committed now — the pure gates only, nothing signed, nothing appended,",
       "                    no artifact kept. Exits 1 on a would-be violation (pre-commit / CI gate)",
       "  verify <digest>   verify one ledger bundle offline (content + signature)",
+      "  ingest <path>     append CLIENT-RUN signed results as ledger citizens (SPEC §12.8):",
+      "                    a submission file, or an Evidence/ tree with ingest-manifest.json.",
+      "                    Requires --repo; validates against the pinned catalog; refuses the",
+      "                    whole batch before signing anything. Never executes an AWS call",
       "  board             show the projection: registers, live evidence, graveyard (--json for the fold)",
       "  board --as-of <iso>  the same projection at a past instant, refolded from the ledger",
       "  board --since previous|<iso>  what moved since a prior scan's board (I2d)",
@@ -108,6 +113,8 @@ function usage(): never {
       "  --pin <version>   dataset version pin (default: " + DEFAULT_DATASET_PIN + ")",
       "  --recipes <dir>   commit-plane recipe dir (default: recipes/commit)",
       "  --adjudications <dir>  frontier: per-control disposition dir (default: recipes/adjudications)",
+      "  --repo <name>     ingest: the offering/repo whose register the evidence joins (required —",
+      "                    the row key is never guessed)",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b).",
       "                    owed and frontier: also accept a and d — reporting is a what-if",
@@ -156,6 +163,7 @@ async function main(): Promise<void> {
       recipes: { type: "string" },
       rules: { type: "string" },
       adjudications: { type: "string" },
+      repo: { type: "string" },
       strict: { type: "boolean" },
       "by-controls": { type: "boolean" },
       class: { type: "string" },
@@ -263,6 +271,24 @@ async function main(): Promise<void> {
       const report = await verify({ digest: target, ledgerDir, keysDir });
       console.log(report.lines.join("\n"));
       if (!report.ok) process.exit(1);
+      return;
+    }
+
+    case "ingest": {
+      if (!target) usage();
+      if (values.repo === undefined) {
+        console.error("ingest requires --repo <name> — the register's row key is never guessed");
+        process.exit(2);
+      }
+      await ingest({
+        path: target,
+        repo: values.repo,
+        datasetDir,
+        datasetPin,
+        ledgerDir,
+        keysDir,
+        log: (line) => console.log(line),
+      });
       return;
     }
 

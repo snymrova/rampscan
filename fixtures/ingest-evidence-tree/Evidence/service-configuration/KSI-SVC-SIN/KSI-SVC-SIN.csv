@@ -1,0 +1,4 @@
+resource,encryption,status
+arn:aws:s3:::synthetic-csp-artifacts,aws:kms,ENCRYPTED
+arn:aws:rds:us-east-1:000000000000:db:synthetic-primary,aws:kms,ENCRYPTED
+arn:aws:ec2:us-east-1:000000000000:volume/vol-6666666666666666,aws:kms,ENCRYPTED

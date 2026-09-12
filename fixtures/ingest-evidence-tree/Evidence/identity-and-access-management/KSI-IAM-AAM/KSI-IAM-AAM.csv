@@ -1,0 +1,3 @@
+resource,managed_by_automation,access_key_age_days,status
+arn:aws:iam::000000000000:user/synthetic-operator,true,21,COMPLIANT
+arn:aws:iam::000000000000:user/synthetic-legacy-svc,false,412,NONCOMPLIANT

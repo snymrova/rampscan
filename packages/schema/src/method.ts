@@ -22,10 +22,11 @@ import { Automatable, PipelineRecipe } from "./recipe.js";
 //
 // Methods are DERIVED, never authored. There is no methods table anyone
 // edits: each method is a pure function of its source artifact —
-// `methodsOfRecipe` below for the pipeline source; an ingested bundle's
-// contract (Q4.1) and an attestation event (Q4.2) for the other two. The
-// register stays a derivation over things that are already reviewed
-// artifacts, so computed-never-typed holds for the register itself.
+// `methodsOfRecipe` below for the pipeline source, `methodOfIngestedBundle`
+// below for the aws-ingested source (Q4.1, SPEC §12.8); an attestation event
+// yields the third (Q4.2). The register stays a derivation over things that
+// are already reviewed artifacts, so computed-never-typed holds for the
+// register itself.
 
 export const MethodSource = z.enum(["pipeline", "aws-ingested", "attestation"]);
 export type MethodSource = z.infer<typeof MethodSource>;
@@ -195,4 +196,53 @@ export function methodsOfRecipe(recipe: PipelineRecipe, scope: MethodScope): Pip
       scope,
     },
   }));
+}
+
+/**
+ * The aws-ingested derivation (SPEC §12.8, Q4.1): an ingested bundle's
+ * contract yields its method — a pure function of the SIGNED bundle, so the
+ * aws-ingested register is recoverable from the ledger alone, exactly as
+ * §12.2 promised. `automated: true` and `clock: "machine"` are fixed per
+ * source (the client ran an automated recipe; a human statement takes the
+ * attestation path, Q4.2), and `standing: "full"` is fixed the same way
+ * today — a submission-declared standing is a future contract field, not a
+ * default this function invents.
+ *
+ * Two refusals, both the contract-rule class: a bundle without the `ingest`
+ * block is not an ingested bundle (deriving a method from it would fabricate
+ * provenance), and a multi-KSI ingested bundle does not exist under the
+ * contract — the submission carries exactly one `ksi`, so more than one here
+ * means the bundle was not minted through it.
+ */
+export function methodOfIngestedBundle(predicate: {
+  recipe_id: string;
+  ksi_ids: string[];
+  ingest?: { signer_identity: string; ingest_digest: string } | undefined;
+}): AwsIngestedMethod {
+  if (predicate.ingest === undefined) {
+    throw new Error(
+      `bundle for recipe ${predicate.recipe_id} carries no ingest block — ` +
+        `a method derived from it would fabricate provenance`,
+    );
+  }
+  const ksi = predicate.ksi_ids[0];
+  if (ksi === undefined || predicate.ksi_ids.length !== 1) {
+    throw new Error(
+      `ingested bundle for recipe ${predicate.recipe_id} names ${predicate.ksi_ids.length} KSIs — ` +
+        `the ingestion contract mints exactly one per submission (SPEC §12.8)`,
+    );
+  }
+  return {
+    id: methodId("aws-ingested", predicate.recipe_id, ksi),
+    ksi,
+    source: "aws-ingested" as const,
+    automated: true,
+    clock: "machine" as const,
+    standing: "full" as const,
+    provenance: {
+      recipe_id: predicate.recipe_id,
+      signer_identity: predicate.ingest.signer_identity,
+      ingest_digest: predicate.ingest.ingest_digest,
+    },
+  };
 }

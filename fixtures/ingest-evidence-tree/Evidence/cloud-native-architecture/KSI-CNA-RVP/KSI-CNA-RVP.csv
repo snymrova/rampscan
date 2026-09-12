@@ -1,0 +1,3 @@
+resource,waf_web_acl,shield_advanced,status
+arn:aws:cloudfront::000000000000:distribution/SYNTHETIC1,synthetic-acl,true,PROTECTED
+arn:aws:elasticloadbalancing:us-east-1:000000000000:loadbalancer/app/synthetic-alb/2222222222222222,synthetic-regional,true,PROTECTED

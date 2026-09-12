@@ -113,7 +113,10 @@ export function toEvidenceBundle(
  * basis, that scan re-keys and the old claim dies, which is what it is for.
  * The same argument holds for the producer: a recipe re-pointed at a different
  * collector with an identical verdict is different evidence, and a chain that
- * names the old producer is worse than one that names none.
+ * names the old producer is worse than one that names none. The Q4.1 `ingest`
+ * block joins them for the same reason — signer identity and submission
+ * digest are claims about what the evidence rests on, and a re-signed or
+ * re-submitted result is a new handoff, not the old one surviving.
  *
  * A bundle predating J5 carries neither field and therefore does NOT match one
  * minted after it — deliberately, with no back-compat exemption: every live
@@ -131,6 +134,11 @@ export function sameEvidence(a: EvidenceBundle, b: EvidenceBundle): boolean {
     p.collector === q.collector &&
     p.dataset_version === q.dataset_version &&
     JSON.stringify(p.basis) === JSON.stringify(q.basis) &&
+    // the ingestion handoff (Q4.1) is on the collector/basis side of the
+    // identity line: the same verdict handed over by a different signer, or
+    // derived from different submitted bytes, is different evidence. Pipeline
+    // bundles carry no block on either side, so nothing existing re-keys.
+    JSON.stringify(p.ingest) === JSON.stringify(q.ingest) &&
     JSON.stringify(p.tool_versions) === JSON.stringify(q.tool_versions) &&
     JSON.stringify(p.anchor_paths) === JSON.stringify(q.anchor_paths) &&
     p.assertions.length === q.assertions.length &&

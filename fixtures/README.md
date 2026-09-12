@@ -16,3 +16,18 @@ node fixtures/build-vulnerable-app.mjs
 
 `fixtures/vulnerable-app/` itself is gitignored. Timestamps and identity are
 fixed, so the generated commit SHAs are identical on every machine.
+
+## ingest-evidence-tree
+
+The synthetic client-run evidence tree for the Q4.1 ingestion contract
+(SPEC §12.8): an `Evidence/<family>/<KSI-ID>/<KSI-ID>.{json,csv}` layout plus
+the client-authored `ingest-manifest.json`, mirroring the de facto output
+shapes of client-run AWS evidence scripts (JSON results array + CSV + exit
+code — `docs/RESEARCH-PARAMIFY-PILOT.md` §3). Three entries: a passing DoS
+protection check (KSI-CNA-RVP), a passing encryption-status capture declared
+`point-in-time` (KSI-SVC-SIN — the per-entry evidence-class override, and
+G6's specimen), and a failing IAM lifecycle check (KSI-IAM-AAM, exit 3 →
+`violated`). Every ARN and account id is synthetic; the content is written
+by us, shapes-only — no code or fixture reuse from the observed repository
+(it carries no license). Static and committed: unlike vulnerable-app it
+needs no git history, because ingested evidence has no commit anchor.

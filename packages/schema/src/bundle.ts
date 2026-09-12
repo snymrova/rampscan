@@ -193,6 +193,24 @@ export const EvidencePredicate = z.object({
    * change.
    */
   evidence_class: EvidenceClass.optional(),
+  /**
+   * The ingestion handoff (SPEC §12.8, Q4.1), present exactly on bundles
+   * minted from an IngestSubmission: who ran the upstream recipe and stands
+   * behind the result, and the sha256 of the canonical submission — the
+   * address of exactly what was accepted. Strict, because this is the
+   * provenance an assessor pulls on for evidence the appliance never
+   * produced. INCLUDED in evidence identity (`sameEvidence`), on the
+   * `collector`/`basis` side of that line: the same verdict handed over by a
+   * different signer, or derived from different submitted bytes, is
+   * different evidence. Pipeline bundles carry no block on either side of
+   * the comparison, so nothing existing re-keys.
+   */
+  ingest: z
+    .strictObject({
+      signer_identity: z.string().min(1),
+      ingest_digest: z.string().min(1),
+    })
+    .optional(),
   ksi_ids: z.array(z.string()),
   control_ids: z.array(z.string()),
   verdict: Verdict,

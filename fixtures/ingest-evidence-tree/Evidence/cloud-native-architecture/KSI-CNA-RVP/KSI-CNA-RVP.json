@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "resource": "arn:aws:cloudfront::000000000000:distribution/SYNTHETIC1",
+      "waf_web_acl": "arn:aws:wafv2:us-east-1:000000000000:global/webacl/synthetic-acl/11111111-1111-1111-1111-111111111111",
+      "shield_advanced": true,
+      "status": "PROTECTED"
+    },
+    {
+      "resource": "arn:aws:elasticloadbalancing:us-east-1:000000000000:loadbalancer/app/synthetic-alb/2222222222222222",
+      "waf_web_acl": "arn:aws:wafv2:us-east-1:000000000000:regional/webacl/synthetic-regional/33333333-3333-3333-3333-333333333333",
+      "shield_advanced": true,
+      "status": "PROTECTED"
+    }
+  ]
+}
