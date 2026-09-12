@@ -111,6 +111,62 @@ describe.skipIf(!HAVE_PB)("pocketbase projection store", () => {
     expect((bundles[0] as any).envelope.signatures).toHaveLength(1);
   });
 
+  // Q4.3: an ingested result has NO commit anchor (SPEC §12.8), so its register
+  // row omits `commit` and its vulnerability record carries an empty one. Both
+  // must survive this store, whose `commit_sha` on vulnerabilities is a REQUIRED
+  // field — exactly the kind of place an empty value is silently rejected.
+  it("an ingested result with no commit anchor round-trips, violated episode included", async () => {
+    const pb = new PocketBaseAdmin(URL);
+    await pb.auth(EMAIL, PASSWORD);
+
+    const ingested = (ksi: string, violated: boolean, timestamp: string): LedgerEntry => ({
+      digest: `pbtest-ing-${ksi}`,
+      appendedAt: timestamp,
+      bundle: {
+        _type: "https://in-toto.io/Statement/v1",
+        subject: [{ name: "out.json", digest: { sha256: "f".repeat(64) } }],
+        predicateType: "https://rampscan.dev/evidence/v1",
+        predicate: {
+          recipe_id: `${ksi}.sh`,
+          method_id: `aws-ingested:${ksi}.sh#${ksi}`,
+          evidence_class: "process-generated",
+          ingest: { signer_identity: "ops@client.example", ingest_digest: "a".repeat(64) },
+          ksi_ids: [ksi],
+          control_ids: [],
+          verdict: violated ? "violated" : "evidenced",
+          repo: "fixtures/app",
+          commit: "",
+          anchor_paths: [],
+          dataset_version: "2026.07.14.01",
+          tool_versions: {},
+          assertions: [{ description: "check", passed: !violated, population: 0 }],
+          cadence: "monthly",
+          run_id: `ingest:${ksi}`,
+          timestamp,
+        },
+      } as EvidenceBundle,
+    });
+
+    const entries = [
+      ingested("KSI-CNA-RVP", false, "2026-08-01T00:00:00.000Z"),
+      ingested("KSI-IAM-AAM", true, "2026-08-01T01:00:00.000Z"),
+    ];
+    const projection = foldEntries(entries, "2026-08-03T00:00:00.000Z");
+    // the row says nothing about a commit, because there is none to name
+    const row = projection.registers.find((r) => r.recipeId === "KSI-IAM-AAM.sh")!;
+    expect(row.commit).toBeUndefined();
+    expect(row.introducingCommit).toBeUndefined();
+    // the violated ingestion still opens an episode, whose commit IS empty
+    expect(projection.vulnerabilities).toHaveLength(1);
+    expect(projection.vulnerabilities[0]!.commit).toBe("");
+    // "0 of 0" is a measurement: population 0 must survive too, not read as absent
+    expect(row.population).toBe(0);
+
+    const settings = { certClass: "b" as const, reproduceCommand: "pnpm rampscan scan <path>" };
+    await writeProjectionPocketBase(projection, entries, pb, settings);
+    expect(await readProjectionPocketBase(pb)).toEqual(projection);
+  });
+
   it("ensureCollection grows an existing collection additively — a new spec field reaches old deployments", async () => {
     const pb = new PocketBaseAdmin(URL);
     await pb.auth(EMAIL, PASSWORD);
@@ -130,6 +186,44 @@ describe.skipIf(!HAVE_PB)("pocketbase projection store", () => {
     await pb.create("sync_probe", { a: "x", b: "kept" });
     const rows = await pb.listAll("sync_probe");
     expect((rows[0] as any).b).toBe("kept"); // without the sync, PB silently drops unknown fields
+  });
+
+  it("ensureCollection relaxes a field the spec made optional — and only that direction (Q4.3)", async () => {
+    const pb = new PocketBaseAdmin(URL);
+    await pb.auth(EMAIL, PASSWORD);
+    const rules = { listRule: null, viewRule: null, createRule: null, updateRule: null, deleteRule: null };
+    const strict = {
+      name: "relax_probe",
+      type: "base" as const,
+      fields: [
+        { name: "keep_required", type: "text", required: true },
+        { name: "was_required", type: "text", required: true },
+      ],
+      ...rules,
+    };
+    await pb.ensureCollection(strict);
+    // the deployment exists with both fields required — an empty value is refused
+    await expect(
+      pb.create("relax_probe", { keep_required: "x", was_required: "" }),
+    ).rejects.toThrow(/validation_required/);
+
+    // the spec relaxes one of them, exactly as `vulnerabilities.commit_sha` was
+    await pb.ensureCollection({
+      ...strict,
+      fields: [
+        { name: "keep_required", type: "text", required: true },
+        { name: "was_required", type: "text", required: false },
+      ],
+    });
+    await pb.create("relax_probe", { keep_required: "x", was_required: "" });
+    const rows = await pb.listAll("relax_probe");
+    expect(rows).toHaveLength(1);
+    expect((rows[0] as any).was_required).toBe("");
+    // the field the spec still requires is untouched: relaxing is not a licence
+    // to loosen everything, and tightening/retyping stays a hand-written migration
+    await expect(
+      pb.create("relax_probe", { keep_required: "", was_required: "" }),
+    ).rejects.toThrow(/validation_required/);
   });
 
   it("projection collections reject writes that are not the projector's — rule 1 enforced", async () => {

@@ -950,3 +950,271 @@ describe("attestation methods (Q4.2)", () => {
     expect(readProjectionSqlite(dbPath)).toEqual(projection);
   });
 });
+
+// Q4.3 — the aws-ingested leg (SPEC §12.8/§12.10). Also ledger-derived: the
+// catalog holds OUR recipes, and an ingested result names the client's. The
+// join is to the live submission by METHOD identity, not through the recipe
+// cell, because one upstream recipe can evidence two KSIs and neither result
+// may stand in for the other.
+describe("aws-ingested methods (Q4.3)", () => {
+  const MVX7: ClockWindow = { num: 7, unit: "days" };
+
+  function ingestedEntry(opts: {
+    recipeId: string;
+    ksiId: string;
+    timestamp: string;
+    verdict?: "evidenced" | "violated";
+    repo?: string;
+    evidenceClass?: "process-generated" | "point-in-time";
+    signer?: string;
+    ingestDigest?: string;
+  }): LedgerEntry {
+    const bundle: EvidenceBundle = {
+      _type: "https://in-toto.io/Statement/v1",
+      subject: [{ name: "out.json", digest: { sha256: "f".repeat(64) } }],
+      predicateType: "https://rampscan.dev/evidence/v1",
+      predicate: {
+        recipe_id: opts.recipeId,
+        method_id: `aws-ingested:${opts.recipeId}#${opts.ksiId}`,
+        evidence_class: opts.evidenceClass ?? "process-generated",
+        ingest: {
+          signer_identity: opts.signer ?? "ops@client.example",
+          ingest_digest: (opts.ingestDigest ?? "a").repeat(64),
+        },
+        ksi_ids: [opts.ksiId],
+        control_ids: [],
+        verdict: opts.verdict ?? "evidenced",
+        repo: opts.repo ?? "fixtures/app",
+        // no commit anchor: ingested evidence dies superseded or goes stale,
+        // never by anchor drift (SPEC §12.8)
+        commit: "",
+        anchor_paths: [],
+        dataset_version: "2026.07.14.01",
+        tool_versions: {},
+        assertions: [
+          { description: "check", passed: (opts.verdict ?? "evidenced") === "evidenced" },
+        ],
+        cadence: "monthly",
+        run_id: `ingest:${opts.timestamp}`,
+        timestamp: opts.timestamp,
+      },
+    };
+    return { digest: `ing-${counter++}`, bundle, appendedAt: opts.timestamp };
+  }
+
+  it("an ingested result becomes a counted automated method on its KSI", () => {
+    const projection = foldWith(
+      [ingestedEntry({ recipeId: "KSI-CNA-CIC.sh", ksiId: "KSI-CNA-CIC", timestamp: T1 })],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const row = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/app" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    expect(row.methods).toHaveLength(1);
+    const cell = row.methods[0]!;
+    expect(cell.methodId).toBe("aws-ingested:KSI-CNA-CIC.sh#KSI-CNA-CIC");
+    expect(cell.source).toBe("aws-ingested");
+    expect(cell.recipeId).toBe("KSI-CNA-CIC.sh"); // the UPSTREAM id, named
+    // nothing of ours walked anything, so there is no collector and no scope
+    expect(cell.collector).toBeUndefined();
+    expect(cell.scope).toBeUndefined();
+    expect(cell.state).toBe("evidenced");
+    expect(cell.freshAsOf).toBe(T1);
+    expect(cell.clock).toBe("machine");
+    expect(cell.freshMet).toBe(true);
+    // the point of Q4.3: it counts toward the FRC-CSX-VVK numerator
+    expect(cell.automated).toBe(true);
+    expect(row.automatedMethods).toBe(1);
+    expect(row.floorMet).toBe(true);
+    expect(row.gap).not.toBe("G1");
+    expect(row.gap).not.toBe("G2");
+  });
+
+  it("a violated ingested result still counts as a method — the record exists (G13 owns what it says)", () => {
+    const projection = foldWith(
+      [
+        ingestedEntry({
+          recipeId: "KSI-CNA-CIC.sh",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: T1,
+          verdict: "violated",
+        }),
+      ],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods[0]!.state).toBe("violated");
+    expect(row.automatedMethods).toBe(1);
+    expect(row.floorMet).toBe(true);
+  });
+
+  it("quotes the submitter's evidence-class assertion — the one fact the appliance cannot compute", () => {
+    const projection = foldWith(
+      [
+        ingestedEntry({
+          recipeId: "KSI-CNA-CIC.sh",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: T1,
+          evidenceClass: "point-in-time",
+        }),
+      ],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods[0]!.evidenceClass).toBe("point-in-time");
+    expect(row.pointInTimeMethods).toBe(1);
+    // standing alone, so G6 is the row's gap once nothing worse outranks it
+    expect(row.gap).toBe("G5"); // artifacts 1/3/4 unjudged outrank G6
+  });
+
+  it("one upstream recipe evidencing two KSIs mints two methods, neither standing in for the other", () => {
+    const projection = foldWith(
+      [
+        ingestedEntry({ recipeId: "shared.sh", ksiId: "KSI-CNA-CIC", timestamp: T1 }),
+        ingestedEntry({
+          recipeId: "shared.sh",
+          ksiId: "KSI-CMT-CHG",
+          timestamp: T1,
+          verdict: "violated",
+        }),
+      ],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const cic = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    const chg = projection.methodRegisters.find((r) => r.ksi === "KSI-CMT-CHG")!;
+    const cicCell = cic.methods.find((m) => m.source === "aws-ingested")!;
+    const chgCell = chg.methods.find((m) => m.source === "aws-ingested")!;
+    expect(cicCell.methodId).toBe("aws-ingested:shared.sh#KSI-CNA-CIC");
+    expect(chgCell.methodId).toBe("aws-ingested:shared.sh#KSI-CMT-CHG");
+    // the distinct verdicts prove the join did not collapse through the shared
+    // recipe id — each KSI reads its own submission
+    expect(cicCell.state).toBe("evidenced");
+    expect(chgCell.state).toBe("violated");
+  });
+
+  it("a re-ingestion satisfies the same method and its provenance cites the live submission", () => {
+    const stale = "2026-07-20T00:00:00.000Z";
+    const projection = foldWith(
+      [
+        ingestedEntry({
+          recipeId: "KSI-CNA-CIC.sh",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: stale,
+          ingestDigest: "a",
+        }),
+        ingestedEntry({
+          recipeId: "KSI-CNA-CIC.sh",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: T1,
+          ingestDigest: "b",
+        }),
+      ],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods).toHaveLength(1);
+    expect(row.methods[0]!.freshAsOf).toBe(T1);
+    expect(row.methods[0]!.freshMet).toBe(true);
+  });
+
+  it("is scoped to its own repo — an ingested result is about one offering", () => {
+    const projection = foldWith(
+      [
+        ingestedEntry({
+          recipeId: "KSI-CNA-CIC.sh",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: T1,
+          repo: "fixtures/app",
+        }),
+        evidenceEntry({ recipe: "covered", timestamp: T1, repo: "fixtures/other" }),
+      ],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const mine = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/app" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    const theirs = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/other" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    expect(mine.methods).toHaveLength(1);
+    expect(theirs.methods).toHaveLength(0);
+  });
+
+  it("all three sources count on one KSI — the register spans them (the Q4.3 point)", () => {
+    const projection = foldEntries(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1, ksiIds: ["KSI-CNA-CIC"] }),
+        ingestedEntry({ recipeId: "KSI-CNA-CIC.sh", ksiId: "KSI-CNA-CIC", timestamp: T1 }),
+        {
+          digest: "att-q43",
+          appendedAt: T1,
+          bundle: {
+            _type: "https://in-toto.io/Statement/v1",
+            subject: [{ name: "attestation.txt", digest: { sha256: "b".repeat(64) } }],
+            predicateType: "https://rampscan.dev/attestation/v1",
+            predicate: {
+              action: "attested",
+              statement_id: "incident-review",
+              ksi_id: "KSI-CNA-CIC",
+              attestor_role: "ciso",
+              statement: "reviewed",
+              repo: "fixtures/app",
+              proposed_by: "v",
+              approved_by: "a",
+              dataset_version: "2026.07.14.01",
+              timestamp: T1,
+            },
+          } as Attestation,
+        },
+      ],
+      T2,
+      {
+        recipes,
+        // a pipeline method for this KSI, so all three legs are present
+        methods: [...methods, ...methodsOfRecipe(recipe("cic", ["KSI-CNA-CIC"]), scope)],
+        ksiIds: KSI_IDS,
+        methodFloor: 2,
+        machineWindow: MVX7,
+        nonMachineWindow: { num: 3, unit: "months" },
+      },
+    );
+    const row = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/app" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    expect([...new Set(row.methods.map((m) => m.source))].sort()).toEqual([
+      "attestation",
+      "aws-ingested",
+      "pipeline",
+    ]);
+    expect(row.methods).toHaveLength(3);
+    // two automated (pipeline + ingested); the attestation is not, so a floor
+    // of 2 is met by the automated pair and the attestation adds coverage only
+    expect(row.automatedMethods).toBe(2);
+    expect(row.floorMet).toBe(true);
+  });
+
+  it("survives the sqlite round trip", async () => {
+    const projection = foldWith(
+      [ingestedEntry({ recipeId: "KSI-CNA-CIC.sh", ksiId: "KSI-CNA-CIC", timestamp: T1 })],
+      1,
+      null,
+      { machineWindow: MVX7 },
+    );
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-q43-"));
+    const dbPath = join(dir, "projection.db");
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
