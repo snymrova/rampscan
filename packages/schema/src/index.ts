@@ -7,6 +7,7 @@ export * from "./scan-run.js";
 export * from "./scoping.js";
 export * from "./artifact-judgment.js";
 export * from "./manifest.js";
+export * from "./ingest.js";
 export * from "./scanresult.js";
 export * from "./canon.js";
 export * from "./contract.js";

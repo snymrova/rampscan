@@ -405,3 +405,45 @@ The rule: a method that read gitignored paths *says so*; one that didn't says th
 ### 12.7 Adoption mechanics
 
 The plan's phases live as GitHub milestones (`Q0 — decisions locked` … `Q5 — schema-target exports`) with issues per numbered item — created at adoption, 2026-09-11. The milestones are the plan of record; this section is the specification the Q1–Q3 issues implement. Positioning (the README's first sentence, the MVX-expansion fix) changes only when `frontier` v2 prints the numbers it quotes — plan §7.5.
+
+### 12.8 The ingestion contract (Q4.1)
+
+The no-SaaS / no-execution boundary holds: ramprules' AWS recipes remain the client's to run, and nothing in the appliance ever executes an AWS call. What Q4.1 adds is the contract under which a client-run result becomes a ledger citizen — the `source: aws-ingested` leg of §12.2's register.
+
+**The submission is the contract's unit** — one result per (upstream recipe × KSI), a self-identifying JSON document:
+
+```
+IngestSubmission = {
+  _type:           "https://rampscan.dev/ingest-submission/v1"
+  recipe_id:       string      // upstream's recipe id — their names, not ours
+  ksi:             string      // exactly one KSI, mnemonic form; must resolve
+                               // in the pinned catalog
+  evidence_class:  "process-generated" | "point-in-time"
+                               // the G6 assertion, made by the SUBMITTER —
+                               // the one fact the appliance cannot compute
+  cadence:         Cadence     // the cycle the client runs this on (artifact 2)
+  artifacts:       [{ name, sha256 }]                              // ≥ 1
+  assertions:      [{ description, passed, detail?, population? }] // ≥ 1
+  timestamp:       ISO 8601    // the client RUN's clock, not the ingest's
+  signer_identity: string      // who ran it and stands behind it
+  tool_versions?:  { [tool]: version }
+  reproduce?:      string
+}
+```
+
+Strict at every level, the manifest/contract rule: provenance is what an assessor pulls on (`FRR-PVA-AA-06`), and a misspelled field that parses to nothing is a question the interrogation view can no longer answer.
+
+**Verdict is computed, never declared:** every assertion passed → `evidenced`; any failed → `violated`. There is no `unevidenced` submission — a run that observed nothing has nothing to submit, and the contract refuses empty `artifacts`/`assertions` structurally.
+
+**What ingestion mints:** a regular `EvidenceBundle`, signed and appended exactly like a pipeline bundle (the bundle IS the ledger citizenship — no new statement type):
+
+- Subjects are the submitted artifact digests. `anchor_paths: []` and `commit: ""` — ingested evidence has no commit anchor, so it dies superseded or goes stale (G3) but never dies by anchor drift, which is the honest death model for evidence about a cloud account rather than a checkout.
+- `method_id = aws-ingested:<recipe_id>#<ksi>`; `evidence_class` copied from the submission — G6 asserted at the bundle's birth, the same slot the pipeline mint asserts.
+- The predicate gains an optional strict `ingest { signer_identity, ingest_digest }` block, `ingest_digest = sha256(canonicalJson(submission))` — the address of exactly what was accepted. INCLUDED in evidence identity (`sameEvidence`), on the `collector`/`basis` side of that line: the same verdict handed over by a different signer, or derived from different submitted bytes, is different evidence. Pipeline bundles carry no block on either side of the comparison, so nothing existing re-keys.
+- `run_id = ingest:<digest[0..12]>` — derived, never typed; the upstream run's identity is the digest itself.
+
+**The method derivation** (§12.2's Q4.1 promise): `methodOfIngestedBundle(bundle)` is a pure function of the signed bundle — `automated: true`, `clock: "machine"`, `standing: "full"` (fixed per source today, exactly like `automated`; a submission-declared standing is a future field, not a default), provenance `{ recipe_id, signer_identity, ingest_digest }`. Methods stay derived, never authored: the ingested bundle is itself the reviewed artifact the register derives from, so the aws-ingested register is recoverable from the ledger alone.
+
+**The tree adapter** meets clients where they already are (`docs/RESEARCH-PARAMIFY-PILOT.md` §3): `rampscan ingest <dir>` accepts an `Evidence/<family>/<KSI-ID>/<KSI-ID>.{json,csv}` tree plus an `ingest-manifest.json` the client authors — signer identity, evidence class (per-entry override permitted), cadence, and per entry the script name, exit code, and timestamp: exactly the facts the tree itself does not carry. The adapter's output IS native submissions (exit code → the single assertion; `population` = the result rows the script emitted), so the digest discipline is identical on both paths. The synthetic fixture mirrors those output shapes and is written by us — no code or fixture reuse (their repo has no license).
+
+**Refusal before append:** a KSI that does not resolve in the pinned catalog, a duplicate (recipe, KSI) within one batch, or any malformed submission refuses the WHOLE batch before anything is signed — validate-then-append, the artifact-judgment pattern applied to evidence.

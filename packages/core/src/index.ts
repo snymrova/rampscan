@@ -4,5 +4,6 @@ export * from "./cache.js";
 export * from "./assert.js";
 export * from "./join.js";
 export * from "./bundle.js";
+export * from "./ingest.js";
 export * from "./scoping.js";
 export * from "./artifact-judgment.js";
