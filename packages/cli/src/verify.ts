@@ -30,6 +30,10 @@ export async function verify(options: {
     lines.push(
       `bundle   ${options.digest.slice(0, 16)}…`,
       `recipe   ${p.recipe_id} → ${p.verdict}`,
+      // the evidence-class assertion (Q3.4, G6), quoted only when the signed
+      // predicate states one — a pre-Q3.4 bundle asserted nothing, and this
+      // report never fills in what a signature did not say
+      ...(p.evidence_class !== undefined ? [`class    ${p.evidence_class}`] : []),
       `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
       `signed   ${p.timestamp} (run ${p.run_id})`,
     );

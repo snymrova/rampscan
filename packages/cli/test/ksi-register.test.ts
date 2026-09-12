@@ -169,6 +169,7 @@ const foldedRegisters: MethodRegisterRow[] = [
       { artifact: 5, basis: "computed", present: true },
     ],
     artifactsPresent: 2,
+    pointInTimeMethods: 0,
     gap: "G3",
   },
   {
@@ -202,6 +203,7 @@ const foldedRegisters: MethodRegisterRow[] = [
       { artifact: 5, basis: "computed", present: false },
     ],
     artifactsPresent: 0,
+    pointInTimeMethods: 0,
     gap: "G3",
   },
   {
@@ -222,6 +224,7 @@ const foldedRegisters: MethodRegisterRow[] = [
       { artifact: 5, basis: "computed", present: false },
     ],
     artifactsPresent: 0,
+    pointInTimeMethods: 0,
     gap: "G1",
   },
 ];
@@ -258,6 +261,7 @@ describe("buildKsiRegister (Q2.4)", () => {
       everyMethodFresh: 0, // both method-bearing rows carry an unmet clock (Q3.2)
       historyMet: null, // class b owes no months (Q3.1)
       allArtifacts: 0, // no row holds all five owed artifacts (Q3.3)
+      pointInTime: 0, // nothing asserted point-in-time — the pipeline mints process-generated (Q3.4)
       total: 3,
     });
   });
@@ -466,6 +470,51 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
     expect(row.artifactsPresent).toBe(4);
     expect(row.worstGap).toBe("G5");
     expect(renderKsiRegister(view, false, now)).toContain("G5 artifact");
+  });
+
+  it("the evidence-class meter (Q3.4) counts asserted point-in-time rows, and unmeasured without a repo", () => {
+    expect(text).toContain(
+      "evidence class: 0 of 3 KSIs hold point-in-time evidence, rejectable when standalone — FRR-PVA-AA-06 (pipeline mints assert process-generated)",
+    );
+    expect(view.summary.pointInTime).toBe(0);
+    const bare = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: [],
+      frontier,
+    });
+    expect(bare.summary.pointInTime).toBeNull();
+    expect(renderKsiRegister(bare, false, now)).toContain(
+      "evidence class: unmeasured — asserted per bundle at ingestion (process-generated | point-in-time, FRR-PVA-AA-06)",
+    );
+  });
+
+  it("G6 renders when the fold judged point-in-time standing alone and every earlier arm declined (Q3.4)", () => {
+    const folded: MethodRegisterRow[] = [
+      {
+        ...foldedRegisters[0]!,
+        staleMethods: 0, // clocks met — G3 must not mask the class gap
+        artifactsPresent: 5, // artifacts judged — G5 must not either
+        pointInTimeMethods: 1,
+        gap: "G6", // the fold's judgment: it read the signed assertions, this join does not
+      },
+    ];
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: folded,
+      frontier,
+    });
+    const row = view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.pointInTimeMethods).toBe(1);
+    expect(row.worstGap).toBe("G6");
+    const rendered = renderKsiRegister(view, false, now);
+    expect(rendered).toContain("G6 evidence");
+    expect(rendered).toContain(
+      "evidence class: 1 of 3 KSIs hold point-in-time evidence, rejectable when standalone",
+    );
   });
 
   it("the history meter line names the rule even when the class owes no months (Q3.1)", () => {

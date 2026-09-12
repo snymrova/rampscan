@@ -44,8 +44,14 @@ export interface KsiRegisterRowView {
    * fake 0 that implies measurement (§12.5 rule 3).
    */
   artifactsPresent: number | null;
-  /** worst gap class computable today — G6+ land later in Q3 */
-  worstGap?: "G1" | "G2" | "G3" | "G4" | "G5";
+  /**
+   * Methods whose live evidence asserts point-in-time (Q3.4) — the G6
+   * numerator. Zero without a fold: an unscanned register holds no evidence
+   * of either class.
+   */
+  pointInTimeMethods: number;
+  /** worst gap class computable today — G8/G13 land with the gap register */
+  worstGap?: "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
   methodIds: string[];
 }
 
@@ -91,6 +97,13 @@ export interface KsiRegisterView {
      * there is nothing to measure, which is a different fact from zero.
      */
     allArtifacts: number | null;
+    /**
+     * Rows holding any point-in-time evidence (Q3.4, G6) — rejectable as
+     * standalone under FRR-PVA-AA-06 when nothing process-generated stands
+     * beside it. Null when no scanned repo exists — the class of evidence
+     * that does not exist is not a zero, it is unmeasured.
+     */
+    pointInTime: number | null;
     total: number;
   };
   /** the G8 adjudication queue: unreviewed frontier controls, by leverage */
@@ -166,6 +179,10 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       // and the computed ones are facts about a repo's evidence, so a
       // register with no repo has nothing to count, not a zero.
       artifactsPresent: folded?.artifactsPresent ?? null,
+      // The G6 numerator (Q3.4): the fold's count of methods whose live
+      // evidence asserts point-in-time. Without a fold there is no evidence
+      // of either class, so zero is the fact, not a placeholder.
+      pointInTimeMethods: folded?.pointInTimeMethods ?? 0,
       methodIds,
     };
     if (folded?.freshAsOf !== undefined) row.freshest = folded.freshAsOf;
@@ -175,6 +192,11 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     else if (row.staleMethods > 0) row.worstGap = "G3";
     else if (row.historyMet === false) row.worstGap = "G4";
     else if (row.artifactsPresent !== null && row.artifactsPresent < 5) row.worstGap = "G5";
+    // G6 (Q3.4): the standalone judgment is the fold's — it read each live
+    // bundle's signed assertion, which this join deliberately does not
+    // re-derive. The chain position is preserved: the fold's own chain only
+    // reaches G6 after the same earlier arms declined.
+    else if (folded?.gap === "G6") row.worstGap = "G6";
     return row;
   });
 
@@ -213,6 +235,8 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
         history.months === null ? null : rows.filter((r) => r.historyMet === true).length,
       allArtifacts:
         repo === undefined ? null : rows.filter((r) => r.artifactsPresent === 5).length,
+      pointInTime:
+        repo === undefined ? null : rows.filter((r) => r.pointInTimeMethods > 0).length,
       total: rows.length,
     },
     queue,
@@ -298,7 +322,9 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
               ? red("G4 history")
               : row.worstGap === "G5"
                 ? red("G5 artifact")
-                : dim("—");
+                : row.worstGap === "G6"
+                  ? red("G6 evidence")
+                  : dim("—");
     lines.push(`  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}`);
   }
 
@@ -337,6 +363,17 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
         )
       : dim(
           `  artifacts: ${s.allArtifacts} of ${s.total} KSIs hold all five owed artifacts — default_artifacts.KSI (2, 5 computed · 1, 3, 4 two-key judged)`,
+        ),
+    // the evidence-class meter (Q3.4, FRR-PVA-AA-06): every bundle asserts
+    // process-generated vs point-in-time at ingestion; point-in-time is
+    // rejectable as standalone evidence, and the count here is of asserted
+    // labels — the fold never infers a class a signature did not state
+    s.pointInTime === null
+      ? dim(
+          `  evidence class: unmeasured — asserted per bundle at ingestion (process-generated | point-in-time, FRR-PVA-AA-06)`,
+        )
+      : dim(
+          `  evidence class: ${s.pointInTime} of ${s.total} KSIs hold point-in-time evidence, rejectable when standalone — FRR-PVA-AA-06 (pipeline mints assert process-generated)`,
         ),
     "",
   );
