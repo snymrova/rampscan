@@ -13,3 +13,4 @@ export * from "./scanresult.js";
 export * from "./canon.js";
 export * from "./contract.js";
 export * from "./documents.js";
+export * from "./offering.js";
