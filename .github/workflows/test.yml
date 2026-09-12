@@ -48,3 +48,41 @@ jobs:
       # unit + e2e, the whole suite; several tests build the fixture repos and
       # assert on their SHAs, so no test tool needs to be on PATH here
       - run: pnpm test
+
+      # Q5.2 — the package conformance check (G10, `FRC-CSO-JSN`) walked end to
+      # end through the CLI, over THIS repository's own declared offering. A
+      # nonconforming certification document fails our build, and never a
+      # client's.
+      #
+      # WHAT THIS STEP GATES, STATED HONESTLY — because the obvious reading is
+      # wrong. CI has no ledger (it is gitignored and nothing here builds one),
+      # so the fold is empty and the computed half of both documents is zeros;
+      # `pnpm test` above is what validates a populated computed half, over a
+      # fixture register and against the same pinned bytes.
+      #
+      # And the declared half is NOT merely "the part a human edits": zod's
+      # `OfferingConfig` deliberately mirrors the FedRAMP schema's own
+      # constraints — the Sales contact, the phone pattern, the six-digit
+      # assessorID, the gated-repository if/then — so that a typo fails one
+      # layer closer to the person who can fix it. A config that parses is
+      # therefore ALREADY most of the way to a conforming document.
+      #
+      # What is left, and why this step is not ceremony, is the DIVERGENCE
+      # between that hand-written mirror and the schema it mirrors. The mirror
+      # is maintained by hand against a PINNED draft; the pin will bump. Today
+      # `businessCategory` is the live example — zod takes any non-empty string,
+      # the FedRAMP schema takes one of thirty-six enum values — so a config
+      # declaring a category FedRAMP does not list parses clean and produces a
+      # document that fails here. `fedramp-conformance.test.ts` pins exactly
+      # that case, so this step is provably able to fail (ground rule 7).
+      #
+      # It runs as two commands rather than one because they fail differently
+      # and a reader should be able to tell which: `exports` exits 1 on bytes it
+      # just generated, `conformance` exits 1 on bytes it just read — including
+      # on a document whose own conformance stamp no longer matches a fresh
+      # validation, which is the failure a regeneration can never surface.
+      - name: package conformance check (FRC-CSO-JSN) over our own exports
+        run: |
+          set -euo pipefail
+          pnpm rampscan exports --ledger "$RUNNER_TEMP/absent-ledger" --out "$RUNNER_TEMP/conformance"
+          pnpm rampscan conformance "$RUNNER_TEMP/conformance/exports"

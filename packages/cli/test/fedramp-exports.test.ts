@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import type { DriftEvent, MethodRegisterRow, ValidationVulnerability } from "@rampscan/core";
 import { OfferingConfig } from "@rampscan/schema";
 import {
+  APPLICATION_FRESHNESS_WINDOW_DAYS,
+  applicationFreshness,
   buildOngoingCertificationReport,
   buildPackageOverview,
   certificationDataChanges,
@@ -492,6 +494,164 @@ describe("the computed half", () => {
 // the exit gate
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Q5.3 — FRC-APP-FCP application freshness
+// ---------------------------------------------------------------------------
+
+/** One register row holding one machine method, `at` old or new as the test needs. */
+function freshRow(overrides: Partial<import("@rampscan/core").MethodCell> = {}): MethodRegisterRow {
+  return {
+    repo: "/repo/app",
+    ksi: "KSI-SCR-MIT",
+    methods: [
+      {
+        methodId: "pipeline:sbom#KSI-SCR-MIT",
+        source: "pipeline",
+        automated: true,
+        clock: "machine",
+        standing: "full",
+        state: "evidenced",
+        recipeId: "sbom",
+        bundleDigest: "aaa",
+        freshAsOf: "2026-09-10T00:00:00.000Z",
+        window: { num: 7, unit: "days" },
+        freshMet: true,
+        ...overrides,
+      },
+    ],
+    automatedMethods: 1,
+    methodFloor: 1,
+    floorMet: true,
+    historyFloorMonths: null,
+    historyMet: null,
+    staleMethods: 0,
+    artifacts: [],
+    artifactsPresent: 0,
+    pointInTimeMethods: 0,
+  };
+}
+
+describe("FRC-APP-FCP freshness", () => {
+  it("is a flat 7 days, and is NOT the class window", () => {
+    expect(APPLICATION_FRESHNESS_WINDOW_DAYS).toBe(7);
+    // class c's MVX window is 3 days and class b's is 7; this rule reads the
+    // same for both, so the two clocks must not share a constant
+    const b = applicationFreshness(input({ offeringClass: "b", methodRegisters: [freshRow()] }));
+    const c = applicationFreshness(input({ offeringClass: "c", methodRegisters: [freshRow()] }));
+    expect(b.windowDays).toBe(c.windowDays);
+    expect(b.fresh).toBe(c.fresh);
+  });
+
+  it("is fresh when every method was verified inside the window", () => {
+    const f = applicationFreshness(input({ methodRegisters: [freshRow()] }));
+    expect(f.fresh).toBe(true);
+    expect(f.methodsCounted).toBe(1);
+    expect(f.methodsInWindow).toBe(1);
+    expect(f.verifiedAt).toBe("2026-09-10T00:00:00.000Z");
+  });
+
+  it("is UNfresh on evidence one day past the window, and names the oldest", () => {
+    // projectedAt is 2026-09-12T12:00Z, so the boundary is 2026-09-05T12:00Z
+    const f = applicationFreshness(
+      input({ methodRegisters: [freshRow({ freshAsOf: "2026-09-05T11:00:00.000Z" })] }),
+    );
+    expect(f.fresh).toBe(false);
+    expect(f.methodsOutOfWindow).toBe(1);
+    expect(f.oldestVerifiedAt).toBe("2026-09-05T11:00:00.000Z");
+  });
+
+  it("counts evidence exactly ON the boundary as inside it", () => {
+    const f = applicationFreshness(
+      input({ methodRegisters: [freshRow({ freshAsOf: "2026-09-05T12:00:00.000Z" })] }),
+    );
+    expect(f.methodsInWindow).toBe(1);
+    expect(f.fresh).toBe(true);
+  });
+
+  it("counts a method with NO live evidence as unfresh, not as excused", () => {
+    const row = freshRow();
+    delete row.methods[0]!.freshAsOf;
+    const f = applicationFreshness(input({ methodRegisters: [row] }));
+    expect(f.fresh).toBe(false);
+    expect(f.methodsWithoutEvidence).toBe(1);
+    expect(f.methodsCounted).toBe(1);
+  });
+
+  it("excludes a signed two-key notApplicable — a decision is not a lapsed clock", () => {
+    const f = applicationFreshness(
+      input({ methodRegisters: [freshRow({ state: "notApplicable" })] }),
+    );
+    expect(f.scopedOut).toBe(1);
+    expect(f.methodsCounted).toBe(0);
+    // and an all-scoped register is still not fresh: it shows no status at all
+    expect(f.fresh).toBe(false);
+  });
+
+  it("an EMPTY register is never fresh", () => {
+    const f = applicationFreshness(input({ methodRegisters: [] }));
+    expect(f.fresh).toBe(false);
+    expect(f.machineOnlyFresh).toBe(false);
+    expect(f.methodsCounted).toBe(0);
+  });
+
+  it("does not let machineOnlyFresh pass VACUOUSLY on a register with no machine method", () => {
+    // "every machine method is fresh" is trivially true of none, and a green
+    // that survives no interrogation is the bug this product may not ship
+    const f = applicationFreshness(
+      input({ methodRegisters: [freshRow({ clock: "non-machine" })] }),
+    );
+    expect(f.machineMethods).toBe(0);
+    expect(f.machineOnlyFresh).toBe(false);
+    // and the literal reading still reads true — the two answers are independent
+    expect(f.fresh).toBe(true);
+  });
+
+  it("publishes the narrower reading separately rather than choosing it", () => {
+    // one stale NON-machine method: literal reading unfresh, narrow reading fresh
+    const f = applicationFreshness(
+      input({
+        methodRegisters: [
+          freshRow(),
+          freshRow({ clock: "non-machine", freshAsOf: "2026-07-01T00:00:00.000Z" }),
+        ],
+      }),
+    );
+    expect(f.fresh).toBe(false);
+    expect(f.machineOnlyFresh).toBe(true);
+    expect(f.nonMachineMethods).toBe(1);
+  });
+
+  it("rides the package overview and is COMPUTED — the config has no slot for it", () => {
+    const built = buildPackageOverview(input({ methodRegisters: [freshRow()] }));
+    const ext = built.document["x-rampscan"] as Record<string, unknown>;
+    expect((ext["freshness"] as Record<string, unknown>)["ruleId"]).toBe("FRC-APP-FCP");
+    // §12.4 rule 3: a provider cannot declare their own package fresh. The
+    // strict schema does not strip the key, it REFUSES it — a declaration that
+    // was silently dropped would look accepted to whoever typed it
+    expect(() => OfferingConfig.parse({ ...offeringJson, freshness: { fresh: true } })).toThrow();
+  });
+
+  it("states the shortfall in the document's problems rather than only a boolean", () => {
+    const built = buildPackageOverview(
+      input({ methodRegisters: [freshRow({ freshAsOf: "2026-01-01T00:00:00.000Z" })] }),
+    );
+    expect(built.problems.join(" ")).toMatch(/FRC-APP-FCP is unmet/);
+  });
+
+  it("says nothing about FRC-APP-FCP when the package IS fresh", () => {
+    const built = buildPackageOverview(input({ methodRegisters: [freshRow()] }));
+    expect(built.problems.join(" ")).not.toMatch(/FRC-APP-FCP/);
+  });
+
+  it("does not stamp the OCR: FRC-APP-FCP is about the INITIAL package", () => {
+    const ocr = buildOngoingCertificationReport(
+      input({ offering: offering({ report: reportJson }), methodRegisters: [freshRow()] }),
+    );
+    const ext = ocr.export?.document["x-rampscan"] as Record<string, unknown>;
+    expect(ext["freshness"]).toBeUndefined();
+  });
+});
+
 describe("Q5 exit gate", () => {
   it("writes both documents schema-valid, each carrying its own conformance verdict", async () => {
     const exportsDir = join(await mkdtemp(join(tmpdir(), "rampscan-exports-")), "exports");
@@ -544,6 +704,31 @@ describe("Q5 exit gate", () => {
     const declared = await loadOffering(REPO_ROOT);
     expect(declared).toBeDefined();
     expect(declared!.certificationType).toBe("20x");
+  });
+
+  // Q5.2's gate, inside the suite. The CI workflow runs the same check through
+  // the CLI end to end; this one runs on every `pnpm test` and fails in the
+  // place a reader is already looking. What it protects is the DECLARED half —
+  // `rampscan.config.json`'s offering block is the part of these documents a
+  // human edits, and therefore the part that breaks.
+  it("generates a CONFORMANT package overview from this repository's own declaration", async () => {
+    const declared = await loadOffering(REPO_ROOT);
+    const built = buildPackageOverview(input({ offering: declared! }));
+    const loaded = await loadPinnedSchema(REPO_ROOT, PACKAGE_OVERVIEW_SCHEMA);
+    expect(validateAgainst(loaded, built.document)).toEqual([]);
+  });
+
+  it("generates a CONFORMANT OCR from this repository's own declaration, when one is declared", async () => {
+    const declared = await loadOffering(REPO_ROOT);
+    const ocr = buildOngoingCertificationReport(input({ offering: declared! }));
+    // no `report` block is a legitimate state (the first refusal), and it is
+    // asserted rather than assumed either way: a skipped OCR must say why
+    if (ocr.export === undefined) {
+      expect(ocr.skipped).toMatch(/no `offering.report` block declared/);
+      return;
+    }
+    const loaded = await loadPinnedSchema(REPO_ROOT, OCR_SCHEMA);
+    expect(validateAgainst(loaded, ocr.export.document)).toEqual([]);
   });
 
   it("refuses a malformed offering block rather than silently waiving it", async () => {

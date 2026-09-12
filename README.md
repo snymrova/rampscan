@@ -3,39 +3,51 @@
 [![test](https://github.com/snymrova/rampscan/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/snymrova/rampscan/actions/workflows/test.yml)
 [![smoke](https://github.com/snymrova/rampscan/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/snymrova/rampscan/actions/workflows/smoke.yml)
 
-Pipeline-source evidence for FedRAMP 20x: a scan harness deployed **inside the client's AWS account** that fetches their repositories, scans code / IaC / CI, and produces signed, commit-anchored evidence — keyed to [ramprules](https://ramprules.com) recipe and control IDs — on the MVX re-verification clock (7 days class b, 3 days class c).
+The open-source **KSI gap engine** for FedRAMP 20x: an appliance deployed **inside the client's own boundary** that answers, per Key Security Indicator, what is owed, what is validated, and precisely which class of gap sits between them — with the commit plane as its first evidence source and [ramprules](https://ramprules.com) as its enrichment.
 
-ramprules answers *what is owed* and *what AWS APIs can prove*. rampscan supplies the other half: *what the repository and pipeline can prove* — the `pipeline` evidence source that ramprules' automation frontier reserves and has barely begun to fill (9 of 209 controls at the pinned snapshot).
+One row per KSI, forty-six of them, always. Each carries automated methods against the class floor (`FRC-CSX-VVK`), evidence age against its owed window (MVX — Persistent Machine Verification and Validation: 7 days class b, 3 days class c), the five owed artifacts, and the worst gap class computed for that row. A KSI nothing validates is a `G1 coverage` row, never an absent one — the absence is the finding.
 
-Out of scope, deliberately: executing ramprules' AWS evidence recipes (the client runs those directly — they're copy-pasteable by design), and any SaaS control plane that would move code or evidence out of the client's boundary.
+The evidence under those rows is signed and commit-anchored. `scan` produces it from a checkout; `ingest` accepts a client-run AWS result the appliance never executed; an attestation covers what neither can reach. Out of scope, deliberately: executing ramprules' AWS evidence recipes (the client runs those directly — they're copy-pasteable by design), and any SaaS control plane that would move code or evidence out of the client's boundary.
 
 ## Status
 
-**`v0.1.0-beta`.** Eleven CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 723 tests across 60 files — 720 pass on a fresh clone and 3 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 723 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
+**`v0.1.0-beta`.** Sixteen CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,001 tests across 81 files — 996 pass on a fresh clone and 5 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 1,001 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
 ## How much of FedRAMP this actually answers
 
-Ground rule: **every number here comes from a command.** This one comes from `rampscan frontier`, which probes nothing and writes nothing — it counts the rows it prints.
+Ground rule: **every number here comes from a command.** These come from `rampscan frontier`, which probes nothing and writes nothing — it counts the rows it prints. This is the self-scan, so the tool is reporting on itself.
 
 ```
 $ pnpm rampscan frontier
 
-frontier 112 uncovered controls · dataset 2026.07.14.01
-  adjudicated  0 automatable · 20 partial · 24 narrative
-  unreviewed   68  ← the question nobody has asked yet
-  discharged   0  (automatable AND a recipe exists today)
+rampscan frontier — the KSI register
+class b · dataset 2026.07.14.01 · frontier overlay 0.7.5 · evidence: .
 
-the commit plane's ceiling
-  catalog covers   23 of 209 controls a KSI reaches
-  reachable        38 of 209 — 18.2%
-  reachable = what the catalog claims today ∪ what the adjudication says a repository could answer
+  KSI              methods    freshest         artifacts   worst gap
+  KSI-CED-RAT      0/1        —                0/5         G1 coverage
+  KSI-CMT-RVP      1/1 ok     30d / 7d         2/5         G3 freshness
+  KSI-CMT-VTD      4/1 ok     30d / 7d         2/5         G3 freshness
+  …                                                        (46 rows, always)
+
+  floor met on 13 of 46 KSIs · at least one automated method on 13 · no method on 33
+  covering all 46 — a row that says "nothing evidences this from a pipeline" is a row
+  clocks: 0 of 46 KSIs hold every method inside its owed window — VDR-TFR-MVX (MUST)
+  history: no floor at class b — FRC-CSX-MOT (SHOULD, unquantified)
+  artifacts: 0 of 46 KSIs hold all five owed artifacts — default_artifacts.KSI
+  evidence class: 0 of 46 KSIs hold point-in-time evidence, rejectable when standalone
+
+  adjudication queue (G8): 68 unreviewed, sorted by leverage
+
+  legacy view: --by-controls   (23 of 209 controls · 38 reachable at this pin)
 ```
 
-**23 of 209 covered, and a ceiling of 38.** Read cold that looks like an unfinished tool, so read it the other way: the second line is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed 209 of 209 from a checkout would be claiming it can see things that leave no trace in one.
+**13 of 46 KSIs meet the class-b method floor, and 33 have no pipeline method at all.** Read cold that looks like an unfinished tool, so read it the other way: the second number is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed all 46 from a checkout would be claiming it can see things that leave no trace in one. That is what `ingest` and the attestation clock exist for: a method the appliance did not execute can still be counted, once something signed says so.
 
-`frontier` also names what nobody has decided yet: **68 controls unreviewed**, printed as a question rather than as a gap. The full output breaks all of it down by family and shows where this project and ramprules reasoned about the same control — including where they disagree, which is recorded rather than smoothed over.
+**Every zero above is a different gap, and the tool says which.** `0/1` methods is `G1 coverage`; a method past its window is `G3 freshness`; the clocks, history, artifact and evidence-class lines are `G3`, `G4`, `G5` and `G6` measured separately, each against the rule that owes it. `rampscan gaps` prints them as a register — every row a (KSI, gap class, rule ID, evidence digest) tuple. A single blended percentage would have hidden which one you can actually fix this week.
+
+`frontier` also names what nobody has decided yet: **68 controls unreviewed**, printed as a question rather than as a gap. `--by-controls` keeps the pre-pivot denominator printable — 23 of 209 controls covered against a ceiling of 38 — because a project that changes how it counts should be able to show both numbers, not just the flattering one.
 
 ## What it does
 
@@ -46,6 +58,10 @@ The reachability tier is what separates a verdict from a count. The `graph` coll
 `rampscan serve` is the visual loop: PocketBase as projection store and auth, a Next.js console with the coverage board (filterable by KSI theme, control family, repo), the clock view (bundle age against the MVX window, expiring first), the drift view (born / died / verdict-flipped / scoped, with cause and killing commit), and the two-key queue — any signed-in identity proposes a `notApplicable`, an approver's key turn signs a scoping event into the **ledger**, and the register flips only when the projector re-folds it. The projector is the only writer of projection collections, enforced by PocketBase rules rather than by discipline, and a ledger watcher re-projects on every append, so a scan in another terminal moves the board live.
 
 `rampscan exports` writes the two FedRAMP schema-target documents into `out/exports/` — a Certification Package Overview (`FRC-CSO-PKG`) and an Ongoing Certification Report (`CCM-OCR-AVL`) — as JSON validated against the [pinned FedRAMP schemas](docs/context/fedramp-schemas/) per `FRC-CSO-JSN`, and exits 1 on a violation. Each document is two halves with a published line between them: the offering identity is **declared** in `rampscan.config.json` and passed through untouched, and the validation record is **computed** from the fold, so `x-rampscan.fieldSources` labels every field declared or computed and an assessor can tell which half was measured. The appliance makes no attestation on a provider's behalf: with no `offering.report` block declared there is no Ongoing Certification Report, because an empty incident list in one *is* the attestation that none occurred.
+
+The package overview also carries an `FRC-APP-FCP` freshness stamp — the rule wants a package showing status verified within the previous **7 days**, which is its own flat window and not the class one — computed from the register and unclaimable by declaration, since `rampscan.config.json` refuses any key that would let a provider type their own package fresh. rampscan's own package currently reads `fresh: false`, and that is the stamp working.
+
+`rampscan conformance [path]` is the check pointed at a *file*: certification JSON on disk validated against the pinned schemas, whether rampscan wrote it or another tool did. It also compares each document's own conformance stamp against a fresh validation, which is the one thing regenerating cannot do — a document claiming `valid: true` after the pins moved under it fails rather than passing quietly. It refuses what it cannot resolve rather than skipping it, and CI runs it over this repository's own declared offering on every pull request, so a nonconforming export fails our build and never a client's.
 
 `rampscan rebuild` drops the projection, refills it from the ledger and proves byte equality. `rampscan verify <digest>` checks any bundle or scoping event offline. `rampscan check` is the dry run over the working tree — pure gates, nothing signed, nothing appended, exit 1 on a would-be violation.
 

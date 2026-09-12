@@ -26,6 +26,7 @@ import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { buildGapRegister, renderGapRegister } from "./gaps.js";
 import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
+import { checkConformance, renderConformance } from "./fedramp-conformance.js";
 import { loadOffering } from "./offering.js";
 import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
 import { startDaemon } from "./daemon.js";
@@ -102,6 +103,13 @@ function usage(): never {
       "                    the scanned repo's declared `offering` block joined to the fold.",
       "                    Lands in <out>/exports/. Exits 1 on a nonconforming document",
       "                    (FRC-CSO-JSN); every document carries its own conformance verdict",
+      "  conformance [path]  the package conformance check (plan Q5.2 — G10, FRC-CSO-JSN):",
+      "                    certification JSON on disk validated against the PINNED FedRAMP",
+      "                    schemas — rampscan's own exports or a document another tool wrote.",
+      "                    Defaults to <out>/exports/; takes a file or a directory. Also checks",
+      "                    each document's own conformance stamp AGAINST a fresh validation, so",
+      "                    a file claiming a verdict it no longer earns fails. Exits 1 on any",
+      "                    violation, disagreement, or unresolvable schema — never a skip",
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
@@ -152,6 +160,8 @@ function usage(): never {
       "                    comment can tell a violation this tree introduced from one it inherited.",
       "                    A pull request's base commit is the intended argument. Without it the",
       "                    board is the baseline, and with no ledger there is none at all",
+      "  --schema <file>   conformance: force a pinned FedRAMP schema instead of resolving",
+      "                    one per document from its stamp or its filename",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -191,6 +201,7 @@ async function main(): Promise<void> {
       markdown: { type: "boolean" },
       "run-url": { type: "string" },
       "baseline-ref": { type: "string" },
+      schema: { type: "string" },
       "no-color": { type: "boolean" },
     },
   });
@@ -640,6 +651,31 @@ async function main(): Promise<void> {
       if (values.json) console.log(JSON.stringify(exportResult, null, 2));
       else console.log(renderFedrampExports(exportResult));
       if (!exportResult.conformant) process.exit(1);
+      return;
+    }
+    case "conformance": {
+      // The package conformance check (plan Q5.2 — G10, `FRC-CSO-JSN`). Reads
+      // documents from disk rather than from a fold, so it answers for a
+      // certification package another tool wrote, one edited by hand, or one
+      // this appliance generated before the pins moved. Fails closed: a
+      // document whose schema cannot be resolved is an exit, not a skip.
+      const conformanceTarget = target ?? join(values.out ?? "./rampscan-out", "exports");
+      let conformanceResult;
+      try {
+        conformanceResult = await checkConformance({
+          schemaRoot: REPO_ROOT,
+          target: conformanceTarget,
+          ...(values.schema !== undefined ? { schema: values.schema } : {}),
+        });
+      } catch (cause) {
+        console.error(
+          `conformance check refused: ${cause instanceof Error ? cause.message : String(cause)}`,
+        );
+        process.exit(1);
+      }
+      if (values.json) console.log(JSON.stringify(conformanceResult, null, 2));
+      else console.log(renderConformance(conformanceResult));
+      if (!conformanceResult.conformant) process.exit(1);
       return;
     }
     case "owed": {

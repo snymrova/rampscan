@@ -146,6 +146,170 @@ function summarise(input: FedrampExportInput): ValidationSummary {
   return summary;
 }
 
+// ---------------------------------------------------------------------------
+// FRC-APP-FCP — application freshness (Q5.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * `FRC-APP-FCP`'s window, and it is NOT the class window. VDR-TFR-MVX gives
+ * class b seven days and class c three, and VDR-TFR-NMV gives a non-machine
+ * method three months; this rule is a flat seven days on the package at
+ * application time, the same number for every class. Two clocks that happen to
+ * read 7 for one class are still two clocks, so this constant is its own and
+ * never reads `catalog.windows`.
+ */
+export const APPLICATION_FRESHNESS_WINDOW_DAYS = 7;
+
+const DAY_MS = 86_400_000;
+
+export interface ApplicationFreshness {
+  ruleId: "FRC-APP-FCP";
+  windowDays: number;
+  /** the fold instant every age below is measured against */
+  asOf: string;
+  /**
+   * Every counted method was verified inside the window. The LITERAL reading
+   * of the rule: the package shows the current status of the offering, and a
+   * method whose evidence is older than seven days is not part of a status
+   * verified within seven days.
+   */
+  fresh: boolean;
+  /**
+   * The same question asked of machine-clock methods only — for a reader who
+   * holds the narrower reading, in which VDR-TFR-NMV's three months governs an
+   * attestation and FRC-APP-FCP speaks only to what a machine re-verifies.
+   * Published rather than chosen between: the rules text supports an argument
+   * either way and this document should not settle it silently.
+   */
+  machineOnlyFresh: boolean;
+  /** the freshest live evidence anywhere in the counted set */
+  verifiedAt?: string;
+  /** the ELDEST live evidence among counted methods — the one that binds */
+  oldestVerifiedAt?: string;
+  /** methods judged: every method cell the register holds, less the scoped ones */
+  methodsCounted: number;
+  methodsInWindow: number;
+  /** live evidence, older than the window */
+  methodsOutOfWindow: number;
+  /**
+   * No live evidence at all. Counted as unfresh rather than excused, which is
+   * the fold's own rule for `freshMet` (a method with no live evidence is not
+   * being validated at any cadence) applied to this clock.
+   */
+  methodsWithoutEvidence: number;
+  /** signed two-key notApplicable — not a lapsed clock, so not counted */
+  scopedOut: number;
+  /** of the counted methods, how many run on the non-machine clock */
+  nonMachineMethods: number;
+  /**
+   * …and how many on the machine clock. Carried because `machineOnlyFresh`
+   * would otherwise pass VACUOUSLY on a register holding no machine method at
+   * all — "every machine method is fresh" is trivially true of none, and a
+   * green that survives no interrogation is the one bug this product may not
+   * ship (ground rule 7).
+   */
+  machineMethods: number;
+  basis: string;
+}
+
+/**
+ * Computed from the register, never typed — `OfferingConfig` has no slot for
+ * any field here, so a provider cannot declare their package fresh (§12.4's
+ * rule 3, the same mechanism that keeps a report period out of the config).
+ */
+export function applicationFreshness(input: FedrampExportInput): ApplicationFreshness {
+  const asOfMs = Date.parse(input.projectedAt);
+  const cutoff = asOfMs - APPLICATION_FRESHNESS_WINDOW_DAYS * DAY_MS;
+
+  let methodsCounted = 0;
+  let methodsInWindow = 0;
+  let methodsOutOfWindow = 0;
+  let methodsWithoutEvidence = 0;
+  let scopedOut = 0;
+  let nonMachineMethods = 0;
+  let machineMethods = 0;
+  let machineUnfresh = 0;
+  let newest: string | undefined;
+  let oldest: string | undefined;
+
+  for (const row of input.methodRegisters) {
+    for (const cell of row.methods) {
+      // a signed two-key N/A is a decision, not a lapsed clock — the same
+      // exclusion `freshMet` makes, for the same reason
+      if (cell.state === "notApplicable") {
+        scopedOut += 1;
+        continue;
+      }
+      methodsCounted += 1;
+      if (cell.clock === "machine") machineMethods += 1;
+      else nonMachineMethods += 1;
+
+      const at = cell.freshAsOf;
+      if (at === undefined) {
+        methodsWithoutEvidence += 1;
+        if (cell.clock === "machine") machineUnfresh += 1;
+        continue;
+      }
+      if (newest === undefined || at > newest) newest = at;
+      if (oldest === undefined || at < oldest) oldest = at;
+
+      if (Date.parse(at) >= cutoff) {
+        methodsInWindow += 1;
+      } else {
+        methodsOutOfWindow += 1;
+        if (cell.clock === "machine") machineUnfresh += 1;
+      }
+    }
+  }
+
+  const freshness: ApplicationFreshness = {
+    ruleId: "FRC-APP-FCP",
+    windowDays: APPLICATION_FRESHNESS_WINDOW_DAYS,
+    asOf: input.projectedAt,
+    fresh: methodsCounted > 0 && methodsOutOfWindow === 0 && methodsWithoutEvidence === 0,
+    machineOnlyFresh: machineMethods > 0 && machineUnfresh === 0,
+    methodsCounted,
+    methodsInWindow,
+    methodsOutOfWindow,
+    methodsWithoutEvidence,
+    scopedOut,
+    nonMachineMethods,
+    machineMethods,
+    basis:
+      "Computed from the method register at the fold instant. FRC-APP-FCP's seven days is an application-time window on the package and is NOT the class window (VDR-TFR-MVX / VDR-TFR-NMV): it reads the same for every class. `fresh` counts a method with no live evidence as unfresh, which is the fold's own rule for freshMet rather than a stricter one invented here; `machineOnlyFresh` answers the narrower reading in which a non-machine method keeps its own three-month cadence, and is false when there is no machine method to have asked about rather than vacuously true of none. An empty register is never fresh — a package validating nothing shows no status to have verified.",
+  };
+  if (newest !== undefined) freshness.verifiedAt = newest;
+  if (oldest !== undefined) freshness.oldestVerifiedAt = oldest;
+  return freshness;
+}
+
+/**
+ * The sentences a reader needs when the package is not fresh. Separate from
+ * the computation so the numbers stay assertable without parsing prose.
+ */
+export function freshnessProblems(f: ApplicationFreshness): string[] {
+  if (f.fresh) return [];
+  if (f.methodsCounted === 0) {
+    return [
+      "FRC-APP-FCP is unmet: the register holds no validation method in scope, so this package shows no current status that could have been verified within the previous 7 days. A package that validates nothing is not a fresh package; it is an empty one",
+    ];
+  }
+  const causes = [
+    ...(f.methodsOutOfWindow > 0
+      ? [`${f.methodsOutOfWindow} carry live evidence older than ${f.windowDays} days (oldest ${f.oldestVerifiedAt ?? "unknown"})`]
+      : []),
+    ...(f.methodsWithoutEvidence > 0
+      ? [`${f.methodsWithoutEvidence} carry no live evidence at all, and a method nothing validates was verified within no window`]
+      : []),
+  ].join("; ");
+  const narrower = f.machineOnlyFresh
+    ? " Every MACHINE-clock method is inside the window, so a reader holding the narrower reading — FRC-APP-FCP speaking only to what a machine re-verifies, VDR-TFR-NMV governing the rest — would read this package as fresh. `x-rampscan.freshness.machineOnlyFresh` carries that answer; this appliance publishes both rather than choosing for the reader."
+    : "";
+  return [
+    `FRC-APP-FCP is unmet: of ${f.methodsCounted} validation method(s) in scope at ${f.asOf}, ${f.methodsInWindow} were verified within the previous ${f.windowDays} days — ${causes}. Re-scanning refreshes the machine-clock methods; a non-machine method is refreshed by a new signed attestation.${narrower}`,
+  ];
+}
+
 /**
  * The `x-rampscan` block. Legitimate rather than a liberty: `FRC-CSO-JSN`'s own
  * note says the schemas are "designed to be lightweight and flexible to
@@ -249,6 +413,13 @@ export function buildPackageOverview(input: FedrampExportInput): FedrampExport {
     );
   }
 
+  // FRC-APP-FCP (Q5.3). Stamped on the OVERVIEW and not on the OCR: the rule
+  // is about the INITIAL package a provider supplies, and an ongoing report
+  // answers to CCM-OCR's cadence instead. Computed from the register — there is
+  // no config key that could have said this, by construction.
+  const freshness = applicationFreshness(input);
+  problems.push(...freshnessProblems(freshness));
+
   const document: Record<string, unknown> = {
     serviceIdentification,
     serviceProperties,
@@ -269,6 +440,9 @@ export function buildPackageOverview(input: FedrampExportInput): FedrampExport {
       certifiedServices: "declared",
       thirdPartyInformationResources: "declared",
     }),
+    // after the spread, never before it: a computed stamp that a shared block
+    // could quietly overwrite is a stamp nobody can rely on
+    freshness,
     note: "Every schema field in this document is DECLARED, read from rampscan.config.json's `offering` block. An evidence ledger holds none of these facts and this generator invents none of them. The validation summary below is computed from signed bundles and is the only part of this file rampscan attests to.",
   };
 
