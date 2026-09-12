@@ -277,6 +277,28 @@ export interface DriftRecord {
   bundle_digest: string;
 }
 
+/**
+ * One vulnerability-shaped record (Q3.5, G13 — VDR-CSO-FAV), as the
+ * projector writes the `vulnerabilities` collection: an episode of a cell
+ * standing violated, detected at the violating bundle's own timestamp and
+ * resolved only by a later evidenced bundle in the same chain. A violated
+ * chain that merely died (anchor drift) stays open — evidence that died
+ * unfixed is not a fix.
+ */
+export interface VulnerabilityRecord {
+  id: string;
+  repo: string;
+  recipe_id: string;
+  ksi_ids: string[];
+  detected_at: string;
+  commit_sha: string;
+  bundle_digest: string;
+  vuln_status: "open" | "resolved";
+  resolved_at: string;
+  resolving_digest: string;
+  resolving_commit: string;
+}
+
 export interface BundleRecord {
   id: string;
   digest: string;

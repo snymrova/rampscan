@@ -8,6 +8,7 @@ import type {
   RegisterRow,
   RollupRow,
   ScanRunRow,
+  ValidationVulnerability,
 } from "@rampscan/core";
 
 // PocketBase as projection store (SPEC §6, plan M3 E1). The rules that keep
@@ -277,6 +278,29 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("gap_end", true),
       { name: "duration_ms", type: "number", required: false },
       { name: "ongoing", type: "bool", required: false },
+    ],
+    listRule: AUTHED,
+    viewRule: AUTHED,
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
+  },
+  {
+    // the failure→vulnerability feed (Q3.5, G13 — VDR-CSO-FAV): one record
+    // per episode of a cell standing violated, open or resolved
+    name: "vulnerabilities",
+    type: "base",
+    fields: [
+      text("repo", true),
+      text("recipe_id", true),
+      json("ksi_ids"),
+      text("detected_at", true),
+      text("commit_sha", true),
+      text("bundle_digest", true),
+      text("vuln_status", true), // `status` collides with PB vocabulary, like trigger/timestamp
+      text("resolved_at"),
+      text("resolving_digest"),
+      text("resolving_commit"),
     ],
     listRule: AUTHED,
     viewRule: AUTHED,
@@ -615,6 +639,20 @@ export async function writeProjectionPocketBase(
       ongoing: gap.ongoing,
     });
   }
+  for (const record of projection.vulnerabilities) {
+    await pb.create("vulnerabilities", {
+      repo: record.repo,
+      recipe_id: record.recipeId,
+      ksi_ids: record.ksiIds,
+      detected_at: record.detectedAt,
+      commit_sha: record.commit,
+      bundle_digest: record.bundleDigest,
+      vuln_status: record.status,
+      resolved_at: record.resolvedAt ?? "",
+      resolving_digest: record.resolvingDigest ?? "",
+      resolving_commit: record.resolvingCommit ?? "",
+    });
+  }
   for (const run of projection.scanRuns) {
     await pb.create("scan_runs", {
       digest: run.digest,
@@ -654,6 +692,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     ksiRecords,
     methodRegisterRecords,
     gapRecords,
+    vulnerabilityRecords,
     scanRunRecords,
     metaRecords,
   ] = await Promise.all([
@@ -664,6 +703,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     pb.listAll("ksis"),
     pb.listAll("method_registers"),
     pb.listAll("gaps"),
+    pb.listAll("vulnerabilities"),
     pb.listAll("scan_runs"),
     pb.listAll("meta"),
   ]);
@@ -756,6 +796,21 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     durationMs: r.duration_ms,
     ongoing: r.ongoing === true,
   }));
+  const vulnerabilities: ValidationVulnerability[] = vulnerabilityRecords.map((r: any) => {
+    const record: ValidationVulnerability = {
+      repo: r.repo,
+      recipeId: r.recipe_id,
+      ksiIds: r.ksi_ids ?? [],
+      detectedAt: r.detected_at,
+      commit: r.commit_sha,
+      bundleDigest: r.bundle_digest,
+      status: r.vuln_status,
+    };
+    if (r.resolved_at) record.resolvedAt = r.resolved_at;
+    if (r.resolving_digest) record.resolvingDigest = r.resolving_digest;
+    if (r.resolving_commit) record.resolvingCommit = r.resolving_commit;
+    return record;
+  });
   const scanRuns: ScanRunRow[] = scanRunRecords.map((r: any) => ({
     digest: r.digest,
     runId: r.run_id,
@@ -777,6 +832,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     ksis: ksiRecords.map(toRollup),
     methodRegisters,
     gaps,
+    vulnerabilities,
     scanRuns,
     datasetVersion: meta?.dataset_version ?? "",
     projectedAt: meta?.projected_at ?? "",

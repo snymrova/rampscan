@@ -15,6 +15,7 @@ import type {
   RollupRow,
   ScanRunRow,
   ScopingInfo,
+  ValidationVulnerability,
 } from "@rampscan/core";
 import type {
   ArtifactJudgment,
@@ -643,6 +644,49 @@ export function foldEntries(
     }
   }
 
+  // The failure→vulnerability feed (Q3.5, G13 — VDR-CSO-FAV): a failed
+  // validation is a vulnerability with detection-and-response obligations,
+  // so every episode of a cell standing `violated` becomes a record here —
+  // never only a drift footnote. An episode opens at the first violated
+  // bundle of a violated run (chains hold only evidenced/violated — an
+  // unevidenced verdict is never recorded) and resolves at the first later
+  // bundle whose verdict is `evidenced`. A violated chain that merely dies
+  // (anchor drift, nothing replacing it) stays OPEN: evidence that died
+  // unfixed is not a fix, and the record keeps saying so.
+  const vulnerabilities: ValidationVulnerability[] = [];
+  for (const chain of groups.values()) {
+    chain.forEach((entry, i) => {
+      const p = entry.bundle.predicate;
+      if (p.verdict !== "violated") return;
+      const prev = chain[i - 1];
+      if (prev !== undefined && prev.bundle.predicate.verdict === "violated") return;
+      // the episode's detection — now find its resolution, if one is recorded
+      const record: ValidationVulnerability = {
+        repo: p.repo,
+        recipeId: p.recipe_id,
+        ksiIds: p.ksi_ids,
+        detectedAt: p.timestamp,
+        commit: p.commit,
+        bundleDigest: entry.digest,
+        status: "open",
+      };
+      const resolving = chain
+        .slice(i + 1)
+        .find((e) => e.bundle.predicate.verdict === "evidenced");
+      if (resolving !== undefined) {
+        const q = resolving.bundle.predicate;
+        record.status = "resolved";
+        record.resolvedAt = q.timestamp;
+        record.resolvingDigest = resolving.digest;
+        record.resolvingCommit = q.commit;
+      }
+      vulnerabilities.push(record);
+    });
+  }
+  vulnerabilities.sort(
+    (a, b) => a.detectedAt.localeCompare(b.detectedAt) || a.bundleDigest.localeCompare(b.bundleDigest),
+  );
+
   // Cadence-adherence history (I1d): bundle chains × the MVX window. Every
   // consecutive pair whose refresh landed after the window closed is a gap;
   // an unrefreshed tail whose window closed before projectedAt is an ongoing
@@ -707,6 +751,7 @@ export function foldEntries(
     ksis,
     methodRegisters,
     gaps,
+    vulnerabilities,
     scanRuns,
     datasetVersion: newest?.bundle.predicate.dataset_version ?? "",
     projectedAt,
