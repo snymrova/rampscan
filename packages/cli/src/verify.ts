@@ -1,9 +1,11 @@
+import type { LedgerEntry } from "@rampscan/core";
 import {
   canonicalJson,
   isAttestation,
   isEvidenceBundle,
   isScanRun,
   isScopingEvent,
+  methodOfIngestedBundle,
 } from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
@@ -30,6 +32,64 @@ export async function verify(options: {
   const entry = await ledger.get(options.digest);
   if (!entry) {
     return { ok: false, lines: [`no ledger entry with digest ${options.digest}`] };
+  }
+  // Q4.4 (SPEC §12.8): an ingested bundle verifies with exactly the same
+  // machinery as a native one — same envelope, same address discipline — but
+  // it must not RENDER as one. Two things differ and both matter to an
+  // assessor: it anchors to no commit (so the native `repo @ commit` line has
+  // nothing to put after the `@`), and the facts worth pulling on are the
+  // handoff's — who signed the result and which submission bytes were
+  // accepted. Those live in the predicate precisely so this report can quote
+  // them (FRR-PVA-AA-06).
+  const ingested = isEvidenceBundle(entry.bundle) ? entry.bundle.predicate.ingest : undefined;
+  if (isEvidenceBundle(entry.bundle) && ingested !== undefined) {
+    const p = entry.bundle.predicate;
+    // The method id is the register's join key, so a bundle whose carried key
+    // disagrees with what its own signed content derives would COUNT on a
+    // different method than it describes. Checking it is the offline half of
+    // "same as native ones": a derivation, reproducible from the bundle alone.
+    let derived: string | undefined;
+    let derivationError: string | undefined;
+    try {
+      derived = methodOfIngestedBundle(p).id;
+    } catch (error) {
+      derivationError = error instanceof Error ? error.message : String(error);
+    }
+    lines.push(
+      `ingest   ${options.digest.slice(0, 16)}…`,
+      `method   ${p.method_id ?? derived ?? "(none carried)"} → ${p.verdict}`,
+      ...(p.evidence_class !== undefined ? [`class    ${p.evidence_class}`] : []),
+      // no `@ commit`: ingested evidence has no anchor, so it dies superseded
+      // or goes stale, never by anchor drift — said here rather than left as a
+      // dangling separator
+      `repo     ${p.repo} (no commit anchor — ingested evidence)`,
+      `signer   ${ingested.signer_identity}`,
+      `handoff  ${ingested.ingest_digest.slice(0, 16)}… — the submission this bundle accepted`,
+      `signed   ${p.timestamp} (run ${p.run_id})`,
+    );
+    const rest = await verifyEnvelope(entry, options.keysDir, lines);
+    const derivationOk = derivationError === undefined && derived === p.method_id;
+    lines.push(
+      derivationOk
+        ? "derived  ok — the carried method id is what this content derives"
+        : `derived  MISMATCH — carries ${p.method_id ?? "no method id"}, content derives ` +
+          `${derived ?? `nothing (${derivationError})`}`,
+    );
+    if (rest.ok && derivationOk) {
+      // The honest limit, stated where an assessor reads the verdict: the
+      // signature is ours and covers the HANDOFF, not the cloud. Leaving this
+      // implicit is how a report starts being read as the appliance vouching
+      // for AWS — which is the one thing the no-execution boundary means it
+      // cannot do.
+      lines.push(
+        "",
+        "This verifies the handoff, not the cloud: the appliance signed that this submission,",
+        "at this digest, was accepted under the contract — it executed no AWS call and vouches",
+        "for no account state. The submission's own bytes are the client's to produce, and the",
+        "handoff digest above is the address to demand exactly those bytes by.",
+      );
+    }
+    return { ok: rest.ok && derivationOk, lines };
   }
   if (isEvidenceBundle(entry.bundle)) {
     const p = entry.bundle.predicate;
@@ -87,14 +147,29 @@ export async function verify(options: {
     );
   }
 
+  const rest = await verifyEnvelope(entry, options.keysDir, lines);
+  return { ok: rest.ok, lines };
+}
+
+/**
+ * The checks every statement kind gets, identical for all of them — which is
+ * what "ingested bundles verify offline, same as native ones" (Q4.4) means
+ * concretely: the address, the signature, and the coverage are one code path,
+ * and only the rendering above knows what kind of statement it is reading.
+ */
+async function verifyEnvelope(
+  entry: LedgerEntry,
+  keysDir: string,
+  lines: string[],
+): Promise<{ ok: boolean }> {
   lines.push(`content  ok — object hashes to its address`); // get() would have thrown otherwise
 
   if (!entry.envelope) {
     lines.push("signature MISSING — bundle was appended unsigned");
-    return { ok: false, lines };
+    return { ok: false };
   }
 
-  const signer = createLocalSigner(options.keysDir);
+  const signer = createLocalSigner(keysDir);
   const signatureOk = await signer.verify(entry.envelope);
   lines.push(signatureOk ? "signature ok — DSSE envelope verifies" : "signature FAILED");
 
@@ -108,5 +183,5 @@ export async function verify(options: {
       : "payload  MISMATCH — the envelope signs different content than stored",
   );
 
-  return { ok: signatureOk && payloadMatches, lines };
+  return { ok: signatureOk && payloadMatches };
 }
