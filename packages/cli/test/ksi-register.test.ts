@@ -583,4 +583,85 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
   it("the header names class, dataset and overlay — the pins a reader checks numbers against", () => {
     expect(text).toContain("class b · dataset 2026.07.14.01 · frontier overlay 0.7.5");
   });
+
+  // Q4.2: a row's methods stopped being one clock family. The freshest column
+  // prints the window of the METHOD that supplied the instant (§12.5 rule 3),
+  // never the class's MVX window borrowed across families — an attestation
+  // 20 days old is inside VDR-TFR-NMV's 3 months and would read as a lapse
+  // against VDR-TFR-MVX's 7 days.
+  const NMV3 = { num: 3, unit: "months" } as const;
+  const attested = (freshAsOf: string, freshMet: boolean): MethodRegisterRow => ({
+    repo: "/repo/app",
+    ksi: "KSI-CNA-CIC",
+    methods: [
+      {
+        methodId: "attestation:incident-review#KSI-CNA-CIC",
+        source: "attestation",
+        automated: false,
+        clock: "non-machine",
+        standing: "narrative",
+        state: "evidenced",
+        bundleDigest: "att-1",
+        freshAsOf,
+        window: NMV3,
+        freshMet,
+      },
+    ],
+    automatedMethods: 0,
+    methodFloor: 1,
+    floorMet: false,
+    freshAsOf,
+    staleMethods: freshMet ? 0 : 1,
+    historyFloorMonths: null,
+    historyMet: null,
+    artifacts: [
+      { artifact: 1, basis: "judged", present: false },
+      { artifact: 2, basis: "computed", present: false },
+      { artifact: 3, basis: "judged", present: false },
+      { artifact: 4, basis: "judged", present: false },
+      { artifact: 5, basis: "computed", present: true },
+    ],
+    artifactsPresent: 1,
+    pointInTimeMethods: 0,
+    gap: "G2",
+  });
+
+  it("a non-machine method is judged against VDR-TFR-NMV, not the class MVX window", () => {
+    // 20 days old: outside MVX's 7 days, comfortably inside NMV's 3 months
+    const twentyDaysAgo = "2026-08-21T11:00:00.000Z";
+    const nmvView = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: [attested(twentyDaysAgo, true)],
+      frontier,
+    });
+    const row = nmvView.rows.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.freshestWindow).toEqual(NMV3);
+    expect(row.freshestMet).toBe(true);
+    const nmvText = renderKsiRegister(nmvView, false, now);
+    // the label is the method's own window, and "ok" is the fold's verdict —
+    // against the 7-day window this same row would have read as lapsed
+    expect(nmvText).toMatch(/KSI-CNA-CIC\s+0\/1\s+20d \/ 3mo ok/);
+    expect(nmvText).not.toMatch(/KSI-CNA-CIC.*7d/);
+  });
+
+  it("the fold's verdict wins over the renderer's approximation — no row says ok beside its own G3", () => {
+    const lapsed = attested("2026-06-01T00:00:00.000Z", false);
+    lapsed.gap = "G3";
+    lapsed.methodFloor = null;
+    lapsed.floorMet = null;
+    const lapsedView = buildKsiRegister({
+      catalog,
+      offeringClass: "a", // class a owes no automated floor, so G3 is the row's worst
+      methods,
+      methodRegisters: [lapsed],
+      frontier,
+    });
+    const lapsedText = renderKsiRegister(lapsedView, false, now);
+    const line = lapsedText.split("\n").find((l) => l.includes("KSI-CNA-CIC"))!;
+    expect(line).toContain("3mo");
+    expect(line).not.toContain("ok");
+    expect(line).toContain("G3 freshness");
+  });
 });

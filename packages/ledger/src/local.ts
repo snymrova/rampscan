@@ -11,6 +11,7 @@ import {
   LedgerStatement,
   canonicalJson,
   isArtifactJudgment,
+  isAttestation,
   isEvidenceBundle,
   isScanRun,
   isScopingEvent,
@@ -116,12 +117,12 @@ export function createLocalLedger(dir: string): LedgerStore {
       // Each statement kind fills the index slots it honestly has: a scoping
       // event carries no commit anchor and no verdict (its action goes in the
       // verdict slot so list() filters keep working uniformly), an artifact
-      // judgment (Q3.3) likewise names no recipe and no commit — its action
-      // rides the verdict slot the same way — and a run record (J1) is about
-      // a whole scan rather than one recipe, so its recipe_id and verdict
-      // stay EMPTY rather than being invented. That is what keeps
-      // `list({ recipeId })` from ever handing a run record to the evidence
-      // chain that asked for a recipe's bundles.
+      // judgment (Q3.3) and an attestation (Q4.2) likewise name no recipe and
+      // no commit — their actions ride the verdict slot the same way — and a
+      // run record (J1) is about a whole scan rather than one recipe, so its
+      // recipe_id and verdict stay EMPTY rather than being invented. That is
+      // what keeps `list({ recipeId })` from ever handing a run record to the
+      // evidence chain that asked for a recipe's bundles.
       const row: IndexRow = {
         digest,
         appended_at: new Date().toISOString(),
@@ -131,7 +132,7 @@ export function createLocalLedger(dir: string): LedgerStore {
         commit: isEvidenceBundle(parsed) || isScanRun(parsed) ? parsed.predicate.commit : "",
         verdict: isEvidenceBundle(parsed)
           ? parsed.predicate.verdict
-          : isScopingEvent(parsed) || isArtifactJudgment(parsed)
+          : isScopingEvent(parsed) || isArtifactJudgment(parsed) || isAttestation(parsed)
             ? parsed.predicate.action
             : "",
         timestamp: parsed.predicate.timestamp,

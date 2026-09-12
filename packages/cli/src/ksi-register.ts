@@ -1,4 +1,4 @@
-import type { MethodRegisterRow } from "@rampscan/core";
+import type { ClockWindow, MethodRegisterRow } from "@rampscan/core";
 import type { HistoryFloor, KsiCatalog, OfferingClass, ValidationWindow } from "@rampscan/dataset";
 import type { PipelineMethod } from "@rampscan/schema";
 import type { FrontierMap } from "./frontier.js";
@@ -27,6 +27,25 @@ export interface KsiRegisterRowView {
   floorMet: boolean | null;
   /** freshest live evidence across the KSI's methods; absent when none */
   freshest?: string; // ISO 8601
+  /**
+   * The owed window of the METHOD that supplied `freshest`, not the row's
+   * (§12.5 rule 3: "against the method's window"). Load-bearing from Q4.2,
+   * when a row's methods stopped being one clock family: an attestation runs
+   * on VDR-TFR-NMV's 3 months, and printing the class's 7-day MVX window
+   * beside its age would report a lapse the fold never judged.
+   *
+   * Absent when no folded cell supplied the instant — then the class's MVX
+   * window is the honest label, because every derived method is machine.
+   * Null when that method's family owes no window (machine at class d).
+   */
+  freshestWindow?: ClockWindow | null;
+  /**
+   * The FOLD's freshness judgment for that same method (Q3.2), carried rather
+   * than recomputed here: the fold judges calendar months exactly, and a
+   * second approximation in the renderer could print "ok" on a row the gap
+   * column calls G3. One computation, quoted twice.
+   */
+  freshestMet?: boolean | null;
   /** where this KSI's ledger history begins (Q3.1); absent when it holds nothing */
   historySince?: string; // ISO 8601
   /** the FRC-CSX-MOT judgment; null exactly when the class owes no months */
@@ -185,7 +204,19 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       pointInTimeMethods: folded?.pointInTimeMethods ?? 0,
       methodIds,
     };
-    if (folded?.freshAsOf !== undefined) row.freshest = folded.freshAsOf;
+    if (folded?.freshAsOf !== undefined) {
+      row.freshest = folded.freshAsOf;
+      // Which method's clock does that instant belong to? The freshest cell —
+      // and from Q4.2 a row can hold more than one family, so the window and
+      // the verdict travel WITH the instant instead of being re-derived from
+      // the class. Ties go to the first by method id, matching the cell order
+      // the fold already sorted.
+      const source = folded.methods.find((m) => m.freshAsOf === folded.freshAsOf);
+      if (source !== undefined) {
+        row.freshestWindow = source.window;
+        row.freshestMet = source.freshMet;
+      }
+    }
     if (folded?.historySince !== undefined) row.historySince = folded.historySince;
     if (total === 0) row.worstGap = "G1";
     else if (floor !== null && automated < floor) row.worstGap = "G2";
@@ -258,14 +289,14 @@ function shortAge(ms: number): string {
   return `${Math.round(ms / 86_400_000)}d`;
 }
 
-function windowMs(window: ValidationWindow): number {
+function windowMs(window: ClockWindow): number {
   // months as 30 days for the AGE COMPARISON only — the scheduler owns real
   // scheduling; this is a report saying whether evidence is inside its window
   const dayMs = 86_400_000;
   return window.unit === "days" ? window.num * dayMs : window.num * 30 * dayMs;
 }
 
-function windowLabel(window: ValidationWindow): string {
+function windowLabel(window: ClockWindow): string {
   return `${window.num}${window.unit === "days" ? "d" : "mo"}`;
 }
 
@@ -298,11 +329,20 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
       freshestCol = "—".padEnd(15);
     } else {
       const age = shortAge(now.getTime() - Date.parse(row.freshest));
-      if (view.window === null) {
+      // The window of the METHOD that supplied the instant (§12.5 rule 3),
+      // falling back to the class's MVX window only when no fold named one —
+      // where every derived method is machine, so MVX is the honest label.
+      const owed = row.freshestWindow === undefined ? view.window : row.freshestWindow;
+      if (owed === null) {
         freshestCol = `${age} / —`.padEnd(15);
       } else {
-        const within = now.getTime() - Date.parse(row.freshest) <= windowMs(view.window);
-        freshestCol = `${age} / ${windowLabel(view.window)}${within ? " ok" : ""}`.padEnd(15);
+        // Prefer the FOLD's verdict; recompute only when there is no fold.
+        // The fold judges calendar months exactly, and `windowMs` below
+        // approximates a month as 30 days — close enough to label a report,
+        // never close enough to contradict the gap column.
+        const within =
+          row.freshestMet ?? now.getTime() - Date.parse(row.freshest) <= windowMs(owed);
+        freshestCol = `${age} / ${windowLabel(owed)}${within ? " ok" : ""}`.padEnd(15);
       }
     }
     // artifacts (Q3.3): the fold's count over the five owed artifacts;

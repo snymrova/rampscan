@@ -23,6 +23,14 @@ export interface GapRow {
   detail: string;
   /** the evidence digest, exactly when evidence exists to cite */
   digest?: string;
+  /**
+   * The rule THIS row cites, when it differs from its section's. Load-bearing
+   * from Q4.2: G3 spans two clock families, so a non-machine row sits under a
+   * section headed VDR-TFR-MVX while the rule that actually makes it a gap is
+   * VDR-TFR-NMV. Absent means the section's rule id is the row's — which is
+   * every row of every other class.
+   */
+  ruleId?: string;
 }
 
 export interface GapSection {
@@ -143,6 +151,14 @@ export function buildGapRegister(input: GapRegisterInput): GapRegisterView {
     for (const row of folded) {
       for (const cell of row.methods) {
         if (cell.freshMet !== false) continue;
+        // Which clock owes this row? The cell's family names the rule, so a
+        // non-machine method cites VDR-TFR-NMV even under a section headed
+        // by the machine window (Q4.2) — the gap register's promise is that
+        // every row cites the rule that makes IT a gap.
+        const rowRule =
+          cell.clock === "non-machine"
+            ? catalog.nonMachineWindow.requirementId
+            : machineWindow?.requirementId;
         g3.rows.push({
           subject: `${row.ksi} · ${cell.methodId}`,
           detail:
@@ -150,6 +166,7 @@ export function buildGapRegister(input: GapRegisterInput): GapRegisterView {
               ? "no live evidence — nothing re-validates this method at any cadence"
               : `evidence of ${cell.freshAsOf} sits outside the owed ${cell.window!.num}${cell.window!.unit === "days" ? "d" : "mo"} window`,
           ...(cell.bundleDigest !== undefined ? { digest: cell.bundleDigest } : {}),
+          ...(rowRule !== undefined && rowRule !== g3.ruleId ? { ruleId: rowRule } : {}),
         });
       }
     }
@@ -334,6 +351,9 @@ export function renderGapRegister(view: GapRegisterView, useColor: boolean): str
     for (const row of section.rows) {
       lines.push(
         `    ${red(row.subject.padEnd(44))} ${dim(row.detail)}` +
+          // the row's own rule, printed only when it differs from the
+          // section's — a non-machine method under a machine-headed G3 (Q4.2)
+          (row.ruleId !== undefined ? dim(` · ${row.ruleId}`) : "") +
           (row.digest !== undefined ? dim(` · ${row.digest.slice(0, 12)}…`) : ""),
       );
     }

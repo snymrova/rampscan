@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { ClockWindow, LedgerEntry } from "@rampscan/core";
 import type {
   ArtifactJudgment,
+  Attestation,
   EvidenceBundle,
   JudgedArtifact,
   MethodScope,
@@ -755,6 +756,195 @@ describe("G6 evidence class (Q3.4)", () => {
       1,
     );
     const dir = await mkdtemp(join(tmpdir(), "rampscan-g6-"));
+    const dbPath = join(dir, "projection.db");
+    await writeProjectionSqlite(projection, dbPath);
+    expect(readProjectionSqlite(dbPath)).toEqual(projection);
+  });
+});
+
+// Q4.2 — the attestation leg (SPEC §12.9). Unlike pipeline methods, these are
+// not handed to the fold: the catalog cannot carry a human attestation, so the
+// fold DERIVES them from the signed events it already reads. The cell's
+// freshness comes from the event's own timestamp, because an attestation has
+// no evidence chain — the event IS the evidence.
+describe("attestation methods (Q4.2)", () => {
+  const NMV3: ClockWindow = { num: 3, unit: "months" };
+  // T2 is 2026-08-08; NMV's threshold is three calendar months before it
+  const FRESH = "2026-07-01T00:00:00.000Z";
+  const LAPSED = "2026-01-01T00:00:00.000Z";
+
+  function attestationEntry(opts: {
+    statementId: string;
+    ksiId: string;
+    timestamp: string;
+    action?: "attested" | "withdrawn";
+    repo?: string;
+    role?: string;
+    statementRef?: string;
+  }): LedgerEntry {
+    const bundle: Attestation = {
+      _type: "https://in-toto.io/Statement/v1",
+      subject: [
+        { name: "attestation.txt", digest: { sha256: (opts.statementRef ?? "b").repeat(64) } },
+      ],
+      predicateType: "https://rampscan.dev/attestation/v1",
+      predicate: {
+        action: opts.action ?? "attested",
+        statement_id: opts.statementId,
+        ksi_id: opts.ksiId,
+        attestor_role: opts.role ?? "ciso",
+        statement: "the programme ran and its effectiveness was reviewed",
+        repo: opts.repo ?? "fixtures/app",
+        proposed_by: "viewer@rampscan.local (pb:u1)",
+        approved_by: "approver@rampscan.local (pb:u2)",
+        dataset_version: "2026.07.14.01",
+        timestamp: opts.timestamp,
+      },
+    };
+    return { digest: `att-${counter++}`, bundle, appendedAt: opts.timestamp };
+  }
+
+  it("derives a method from the ledger event and judges it on the NMV clock", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        attestationEntry({
+          statementId: "incident-review",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: FRESH,
+        }),
+      ],
+      null,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const row = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/app" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    expect(row.methods).toHaveLength(1);
+    const cell = row.methods[0]!;
+    expect(cell.methodId).toBe("attestation:incident-review#KSI-CNA-CIC");
+    expect(cell.source).toBe("attestation");
+    expect(cell.automated).toBe(false);
+    expect(cell.clock).toBe("non-machine");
+    expect(cell.standing).toBe("narrative");
+    expect(cell.state).toBe("evidenced");
+    expect(cell.freshAsOf).toBe(FRESH);
+    expect(cell.window).toEqual(NMV3);
+    expect(cell.freshMet).toBe(true);
+    // no pipeline join fields, and no G6 label: a human statement asserts none
+    expect(cell.recipeId).toBeUndefined();
+    expect(cell.evidenceClass).toBeUndefined();
+    expect(row.gap).not.toBe("G1");
+  });
+
+  it("a lapsed attestation is stale on its own clock", () => {
+    const projection = foldWith(
+      [attestationEntry({ statementId: "incident-review", ksiId: "KSI-CNA-CIC", timestamp: LAPSED })],
+      null,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods[0]!.freshMet).toBe(false);
+    expect(row.staleMethods).toBe(1);
+    expect(row.gap).toBe("G3");
+  });
+
+  it("a signed withdrawal supersedes the claim, and the method goes with it", () => {
+    const projection = foldWith(
+      [
+        attestationEntry({ statementId: "incident-review", ksiId: "KSI-CNA-CIC", timestamp: FRESH }),
+        attestationEntry({
+          statementId: "incident-review",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: "2026-08-02T00:00:00.000Z",
+          action: "withdrawn",
+        }),
+      ],
+      null,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods).toHaveLength(0);
+    expect(row.gap).toBe("G1");
+  });
+
+  it("a renewal satisfies the same method — one mechanism, not two", () => {
+    const projection = foldWith(
+      [
+        attestationEntry({
+          statementId: "incident-review",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: LAPSED,
+          statementRef: "a",
+        }),
+        attestationEntry({
+          statementId: "incident-review",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: FRESH,
+          statementRef: "c",
+        }),
+      ],
+      null,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods).toHaveLength(1);
+    expect(row.methods[0]!.freshMet).toBe(true);
+  });
+
+  it("is scoped to its own repo — an attestation is about one offering", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1, repo: "fixtures/other" }),
+        attestationEntry({
+          statementId: "incident-review",
+          ksiId: "KSI-CNA-CIC",
+          timestamp: FRESH,
+          repo: "fixtures/app",
+        }),
+      ],
+      null,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const mine = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/app" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    const theirs = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/other" && r.ksi === "KSI-CNA-CIC",
+    )!;
+    expect(mine.methods).toHaveLength(1);
+    expect(theirs.methods).toHaveLength(0);
+  });
+
+  it("no number of attestations reaches an automated floor — cover is not automate", () => {
+    const projection = foldWith(
+      ["ir", "training", "access", "vendor"].map((statementId) =>
+        attestationEntry({ statementId, ksiId: "KSI-CNA-CIC", timestamp: FRESH }),
+      ),
+      1,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CNA-CIC")!;
+    expect(row.methods).toHaveLength(4);
+    expect(row.automatedMethods).toBe(0);
+    expect(row.floorMet).toBe(false);
+    expect(row.gap).toBe("G2");
+  });
+
+  it("survives the sqlite round trip", async () => {
+    const projection = foldWith(
+      [attestationEntry({ statementId: "incident-review", ksiId: "KSI-CNA-CIC", timestamp: FRESH })],
+      1,
+      null,
+      { nonMachineWindow: NMV3 },
+    );
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-q42-"));
     const dbPath = join(dir, "projection.db");
     await writeProjectionSqlite(projection, dbPath);
     expect(readProjectionSqlite(dbPath)).toEqual(projection);

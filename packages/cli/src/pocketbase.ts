@@ -5,6 +5,7 @@ import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import {
+  ATTESTATION_PROPOSALS_COLLECTION,
   JUDGMENT_PROPOSALS_COLLECTION,
   PocketBaseAdmin,
   PROPOSALS_COLLECTION,
@@ -116,6 +117,7 @@ export async function bootstrapConsole(pb: PocketBaseAdmin, log: (line: string) 
 
   await pb.ensureCollection(PROPOSALS_COLLECTION);
   await pb.ensureCollection(JUDGMENT_PROPOSALS_COLLECTION);
+  await pb.ensureCollection(ATTESTATION_PROPOSALS_COLLECTION);
 
   for (const user of DEMO_USERS) {
     try {

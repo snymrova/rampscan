@@ -19,6 +19,7 @@ import type {
 } from "@rampscan/core";
 import type {
   ArtifactJudgment,
+  Attestation,
   EvidenceBundle,
   OffenderPointer,
   PipelineRecipe,
@@ -28,9 +29,11 @@ import type {
 } from "@rampscan/schema";
 import {
   isArtifactJudgment,
+  isAttestation,
   isEvidenceBundle,
   isScanRun,
   isScopingEvent,
+  methodOfAttestation,
 } from "@rampscan/schema";
 
 // Projector v2 (plan M3): still a pure fold of the ledger — identical in
@@ -59,6 +62,9 @@ interface ScanRunEntry extends LedgerEntry {
 }
 interface ArtifactJudgmentEntry extends LedgerEntry {
   bundle: ArtifactJudgment;
+}
+interface AttestationEntry extends LedgerEntry {
+  bundle: Attestation;
 }
 
 /**
@@ -215,6 +221,7 @@ export function foldEntries(
   const judgments = sorted.filter((e): e is ArtifactJudgmentEntry =>
     isArtifactJudgment(e.bundle),
   );
+  const attestations = sorted.filter((e): e is AttestationEntry => isAttestation(e.bundle));
 
   // latest observation of every (repo, path): who saw this content last, when
   const pathObservations = new Map<
@@ -334,17 +341,34 @@ export function foldEntries(
     judgmentByCell.set(`${p.repo} ${p.ksi_id} ${p.artifact}`, entry);
   }
 
+  // Live attestation per (repo, statement_id, KSI) — Q4.2, SPEC §12.9. Sorted
+  // order → the latest wins, so a signed `withdrawn` retracts a standing
+  // claim by superseding it, never by deletion. The withdrawn entry stays in
+  // the map: the cell below reads its action, because "this was attested and
+  // then retracted" and "this was never attested" are different facts, and
+  // only the first of them has a method to stop deriving.
+  const attestationByCell = new Map<string, AttestationEntry>();
+  for (const entry of attestations) {
+    const p = entry.bundle.predicate;
+    attestationByCell.set(`${p.repo} ${p.statement_id} ${p.ksi_id}`, entry);
+  }
+
   // The registers: every (scanned repo × catalog recipe), plus any ledger
   // cell whose recipe fell out of the catalog — nothing recorded ever hides.
   const recipeById = new Map((options.recipes ?? []).map((r) => [r.id, r]));
-  // Deliberately evidence + the two-key statements (scoping, artifact
-  // judgment), NOT every statement: a run record names a repo too, and
-  // letting it introduce register cells would make the board partly a
+  // Deliberately evidence + the three two-key statements (scoping, artifact
+  // judgment, attestation), NOT every statement: a run record names a repo
+  // too, and letting it introduce register cells would make the board partly a
   // function of the run log. The board is folded from evidence and signed
   // decisions alone, and a scan run can never move a cell (J1's standing
-  // rule — /runs renders runs, never states).
+  // rule — /runs renders runs, never states). An attestation belongs in this
+  // set for the Q4.2 reason: for an acts-on-people KSI it may be the only
+  // validation that exists, and a repo whose register rests on one would
+  // otherwise have no rows at all.
   const repos = [
-    ...new Set([...evidence, ...scopings, ...judgments].map((e) => e.bundle.predicate.repo)),
+    ...new Set(
+      [...evidence, ...scopings, ...judgments, ...attestations].map((e) => e.bundle.predicate.repo),
+    ),
   ].sort();
   const cells = new Set<string>();
   for (const repo of repos) {
@@ -456,8 +480,30 @@ export function foldEntries(
         method,
       );
     }
+    // The attestation leg (Q4.2, SPEC §12.9) is LEDGER-derived, not handed in:
+    // the catalog cannot carry these, because a human attestation is not a
+    // recipe. Keyed by repo as well as KSI — an attestation is about one
+    // offering, where a pipeline method applies to every repo the catalog is
+    // scanned against. A `withdrawn` claim yields nothing: the supersession
+    // above already picked the live event per (repo, statement_id, KSI), and
+    // `methodOfAttestation` refuses a retracted one outright.
+    const attestationMethodsByCell = new Map<string, ValidationMethod[]>();
+    const attestationEntryByMethod = new Map<string, AttestationEntry>();
+    const attestationKsis = new Set<string>();
+    for (const entry of attestationByCell.values()) {
+      const p = entry.bundle.predicate;
+      if (p.action !== "attested") continue;
+      const method = methodOfAttestation(entry.bundle);
+      const cellKey = `${p.repo} ${p.ksi_id}`;
+      (
+        attestationMethodsByCell.get(cellKey) ??
+        attestationMethodsByCell.set(cellKey, []).get(cellKey)!
+      ).push(method);
+      attestationEntryByMethod.set(`${p.repo} ${method.id}`, entry);
+      attestationKsis.add(p.ksi_id);
+    }
     const ksiUniverse = [
-      ...new Set([...(options.ksiIds ?? []), ...methodsByKsi.keys()]),
+      ...new Set([...(options.ksiIds ?? []), ...methodsByKsi.keys(), ...attestationKsis]),
     ].sort();
     const registerByCell = new Map(registers.map((r) => [`${r.repo} ${r.recipeId}`, r]));
     const floor = options.methodFloor ?? null;
@@ -489,7 +535,10 @@ export function foldEntries(
     };
     for (const repo of repos) {
       for (const ksi of ksiUniverse) {
-        const cells: MethodCell[] = [...(methodsByKsi.get(ksi) ?? [])]
+        const cells: MethodCell[] = [
+          ...(methodsByKsi.get(ksi) ?? []),
+          ...(attestationMethodsByCell.get(`${repo} ${ksi}`) ?? []),
+        ]
           .sort((a, b) => a.id.localeCompare(b.id))
           .map((method) => {
             const window = windowByClock[method.clock];
@@ -520,6 +569,26 @@ export function foldEntries(
               const live = liveByCell.get(`${repo} ${method.provenance.recipe_id}`);
               const evidenceClass = live?.bundle.predicate.evidence_class;
               if (evidenceClass !== undefined) cell.evidenceClass = evidenceClass;
+            }
+            if (method.source === "attestation") {
+              // An attestation has no evidence chain to join: the signed
+              // event IS the evidence, so its own timestamp is the instant
+              // the VDR-TFR-NMV clock below judges. Without this arm a
+              // non-machine method could never be fresh, and putting the
+              // path on a clock would be decoration.
+              //
+              // No `evidenceClass`: G6 asserts whether a MACHINE process is
+              // repeatable or a captured state, and a human statement makes
+              // no such claim. An unlabeled cell neither triggers G6 nor
+              // defends against it, which is the honest reading — what this
+              // method is, `automated: false` and `standing: narrative`
+              // already say.
+              const live = attestationEntryByMethod.get(`${repo} ${method.id}`);
+              if (live !== undefined) {
+                cell.state = "evidenced";
+                cell.bundleDigest = live.digest;
+                cell.freshAsOf = live.bundle.predicate.timestamp;
+              }
             }
             // G3 per method (Q3.2): the owed clock, judged at projectedAt.
             // Missing evidence is false, not null — nothing is re-validating

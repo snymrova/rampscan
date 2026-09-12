@@ -1,4 +1,10 @@
-import { canonicalJson, isEvidenceBundle, isScanRun, isScopingEvent } from "@rampscan/schema";
+import {
+  canonicalJson,
+  isAttestation,
+  isEvidenceBundle,
+  isScanRun,
+  isScopingEvent,
+} from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
 
@@ -54,6 +60,18 @@ export async function verify(options: {
     lines.push(
       `scoping  ${options.digest.slice(0, 16)}…`,
       `recipe   ${p.recipe_id} → ${p.action}`,
+      `repo     ${p.repo}`,
+      `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
+    );
+  } else if (isAttestation(entry.bundle)) {
+    // an attestation (Q4.2, SPEC §12.9) verifies exactly like the other two
+    // two-key writes. It quotes the ROLE, not the signer: the two identities
+    // below say who turned the keys, and the role says whose accountability
+    // the claim rests on — an assessor pulls on both.
+    const p = entry.bundle.predicate;
+    lines.push(
+      `attest   ${options.digest.slice(0, 16)}…`,
+      `claim    ${p.statement_id}#${p.ksi_id} → ${p.action} (${p.attestor_role})`,
       `repo     ${p.repo}`,
       `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
     );
