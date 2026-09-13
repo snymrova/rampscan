@@ -187,6 +187,20 @@ describe("the check", () => {
     expect(result.conformant).toBe(true);
   });
 
+  // R0.3 (SPEC §13.8): the gated family has its own directory so that every
+  // document in the checked path is one a pinned schema gates. The refusal
+  // below is what made that necessary and it is deliberately unchanged — the
+  // fix was the directory, never the resolution rule.
+  it("still refuses a directory mixing gated documents with ungated ones", async () => {
+    const root = await dir({
+      [PACKAGE_OVERVIEW_ARTIFACT]: overviewDocument(),
+      "openvex.json": { "@context": "https://openvex.dev/ns/v0.2.0", statements: [] },
+    });
+    await expect(checkConformance({ schemaRoot: REPO_ROOT, target: root })).rejects.toThrow(
+      /cannot tell which FedRAMP schema/,
+    );
+  });
+
   it("refuses an EMPTY directory — nothing checked is not a pass", async () => {
     const root = await dir({});
     await expect(checkConformance({ schemaRoot: REPO_ROOT, target: root })).rejects.toThrow(

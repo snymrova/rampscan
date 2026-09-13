@@ -1,5 +1,6 @@
 import type { ClockWindow, MethodRegisterRow } from "@rampscan/core";
 import type { HistoryFloor, KsiCatalog, OfferingClass, ValidationWindow } from "@rampscan/dataset";
+import { optionalKsis } from "@rampscan/dataset";
 import type { PipelineMethod } from "@rampscan/schema";
 import type { FrontierMap } from "./frontier.js";
 
@@ -72,6 +73,15 @@ export interface KsiRegisterRowView {
   /** worst gap class computable today — G8/G13 land with the gap register */
   worstGap?: "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
   methodIds: string[];
+  /**
+   * This class does not oblige the indicator (SPEC §13.7) — the rules JSON
+   * prefixes its class statement `**Optional:**`. The row STAYS (invariant 4:
+   * 46 rows at every class, because a KSI that vanished at one class is a KSI
+   * nobody remembers at the class where it returns) and leaves every meter's
+   * numerator and denominator, so a provider who evidences one anyway is
+   * never shown 42 of 41.
+   */
+  optional: boolean;
 }
 
 export interface G8QueueRow {
@@ -123,7 +133,18 @@ export interface KsiRegisterView {
      * that does not exist is not a zero, it is unmeasured.
      */
     pointInTime: number | null;
+    /** the denominator: rows this class obliges (§13.7) — 41 of 46 at class b */
     total: number;
+    /** rows this class leaves optional, by id, ascending */
+    optional: readonly string[];
+    /** of those, how many carry at least one method anyway */
+    optionalEvidenced: number;
+    /**
+     * Absent when applicability is stated. Present when NEITHER source could
+     * say which indicators the class obliges, naming why — a denominator
+     * standing on an assumption has to say so out loud.
+     */
+    applicabilityUnstated?: string;
   };
   /** the G8 adjudication queue: unreviewed frontier controls, by leverage */
   queue: G8QueueRow[];
@@ -162,6 +183,12 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     );
   }
 
+  // Which indicators this class does not oblige (§13.7). Read from the
+  // catalog, never derived here: the loader is the only thing that reads the
+  // rules JSON's prefix, and a second reading in a renderer is a second
+  // answer waiting to disagree with the first.
+  const optionalIds = new Set(optionalKsis(input.catalog, input.offeringClass));
+
   const rows: KsiRegisterRowView[] = input.catalog.ksis.map((entry) => {
     const folded = foldedByKsi.get(entry.id);
     // With a scan recorded, the projector's row is the authority (Q2.3);
@@ -176,6 +203,7 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     const row: KsiRegisterRowView = {
       ksi: entry.id,
       name: entry.name,
+      optional: optionalIds.has(entry.id),
       methods: total,
       automated,
       floor,
@@ -246,6 +274,8 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
         (b.leverage ?? -1) - (a.leverage ?? -1) || a.displayId.localeCompare(b.displayId),
     );
 
+  const obliged = rows.filter((r) => !r.optional);
+
   return {
     offeringClass: input.offeringClass,
     datasetVersion: input.catalog.datasetVersion,
@@ -255,20 +285,28 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     window: input.catalog.windows[input.offeringClass],
     history,
     summary: {
-      floorMet: rows.filter((r) => r.floorMet === true).length,
-      atLeastOneAutomated: rows.filter((r) => r.automated > 0).length,
-      noMethod: rows.filter((r) => r.methods === 0).length,
+      // Every meter counts the OBLIGED rows only (§13.7). An optional row that
+      // is evidenced anyway is real work and is counted on its own line below,
+      // never folded into a numerator whose denominator excludes it.
+      floorMet: obliged.filter((r) => r.floorMet === true).length,
+      atLeastOneAutomated: obliged.filter((r) => r.automated > 0).length,
+      noMethod: obliged.filter((r) => r.methods === 0).length,
       everyMethodFresh:
         input.catalog.windows[input.offeringClass] === null
           ? null
-          : rows.filter((r) => r.methods > 0 && r.staleMethods === 0).length,
+          : obliged.filter((r) => r.methods > 0 && r.staleMethods === 0).length,
       historyMet:
-        history.months === null ? null : rows.filter((r) => r.historyMet === true).length,
+        history.months === null ? null : obliged.filter((r) => r.historyMet === true).length,
       allArtifacts:
-        repo === undefined ? null : rows.filter((r) => r.artifactsPresent === 5).length,
+        repo === undefined ? null : obliged.filter((r) => r.artifactsPresent === 5).length,
       pointInTime:
-        repo === undefined ? null : rows.filter((r) => r.pointInTimeMethods > 0).length,
-      total: rows.length,
+        repo === undefined ? null : obliged.filter((r) => r.pointInTimeMethods > 0).length,
+      total: obliged.length,
+      optional: [...optionalIds].sort(),
+      optionalEvidenced: rows.filter((r) => r.optional && r.methods > 0).length,
+      ...(input.catalog.applicability.stated
+        ? {}
+        : { applicabilityUnstated: input.catalog.applicability.reason }),
     },
     queue,
     legacy: {
@@ -365,7 +403,10 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
                 : row.worstGap === "G6"
                   ? red("G6 evidence")
                   : dim("—");
-    lines.push(`  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}`);
+    // An optional row keeps its place and is dimmed with the rules' own word:
+    // it is not owed at this class, and it is not gone either (§13.7).
+    const line = `  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}`;
+    lines.push(row.optional ? dim(`${line}  optional at class ${view.offeringClass}`) : line);
   }
 
   const s = view.summary;
@@ -377,6 +418,19 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     dim(
       `  covering all ${s.total} — a row that says "nothing evidences this from a pipeline" is a row`,
     ),
+    // The denominator, said out loud (§13.7). A meter that divided by 46 at a
+    // class owing 41 would overstate the provider's obligation by five rows.
+    s.applicabilityUnstated !== undefined
+      ? dim(
+          `  applicability: unstated — ${s.applicabilityUnstated}. Every one of the ${view.rows.length} rows is counted as obliged, which is the conservative reading and not a measured one`,
+        )
+      : s.optional.length === 0
+        ? dim(
+            `  applicability: class ${view.offeringClass} obliges all ${view.rows.length} indicators — none is optional at this class`,
+          )
+        : dim(
+            `  ${s.optional.length} optional at class ${view.offeringClass}, outside every meter above — ${s.optional.join(", ")} (${s.optionalEvidenced} evidenced anyway)`,
+          ),
     // the clock meter (Q3.2): every method judged against its own family's
     // owed window at fold time — the count is the fold's, never this render's
     view.window === null || view.summary.everyMethodFresh === null

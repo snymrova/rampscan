@@ -19,6 +19,7 @@ import { verify } from "../src/verify.js";
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const TREE = join(REPO_ROOT, "fixtures/ingest-evidence-tree");
 const DATASET_DIR = join(REPO_ROOT, "docs/context/ramprules/derived");
+const RULES_FILE = join(REPO_ROOT, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
 
 const REPO = "synthetic-csp/offering";
 
@@ -30,6 +31,7 @@ async function work(): Promise<{ ledgerDir: string; keysDir: string }> {
 const base = {
   repo: REPO,
   datasetDir: DATASET_DIR,
+      rulesFile: RULES_FILE,
   datasetPin: DEFAULT_DATASET_PIN,
 };
 

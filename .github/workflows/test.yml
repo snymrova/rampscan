@@ -81,8 +81,14 @@ jobs:
       # just generated, `conformance` exits 1 on bytes it just read — including
       # on a document whose own conformance stamp no longer matches a fresh
       # validation, which is the failure a regeneration can never surface.
+      #
+      # Both commands run on their DEFAULT paths from R0.3 (SPEC §13.8). Until
+      # then `conformance` had to be handed an explicit directory, because its
+      # default met `scan`'s openvex.json — a document no FedRAMP schema gates
+      # — and exited. A gate that only passes when pointed somewhere other than
+      # where it points itself is not testing the thing a provider would run.
       - name: package conformance check (FRC-CSO-JSN) over our own exports
         run: |
           set -euo pipefail
           pnpm rampscan exports --ledger "$RUNNER_TEMP/absent-ledger" --out "$RUNNER_TEMP/conformance"
-          pnpm rampscan conformance "$RUNNER_TEMP/conformance/exports"
+          pnpm rampscan conformance --out "$RUNNER_TEMP/conformance"

@@ -25,6 +25,7 @@ import { verify } from "../src/verify.js";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const DATASET_DIR = join(REPO_ROOT, "docs/context/ramprules/derived");
+const RULES_FILE = join(REPO_ROOT, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
 const TREE = join(REPO_ROOT, "fixtures/ingest-evidence-tree");
 const REPO = "fixtures/vulnerable-app";
 
@@ -70,6 +71,7 @@ describe("rampscan verify — ingested bundles (Q4.4)", () => {
       path: TREE,
       repo: REPO,
       datasetDir: DATASET_DIR,
+      rulesFile: RULES_FILE,
       datasetPin: DEFAULT_DATASET_PIN,
       ledgerDir: join(work, "ledger"),
       keysDir: join(work, "keys"),

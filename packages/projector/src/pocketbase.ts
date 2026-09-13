@@ -534,6 +534,11 @@ export const KSI_CATALOG_COLLECTION: CollectionSpec = {
     // rules' own order — repeated per row so the checklist quotes the pinned
     // JSON, never prose typed into the web app
     json("artifacts"),
+    // R0.2 (SPEC §13.7): the classes that do NOT oblige this indicator, read
+    // from the rules JSON's own `**Optional:**` prefix. Mirrored so the board
+    // divides by the same denominator the CLI prints — one computation, two
+    // surfaces, never two answers.
+    json("optional_at"),
   ],
   listRule: AUTHED,
   viewRule: AUTHED,
@@ -551,6 +556,8 @@ export interface KsiCatalogRow {
   controls: readonly string[];
   /** the five owed artifact texts (default_artifacts.KSI), rules' order */
   artifacts: readonly string[];
+  /** classes that do not oblige this indicator (§13.7); empty for most rows */
+  optionalAt: readonly string[];
 }
 
 /** Drop-and-refill the owed-side mirror — one writer, same as the projection. */
@@ -569,6 +576,7 @@ export async function writeKsiCatalogPocketBase(
       statement: row.statement,
       controls: row.controls,
       artifacts: row.artifacts,
+      optional_at: row.optionalAt,
     });
   }
 }
