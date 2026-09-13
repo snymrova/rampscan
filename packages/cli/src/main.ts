@@ -27,6 +27,15 @@ import { buildGapRegister, renderGapRegister } from "./gaps.js";
 import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
 import { checkConformance, renderConformance } from "./fedramp-conformance.js";
 import { loadOffering } from "./offering.js";
+import { mintComputedArtifact } from "./artifacts.js";
+import { scaffoldArtifact } from "./artifacts-scaffold.js";
+import {
+  buildArtifactsView,
+  checkArtifacts,
+  renderArtifact,
+  renderArtifactCheck,
+  renderArtifacts,
+} from "./artifacts-view.js";
 import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
@@ -58,6 +67,9 @@ import { verify } from "./verify.js";
 //                            and links (`--json` reproduces the scan artifact)
 //   rampscan frontier        the commit plane's answer to ramprules' automation
 //                            frontier: catalog × adjudications × the pinned frontier
+//   rampscan artifacts       the five owed per KSI (SDR-CSX-KSI): list, show one,
+//                            scaffold the two that are yours, generate the three
+//                            that are computed, check that what exists is sound
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -96,6 +108,17 @@ function usage(): never {
       "                    --strict also exits 1 on any unreviewed control",
       "  frontier --by-controls  the legacy control view, unchanged: catalog × adjudications ×",
       "                    the pinned frontier (ground rule 1 — both denominators stay printable)",
+      "  artifacts [KSI]   the five owed artifacts per KSI (SDR-CSX-KSI, SPEC \u00a713): every cell",
+      "                    naming its source and its age, with the empty ones as a work queue.",
+      "                    With a KSI, the long view of that one indicator's five slots",
+      "  artifacts scaffold <KSI> --artifact 1|3   write the stub for an artifact that is YOURS:",
+      "                    what rampscan measured is filled in, the claim is left blank, and the",
+      "                    reason-for-absence path is offered beside it. Never drafts (\u00a713.4)",
+      "  artifacts generate <KSI>  mint the computed artifacts (2, 4, 5) from the fold and append",
+      "                    them signed; prints the reason where there is nothing honest to compute",
+      "  artifacts check   is the plane SOUND \u2014 declarations that stopped resolving, bodies",
+      "                    past VDR-TFR-NMV, judgments about bytes that were revised. An empty",
+      "                    slot is not a finding here: how much is owed is frontier's question",
       "  exports           the two FedRAMP schema-target exports (plan Q5): a Certification",
       "                    Package Overview (FRC-CSO-PKG) and an Ongoing Certification Report",
       "                    (CCM-OCR-AVL) as JSON valid against the PINNED FedRAMP schemas —",
@@ -202,6 +225,8 @@ async function main(): Promise<void> {
       "run-url": { type: "string" },
       "baseline-ref": { type: "string" },
       schema: { type: "string" },
+      artifact: { type: "string" },
+      path: { type: "string" },
       "no-color": { type: "boolean" },
     },
   });
@@ -230,6 +255,7 @@ async function main(): Promise<void> {
     command !== "owed" &&
     command !== "frontier" &&
     command !== "gaps" &&
+    command !== "artifacts" &&
     command !== "exports" &&
     certClass !== "b" &&
     certClass !== "c"
@@ -542,6 +568,168 @@ async function main(): Promise<void> {
         process.exit(1);
       }
       return;
+    }
+
+    case "artifacts": {
+      // `rampscan artifacts` (plan R1.5, SPEC §13) — the artifact plane's
+      // surface. The list is a work queue with a command attached: every empty
+      // cell says whose move is next, and for artifacts 1 and 3 the honest
+      // answer is always "yours", because §13.4 forbids this appliance from
+      // drafting them however easy that would be to ship.
+      const artifactsClass = (values.class ?? "b") as OfferingClass;
+      if (!OFFERING_CLASSES.includes(artifactsClass)) usage();
+      const catalog = await loadKsiCatalog(catalogSources);
+      const recipes = await loadRecipes(recipesDir);
+      const methods = deriveCatalogMethods(
+        recipes,
+        allCollectors.map((c) => c.manifest),
+      );
+      const projector = createProjector({
+        recipes,
+        methods,
+        ksiIds: catalog.ksis.map((k) => k.id),
+        methodFloor: catalog.floors[artifactsClass].minPerKsi,
+        historyFloorMonths: catalog.historyFloors[artifactsClass].months,
+        machineWindow: catalog.windows[artifactsClass],
+        nonMachineWindow: catalog.nonMachineWindow,
+      });
+      const projection = await projector.fold(createLocalLedger(ledgerDir));
+      // one offering per document (§12.11): with several repos in a ledger the
+      // caller names which, rather than the view picking one and not saying
+      const repos = [...new Set(projection.methodRegisters.map((r) => r.repo))].sort();
+      if (values.repo === undefined && repos.length > 1) {
+        console.error(
+          `this ledger holds ${repos.length} repos — name one with --repo:\n` +
+            repos.map((r) => `  ${r}`).join("\n"),
+        );
+        process.exit(1);
+      }
+      const artifactsRepo = values.repo ?? repos[0] ?? null;
+      const subcommand = positionals[1];
+
+      if (subcommand === "scaffold") {
+        const ksiId = positionals[2];
+        const slot = Number(values.artifact ?? "1");
+        if (ksiId === undefined || (slot !== 1 && slot !== 3)) {
+          console.error(
+            "usage: rampscan artifacts scaffold <KSI> --artifact 1|3\n" +
+              "  Only 1 and 3 are scaffolded: they are the provider's own claims (SPEC §13.4).\n" +
+              "  2, 4 and 5 are computed — `rampscan artifacts generate <KSI>`.",
+          );
+          process.exit(1);
+        }
+        const register = projection.methodRegisters.find(
+          (r) => r.ksi === ksiId && (artifactsRepo === null || r.repo === artifactsRepo),
+        );
+        const result = await scaffoldArtifact({
+          catalog,
+          ksiId,
+          artifact: slot,
+          // the repository the stub is written into — the working directory,
+          // because a scaffold belongs beside the code it describes and this
+          // command is run from the repo like every other authoring step
+          root: process.cwd(),
+          ...(register !== undefined ? { register } : {}),
+          ...(values.path !== undefined ? { path: values.path } : {}),
+        });
+        console.log(
+          [
+            `wrote ${result.path}`,
+            "",
+            "  What rampscan measured is filled in. The claim is not: artifacts 1 and 3 are",
+            "  yours, and this tool does not draft them (SPEC §13.4). The reason-for-absence",
+            "  path is offered beside it and satisfies the rule just as well.",
+            "",
+            "  Then declare it, so the scan signs it and the clock starts:",
+            "",
+            ...JSON.stringify({ artifacts: [result.declaration] }, null, 2)
+              .split("\n")
+              .map((l) => `    ${l}`),
+            "",
+          ].join("\n"),
+        );
+        break;
+      }
+
+      if (subcommand === "generate") {
+        const ksiId = positionals[2];
+        if (ksiId === undefined) {
+          console.error("usage: rampscan artifacts generate <KSI> [--artifact 2|4|5]");
+          process.exit(1);
+        }
+        if (artifactsRepo === null) {
+          console.error("this ledger holds no repo to generate against — run a scan first");
+          process.exit(1);
+        }
+        const slots =
+          values.artifact === undefined
+            ? ([2, 4, 5] as const)
+            : ([Number(values.artifact)] as ReadonlyArray<number>);
+        for (const slot of slots) {
+          if (slot !== 2 && slot !== 4 && slot !== 5) {
+            console.error(
+              `artifact ${slot} is not computed: 1 and 3 are the provider's own claims ` +
+                `(SPEC §13.4) — rampscan artifacts scaffold ${ksiId} --artifact ${slot}`,
+            );
+            process.exit(1);
+          }
+          const minted = await mintComputedArtifact({
+            repo: artifactsRepo,
+            ksiId,
+            artifact: slot,
+            projection,
+            offeringClass: artifactsClass,
+            datasetDir,
+            datasetPin,
+            ledgerDir,
+            keysDir,
+          });
+          console.log(
+            minted.minted
+              ? `  ${ksiId} #${slot} — minted ${minted.bodyDigest.slice(0, 12)}… → ${minted.digest.slice(0, 12)}…`
+              : `  ${ksiId} #${slot} — not minted: ${minted.reason}`,
+          );
+        }
+        break;
+      }
+
+      const view = buildArtifactsView({
+        catalog,
+        offeringClass: artifactsClass,
+        repo: artifactsRepo,
+        methodRegisters: projection.methodRegisters,
+      });
+
+      if (subcommand === "check") {
+        const problems = checkArtifacts(view);
+        if (values.json) console.log(JSON.stringify({ view, problems }, null, 2));
+        else console.log(renderArtifactCheck(view, problems));
+        if (problems.length > 0) process.exit(1);
+        break;
+      }
+
+      // `artifacts show <KSI>` and the bare `artifacts <KSI>` are the same
+      // view: the verb reads better in prose and in a scaffold's own pointer,
+      // and typing the id alone is what an operator does at a prompt
+      const showing = subcommand === "show" ? positionals[2] : subcommand;
+      if (subcommand === "show" && showing === undefined) {
+        console.error("usage: rampscan artifacts show <KSI>");
+        process.exit(1);
+      }
+      if (showing !== undefined) {
+        const row = view.rows.find((r) => r.ksi === showing);
+        if (row === undefined) {
+          console.error(`unknown KSI ${showing} — not in the pinned catalog at ${catalog.datasetVersion}`);
+          process.exit(1);
+        }
+        if (values.json) console.log(JSON.stringify(row, null, 2));
+        else console.log(renderArtifact(view, row, new Date()));
+        break;
+      }
+
+      if (values.json) console.log(JSON.stringify(view, null, 2));
+      else console.log(renderArtifacts(view, new Date()));
+      break;
     }
 
     case "gaps": {
