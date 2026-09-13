@@ -94,6 +94,44 @@ test("KSI board: 46 rows always, a covered KSI expands to the interrogation view
   await expect(drawer.getByRole("link", { name: /evidence → / }).first()).toBeVisible();
 });
 
+test("artifact plane: an authored body reads in full, and the page has no way to edit it (R1.6)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/");
+  await page.locator("select").nth(1).selectOption(FIXTURE_REPO);
+
+  // the fixture declares artifact 1 of KSI-SVC-SIN and really has the file, so
+  // the authored half of the plane reaches the board on a real scan
+  const row = page.locator("tr.rowlink", { hasText: "KSI-SVC-SIN" }).first();
+  await row.click();
+  const drawer = page.locator("tr.plain-row").first();
+  await expect(drawer).toContainText("owed artifacts");
+  // the cell names its source, its clock and its anchor — the artifact plane's
+  // three questions, answered on the board itself
+  await expect(drawer).toContainText("authored");
+  await expect(drawer).toContainText("docs/ksi/ksi-svc-sin-1.md");
+  await expect(drawer).toContainText("no review on record"); // §13.2: printed
+
+  // and the body opens, read from the LEDGER rather than the projection
+  await drawer.getByRole("link", { name: /^[0-9a-f]{12}…$/ }).first().click();
+  await expect(page.getByRole("heading", { name: /KSI-SVC-SIN · artifact 1/ })).toBeVisible();
+  await expect(page.locator("pre")).toContainText("encrypted in transit and at rest");
+  await expect(page.locator("pre")).toContainText("it does not write or edit a word of them");
+
+  // the "where this came from" drawer, which is the whole point of the page
+  await expect(page.locator("table.reg")).toContainText("authored");
+  await expect(page.locator("table.reg")).toContainText("the commit that last touched this file");
+  await expect(page.locator("table.reg")).toContainText("VDR-TFR-NMV owes three months");
+  await expect(page.locator("table.reg")).toContainText("none on record");
+
+  // READ-ONLY, and structurally: no form, no textarea, no way in to the prose.
+  // If this assertion ever has to be relaxed, the plan has failed (plan §4.2).
+  await expect(page.locator("textarea")).toHaveCount(0);
+  await expect(page.locator("form")).toHaveCount(0);
+  await expect(page.locator("input")).toHaveCount(0);
+});
+
 test("board: fixture scan rows render, flagship violated, no-daemon strip says so", async ({ page }) => {
   await signIn(page);
   await pickRepo(page);
