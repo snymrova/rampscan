@@ -10,6 +10,7 @@ import { join } from "node:path";
 import {
   LedgerStatement,
   canonicalJson,
+  isArtifact,
   isArtifactJudgment,
   isAttestation,
   isEvidenceBundle,
@@ -123,13 +124,25 @@ export function createLocalLedger(dir: string): LedgerStore {
       // recipe_id and verdict stay EMPTY rather than being invented. That is
       // what keeps `list({ recipeId })` from ever handing a run record to the
       // evidence chain that asked for a recipe's bundles.
+      //
+      // An artifact (R1.1) names no recipe and has no action, so both stay
+      // empty; its commit slot is filled ONLY from an authored body's anchor,
+      // where a commit is a fact the statement already carries. A computed,
+      // attested or assessed body has no anchor and gets no commit — §13.2's
+      // "absent means absent" reaches the index too, because a commit invented
+      // here is a commit `list({ commit })` would hand back as evidence that
+      // this body describes that tree.
       const row: IndexRow = {
         digest,
         appended_at: new Date().toISOString(),
         recipe_id:
           isEvidenceBundle(parsed) || isScopingEvent(parsed) ? parsed.predicate.recipe_id : "",
         repo: parsed.predicate.repo,
-        commit: isEvidenceBundle(parsed) || isScanRun(parsed) ? parsed.predicate.commit : "",
+        commit: isEvidenceBundle(parsed) || isScanRun(parsed)
+          ? parsed.predicate.commit
+          : isArtifact(parsed)
+            ? (parsed.predicate.anchor?.commit ?? "")
+            : "",
         verdict: isEvidenceBundle(parsed)
           ? parsed.predicate.verdict
           : isScopingEvent(parsed) || isArtifactJudgment(parsed) || isAttestation(parsed)

@@ -411,24 +411,85 @@ export interface ArtifactJudgmentInfo {
   proposedBy: string;
   approvedBy: string;
   timestamp: string; // ISO 8601
+  /** the artifact body these two keys approved (§13.6, R1.1) */
+  bodyDigest?: string;
+  /**
+   * Whether this judgment is about the bytes currently in the slot. False when
+   * the body was revised after it was judged — a later revision is UNJUDGED
+   * until judged again (§13.6) — and false for a judgment appended before the
+   * artifact plane existed, which named no bytes at all. A judgment that does
+   * not apply is still carried and still printed; what it may not do is decide
+   * anything about prose it never read.
+   */
+  appliesToLiveBody: boolean;
 }
 
 /**
- * One of the five owed KSI artifacts on a board row (Q3.3, G5) — 1-based
- * into `default_artifacts.KSI`, the rules' own order. Presence is mechanical
- * for 2 and 5 (`basis: "computed"`): artifact 5 is the methods' own live
- * evidence, artifact 2 the cadence record the scheduler already keeps.
- * Sufficiency of 1, 3, and 4 is judgment (`basis: "judged"`): present only
- * while a signed two-key event says sufficient — never a checkbox. Artifact
- * 4 (accuracy of the measurement system) is where the #23 class of defect
- * formally lives.
+ * The artifact body currently filling a slot (R1.1, SPEC §13.2) — lifted from
+ * the latest signed `Artifact` for the (repo, KSI, artifact) at fold time. The
+ * body itself stays in the ledger; what the projection carries is its address
+ * and its provenance, which is what every reader downstream needs to resolve
+ * it, age it, or render it into the SDR.
+ */
+export interface ArtifactBodyInfo {
+  /** the ledger address of the statement that filled this slot */
+  digest: Digest;
+  /** sha256 over the body bytes — what a judgment names (§13.6) and R2 renders */
+  bodyDigest: string;
+  /** who stood behind these bytes (§13.3) */
+  source: "authored" | "computed" | "attested" | "assessed";
+  /** the clock's start (§13.5) — VDR-TFR-NMV, three months, whatever the source */
+  validFrom: string; // ISO 8601
+  /**
+   * `validFrom` at or after the three-month threshold; null when the fold was
+   * given no non-machine window, which renders the same way as every other
+   * null clock on this board: nothing to check against.
+   */
+  freshMet: boolean | null;
+  /** how many bytes the body runs to — a 60 KiB "short summary" reads as one */
+  bodyBytes: number;
+  /** authored only: where the body lives, and what kills it when it moves */
+  anchor?: { commit: string; path: string };
+  /** the body_digest this revises, when it revises one */
+  supersedes?: string;
+  /** R4's forge plane, when it knows — absence is printed, never assumed benign */
+  reviewed?: boolean;
+}
+
+/**
+ * One of the five owed KSI artifacts on a board row (Q3.3, G5; R1.1) — 1-based
+ * into `default_artifacts.KSI`, the rules' own order.
+ *
+ * PRESENCE IS A BODY. Before the artifact plane this cell had no bytes behind
+ * it: artifacts 2 and 5 were "present" because the fold could see the material
+ * for them, and 1, 3 and 4 because a two-key event said `sufficient` about
+ * prose nobody could produce. Both readings survive as what they honestly are
+ * — `derivable` below, and `judgment` — and `present` now means exactly one
+ * thing: a signed `Artifact` fills this slot and no live judgment says
+ * otherwise. R2 must RENDER these five into a document, and a slot that counts
+ * as present with nothing to render is a gap the SDR would discover instead of
+ * the board.
+ *
+ * `basis` keeps its meaning as how the slot is answered for: `computed` for 2
+ * and 5, whose bodies are a function of the fold and which no signature may
+ * override, `judged` for 1, 3 and 4, whose sufficiency is the provider's call
+ * routed through the two-key path. Artifact 4 (accuracy of the measurement
+ * system) is where the #23 class of defect formally lives.
  */
 export interface ArtifactCell {
   artifact: 1 | 2 | 3 | 4 | 5;
   basis: "computed" | "judged";
   present: boolean;
+  /** the live body, when one has been appended */
+  body?: ArtifactBodyInfo;
   /** judged artifacts only: the live judgment, when one is recorded */
   judgment?: ArtifactJudgmentInfo;
+  /**
+   * Computed artifacts only: the fold holds the material to generate this body
+   * and no body has been minted yet (R1.3 mints them). A work queue with a
+   * command attached, not a scold — and never a substitute for the bytes.
+   */
+  derivable?: boolean;
 }
 
 /**

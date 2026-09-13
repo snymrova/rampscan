@@ -1,10 +1,14 @@
+import { createHash } from "node:crypto";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ClockWindow, LedgerEntry } from "@rampscan/core";
 import type {
+  Artifact,
   ArtifactJudgment,
+  ArtifactSlot,
+  ArtifactSource,
   Attestation,
   EvidenceBundle,
   JudgedArtifact,
@@ -500,16 +504,28 @@ function judgmentEntry(opts: {
   action?: "sufficient" | "insufficient";
   timestamp: string;
   repo?: string;
+  /** the body these two keys approved (§13.6) — omitted = a pre-R1.1 judgment */
+  judgedBody?: string;
 }): LedgerEntry {
+  const judgedDigest =
+    opts.judgedBody === undefined
+      ? undefined
+      : createHash("sha256").update(opts.judgedBody, "utf8").digest("hex");
   const bundle: ArtifactJudgment = {
     _type: "https://in-toto.io/Statement/v1",
-    subject: [{ name: "justification.txt", digest: { sha256: "b".repeat(64) } }],
+    subject: [
+      { name: "justification.txt", digest: { sha256: "b".repeat(64) } },
+      ...(judgedDigest !== undefined
+        ? [{ name: "artifact.md", digest: { sha256: judgedDigest } }]
+        : []),
+    ],
     predicateType: "https://rampscan.dev/artifact-judgment/v1",
     predicate: {
       action: opts.action ?? "sufficient",
       ksi_id: opts.ksi,
       artifact: opts.artifact,
       repo: opts.repo ?? "fixtures/app",
+      ...(judgedDigest !== undefined ? { body_digest: judgedDigest } : {}),
       justification: "reviewed against the pinned statement",
       proposed_by: "viewer@rampscan.local (pb:u1)",
       approved_by: "approver@rampscan.local (pb:u2)",
@@ -520,13 +536,61 @@ function judgmentEntry(opts: {
   return { digest: `digest-${counter++}`, bundle, appendedAt: opts.timestamp };
 }
 
-// Q3.3 — G5 artifacts (default_artifacts.KSI): five cells per (repo, KSI),
-// ascending. Presence of 2 and 5 is the fold's computation — artifact 5 is
-// the methods' own live evidence, artifact 2 the declared cadence on an
-// evidenced method; 1, 3, and 4 hold only while the live two-key judgment
-// says sufficient. Never a checkbox, and never green because empty.
-describe("G5 artifacts (Q3.3)", () => {
-  it("computes 2 and 5 from the methods' evidence: five cells always, judged ones absent without a judgment", () => {
+/** an artifact body filling a slot (R1.1, SPEC §13.2) — the plane's own object */
+function artifactEntry(opts: {
+  ksi: string;
+  artifact: ArtifactSlot;
+  timestamp: string;
+  source?: ArtifactSource;
+  body?: string;
+  repo?: string;
+  validFrom?: string;
+  anchor?: { commit: string; path: string };
+}): LedgerEntry {
+  const source = opts.source ?? "authored";
+  const body = opts.body ?? `## ${opts.ksi} artifact ${opts.artifact}\n\nthe measures, summarised.`;
+  const bundle: Artifact = {
+    _type: "https://in-toto.io/Statement/v1",
+    subject: [
+      { name: "artifact.md", digest: { sha256: createHash("sha256").update(body, "utf8").digest("hex") } },
+    ],
+    predicateType: "https://rampscan.dev/artifact/v1",
+    predicate: {
+      ksi_id: opts.ksi,
+      artifact: opts.artifact,
+      repo: opts.repo ?? "fixtures/app",
+      source,
+      body,
+      body_digest: createHash("sha256").update(body, "utf8").digest("hex"),
+      ...(source === "authored"
+        ? { anchor: opts.anchor ?? { commit: "1".repeat(40), path: `docs/ksi/${opts.ksi}-${opts.artifact}.md` } }
+        : {}),
+      ...(source === "computed"
+        ? { generator: { pins: { dataset: "2026.07.14.01" }, tool_versions: {} } }
+        : {}),
+      valid_from: opts.validFrom ?? opts.timestamp,
+      dataset_version: "2026.07.14.01",
+      timestamp: opts.timestamp,
+    },
+  };
+  return { digest: `digest-${counter++}`, bundle, appendedAt: opts.timestamp };
+}
+
+/** the five bodies that clear G5, so a chain can reach the arms below it */
+function filled(ksi: string, timestamp: string): LedgerEntry[] {
+  return ([1, 2, 3, 4, 5] as ArtifactSlot[]).map((n) =>
+    artifactEntry({ ksi, artifact: n, timestamp }),
+  );
+}
+
+// Q3.3 + R1.1 — G5 artifacts (default_artifacts.KSI): five cells per
+// (repo, KSI), ascending, and PRESENCE IS A BODY. A slot is present when a
+// signed `Artifact` fills it and no live judgment calls those bytes
+// insufficient. What the fold can DERIVE for artifacts 2 and 5 is carried as
+// `derivable` — a work queue, never a substitute for the bytes — and the
+// two-key judgment on 1, 3 and 4 now judges bytes that exist (§13.6).
+describe("G5 artifacts (Q3.3, R1.1)", () => {
+  it("five cells always, and an evidenced KSI with no bodies holds none of them", () => {
     const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1);
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
     expect(row.artifacts.map((a) => a.artifact)).toEqual([1, 2, 3, 4, 5]);
@@ -537,25 +601,80 @@ describe("G5 artifacts (Q3.3)", () => {
       "judged",
       "computed",
     ]);
-    // the test recipe declares cadence "weekly", so the evidenced method
-    // carries the scheduler's cycle record (artifact 2) and IS artifact 5
-    expect(row.artifacts.map((a) => a.present)).toEqual([false, true, false, false, true]);
-    expect(row.artifactsPresent).toBe(2);
-    // floor met, no clock or history floor given — the artifacts are the
-    // worst remaining gap, said out loud rather than a green-by-default
+    // Evidence is the MATERIAL for artifacts 2 and 5, not the artifacts: the
+    // test recipe declares cadence "weekly", so the scheduler's cycle record
+    // (2) and the register itself (5) are derivable — and nobody has minted
+    // either body, so the row holds nothing and says so.
+    expect(row.artifacts.map((a) => a.present)).toEqual([false, false, false, false, false]);
+    expect(row.artifacts.map((a) => a.derivable)).toEqual([
+      undefined,
+      true,
+      undefined,
+      undefined,
+      true,
+    ]);
+    expect(row.artifactsPresent).toBe(0);
     expect(row.gap).toBe("G5");
   });
 
-  it("methods without evidence hold neither computed artifact — never green because empty", () => {
+  it("methods without evidence are not even derivable — never green because empty", () => {
     const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1);
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-CMT-CHG")!;
     expect(row.methods.length).toBeGreaterThan(0); // two-ksis + never-scanned derive here
-    expect(row.artifacts.find((a) => a.artifact === 2)!.present).toBe(false);
-    expect(row.artifacts.find((a) => a.artifact === 5)!.present).toBe(false);
+    expect(row.artifacts.find((a) => a.artifact === 2)!.derivable).toBe(false);
+    expect(row.artifacts.find((a) => a.artifact === 5)!.derivable).toBe(false);
     expect(row.artifactsPresent).toBe(0);
   });
 
-  it("a sufficient two-key judgment makes a judged artifact present, identities carried", () => {
+  it("a body fills its slot, carrying its source, its clock and its anchor", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
+      ],
+      1,
+    );
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .artifacts.find((a) => a.artifact === 1)!;
+    expect(cell.present).toBe(true);
+    expect(cell.body?.source).toBe("authored");
+    expect(cell.body?.anchor?.path).toBe("docs/ksi/KSI-SCR-MIT-1.md");
+    expect(cell.body?.bodyDigest).toHaveLength(64);
+    expect(cell.body?.bodyBytes).toBeGreaterThan(0);
+    expect(cell.body?.validFrom).toBe(T1);
+    expect(cell.body?.freshMet).toBeNull(); // no non-machine window given
+    expect(cell.body?.reviewed).toBeUndefined(); // nobody asked the forge (R4)
+  });
+
+  it("a body that a computed slot holds stops being derivable — the bytes replace the queue", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 5, source: "computed", timestamp: T1 }),
+      ],
+      1,
+    );
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .artifacts.find((a) => a.artifact === 5)!;
+    expect(cell.present).toBe(true);
+    expect(cell.derivable).toBeUndefined();
+    expect(cell.body?.source).toBe("computed");
+  });
+
+  it("all five bodies clear G5", () => {
+    const projection = foldWith(
+      [evidenceEntry({ recipe: "covered", timestamp: T1 }), ...filled("KSI-SCR-MIT", T1)],
+      1,
+    );
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.artifacts.every((a) => a.present)).toBe(true);
+    expect(row.artifactsPresent).toBe(5);
+    expect(row.gap).toBeUndefined();
+  });
+
+  it("a judgment without a body presents nothing — the checklist no longer approves the unwritten", () => {
     const projection = foldWith(
       [
         evidenceEntry({ recipe: "covered", timestamp: T1 }),
@@ -566,21 +685,67 @@ describe("G5 artifacts (Q3.3)", () => {
       1,
     );
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
-    expect(row.artifacts.every((a) => a.present)).toBe(true);
-    expect(row.artifactsPresent).toBe(5);
-    expect(row.gap).toBeUndefined();
+    expect(row.artifactsPresent).toBe(0);
+    expect(row.gap).toBe("G5");
+    // the decision is still a fact the board states — it simply no longer
+    // stands in for the prose it was a decision ABOUT
     const judged = row.artifacts.find((a) => a.artifact === 4)!;
     expect(judged.judgment?.action).toBe("sufficient");
     expect(judged.judgment?.approvedBy).toBe("approver@rampscan.local (pb:u2)");
     expect(judged.judgment?.digest).toBeDefined();
   });
 
-  it("the latest judgment wins: a signed insufficient withdraws, and the record still shows it", () => {
+  it("the latest body wins: a supersession replaces the bytes, never edits them", () => {
     const projection = foldWith(
       [
         evidenceEntry({ recipe: "covered", timestamp: T1 }),
-        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, timestamp: T1 }),
-        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, action: "insufficient", timestamp: T2 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, body: "first", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, body: "revised", timestamp: T2 }),
+      ],
+      1,
+    );
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .artifacts.find((a) => a.artifact === 1)!;
+    expect(cell.body?.bodyDigest).toBe(
+      createHash("sha256").update("revised", "utf8").digest("hex"),
+    );
+    expect(cell.body?.validFrom).toBe(T2);
+  });
+
+  it("the artifact clock is VDR-TFR-NMV, judged against the non-machine window", () => {
+    const stale = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1, validFrom: "2026-01-01T00:00:00.000Z" }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 3, timestamp: T1 }),
+      ],
+      1,
+      undefined,
+      { nonMachineWindow: { num: 3, unit: "months" } },
+    );
+    const row = stale.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    // an aged artifact still EXISTS — the clock is a second question, and the
+    // presence meter is not allowed to answer it
+    expect(row.artifacts.find((a) => a.artifact === 1)!.body?.freshMet).toBe(false);
+    expect(row.artifacts.find((a) => a.artifact === 1)!.present).toBe(true);
+    expect(row.artifacts.find((a) => a.artifact === 3)!.body?.freshMet).toBe(true);
+  });
+
+  it("a signed insufficient withdraws a body's presence, and the record still shows both", () => {
+    const body = "the measures, as written";
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 4, body, timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, judgedBody: body, timestamp: T1 }),
+        judgmentEntry({
+          ksi: "KSI-SCR-MIT",
+          artifact: 4,
+          action: "insufficient",
+          judgedBody: body,
+          timestamp: T2,
+        }),
       ],
       1,
     );
@@ -589,13 +754,58 @@ describe("G5 artifacts (Q3.3)", () => {
       .artifacts.find((a) => a.artifact === 4)!;
     expect(cell.present).toBe(false);
     expect(cell.judgment?.action).toBe("insufficient"); // a recorded withdrawal, not an absence
+    expect(cell.judgment?.appliesToLiveBody).toBe(true);
+    expect(cell.body).toBeDefined(); // the bytes it judged are still there to read
   });
 
-  it("a judgment lands per (KSI, artifact): the same index on another KSI stays absent", () => {
+  it("a judgment does not reach bytes it never read — a revision is unjudged until judged again", () => {
+    const first = "the measures, as first written";
     const projection = foldWith(
       [
         evidenceEntry({ recipe: "covered", timestamp: T1 }),
-        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 4, body: first, timestamp: T1 }),
+        judgmentEntry({
+          ksi: "KSI-SCR-MIT",
+          artifact: 4,
+          action: "insufficient",
+          judgedBody: first,
+          timestamp: T1,
+        }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 4, body: "rewritten after review", timestamp: T2 }),
+      ],
+      1,
+    );
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .artifacts.find((a) => a.artifact === 4)!;
+    // the withdrawal stands in the record and is printed — it simply decides
+    // nothing about prose it never read
+    expect(cell.judgment?.action).toBe("insufficient");
+    expect(cell.judgment?.appliesToLiveBody).toBe(false);
+    expect(cell.present).toBe(true);
+  });
+
+  it("a pre-R1.1 judgment names no bytes, so it applies to none", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 4, timestamp: T1 }),
+        judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, timestamp: T1 }),
+      ],
+      1,
+    );
+    const cell = projection.methodRegisters
+      .find((r) => r.ksi === "KSI-SCR-MIT")!
+      .artifacts.find((a) => a.artifact === 4)!;
+    expect(cell.judgment?.bodyDigest).toBeUndefined();
+    expect(cell.judgment?.appliesToLiveBody).toBe(false);
+  });
+
+  it("a body lands per (KSI, artifact): the same index on another KSI stays absent", () => {
+    const projection = foldWith(
+      [
+        evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
       ],
       1,
     );
@@ -603,13 +813,13 @@ describe("G5 artifacts (Q3.3)", () => {
     expect(other.artifacts.find((a) => a.artifact === 1)!.present).toBe(false);
   });
 
-  it("a judgment can stand on a zero-method KSI — G1 still outranks G5", () => {
+  it("a body can stand on a zero-method KSI — G1 still outranks G5", () => {
     // artifact 1's own text allows "an explanation of the reason ... for not
-    // having measures", so the judgment is meaningful where nothing derives
+    // having measures", so the body is meaningful where nothing derives
     const projection = foldWith(
       [
         evidenceEntry({ recipe: "covered", timestamp: T1 }),
-        judgmentEntry({ ksi: "KSI-CNA-CIC", artifact: 1, timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-CNA-CIC", artifact: 1, timestamp: T1 }),
       ],
       1,
     );
@@ -636,13 +846,29 @@ describe("G5 artifacts (Q3.3)", () => {
       (r) => r.repo === "fixtures/other" && r.ksi === "KSI-SCR-MIT",
     )!;
     expect(row).toBeDefined();
+    // the decision is visible; what it decided about is not there to present
+    expect(row.artifacts.find((a) => a.artifact === 1)!.judgment?.action).toBe("sufficient");
+    expect(row.artifacts.find((a) => a.artifact === 1)!.present).toBe(false);
+  });
+
+  it("an artifact-only ledger introduces its repo — a body is never invisible either", () => {
+    const projection = foldWith(
+      [artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1, repo: "fixtures/other" })],
+      1,
+    );
+    const row = projection.methodRegisters.find(
+      (r) => r.repo === "fixtures/other" && r.ksi === "KSI-SCR-MIT",
+    )!;
+    expect(row).toBeDefined();
     expect(row.artifacts.find((a) => a.artifact === 1)!.present).toBe(true);
   });
 
-  it("survives the sqlite round trip, judgments included", async () => {
+  it("survives the sqlite round trip, bodies and judgments included", async () => {
     const projection = foldWith(
       [
         evidenceEntry({ recipe: "covered", timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
+        artifactEntry({ ksi: "KSI-SCR-MIT", artifact: 4, source: "attested", timestamp: T1 }),
         judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 1, timestamp: T1 }),
         judgmentEntry({ ksi: "KSI-SCR-MIT", artifact: 4, action: "insufficient", timestamp: T2 }),
       ],
@@ -662,12 +888,8 @@ describe("G5 artifacts (Q3.3)", () => {
 // beside it, because that is exactly what the rule tells assessors to
 // reject. Unlabeled (pre-Q3.4) evidence neither triggers nor defends.
 describe("G6 evidence class (Q3.4)", () => {
-  /** the three judgments that clear G5, so the chain can reach the G6 arm */
-  const judged = (ksi: string) => [
-    judgmentEntry({ ksi, artifact: 1 as JudgedArtifact, timestamp: T1 }),
-    judgmentEntry({ ksi, artifact: 3 as JudgedArtifact, timestamp: T1 }),
-    judgmentEntry({ ksi, artifact: 4 as JudgedArtifact, timestamp: T1 }),
-  ];
+  /** the five bodies that clear G5, so the chain can reach the G6 arm */
+  const judged = (ksi: string) => filled(ksi, T1);
 
   it("lifts the signed assertion onto the cell; a pre-Q3.4 bundle leaves it absent", () => {
     const projection = foldWith(

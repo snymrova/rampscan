@@ -1,6 +1,8 @@
 import type { LedgerEntry } from "@rampscan/core";
+import { ARTIFACT_CLOCK_RULE } from "@rampscan/core";
 import {
   canonicalJson,
+  isArtifact,
   isAttestation,
   isEvidenceBundle,
   isScanRun,
@@ -134,6 +136,36 @@ export async function verify(options: {
       `claim    ${p.statement_id}#${p.ksi_id} → ${p.action} (${p.attestor_role})`,
       `repo     ${p.repo}`,
       `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
+    );
+  } else if (isArtifact(entry.bundle)) {
+    // an artifact body (R1.1, SPEC §13.2) verifies exactly like every other
+    // statement — same envelope, same address discipline. What it adds to the
+    // rendering is the artifact plane's own three questions: whose sentence
+    // this is (`source`), when its three-month VDR-TFR-NMV clock started
+    // (`valid_from`), and whether anyone is on record as having reviewed it.
+    //
+    // The review line is printed even when there is nothing to print, because
+    // §13.2 says its absence is stated rather than assumed benign: "reviewed
+    // by nobody on record" is a fact an assessor should have to read, not one
+    // they have to notice is missing.
+    const p = entry.bundle.predicate;
+    const bytes = Buffer.byteLength(p.body, "utf8");
+    lines.push(
+      `artifact ${options.digest.slice(0, 16)}…`,
+      `slot     ${p.ksi_id} #${p.artifact} — ${p.source}`,
+      `body     ${p.body_digest.slice(0, 16)}… (${bytes} bytes)` +
+        (p.supersedes !== undefined ? `, supersedes ${p.supersedes.slice(0, 12)}…` : ""),
+      ...(p.anchor !== undefined
+        ? [`anchor   ${p.anchor.path} @ ${p.anchor.commit.slice(0, 12)}`]
+        : []),
+      `review   ${
+        p.review !== undefined
+          ? `${p.review.source} ${p.review.reference} (${p.review.approvers.join(", ") || "no approvers named"})`
+          : "none on record"
+      }`,
+      `repo     ${p.repo}`,
+      `clock    ${ARTIFACT_CLOCK_RULE} from ${p.valid_from}`,
+      `signed   ${p.timestamp}`,
     );
   } else {
     // an artifact-sufficiency judgment (Q3.3) verifies exactly like a

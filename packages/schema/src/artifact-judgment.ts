@@ -12,6 +12,16 @@ import { IN_TOTO_STATEMENT_TYPE, Subject } from "./bundle.js";
 // of the measurement system) is where the #23 class of defect formally
 // lives from now on.
 //
+// R1.1 amends one thing (SPEC §13.6): the judgment now judges A BODY THAT
+// EXISTS. `body_digest` names the bytes that were approved, and the statement's
+// subject carries them beside the justification — so "artifact 3 is sufficient"
+// says WHICH sentences were sufficient, and a later revision of those bytes is
+// unjudged until judged again. It is optional in the schema and required at the
+// write path: a judgment appended before the artifact plane existed carries
+// none and must still parse, exactly as a pre-Q3.4 bundle carries no
+// `evidence_class`. A rendering that finds it absent says the judged bytes are
+// unknown rather than inventing which ones they were.
+//
 // Like a scoping, a judgment is a policy statement, not evidence: no commit
 // anchor, no assertions, subject = the justification the approver signs. It
 // dies only by being superseded by a later judgment for the same
@@ -38,6 +48,11 @@ export const ArtifactJudgmentPredicate = z.object({
   ksi_id: z.string().min(1),
   artifact: JudgedArtifact,
   repo: z.string(),
+  /**
+   * The `body_digest` of the artifact this judgment approved (§13.6). Absent
+   * only on judgments appended before the artifact plane existed.
+   */
+  body_digest: z.string().regex(/^[0-9a-f]{64}$/).optional(),
   justification: z.string().min(1),
   /** console identity that drafted the proposal, e.g. "viewer@rampscan.local (pb:abc123)" */
   proposed_by: z.string().min(1),
@@ -48,10 +63,26 @@ export const ArtifactJudgmentPredicate = z.object({
 });
 export type ArtifactJudgmentPredicate = z.infer<typeof ArtifactJudgmentPredicate>;
 
-export const ArtifactJudgment = z.object({
-  _type: z.literal(IN_TOTO_STATEMENT_TYPE),
-  subject: z.array(Subject).min(1),
-  predicateType: z.literal(RAMPSCAN_ARTIFACT_JUDGMENT_TYPE),
-  predicate: ArtifactJudgmentPredicate,
-});
+export const ArtifactJudgment = z
+  .object({
+    _type: z.literal(IN_TOTO_STATEMENT_TYPE),
+    subject: z.array(Subject).min(1),
+    predicateType: z.literal(RAMPSCAN_ARTIFACT_JUDGMENT_TYPE),
+    predicate: ArtifactJudgmentPredicate,
+  })
+  .superRefine((s, ctx) => {
+    // When the judged bytes are named, the signature must cover that name:
+    // a `body_digest` the subject does not carry would be a pointer nobody
+    // signed, which is the one thing an address may not be.
+    if (
+      s.predicate.body_digest !== undefined &&
+      !s.subject.some((sub) => sub.digest.sha256 === s.predicate.body_digest)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["subject"],
+        message: "the subject must carry the body_digest this judgment names (§13.6)",
+      });
+    }
+  });
 export type ArtifactJudgment = z.infer<typeof ArtifactJudgment>;

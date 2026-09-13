@@ -1,4 +1,5 @@
 import type {
+  ArtifactBodyInfo,
   ArtifactCell,
   CadenceGap,
   ClockWindow,
@@ -18,7 +19,9 @@ import type {
   ValidationVulnerability,
 } from "@rampscan/core";
 import type {
+  Artifact,
   ArtifactJudgment,
+  ArtifactSlot,
   Attestation,
   EvidenceBundle,
   OffenderPointer,
@@ -28,6 +31,7 @@ import type {
   ValidationMethod,
 } from "@rampscan/schema";
 import {
+  isArtifact,
   isArtifactJudgment,
   isAttestation,
   isEvidenceBundle,
@@ -67,6 +71,9 @@ interface ArtifactJudgmentEntry extends LedgerEntry {
 }
 interface AttestationEntry extends LedgerEntry {
   bundle: Attestation;
+}
+interface ArtifactEntry extends LedgerEntry {
+  bundle: Artifact;
 }
 
 /**
@@ -224,6 +231,7 @@ export function foldEntries(
     isArtifactJudgment(e.bundle),
   );
   const attestations = sorted.filter((e): e is AttestationEntry => isAttestation(e.bundle));
+  const artifactStatements = sorted.filter((e): e is ArtifactEntry => isArtifact(e.bundle));
 
   // latest observation of every (repo, path): who saw this content last, when
   const pathObservations = new Map<
@@ -343,6 +351,23 @@ export function foldEntries(
     judgmentByCell.set(`${p.repo} ${p.ksi_id} ${p.artifact}`, entry);
   }
 
+  // Live artifact body per (repo, KSI, artifact) — R1.1, SPEC §13.2. Sorted
+  // order → the latest wins, which IS supersession: an append-only ledger
+  // revises by writing again, and `supersedes` on the predicate records which
+  // bytes were revised rather than deciding which body stands. Nothing here
+  // withdraws a body, because the entity has no withdrawal: an artifact that
+  // should no longer stand is replaced by one that should, and an AUTHORED one
+  // whose file left the repository dies by anchor drift like any other
+  // evidence — which is R1.4's business, where the collector that produces
+  // those anchors lands.
+  const artifactByCell = new Map<string, ArtifactEntry>();
+  const artifactKsis = new Set<string>();
+  for (const entry of artifactStatements) {
+    const p = entry.bundle.predicate;
+    artifactByCell.set(`${p.repo} ${p.ksi_id} ${p.artifact}`, entry);
+    artifactKsis.add(p.ksi_id);
+  }
+
   // Live attestation per (repo, statement_id, KSI) — Q4.2, SPEC §12.9. Sorted
   // order → the latest wins, so a signed `withdrawn` retracts a standing
   // claim by superseding it, never by deletion. The withdrawn entry stays in
@@ -369,7 +394,9 @@ export function foldEntries(
   // otherwise have no rows at all.
   const repos = [
     ...new Set(
-      [...evidence, ...scopings, ...judgments, ...attestations].map((e) => e.bundle.predicate.repo),
+      [...evidence, ...scopings, ...judgments, ...attestations, ...artifactStatements].map(
+        (e) => e.bundle.predicate.repo,
+      ),
     ),
   ].sort();
   const cells = new Set<string>();
@@ -554,6 +581,10 @@ export function foldEntries(
         ...methodsByKsi.keys(),
         ...attestationKsis,
         ...ingestedKsis,
+        // an artifact is a record about a KSI (R1.1): a KSI whose only record
+        // is an authored body still owns a row, the same way one whose only
+        // record is an attestation does
+        ...artifactKsis,
       ]),
     ].sort();
     const registerByCell = new Map(registers.map((r) => [`${r.repo} ${r.recipeId}`, r]));
@@ -707,23 +738,81 @@ export function foldEntries(
             historySince = t;
           }
         }
-        // G5 artifacts (Q3.3): the five owed artifacts per KSI, ascending.
-        // Presence is mechanical for 2 and 5 — artifact 5 IS the methods'
-        // own live evidence (a violated verdict still counts: the validation
-        // record exists; what it says is G13's business), artifact 2 the
-        // cadence record the scheduler already keeps (a declared cadence on
-        // an evidenced method — a cycle declared over evidence that does not
-        // exist explains the cycle of nothing). Sufficiency of 1, 3, and 4
-        // is judgment: present only while the live two-key event says
-        // sufficient, and never a checkbox. Artifact 4 (accuracy of the
-        // measurement system) is where the #23 class of defect lives.
+        // G5 artifacts (Q3.3, R1.1): the five owed artifacts per KSI,
+        // ascending — and since the artifact plane landed, PRESENCE IS A BODY.
+        // A slot is present when a signed `Artifact` fills it (SPEC §13.2) and
+        // no judgment ABOUT THOSE BYTES calls them insufficient. That is a stricter
+        // reading than the one this fold shipped with, deliberately: R2 has to
+        // render these five into the Security Decision Record, and a slot that
+        // counted as present with nothing to render would be a gap the
+        // document discovers instead of the board.
+        //
+        // What the old reading knew is kept, as the two facts it actually was:
+        //
+        //   `derivable`  the fold holds the material to GENERATE artifacts 2
+        //                and 5 — artifact 5 from the methods' own live evidence
+        //                (a violated verdict still counts: the validation
+        //                record exists; what it says is G13's business),
+        //                artifact 2 from the cadence record the scheduler
+        //                already keeps (a declared cadence on an evidenced
+        //                method — a cycle declared over evidence that does not
+        //                exist explains the cycle of nothing). R1.3 mints those
+        //                bodies; until it does, this is a work queue.
+        //   `judgment`   the two-key sufficiency call on 1, 3 and 4, which now
+        //                judges bytes that exist (§13.6) — its subject names
+        //                the `body_digest` it approved, so a later revision of
+        //                those bytes is unjudged until judged again. Artifact 4
+        //                (accuracy of the measurement system) is where the #23
+        //                class of defect formally lives.
+        const bodyOf = (n: ArtifactSlot): ArtifactBodyInfo | undefined => {
+          const entry = artifactByCell.get(`${repo} ${ksi} ${n}`);
+          if (entry === undefined) return undefined;
+          const p = entry.bundle.predicate;
+          const info: ArtifactBodyInfo = {
+            digest: entry.digest,
+            bodyDigest: p.body_digest,
+            source: p.source,
+            validFrom: p.valid_from,
+            // §13.5: the artifact clock is VDR-TFR-NMV whatever the source,
+            // which is the non-machine window this fold was already given.
+            // Judged, never folded into `present`: an artifact that has aged
+            // past three months still EXISTS, and saying otherwise would make
+            // one number answer two questions.
+            freshMet:
+              thresholdByClock["non-machine"] === null
+                ? null
+                : p.valid_from >= thresholdByClock["non-machine"],
+            bodyBytes: Buffer.byteLength(p.body, "utf8"),
+          };
+          if (p.anchor !== undefined) info.anchor = { commit: p.anchor.commit, path: p.anchor.path };
+          if (p.supersedes !== undefined) info.supersedes = p.supersedes;
+          // A review is carried only when one is KNOWN (§13.2): `undefined`
+          // says nobody has asked the forge yet (R4), and a `false` here would
+          // say we asked and there was none. Different facts.
+          if (p.review !== undefined) info.reviewed = true;
+          return info;
+        };
         const judged = (n: 1 | 3 | 4): ArtifactCell => {
           const entry = judgmentByCell.get(`${repo} ${ksi} ${n}`);
+          const body = bodyOf(n);
+          // A judgment decides about the bytes it named (§13.6). One that
+          // named other bytes — or, for a pre-R1.1 judgment, none at all —
+          // does not reach the body standing here: a revision is unjudged
+          // until judged again, and a withdrawal of superseded prose may not
+          // reach through to prose nobody has read yet.
+          const applies =
+            entry !== undefined &&
+            body !== undefined &&
+            entry.bundle.predicate.body_digest !== undefined &&
+            entry.bundle.predicate.body_digest === body.bodyDigest;
           const cell: ArtifactCell = {
             artifact: n,
             basis: "judged",
-            present: entry?.bundle.predicate.action === "sufficient",
+            present:
+              body !== undefined &&
+              !(applies && entry?.bundle.predicate.action === "insufficient"),
           };
+          if (body !== undefined) cell.body = body;
           if (entry !== undefined) {
             const p = entry.bundle.predicate;
             cell.judgment = {
@@ -733,25 +822,39 @@ export function foldEntries(
               proposedBy: p.proposed_by,
               approvedBy: p.approved_by,
               timestamp: p.timestamp,
+              appliesToLiveBody: applies,
             };
+            if (p.body_digest !== undefined) cell.judgment.bodyDigest = p.body_digest;
           }
           return cell;
         };
         const evidencedCells = cells.filter((c) => c.bundleDigest !== undefined);
+        const computed = (n: 2 | 5, derivable: boolean): ArtifactCell => {
+          const body = bodyOf(n);
+          const cell: ArtifactCell = {
+            artifact: n,
+            basis: "computed",
+            present: body !== undefined,
+          };
+          if (body !== undefined) cell.body = body;
+          // stated only while it is the interesting fact: a slot that already
+          // holds its body does not need to be told it could have one
+          if (body === undefined) cell.derivable = derivable;
+          return cell;
+        };
         const artifacts: ArtifactCell[] = [
           judged(1),
-          {
-            artifact: 2,
-            basis: "computed",
-            present: evidencedCells.some(
+          computed(
+            2,
+            evidencedCells.some(
               (c) =>
                 c.recipeId !== undefined &&
                 registerByCell.get(`${repo} ${c.recipeId}`)?.cadence !== undefined,
             ),
-          },
+          ),
           judged(3),
           judged(4),
-          { artifact: 5, basis: "computed", present: evidencedCells.length > 0 },
+          computed(5, evidencedCells.length > 0),
         ];
         const artifactsPresent = artifacts.filter((a) => a.present).length;
         const row: MethodRegisterRow = {
