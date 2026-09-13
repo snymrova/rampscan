@@ -1,0 +1,257 @@
+<title>Fulfilling the KSIs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper:#f4f6f8; --surface:#ffffff; --surface-2:#eef1f5;
+    --ink:#141a21; --dim:#56626f; --faint:#838f9c;
+    --rule:#dbe1e8; --rule-soft:#e7ebf0;
+    --accent:#23628c; --accent-soft:#e4edf3;
+    --ok:#2c7a4e; --warn:#8d6210; --bad:#ab372d;
+    --ok-bg:#e6f2ea; --warn-bg:#f8efdb; --bad-bg:#f8e7e5;
+    --display:"Newsreader",Georgia,serif;
+    --body:"Public Sans",-apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10151b; --surface:#171d25; --surface-2:#1e252f;
+      --ink:#e2e8ee; --dim:#9aa6b4; --faint:#6d7987;
+      --rule:#2b333e; --rule-soft:#232b35;
+      --accent:#6fb3dd; --accent-soft:#1a2b38;
+      --ok:#5fbd85; --warn:#d5a53f; --bad:#e17063;
+      --ok-bg:#16291f; --warn-bg:#2b2415; --bad-bg:#2c1b19;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10151b; --surface:#171d25; --surface-2:#1e252f;
+    --ink:#e2e8ee; --dim:#9aa6b4; --faint:#6d7987;
+    --rule:#2b333e; --rule-soft:#232b35;
+    --accent:#6fb3dd; --accent-soft:#1a2b38;
+    --ok:#5fbd85; --warn:#d5a53f; --bad:#e17063;
+    --ok-bg:#16291f; --warn-bg:#2b2415; --bad-bg:#2c1b19;
+  }
+
+  * { box-sizing:border-box; }
+  body { background:var(--paper); color:var(--ink); font-family:var(--body);
+         font-size:16px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:780px; margin:0 auto; padding-inline:24px; padding-block:56px 96px; }
+
+  .masthead { border-bottom:2px solid var(--ink); padding-bottom:20px; margin-bottom:34px; }
+  .eyebrow { font-family:var(--mono); font-size:11.5px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--faint); margin:0 0 14px; }
+  h1 { font-family:var(--display); font-weight:500; font-size:clamp(34px,6vw,50px);
+       line-height:1.08; letter-spacing:-.015em; margin:0 0 12px; text-wrap:balance; }
+  .standfirst { font-size:18px; line-height:1.55; color:var(--dim); margin:0; max-width:60ch; }
+  .byline { font-family:var(--mono); font-size:11.5px; color:var(--faint); margin-top:18px;
+            display:flex; flex-wrap:wrap; gap:6px 14px; }
+
+  .verdict { background:var(--surface); border:1px solid var(--rule);
+             border-left:4px solid var(--accent); padding:24px 26px; margin-bottom:44px; }
+  .verdict h2 { font-family:var(--mono); font-size:11.5px; letter-spacing:.14em;
+                text-transform:uppercase; color:var(--accent); margin:0 0 14px; font-weight:600; }
+  .verdict p { margin:0 0 12px; } .verdict p:last-child { margin-bottom:0; }
+
+  section { margin-bottom:52px; }
+  h2.sec { font-family:var(--display); font-size:27px; font-weight:500; letter-spacing:-.01em;
+           line-height:1.2; margin:0 0 6px; text-wrap:balance; }
+  .sec-note { font-size:14px; color:var(--faint); margin:0 0 22px;
+              padding-bottom:14px; border-bottom:1px solid var(--rule-soft); }
+  h3 { font-family:var(--body); font-size:16px; font-weight:700; margin:28px 0 8px; }
+  p { margin:0 0 15px; }
+  a { color:var(--accent); text-underline-offset:2px; }
+  code { font-family:var(--mono); font-size:.875em; background:var(--surface-2);
+         padding:1px 5px; border-radius:3px; overflow-wrap:anywhere; }
+
+  /* the coverage ledger */
+  .ledger { display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule); margin-bottom:20px; }
+  .lrow { background:var(--surface); padding:14px 18px; display:grid;
+          grid-template-columns:64px 1fr auto; gap:16px; align-items:baseline; }
+  .lrow .n { font-family:var(--mono); font-size:21px; font-weight:600;
+             font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .lrow .lbl { font-size:14.5px; }
+  .lrow .lbl b { display:block; font-weight:600; }
+  .lrow .lbl span { color:var(--dim); font-size:13.5px; }
+  .lrow.tot { background:var(--surface-2); }
+  .lrow .n.ok { color:var(--ok); } .lrow .n.warn { color:var(--warn); } .lrow .n.bad { color:var(--bad); }
+  @media (max-width:520px){ .lrow{ grid-template-columns:56px 1fr; } .lrow .bar{ display:none; } }
+
+  .bar { width:120px; height:8px; background:var(--surface-2); border-radius:2px; overflow:hidden; align-self:center; }
+  .bar > i { display:block; height:100%; border-radius:2px; }
+
+  .tablewrap { overflow-x:auto; margin:0 0 16px; border:1px solid var(--rule); background:var(--surface); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { text-align:left; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em;
+       text-transform:uppercase; color:var(--faint); font-weight:600; padding:11px 14px;
+       border-bottom:1px solid var(--rule); white-space:nowrap; }
+  td { padding:11px 14px; border-bottom:1px solid var(--rule-soft); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  td.id { font-family:var(--mono); font-size:12.5px; white-space:nowrap; }
+
+  .tag { display:inline-block; font-family:var(--mono); font-size:10.5px; font-weight:600;
+         letter-spacing:.04em; padding:2px 7px; border-radius:2px; white-space:nowrap; }
+  .tag.ok { color:var(--ok); background:var(--ok-bg); }
+  .tag.warn { color:var(--warn); background:var(--warn-bg); }
+  .tag.bad { color:var(--bad); background:var(--bad-bg); }
+
+  .quote { background:var(--accent-soft); border:1px solid var(--rule); padding:20px 24px; margin:20px 0; }
+  .quote blockquote { margin:0 0 10px; font-family:var(--display); font-size:17.5px;
+                      line-height:1.48; color:var(--ink); }
+  .quote cite { font-style:normal; font-family:var(--mono); font-size:11.5px;
+                color:var(--faint); letter-spacing:.04em; }
+  .quote p { margin:12px 0 0; font-size:15px; }
+
+  ol.plan { list-style:none; counter-reset:step; margin:0; padding:0; }
+  ol.plan > li { counter-increment:step; position:relative; padding:0 0 26px 52px;
+                 border-left:1px solid var(--rule); margin-left:15px; }
+  ol.plan > li:last-child { border-left-color:transparent; padding-bottom:0; }
+  ol.plan > li::before { content:counter(step); position:absolute; left:-15px; top:-2px;
+    width:30px; height:30px; border-radius:50%; background:var(--ink); color:var(--paper);
+    font-family:var(--mono); font-size:12.5px; font-weight:600; display:grid; place-items:center; }
+  ol.plan h3 { margin:2px 0 6px; }
+  ol.plan p { font-size:15px; margin-bottom:9px; }
+  .effort { font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+            text-transform:uppercase; color:var(--faint); }
+
+  ul.plain { margin:0 0 15px; padding-left:20px; }
+  ul.plain li { margin-bottom:7px; }
+
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Research note · rampscan</p>
+    <h1>Fulfilling the KSIs</h1>
+    <p class="standfirst">What a Paramify and Coalfire session says about how 20x evidence is actually judged, and exactly how far rampscan's pipeline source can carry a provider.</p>
+    <div class="byline">
+      <span>12 September 2026</span><span>·</span>
+      <span>Source: “FedRAMP 20x: What's Changing and How to Prepare”, Paramify, 18 Jun 2026, 46m</span>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <h2>The short answer</h2>
+    <p>The session validates rampscan's core design almost point for point — the assessor's central question about any compliance tool is the exact question rampscan's population pill was built to answer.</p>
+    <p>But the coverage arithmetic is harder than the board suggests. Against Class B, <strong>13 of 41 required KSIs</strong> hold a method — not 13 of 46, because five are Optional at that class. Two more can be claimed today by re-mapping recipes that already run.</p>
+    <p><strong>Pipeline source tops out near half.</strong> Roughly 20–22 of 41 are reachable from code, IaC and CI. The rest need live cloud state or a human attestation, structurally. rampscan alone will never certify anyone — and that is a positioning fact, not a defect.</p>
+  </div>
+
+  <section>
+    <h2 class="sec">What the session confirms</h2>
+    <p class="sec-note">Speakers: Isaac Tusher, security engineer at Paramify · Jordan Foster, Coalfire assessment division · Mark Zerser, Coalfire public sector advisory</p>
+
+    <div class="quote">
+      <blockquote>“How do I know as the auditor that you've configured your Wiz properly to see all the resources? How do I know that you haven't just excluded everything?”</blockquote>
+      <cite>Isaac Tusher, on a client whose 20x evidence consisted of tool verdicts</cite>
+      <p>This is the single most important minute of the session for rampscan. It describes a client who submitted evidence that amounted to “our scanner says we're fine,” and the assessor's objection is not that the scanner is bad — it's that <strong>a verdict without its domain is unfalsifiable</strong>. rampscan already answers this: the population rides the pill, and a pass over an empty domain is drawn as a warning rather than green. That design decision now has a named assessor asking for exactly it.</p>
+    </div>
+
+    <p>Four more alignments, each worth noting because they are already built:</p>
+
+    <ul class="plain">
+      <li><strong>Green boards are a calibration failure.</strong> The panel relays FedRAMP's own line that a dashboard lit green all the time is probably misconfigured. rampscan's self-scan package reads <code>fresh: false</code>, and its gap engine computes G1–G6 rather than asserting them. That is the posture being asked for.</li>
+      <li><strong>The pipeline is where the evidence already lives.</strong> Paramify's advice on getting started is to sit GRC down with engineering and ask what the CI stages do and what they fail on — because those artifacts already exist. That is rampscan's entire premise, stated by a certified provider as the recommended first move.</li>
+      <li><strong>Schema is not the hard part.</strong> “Don't overly commit to OSCAL” — JSON or YAML, whatever is structured, because it can be restructured later. rampscan's choice to emit the FedRAMP JSON schemas directly rather than route through OSCAL is vindicated, and the CR26 exports are the right target.</li>
+      <li><strong>The validation pipeline is itself in scope.</strong> If a tool abstracts the validation away, that tool gets pulled into the assessment. rampscan's signed, replayable ledger — where <code>rebuild</code> proves the register's own bytes — is built for precisely that inspection.</li>
+    </ul>
+
+    <h3>The one caution</h3>
+    <p>Jordan Foster is explicit that the KSIs were never meant to map one-to-one onto NIST controls, and that the assessor's first job is to <em>verify the relevance</em> of what is being shown. That matters directly for the section below: sharing a control identifier with a KSI is a hypothesis about relevance, not evidence of it. Two of rampscan's candidate re-mappings survive that test and one does not.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">The coverage arithmetic, corrected</h2>
+    <p class="sec-note">Computed from the vendored ruleset 2026.07.14.01 and the 20 recipes in <code>recipes/commit/</code></p>
+
+    <p>The board counts 46 rows and reports 13 with a method. That is right for the catalog but wrong for the class. Five KSIs carry a <code>varies_by_class</code> block whose Class B statement begins <strong>“Optional:”</strong> — <code>CNA-EIS</code>, <code>MLA-ALA</code>, <code>SVC-PRR</code>, <code>SVC-RUD</code>, <code>SVC-VCM</code>. At Class B, which is what <code>rampscan.config.json</code> targets, the denominator is 41.</p>
+
+    <div class="ledger">
+      <div class="lrow tot"><div class="n">46</div><div class="lbl"><b>KSIs in the catalog</b><span>10 families, all status <code>stable</code></span></div><div class="bar"><i style="width:100%;background:var(--faint)"></i></div></div>
+      <div class="lrow"><div class="n">41</div><div class="lbl"><b>Required at Class B</b><span>five are Optional at this class and become required at C</span></div><div class="bar"><i style="width:89%;background:var(--accent)"></i></div></div>
+      <div class="lrow"><div class="n ok">13</div><div class="lbl"><b>Hold a method today</b><span>32% of the honest denominator</span></div><div class="bar"><i style="width:32%;background:var(--ok)"></i></div></div>
+      <div class="lrow"><div class="n warn">+2</div><div class="lbl"><b>Claimable by re-mapping alone</b><span>no new collector, no new scan — the evidence already runs</span></div><div class="bar"><i style="width:37%;background:var(--warn)"></i></div></div>
+      <div class="lrow"><div class="n bad">28</div><div class="lbl"><b>Required and uncovered</b><span>of which roughly half are structurally out of pipeline reach</span></div><div class="bar"><i style="width:68%;background:var(--bad)"></i></div></div>
+    </div>
+
+    <h3>The two free mappings</h3>
+    <p>Both are cases where a recipe already collects the right evidence and asserts the KSI's own NIST controls, but claims a different KSI.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>KSI</th><th>Why it already holds</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="id">KSI-MLA-EVC<br><span style="color:var(--faint)">Evaluating Configurations</span></td>
+            <td>Its statement is “the configuration of machine-based information resources, <em>especially infrastructure as code</em>, is persistently evaluated and tested.” <code>iac-baseline-clean</code> runs checkov across Dockerfiles, workflows and Terraform and asserts <code>cm-2</code> and <code>cm-6</code> — both of MLA-EVC's controls. It currently claims only <code>KSI-SVC-ACM</code>.</td>
+            <td><span class="tag ok">claim it</span></td>
+          </tr>
+          <tr>
+            <td class="id">KSI-SVC-VRI<br><span style="color:var(--faint)">Validating Resource Integrity</span></td>
+            <td>“Use cryptographic methods to validate the integrity of machine-based information resources.” rampscan asserts both of its controls: <code>si-7.1</code> via <code>ci-provenance-present</code>, <code>ci-actions-pinned</code> and <code>lockfile-pinned-deps</code>, and <code>cm-2.2</code> via <code>sbom-exists-and-fresh</code>. Signed attestations and SHA-pinned actions are cryptographic integrity validation on their face.</td>
+            <td><span class="tag ok">claim it</span></td>
+          </tr>
+          <tr>
+            <td class="id">KSI-CMT-RMV<br><span style="color:var(--faint)">Redeploying vs Modifying</span></td>
+            <td>Shares <code>cm-2</code>, <code>cm-5</code> and <code>cm-6</code> with three recipes, and the concept is pipeline-native. But the KSI requires proving a negative — that changes are <em>not</em> made by direct modification — and nothing rampscan runs establishes that. The control overlap is a coincidence of vocabulary.</td>
+            <td><span class="tag bad">needs a recipe</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">Where the remaining 28 actually live</h2>
+    <p class="sec-note">Classified by the evidence source each objective requires, not by how hard it would be</p>
+
+    <h3>Reachable from the pipeline — about 7 more</h3>
+    <p>The <code>documents</code> collector already implements a general pattern: a document the repository declares in <code>rampscan.config.json</code> exists, is non-empty, and is content-anchored to the commit. It serves two KSIs today. Four more are declared-artifact shaped: <code>MLA-LET</code> (the list of logged event types), <code>RPL-RRO</code> (RTO and RPO definitions), <code>RPL-ARP</code> (recovery plans), <code>INR-RIR</code> (incident response procedures). Those are configuration additions, not new code.</p>
+    <p><strong>With one caveat that must not be skipped.</strong> Every one of those KSIs says the artifact is “persistently reviewed.” A present document proves definition, never review. In rampscan's own vocabulary these land as a weak evidence class — a G6 remainder — and the board should say so rather than turn the row green. That is the honest version, and it is also the version that survives an assessor whose stated first job is verifying relevance.</p>
+    <p>Beyond documents, IaC analysis can reach the network-shaped indicators — <code>CNA-RNT</code> and <code>CNA-ULN</code> are about traffic flow controls that are declared in Terraform before they exist in a cloud account, and checkov already parses that tree.</p>
+
+    <h3>Only reachable from live cloud state — about 13</h3>
+    <p>The whole IAM family bar none (<code>AAM</code>, <code>APM</code>, <code>JIT</code>, <code>SNU</code>, <code>SUS</code>), most of CNA (<code>MAT</code>, <code>OFA</code>, <code>RVP</code>), <code>MLA-OSM</code>, <code>MLA-RVL</code>, <code>CMT-LMC</code>, <code>RPL-ABO</code>. These describe the running system, and no amount of reading the repository will produce them. rampscan cannot generate this evidence. It can only <strong>ingest</strong> it — which is exactly what the Q4 contract was built for, and what Paramify's 23 AWS scripts already emit.</p>
+
+    <h3>Only reachable from a human — about 7</h3>
+    <p><code>CED-RAT</code> (training effectiveness), <code>INR-AAR</code> and <code>INR-RPI</code> (after-action reports, incident pattern review), <code>PIY-RES</code> and <code>PIY-RIS</code> (executive support, security investment), <code>SVC-EIS</code> (improvement opportunities), <code>RPL-TRC</code> (recovery testing). The session reinforces that FedRAMP now treats people as information resources. rampscan's Q4.2 attestation path is the right shape for these: an attestation is a method that lands on a clock, so the register can show it aging rather than silently passing.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">What to build, in order</h2>
+    <p class="sec-note">Cheapest defensible gain first</p>
+
+    <ol class="plan">
+      <li>
+        <h3>Claim the two free KSIs</h3>
+        <p>Add <code>KSI-MLA-EVC</code> to <code>iac-baseline-clean</code> and <code>KSI-SVC-VRI</code> to the provenance and SBOM recipes. The scans already run; only the mapping changes. 13 → 15 of 41, with no new evidence and no new claim about what was measured.</p>
+        <p class="effort">An afternoon · pure mapping</p>
+      </li>
+      <li>
+        <h3>Extend the documents collector to four more declared artifacts</h3>
+        <p>Config, not code. Then make the board tell the truth about them: these rows hold a method of a weak evidence class, and the G6 remainder is the interesting number, not the coverage count. Resist letting them read as met.</p>
+        <p class="effort">Two days · and the honesty work is most of it</p>
+      </li>
+      <li>
+        <h3>Write the redeployment recipe</h3>
+        <p><code>CMT-RMV</code> is the one genuinely pipeline-native indicator still uncovered, and proving it means proving a negative: that deployments originate from version-controlled definitions. The <code>journal</code> and <code>repo-facts</code> collectors are the starting point.</p>
+        <p class="effort">Three to four days</p>
+      </li>
+      <li>
+        <h3>Build the ingestion adapter, because it is the real ceiling-breaker</h3>
+        <p>Thirteen KSIs are unreachable by any amount of pipeline work and reachable the moment someone else's cloud evidence can enter the ledger signed. The Q4 contract exists; what is missing is an adapter for the evidence shapes the ecosystem already produces. This is the difference between rampscan covering a third and rampscan covering most of a package.</p>
+        <p class="effort">The largest item, and the one that changes the product's position</p>
+      </li>
+      <li>
+        <h3>Say the ceiling out loud in the README</h3>
+        <p>Pipeline source reaches roughly half of Class B. Publishing that number, with the split, is a stronger claim than a coverage percentage — it says what rampscan is for and what it must be combined with. It also pre-empts the Wiz objection: rampscan is not asking anyone to believe a verdict, it is showing a domain.</p>
+        <p class="effort">An hour, and overdue</p>
+      </li>
+    </ol>
+  </section>
+
+</div>

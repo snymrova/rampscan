@@ -1,0 +1,481 @@
+<title>rampscan Upstream Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #f4f6f8;
+    --surface:    #ffffff;
+    --surface-2:  #eef1f5;
+    --ink:        #141a21;
+    --dim:        #56626f;
+    --faint:      #838f9c;
+    --rule:       #dbe1e8;
+    --rule-soft:  #e7ebf0;
+    --accent:     #23628c;
+    --accent-soft:#e4edf3;
+    --ok:         #2c7a4e;
+    --warn:       #8d6210;
+    --bad:        #ab372d;
+    --ok-bg:      #e6f2ea;
+    --warn-bg:    #f8efdb;
+    --bad-bg:     #f8e7e5;
+
+    --display: "Newsreader", Georgia, "Times New Roman", serif;
+    --body: "Public Sans", -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #10151b;
+      --surface:    #171d25;
+      --surface-2:  #1e252f;
+      --ink:        #e2e8ee;
+      --dim:        #9aa6b4;
+      --faint:      #6d7987;
+      --rule:       #2b333e;
+      --rule-soft:  #232b35;
+      --accent:     #6fb3dd;
+      --accent-soft:#1a2b38;
+      --ok:         #5fbd85;
+      --warn:       #d5a53f;
+      --bad:        #e17063;
+      --ok-bg:      #16291f;
+      --warn-bg:    #2b2415;
+      --bad-bg:     #2c1b19;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #10151b;
+    --surface:    #171d25;
+    --surface-2:  #1e252f;
+    --ink:        #e2e8ee;
+    --dim:        #9aa6b4;
+    --faint:      #6d7987;
+    --rule:       #2b333e;
+    --rule-soft:  #232b35;
+    --accent:     #6fb3dd;
+    --accent-soft:#1a2b38;
+    --ok:         #5fbd85;
+    --warn:       #d5a53f;
+    --bad:        #e17063;
+    --ok-bg:      #16291f;
+    --warn-bg:    #2b2415;
+    --bad-bg:     #2c1b19;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding-inline: 24px;
+    padding-block: 56px 96px;
+  }
+
+  /* ---- masthead ---- */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 20px; margin-bottom: 36px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(34px, 6vw, 50px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--dim);
+    margin: 0;
+    max-width: 60ch;
+  }
+  .byline {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--faint);
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  /* ---- the verdict ---- */
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    padding: 24px 26px;
+    margin-bottom: 44px;
+  }
+  .verdict h2 {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  .verdict p { margin: 0 0 12px; }
+  .verdict p:last-child { margin-bottom: 0; }
+  .verdict strong { font-weight: 700; }
+
+  /* ---- sections ---- */
+  section { margin-bottom: 52px; }
+  h2.sec {
+    font-family: var(--display);
+    font-size: 27px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .sec-note {
+    font-size: 14px;
+    color: var(--faint);
+    margin: 0 0 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  h3 {
+    font-family: var(--body);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 28px 0 8px;
+    letter-spacing: -0.005em;
+  }
+  p { margin: 0 0 15px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.875em;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    overflow-wrap: anywhere;
+  }
+
+  /* ---- tables ---- */
+  .tablewrap { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--rule); background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 600;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.who { font-family: var(--mono); font-size: 12.5px; }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .tag.ok   { color: var(--ok);   background: var(--ok-bg); }
+  .tag.warn { color: var(--warn); background: var(--warn-bg); }
+  .tag.bad  { color: var(--bad);  background: var(--bad-bg); }
+
+  /* ---- checked facts ---- */
+  .facts { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-bottom: 18px; }
+  .fact { background: var(--surface); padding: 15px 18px; display: grid; grid-template-columns: 76px 1fr; gap: 16px; align-items: start; }
+  .fact .state { padding-top: 1px; }
+  .fact .what { font-size: 14.5px; }
+  .fact .what b { font-weight: 600; display: block; margin-bottom: 2px; }
+  .fact .what span { color: var(--dim); }
+  @media (max-width: 500px) {
+    .fact { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  /* ---- case study pull ---- */
+  .case {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    padding: 22px 24px;
+    margin: 22px 0;
+  }
+  .case .label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  .case p { margin: 0 0 11px; font-size: 15px; }
+  .case p:last-child { margin-bottom: 0; }
+  .case blockquote {
+    margin: 0 0 11px;
+    padding-left: 14px;
+    border-left: 2px solid var(--accent);
+    font-family: var(--display);
+    font-size: 16.5px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  /* ---- the sequenced plan (numbering is real: these are ordered phases) ---- */
+  ol.plan { list-style: none; counter-reset: step; margin: 0; padding: 0; }
+  ol.plan > li {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 26px 52px;
+    border-left: 1px solid var(--rule);
+    margin-left: 15px;
+  }
+  ol.plan > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  ol.plan > li::before {
+    content: counter(step);
+    position: absolute;
+    left: -15px;
+    top: -2px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+  }
+  ol.plan h3 { margin: 2px 0 6px; }
+  ol.plan p { font-size: 15px; margin-bottom: 9px; }
+  .effort {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  ul.plain { margin: 0 0 15px; padding-left: 20px; }
+  ul.plain li { margin-bottom: 7px; }
+
+  /* ---- sources ---- */
+  .sources { border-top: 1px solid var(--rule); padding-top: 22px; }
+  .sources h2 {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  .sources ul { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+  .sources li { margin-bottom: 7px; overflow-wrap: anywhere; }
+  .sources a { color: var(--dim); }
+  .sources a:hover { color: var(--accent); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Research brief · rampscan</p>
+    <h1>Upstream Readiness</h1>
+    <p class="standfirst">What contributing to FedRAMP's open source actually means, whether rampscan is ready for it, and what "FedRAMP-appropriate UI" turns out to require.</p>
+    <div class="byline">
+      <span>12 September 2026</span>
+      <span>·</span>
+      <span>Verified against FedRAMP/schemas, FedRAMP/rules, FedRAMP/2026</span>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <h2>The short answer</h2>
+    <p><strong>FedRAMP's repositories do not merge outside code.</strong> Across the four active repos, every merged pull request came from a FedRAMP staff account. Three external pull requests exist; none were merged.</p>
+    <p><strong>But outside findings do land.</strong> One contributor filed an issue describing two schema defects found while building a provider tool, plus a pull request fixing them. The pull request was closed unmerged. Both defects were then fixed by staff pull requests, and the issue was closed.</p>
+    <p><strong>So the contribution is the diagnosis, not the patch</strong> — which is precisely what rampscan is built to produce.</p>
+  </div>
+
+  <section>
+    <h2 class="sec">How the repositories actually work</h2>
+    <p class="sec-note">Pull request history across the FedRAMP organization, all states, queried 12 Sep 2026</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Repository</th><th>Author</th><th class="num">PRs</th><th class="num">Merged</th><th>Who</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="4"><code>schemas</code></td><td class="who">dan-fedramp</td><td class="num">7</td><td class="num">7</td><td><span class="tag ok">staff</span></td></tr>
+          <tr><td class="who">thomasphung</td><td class="num">1</td><td class="num">1</td><td><span class="tag ok">staff</span></td></tr>
+          <tr><td class="who">spencer-scw</td><td class="num">2</td><td class="num">0</td><td><span class="tag bad">outside</span></td></tr>
+          <tr><td class="who">mikedizon</td><td class="num">1</td><td class="num">0</td><td><span class="tag bad">outside</span></td></tr>
+          <tr><td rowspan="2"><code>rules</code></td><td class="who">pete-gov</td><td class="num">20</td><td class="num">20</td><td><span class="tag ok">staff</span></td></tr>
+          <tr><td class="who">dan-fedramp</td><td class="num">7</td><td class="num">4</td><td><span class="tag ok">staff</span></td></tr>
+          <tr><td rowspan="2"><code>2026</code></td><td class="who">pete-gov</td><td class="num">27</td><td class="num">27</td><td><span class="tag ok">staff</span></td></tr>
+          <tr><td class="who">dan-fedramp</td><td class="num">8</td><td class="num">8</td><td><span class="tag ok">staff</span></td></tr>
+          <tr><td><code>community</code></td><td class="who">2 outside authors</td><td class="num">2</td><td class="num">0</td><td><span class="tag bad">outside</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>None of <code>schemas</code>, <code>rules</code> or <code>community</code> carries a <code>CONTRIBUTING.md</code> or a <code>LICENSE</code> file. There is no documented code-contribution path because there isn't one.</p>
+
+    <div class="case">
+      <p class="label">The case that matters</p>
+      <p><strong>Issue #3</strong> on <code>FedRAMP/schemas</code>, opened by an outside contributor, reports that the 2026-06-24 schemas carry unresolvable cross-document <code>$ref</code>s and that <code>finalDisposition</code> has no remediated value. The opening line describes where the defects came from:</p>
+      <blockquote>“Both were found while building a provider tool that generates the CR26 vulnerability report from live system state and validates…”</blockquote>
+      <p>Their pull request (#4) was closed unmerged on 17 July. Their issue stayed open. On 1 September it was closed — after staff pull request #15 fixed the <code>$ref</code> form and #22 added the remediated disposition value.</p>
+      <p><strong>The finding was adopted; the code was not.</strong> That is the entire playbook, and it describes rampscan's position exactly: a tool that validates real documents against the published schemas and can therefore say precisely where they are wrong.</p>
+    </div>
+
+    <h3>Where contribution is actually invited</h3>
+    <ul class="plain">
+      <li><strong>RFC comments.</strong> FedRAMP publishes proposed changes at <code>fedramp.gov/rfcs</code> with roughly 30-day windows, taken on GitHub Discussions. They ask for "explicit targeted feedback rather than general commentary."</li>
+      <li><strong>Issues against <code>schemas</code> and <code>rules</code>,</strong> as demonstrated above. <code>schemas</code> currently has exactly one open issue and no open pull requests.</li>
+      <li><strong>Publishing your own implementation.</strong> The established pattern is a self-owned repo — Paramify, Knox, Anitian and Confluent each published their own 20x pilot submission rather than contributing into FedRAMP's repos.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="sec">Where rampscan already stands</h2>
+    <p class="sec-note">Each row checked against upstream today, not inferred</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="state"><span class="tag ok">verified</span></div>
+        <div class="what"><b>The rules dataset is byte-identical to upstream</b><span>The vendored <code>fedramp-consolidated-rules.json</code> matches <code>FedRAMP/rules@main</code> exactly — same sha256, <code>135707003f0aaa5c…</code>. Version 2026.07.14.01, 46 KSIs across 10 families. Vendored verbatim, which is the right pattern.</span></div>
+      </div>
+      <div class="fact">
+        <div class="state"><span class="tag ok">verified</span></div>
+        <div class="what"><b>All three vendored schemas are semantically current</b><span>Certification Package Overview 0.1.4, Ongoing Certification Report 0.2.0, Common Definitions 0.3.0 — every declared version matches upstream, and parsed key-for-key the content is identical.</span></div>
+      </div>
+      <div class="fact">
+        <div class="state"><span class="tag ok">verified</span></div>
+        <div class="what"><b>Apache-2.0, public, and the history is clean</b><span>161 commits, three authors (two human, one bot), no stray identities in author fields or in the full history diff.</span></div>
+      </div>
+      <div class="fact">
+        <div class="state"><span class="tag warn">gap</span></div>
+        <div class="what"><b>The byte-pin cannot tell reformatting from republication</b><span>The vendored schema bytes differ from upstream's — not because FedRAMP changed anything, but because the files were reformatted on vendoring (upstream is ~50% larger, pretty-printed). The pin therefore fires on a difference that is already present, so it cannot fire on the one it exists to catch. Re-vendor byte-exact and the guard becomes real.</span></div>
+      </div>
+      <div class="fact">
+        <div class="state"><span class="tag warn">gap</span></div>
+        <div class="what"><b>The public repo description is pre-pivot</b><span>It still reads "keyed to ramprules recipe and control IDs." The product was re-keyed to KSIs in Q2 and the README rewritten in Q5. This is the first sentence anyone upstream would read. Tracked in #11, which is owner-blocked.</span></div>
+      </div>
+      <div class="fact">
+        <div class="state"><span class="tag warn">gap</span></div>
+        <div class="what"><b>GitHub does not detect the license</b><span><code>LICENSE</code> holds the Apache 2.0 text but the API reports no license, so the repo shows as unlicensed on its own page — which, for anyone evaluating whether they can use or cite the tool, reads as "no."</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">“UI/UX as per FedRAMP” — what that actually means</h2>
+    <p class="sec-note">The assumption to check before spending a week on it</p>
+
+    <p><strong>The U.S. Web Design System does not apply to rampscan.</strong> USWDS and the 21st Century IDEA govern federal agency public-facing websites, and reach contractors through contract language when they are building those sites. rampscan is a provider-side tool. Nobody will require USWDS of it.</p>
+
+    <p>More to the point: <strong>FedRAMP's own CR26 site isn't USWDS either.</strong> <code>FedRAMP/2026</code> builds a static documentation site with Zensical and MkDocs — breadcrumbs, a nested sidebar, an on-this-page rail, anchor-linked sections. Clean technical documentation, not a federal design-system implementation. Imitating USWDS would make rampscan look less like FedRAMP's ecosystem, not more.</p>
+
+    <h3>What does apply</h3>
+    <p>Section 508 incorporates WCAG 2.0 AA, and USWDS itself targets 2.1 AA. This matters for rampscan not as a mandate but as a procurement reality: the people who would open this console are assessors and agency reviewers, and accessibility is a question they are institutionally trained to ask.</p>
+    <p>Which lands on the finding from this morning's audit. <strong>The KSI board cannot be operated by keyboard at all.</strong> The 46 rows are click handlers on table rows with no tab stop and no focusable child; tabbing from the top of the page goes through the nav, the two selects and two glossary terms, then wraps — never touching a single row. The recipes page has 39 more of the same. That is the one accessibility fact that would survive contact with a federal reviewer, and it is entirely fixable.</p>
+
+    <h3>The real design question is audience, not style</h3>
+    <p>rampscan's console is a dark, dense operator register — good for the person running scans. FedRAMP's ecosystem is light technical documentation, read by assessors and reviewers. Those are different rooms. The exports shipped in Q5 — the Certification Package Overview and the Ongoing Certification Report — are the artifacts that leave the building, and they currently have no presence in the UI at all.</p>
+    <p>That suggests a split rather than a repaint: keep the operator console as it is, and give the certification package its own reviewer-facing surface built to be read by someone who has never run a scan.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">What preparing would take</h2>
+    <p class="sec-note">Ordered — each step's output is the next step's input</p>
+
+    <ol class="plan">
+      <li>
+        <h3>Re-vendor the schemas byte-exact</h3>
+        <p>Take upstream's bytes unmodified so the sha256 pin means what its comment says it means. Today the pin is pre-tripped by the project's own formatting, which makes the republication guard inert.</p>
+        <p class="effort">Half a day · unblocks everything downstream</p>
+      </li>
+      <li>
+        <h3>Point the conformance checker at the published schemas</h3>
+        <p>rampscan already has a hand-rolled validator over the closed keyword set and a command that reads documents on disk. Run it across all eleven published CR26 schemas rather than the three currently vendored, and record what fails to compile or to validate. This is the step that produces something worth filing.</p>
+        <p class="effort">Two to three days</p>
+      </li>
+      <li>
+        <h3>File what it finds as issues, with the tool named</h3>
+        <p>Follow issue #3's shape exactly: state the defect, state that it surfaced while building a provider tool that validates real documents, show the failing case. Do not open pull requests — the evidence says they are closed unmerged even when correct.</p>
+        <p class="effort">A day, and it is the highest-leverage day here</p>
+      </li>
+      <li>
+        <h3>File the RFC-0033 comment</h3>
+        <p>Already tracked as #72 and due before 9 October. Phase 4 covers Class D and self-hosted/hybrid offerings, and FedRAMP has asked for targeted feedback over general commentary. rampscan's pipeline-source evidence model has something specific to say about what self-hosted validation can and cannot demonstrate — that is the comment, not a general endorsement.</p>
+        <p class="effort">Deadline-bound · the only item here with an external clock</p>
+      </li>
+      <li>
+        <h3>Fix keyboard operability, then repair the repo's front door</h3>
+        <p>Make the board rows real tab stops. Then the description, the license detection, and topics — the three things that decide whether anyone arriving from an issue thread takes the project seriously. Repo settings are owner-blocked under #11.</p>
+        <p class="effort">Two days, plus whatever the settings unblock costs</p>
+      </li>
+      <li>
+        <h3>Decide on a reviewer-facing surface for the certification package</h3>
+        <p>Only worth doing once steps 1–4 have established whether anyone upstream is paying attention. Scope it then, against real interest rather than anticipated interest.</p>
+        <p class="effort">Deferred by design</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="sources">
+    <h2>Sources</h2>
+    <ul>
+      <li><a href="https://github.com/FedRAMP/schemas">github.com/FedRAMP/schemas</a> — JSON Schemas for machine-readable submissions; PR history and issue #3 queried via the GitHub API</li>
+      <li><a href="https://github.com/FedRAMP/rules">github.com/FedRAMP/rules</a> — machine-readable Consolidated Rules for 2026</li>
+      <li><a href="https://github.com/FedRAMP/2026">github.com/FedRAMP/2026</a> — Zensical/MkDocs site tooling for the CR26 site</li>
+      <li><a href="https://github.com/FedRAMP/community">github.com/FedRAMP/community</a> — working groups and RFC discussions</li>
+      <li><a href="https://www.fedramp.gov/community/">fedramp.gov/community</a> — how the public participates</li>
+      <li><a href="https://www.fedramp.gov/rfcs/0033/">fedramp.gov/rfcs/0033</a> — Phase 4 development tracks, Class D and self-hosted offerings</li>
+      <li><a href="https://www.fedramp.gov/2026/reference/20x/b/key-security-indicators/">fedramp.gov/2026 — Key Security Indicators</a></li>
+      <li><a href="https://designsystem.digital.gov/documentation/sample-contract-language/">designsystem.digital.gov — sample contract language for 21st Century IDEA</a></li>
+      <li><a href="https://www.section508.gov/develop/accessible-design-using-uswds/">section508.gov — accessible design using USWDS</a></li>
+      <li><a href="https://github.com/paramify/fedramp-20x-pilot">paramify/fedramp-20x-pilot</a>, <a href="https://github.com/Knox-Gov/fedramp_20x_pilot">Knox-Gov</a>, <a href="https://github.com/anitianinc/anitian-fedflex-fedramp-20x">Anitian</a>, <a href="https://github.com/confluentinc/fedramp-20x">Confluent</a> — self-published pilot submissions</li>
+    </ul>
+  </section>
+
+</div>
