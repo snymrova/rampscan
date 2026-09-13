@@ -411,7 +411,10 @@ function ArtifactRowView({
             {cell.body && (
               <>
                 {" "}·{" "}
-                <Link href={`/evidence/${cell.body.digest}`} className="mono">
+                {/* the artifact's own read-only page (R1.6) — NOT /evidence,
+                    which reads the projection's bundles collection and holds no
+                    artifact statement */}
+                <Link href={`/artifacts/${cell.body.digest}`} className="mono">
                   {cell.body.bodyDigest.slice(0, 12)}…
                 </Link>
               </>

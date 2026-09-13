@@ -46,6 +46,10 @@
 //
 // And the document family (plan N1b wave 1), which is the one place this
 // fixture is deliberately WELL BEHAVED:
+//   13. one declared KSI artifact that really exists (docs/ksi/ksi-svc-sin-1.md)
+//       — artifact 1 of KSI-SVC-SIN, the slot rampscan is forbidden to write,
+//       so the fixture demonstrates the authored plane doing what it claims
+//
 //   12. two declared documents that really exist (docs/access-control-policy.md
 //       and docs/admin-guide.md) plus a published SECURITY.md — the three
 //       document recipes need a repository where they reach `evidenced`, and
@@ -369,6 +373,29 @@ limb RA-05 (11)'s record leaves in its remainder: a committed channel is not a
 monitored one.
 `,
 );
+// A declared KSI artifact (plan R1.4): the authored half of the artifact
+// plane, honestly present like the documents above. The fixture needs one
+// repository where an authored body actually reaches the board — the broken
+// cases (missing, empty, oversized, uncommitted) are unit tests, where a temp
+// directory can be broken one way at a time.
+//
+// Artifact 1 on purpose: it is the slot rampscan is FORBIDDEN to write (SPEC
+// §13.4), so a fixture that carries one is the demonstration that the plane
+// works the way it is supposed to — a person wrote this, and the appliance
+// signed, anchored and clocked it without touching a word.
+write(
+  "docs/ksi/ksi-svc-sin-1.md",
+  `# KSI-SVC-SIN — artifact 1
+
+Information in vulnerable-app is encrypted in transit and at rest by the
+platform, and secrets are kept out of the repository by a gate that runs on
+every commit.
+
+Fixture content, written by a person: rampscan signs these bytes, anchors them
+to the commit that last touched this file and puts a three-month clock on them,
+and it does not write or edit a word of them (SPEC §13.4).
+`,
+);
 // The architecture contract (faults 10 and 11): the repo's OWN declared
 // intent, which the code above deliberately breaks. No `graph` block — entry
 // points stay inferred from package.json, which the J5 smoke pins on screen.
@@ -405,6 +432,14 @@ write(
           kind: "system-documentation",
           path: "docs/admin-guide.md",
           description: "installation, configuration and operation for an administrator",
+        },
+      ],
+      artifacts: [
+        {
+          ksi: "KSI-SVC-SIN",
+          artifact: 1,
+          path: "docs/ksi/ksi-svc-sin-1.md",
+          description: "how information in this service is secured, and by which measures",
         },
       ],
     },
