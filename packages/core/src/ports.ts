@@ -490,6 +490,15 @@ export interface ArtifactCell {
    * command attached, not a scold — and never a substitute for the bytes.
    */
   derivable?: boolean;
+  /**
+   * A body stood here and a later scan found its declaration unresolvable
+   * (R1.4): the file was deleted, emptied, or moved out from under the
+   * declaration. An `Artifact` has no withdrawal, so this is how an authored
+   * body dies — by a signed observation of its absence, carrying the scan's own
+   * sentence for why. The cell is empty and says what happened to it, which is
+   * the difference between a slot nobody filled and a slot that emptied.
+   */
+  absent?: { reason: string; at: string; path: string };
 }
 
 /**

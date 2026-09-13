@@ -203,6 +203,13 @@ export interface ArtifactCellRecord {
   };
   /** computed slots only: the fold holds the material, nobody minted the body */
   derivable?: boolean;
+  /**
+   * A body stood here and a later scan found its declaration unresolvable
+   * (R1.4) — deleted, emptied, or moved out from under the declaration. An
+   * artifact has no withdrawal, so this is how an authored one dies: by a
+   * signed observation of its absence, carrying the scan's own sentence.
+   */
+  absent?: { reason: string; at: string; path: string };
   /** judged artifacts only: the live judgment, when one is recorded */
   judgment?: {
     digest: string;

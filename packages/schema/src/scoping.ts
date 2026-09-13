@@ -4,6 +4,10 @@ import { RAMPSCAN_SCAN_RUN_TYPE, ScanRun } from "./scan-run.js";
 import { RAMPSCAN_ARTIFACT_JUDGMENT_TYPE, ArtifactJudgment } from "./artifact-judgment.js";
 import { RAMPSCAN_ATTESTATION_TYPE, Attestation } from "./attestation.js";
 import { RAMPSCAN_ARTIFACT_TYPE, Artifact } from "./artifact.js";
+import {
+  RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE,
+  ArtifactDeclarations,
+} from "./artifact-declarations.js";
 
 // ScopingEvent: the first two-key write (plan M3 E4). A `notApplicable`
 // scoping is drafted in the console, signed by the approver's identity, and
@@ -44,8 +48,8 @@ export type ScopingEvent = z.infer<typeof ScopingEvent>;
 
 /**
  * Everything the ledger stores: evidence bundles, the three two-key writes
- * (scoping, artifact judgment, attestation), artifact bodies (R1.1), and run
- * records. The union is the reason a new statement kind cannot be added
+ * (scoping, artifact judgment, attestation), artifact bodies and the scan's
+ * observation of what the repo declares (R1.1, R1.4), and run records. The union is the reason a new statement kind cannot be added
  * quietly — every exhaustive reader (the ledger index fill, `rampscan
  * verify`'s rendering, the fold) stops compiling until it says what it does
  * with the new member.
@@ -56,6 +60,7 @@ export const LedgerStatement = z.discriminatedUnion("predicateType", [
   ArtifactJudgment,
   Attestation,
   Artifact,
+  ArtifactDeclarations,
   ScanRun,
 ]);
 export type LedgerStatement = z.infer<typeof LedgerStatement>;
@@ -82,4 +87,8 @@ export function isAttestation(s: LedgerStatement): s is Attestation {
 
 export function isArtifact(s: LedgerStatement): s is Artifact {
   return s.predicateType === RAMPSCAN_ARTIFACT_TYPE;
+}
+
+export function isArtifactDeclarations(s: LedgerStatement): s is ArtifactDeclarations {
+  return s.predicateType === RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE;
 }

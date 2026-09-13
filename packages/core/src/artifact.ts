@@ -1,6 +1,8 @@
 import type {
   Artifact,
   ArtifactAnchor,
+  ArtifactDeclarations,
+  DeclarationObservation,
   ArtifactGenerator,
   ArtifactReview,
   ArtifactSlot,
@@ -8,6 +10,7 @@ import type {
 } from "@rampscan/schema";
 import {
   IN_TOTO_STATEMENT_TYPE,
+  RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE,
   RAMPSCAN_ARTIFACT_TYPE,
   artifactBodyDigest,
 } from "@rampscan/schema";
@@ -86,6 +89,45 @@ export function toArtifact(ctx: ArtifactContext): Artifact {
       ...(ctx.review !== undefined ? { review: ctx.review } : {}),
       ...(ctx.supersedes !== undefined ? { supersedes: ctx.supersedes } : {}),
       valid_from: ctx.validFrom ?? ctx.timestamp,
+      dataset_version: ctx.datasetVersion,
+      timestamp: ctx.timestamp,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The declaration observation (plan R1.4, SPEC §13.3)
+
+export interface ArtifactDeclarationsContext {
+  repo: string;
+  /** the commit this observation was made at — it is a claim about a tree */
+  commit: string;
+  /** the declaration file that was read, and its digest */
+  source: { path: string; sha256: string };
+  declarations: readonly DeclarationObservation[];
+  datasetVersion: string;
+  timestamp: string; // ISO 8601
+}
+
+/**
+ * The subject is the DECLARATION FILE, not the artifacts: what this statement
+ * observed is a config block, and the bodies it resolved are named inside it by
+ * their own digests. Signing the file that was read is what lets a reader check
+ * that the observation was made over the declarations they are looking at.
+ */
+export function toArtifactDeclarations(
+  ctx: ArtifactDeclarationsContext,
+): ArtifactDeclarations {
+  return {
+    _type: IN_TOTO_STATEMENT_TYPE,
+    subject: [{ name: ctx.source.path, digest: { sha256: ctx.source.sha256 } }],
+    predicateType: RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE,
+    predicate: {
+      repo: ctx.repo,
+      commit: ctx.commit,
+      declarations: [...ctx.declarations].sort((a, b) =>
+        `${a.ksi_id} ${a.artifact}`.localeCompare(`${b.ksi_id} ${b.artifact}`),
+      ),
       dataset_version: ctx.datasetVersion,
       timestamp: ctx.timestamp,
     },

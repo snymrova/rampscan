@@ -42,6 +42,13 @@ export {
   POLICY_RECIPE,
   SYSTEM_DOCS_RECIPE,
   loadDocuments,
+  loadDeclaredArtifacts,
+  collectAuthoredArtifacts,
+} from "./documents.js";
+export type {
+  AuthoredArtifact,
+  AuthoredArtifactProblem,
+  AuthoredArtifactScan,
 } from "./documents.js";
 export { checkov, CHECKOV_RESULTS_ARTIFACT, matchIacFiles } from "./checkov.js";
 export { spectral, SPECTRAL_RESULTS_ARTIFACT, matchSpecFiles } from "./spectral.js";
