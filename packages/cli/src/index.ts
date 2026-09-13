@@ -19,7 +19,7 @@ export { recordScoping } from "./scoping.js";
 export type { RecordScopingOptions } from "./scoping.js";
 export { recordArtifactJudgment } from "./artifact-judgment.js";
 export type { RecordArtifactJudgmentOptions } from "./artifact-judgment.js";
-export { generateArtifact4 } from "./artifact-generators.js";
+export { generateArtifact2, generateArtifact4, generateArtifact5 } from "./artifact-generators.js";
 export type { ArtifactGeneration, ArtifactGenerationInput } from "./artifact-generators.js";
 export { mintComputedArtifact, recordArtifact } from "./artifacts.js";
 export type { MintComputedArtifactOptions, MintedArtifact, RecordArtifactOptions } from "./artifacts.js";
