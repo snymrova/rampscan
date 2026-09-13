@@ -1,8 +1,10 @@
 import type {
+  CadenceGap,
   MethodCell,
   MethodRegisterRow,
   RegisterRow,
   ScanRunRow,
+  ValidationVulnerability,
 } from "@rampscan/core";
 import type { ArtifactGenerator, CollectorRun, ToolResolution } from "@rampscan/schema";
 
@@ -45,6 +47,18 @@ export interface ArtifactGenerationInput {
   registers: readonly RegisterRow[];
   /** the signed execution record, newest first, as the fold projects it */
   scanRuns: readonly ScanRunRow[];
+  /** cadence lapses the fold computed (I1d) — artifact 2's honest half */
+  gaps?: readonly CadenceGap[];
+  /** the failure→vulnerability feed (Q3.5, G13) — artifact 5's honest half */
+  vulnerabilities?: readonly ValidationVulnerability[];
+  /**
+   * Which rule each clock family answers to (§12.2), owed-side data passed in
+   * rather than written here: the fold strips a window down to its number and
+   * unit, and a rule id invented in this file would be a second copy of a
+   * pinned fact. Absent members render the family in plain words instead of
+   * citing a rule nobody handed us.
+   */
+  clockRules?: { machine?: string; nonMachine?: string };
   datasetVersion: string;
 }
 
@@ -350,6 +364,345 @@ export function generateArtifact4(input: ArtifactGenerationInput): ArtifactGener
         Object.entries(toolVersions).sort(([a], [b]) => a.localeCompare(b)),
       ),
       journal_digest: newestRun.digest,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Artifact 2 — the cycle (plan R1.3)
+//
+//   default_artifacts.KSI[2] — "Explanation of the cycle for any measures that
+//   are implemented persistently (if applicable)."
+//
+// The cycle is the scheduler's own contract, and the ledger has been recording
+// how it actually ran since M2. Both halves go in the body, because they are
+// different facts: the cadence a recipe DECLARES and the window a rule OWES
+// are the schedule; the timestamps in the chain are the repetitions that
+// happened. A document that printed only the first would be a plan, and
+// `SDR-CSX-KSI` item 2 is not asking for a plan.
+//
+// "(if applicable)" is the provider's call, exactly as artifact 4's second
+// half is: where no measure has ever run, this refuses rather than explaining
+// why a cycle was not needed.
+
+/** how a measure's owed window reads, cited to the rule that owes it */
+function describeWindow(cell: MethodCell, rules: { machine?: string; nonMachine?: string }): string {
+  const rule = cell.clock === "machine" ? rules.machine : rules.nonMachine;
+  const family = cell.clock === "machine" ? "the machine cadence" : "the non-machine cadence";
+  if (cell.window === null) {
+    return `no re-validation window was given to this fold for ${rule ?? family}`;
+  }
+  return `owed every ${cell.window.num} ${cell.window.unit} under ${rule ?? family}`;
+}
+
+export function generateArtifact2(input: ArtifactGenerationInput): ArtifactGeneration {
+  const rules = input.clockRules ?? {};
+  const methods = input.row.methods;
+  // "implemented persistently" is a claim about repetition, so it is read from
+  // the measures that have actually run: a method with no evidence keeps no
+  // cycle, whatever its declared cadence says it would keep.
+  const running = methods.filter((m) => m.freshAsOf !== undefined);
+  if (running.length === 0) {
+    return {
+      generated: false,
+      reason:
+        `no measure for ${input.ksiId} has run even once, so there is no cycle to explain. ` +
+        `Whether one is applicable here — the rule's own "(if applicable)" — is a claim about ` +
+        `your implementation, and rampscan does not write it (SPEC §13.4).`,
+    };
+  }
+
+  const registerByRecipe = new Map(
+    input.registers.filter((r) => r.repo === input.repo).map((r) => [r.recipeId, r]),
+  );
+  const recipeIds = new Set(
+    methods.map((m) => m.recipeId).filter((id): id is string => id !== undefined),
+  );
+
+  const lines: string[] = [];
+  lines.push(`## The validation cycle behind ${input.ksiId}`);
+  lines.push("");
+  lines.push(
+    `Computed by rampscan from the pinned cadence rules and its own ledger's record of when each ` +
+      `measure last ran. A cycle is a claim about repetition, so what follows is read from the ` +
+      `repetitions that are recorded — not from the schedule anyone intended to keep.`,
+  );
+  lines.push("");
+  lines.push(
+    `**${running.length} of ${methods.length} measure(s) for this indicator have run at least once.**`,
+  );
+  lines.push("");
+
+  lines.push("### The cycle each keeps");
+  lines.push("");
+  lines.push(
+    ...bulletList(
+      running.map((cell) => {
+        const register = cell.recipeId === undefined ? undefined : registerByRecipe.get(cell.recipeId);
+        const declared =
+          register?.cadence === undefined
+            ? "no cadence declared in the catalog"
+            : `declared cadence ${register.cadence}`;
+        const standing =
+          cell.freshMet === null
+            ? "nothing to judge it against"
+            : cell.freshMet
+              ? "inside its window"
+              : "PAST its window";
+        return (
+          `\`${cell.methodId}\` — ${declared}; ${describeWindow(cell, rules)}; last validated ` +
+          `${cell.freshAsOf}, ${standing}`
+        );
+      }),
+    ),
+  );
+  lines.push("");
+
+  // The lapses, from the fold's own cadence-gap computation (I1d): intervals
+  // where a cell sat past its owed window unrefreshed. This is the half a
+  // schedule cannot supply and the half an assessor is actually asking about.
+  const gaps = (input.gaps ?? []).filter(
+    (g) => g.repo === input.repo && recipeIds.has(g.recipeId),
+  );
+  lines.push("### Where the cycle has lapsed");
+  lines.push("");
+  if (gaps.length === 0) {
+    const noWindow = running.every((m) => m.window === null);
+    lines.push(
+      noWindow
+        ? "- no re-validation window was given to this fold, so no lapse can be computed — this " +
+            "section states nothing rather than reporting a clean record it never checked"
+        : "- no interval past the owed window is recorded for these measures",
+    );
+  } else {
+    const byRecipe = new Map<string, CadenceGap[]>();
+    for (const gap of gaps) {
+      (byRecipe.get(gap.recipeId) ?? byRecipe.set(gap.recipeId, []).get(gap.recipeId)!).push(gap);
+    }
+    lines.push(
+      ...bulletList(
+        [...byRecipe.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([recipeId, list]) => {
+            const longest = [...list].sort((a, b) => b.durationMs - a.durationMs)[0]!;
+            const days = Math.round(longest.durationMs / 86_400_000);
+            return (
+              `\`${recipeId}\` — ${list.length} interval(s) past the owed window; the longest ran ` +
+              `${longest.start} → ${longest.end} (${days}d)` +
+              (longest.ongoing ? ", and is still open" : "")
+            );
+          }),
+      ),
+    );
+  }
+  lines.push("");
+
+  const limits: string[] = [];
+  const never = methods.filter((m) => m.freshAsOf === undefined);
+  if (never.length > 0) {
+    limits.push(
+      `${never.length} measure(s) have never run, so they keep no cycle yet: ${never
+        .map((m) => `\`${m.methodId}\``)
+        .join(", ")}`,
+    );
+  }
+  const scoped = methods.filter((m) => m.state === "notApplicable");
+  if (scoped.length > 0) {
+    limits.push(
+      `${scoped.length} measure(s) stand scoped not-applicable by a signed two-key decision — a ` +
+        `cycle is not owed where the decision says the measure is not: ${scoped
+          .map((m) => `\`${m.methodId}\``)
+          .join(", ")}`,
+    );
+  }
+  if (limits.length > 0) {
+    lines.push("### What this does not say");
+    lines.push("");
+    lines.push(...bulletList(limits));
+    lines.push("");
+  }
+
+  const newest = running
+    .map((m) => m.freshAsOf!)
+    .sort()
+    .at(-1)!;
+  return {
+    generated: true,
+    body: lines.join("\n").trimEnd(),
+    generator: {
+      pins: { dataset: input.datasetVersion, freshest: newest },
+      tool_versions: {},
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Artifact 5 — validation (plan R1.3)
+//
+//   default_artifacts.KSI[5] — "Validation that the measures are accurately
+//   produced and are in place and working as intended, or that the reason for
+//   not having them is valid."
+//
+// This is the register, read out. "In place and working as intended" is the
+// verdict standing on each measure; "accurately produced" is what the verdict
+// was reached OVER, which is why the population rides every line — evidenced
+// over 412 dependencies and evidenced over none are the same word for very
+// different facts, and a body that printed only the word would be the second
+// of those pretending to be the first.
+//
+// The rule's other half — "or that the reason for not having them is valid" —
+// is a judgment, and the only form of it this body carries is a SIGNED
+// two-key scoping quoted with its approver. Quoting a recorded decision is not
+// making one, and the body says which it is doing.
+
+export function generateArtifact5(input: ArtifactGenerationInput): ArtifactGeneration {
+  const methods = input.row.methods;
+  const live = methods.filter((m) => m.bundleDigest !== undefined);
+  if (live.length === 0) {
+    return {
+      generated: false,
+      reason:
+        `no measure for ${input.ksiId} holds live evidence, so there is nothing whose production ` +
+        `or standing this artifact could validate. The rule's other half — that the reason for ` +
+        `not having measures is valid — is a claim about your risk, and rampscan does not write ` +
+        `it (SPEC §13.4).`,
+    };
+  }
+
+  const registerByRecipe = new Map(
+    input.registers.filter((r) => r.repo === input.repo).map((r) => [r.recipeId, r]),
+  );
+
+  const lines: string[] = [];
+  lines.push(`## Validation standing behind ${input.ksiId}`);
+  lines.push("");
+  lines.push(
+    `Computed by rampscan from the signed evidence in its own ledger: what each measure currently ` +
+      `says, what it was reached over, and what kind of evidence it is. Every line below resolves ` +
+      `to a bundle that verifies offline against its own signature.`,
+  );
+  lines.push("");
+  lines.push(
+    `**${live.length} of ${methods.length} measure(s) hold live evidence.**`,
+  );
+  lines.push("");
+
+  lines.push("### What each measure currently says");
+  lines.push("");
+  lines.push(
+    ...bulletList(
+      methods.map((cell) => {
+        const register = cell.recipeId === undefined ? undefined : registerByRecipe.get(cell.recipeId);
+        const parts: string[] = [cell.state];
+        if (register?.population !== undefined) {
+          parts.push(
+            register.population === 0
+              ? "over NOTHING — the check found no row to evaluate"
+              : `over ${register.population} observation(s)`,
+          );
+        }
+        parts.push(cell.evidenceClass ?? "evidence class unasserted");
+        if (cell.freshAsOf !== undefined) {
+          parts.push(
+            `validated ${cell.freshAsOf}` +
+              (cell.freshMet === false ? " (past its window)" : ""),
+          );
+        }
+        if (cell.bundleDigest !== undefined) parts.push(`bundle ${cell.bundleDigest.slice(0, 12)}…`);
+        return `\`${cell.methodId}\` — ${parts.join("; ")}`;
+      }),
+    ),
+  );
+  lines.push("");
+
+  const recipeIds = new Set(
+    methods.map((m) => m.recipeId).filter((id): id is string => id !== undefined),
+  );
+  const failures = (input.vulnerabilities ?? []).filter(
+    (v) => v.repo === input.repo && recipeIds.has(v.recipeId),
+  );
+  const open = failures.filter((v) => v.status === "open");
+  if (failures.length > 0) {
+    lines.push("### Where validation has failed");
+    lines.push("");
+    lines.push(
+      ...bulletList(
+        [...failures]
+          .sort((a, b) => b.detectedAt.localeCompare(a.detectedAt))
+          .map(
+            (v) =>
+              `\`${v.recipeId}\` — failed at ${v.detectedAt} (commit ${v.commit.slice(0, 12)}), ` +
+              (v.status === "open"
+                ? "still OPEN"
+                : `resolved ${v.resolvedAt} by ${v.resolvingDigest?.slice(0, 12) ?? "a later bundle"}…`),
+          ),
+      ),
+    );
+    lines.push("");
+  }
+
+  const limits: string[] = [];
+  const unevidenced = methods.filter((m) => m.state === "unevidenced");
+  if (unevidenced.length > 0) {
+    limits.push(
+      `${unevidenced.length} measure(s) hold no live evidence at all, so nothing here validates ` +
+        `them: ${unevidenced.map((m) => `\`${m.methodId}\``).join(", ")}`,
+    );
+  }
+  if (open.length > 0) {
+    limits.push(
+      `${open.length} validation failure(s) are still open — these measures are in place and are ` +
+        `NOT working as intended, and this document says so rather than averaging it away`,
+    );
+  }
+  const pointInTime = live.filter((m) => m.evidenceClass === "point-in-time");
+  const processGenerated = live.filter((m) => m.evidenceClass === "process-generated");
+  if (pointInTime.length > 0 && processGenerated.length === 0) {
+    limits.push(
+      `every live measure here is point-in-time evidence with nothing process-generated beside ` +
+        `it — FRR-PVA-AA-06 instructs assessors to reject point-in-time evidence as STANDALONE ` +
+        `evidence, and this document does not pretend otherwise`,
+    );
+  }
+  const unlabelled = live.filter((m) => m.evidenceClass === undefined);
+  if (unlabelled.length > 0) {
+    limits.push(
+      `${unlabelled.length} live measure(s) assert no evidence class — an unlabelled bundle ` +
+        `neither claims to be process-generated nor admits to being point-in-time`,
+    );
+  }
+  const scoped = methods.filter((m) => m.state === "notApplicable");
+  for (const cell of scoped) {
+    const scoping = cell.recipeId === undefined ? undefined : registerByRecipe.get(cell.recipeId)?.scoping;
+    limits.push(
+      scoping === undefined
+        ? `\`${cell.methodId}\` stands not-applicable`
+        : `\`${cell.methodId}\` stands not-applicable by a signed decision of ${scoping.approvedBy} ` +
+            `on ${scoping.timestamp}: "${scoping.justification}". rampscan records that decision ` +
+            `and does not endorse it — whether the reason is valid is the approver's claim, and ` +
+            `their name is on it`,
+    );
+  }
+  if (limits.length > 0) {
+    lines.push("### What this does not say");
+    lines.push("");
+    lines.push(...bulletList(limits));
+  }
+
+  const newest = live
+    .map((m) => m.freshAsOf)
+    .filter((t): t is string => t !== undefined)
+    .sort()
+    .at(-1);
+  return {
+    generated: true,
+    body: lines.join("\n").trimEnd(),
+    generator: {
+      pins: {
+        dataset: input.datasetVersion,
+        ...(newest !== undefined ? { freshest: newest } : {}),
+      },
+      tool_versions: {},
     },
   };
 }

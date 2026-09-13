@@ -1,6 +1,7 @@
 import { toArtifact } from "@rampscan/core";
 import type { Digest, Projection } from "@rampscan/core";
 import { loadKsiCatalogFromSlices } from "@rampscan/dataset";
+import type { OfferingClass } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import type {
   ArtifactAnchor,
@@ -11,7 +12,7 @@ import type {
 } from "@rampscan/schema";
 import { Artifact, isArtifact } from "@rampscan/schema";
 import { createLocalSigner } from "@rampscan/signer";
-import { generateArtifact4 } from "./artifact-generators.js";
+import { generateArtifact2, generateArtifact4, generateArtifact5 } from "./artifact-generators.js";
 
 // The artifact plane's write path (plan R1.1, SPEC §13.2) — `recordScoping`,
 // `recordArtifactJudgment` and `recordAttestation`'s fourth sibling, and the
@@ -151,6 +152,13 @@ export interface MintComputedArtifactOptions {
   artifact: 2 | 4 | 5;
   /** a fold of the ledger this artifact will be appended to */
   projection: Projection;
+  /**
+   * The offering's class, so artifact 2 can cite the RULE its machine window
+   * comes from. The number itself already rode in on the fold; only the rule
+   * id is class-dependent, and naming one without knowing the class would be
+   * a citation we made up.
+   */
+  offeringClass: OfferingClass;
   datasetDir: string;
   datasetPin: string;
   ledgerDir: string;
@@ -187,18 +195,42 @@ export async function mintComputedArtifact(
   }
 
   const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+  // §13.4 at this layer too. The schema is the structural backstop and would
+  // refuse the append anyway, but a caller reaching past the type deserves the
+  // rule's own sentence rather than a parse error that happens to say it — and
+  // the dispatch below must never quietly hand artifact 1 to another slot's
+  // generator on its way there.
+  if (options.artifact !== 2 && options.artifact !== 4 && options.artifact !== 5) {
+    return {
+      minted: false,
+      reason:
+        `artifact ${options.artifact} is not computed: artifacts 1 and 3 are the provider's own ` +
+        `claims and rampscan does not write them (SPEC §13.4). An absence with a reason is the ` +
+        `honest output here; a draft is not.`,
+    };
+  }
+
+  const machineRule = catalog.windows[options.offeringClass]?.requirementId;
   const input = {
     repo: options.repo,
     ksiId: options.ksiId,
     row,
     registers: options.projection.registers,
     scanRuns: options.projection.scanRuns,
+    gaps: options.projection.gaps,
+    vulnerabilities: options.projection.vulnerabilities,
+    clockRules: {
+      ...(machineRule !== undefined ? { machine: machineRule } : {}),
+      nonMachine: catalog.nonMachineWindow.requirementId,
+    },
     datasetVersion: catalog.datasetVersion,
   };
   const generated =
-    options.artifact === 4
-      ? generateArtifact4(input)
-      : { generated: false as const, reason: `artifact ${options.artifact} has no generator yet (R1.3)` };
+    options.artifact === 2
+      ? generateArtifact2(input)
+      : options.artifact === 4
+        ? generateArtifact4(input)
+        : generateArtifact5(input);
   if (!generated.generated) return { minted: false, reason: generated.reason };
 
   const recorded = await recordArtifact({

@@ -101,6 +101,7 @@ describe("computed artifact 4 from the exec journal (R1.2)", () => {
       ksiId: evidencedKsi,
       artifact: 4,
       projection,
+      offeringClass: "b",
       datasetDir: DATASET_DIR,
       datasetPin: DEFAULT_DATASET_PIN,
       ledgerDir,
@@ -135,12 +136,62 @@ describe("computed artifact 4 from the exec journal (R1.2)", () => {
     expect(cell.body?.source).toBe("computed");
   });
 
+  it("mints all three computable slots, and the board's k/5 moves to 3", async () => {
+    for (const artifact of [2, 5] as const) {
+      const minted = await mintComputedArtifact({
+        repo,
+        ksiId: evidencedKsi,
+        artifact,
+        projection,
+        offeringClass: "b",
+        datasetDir: DATASET_DIR,
+        datasetPin: DEFAULT_DATASET_PIN,
+        ledgerDir,
+        keysDir,
+      });
+      expect(
+        minted.minted,
+        "minted" in minted && !minted.minted ? `artifact ${artifact}: ${minted.reason}` : "",
+      ).toBe(true);
+    }
+
+    const after = await fold();
+    const row = after.methodRegisters.find((r) => r.repo === repo && r.ksi === evidencedKsi)!;
+    // 2, 4 and 5 computed; 1 and 3 are the provider's own claims and stay
+    // empty — which is the whole point of §13.4 rather than a shortfall
+    expect(row.artifactsPresent).toBe(3);
+    expect(row.artifacts.filter((a) => a.present).map((a) => a.artifact)).toEqual([2, 4, 5]);
+    expect(row.artifacts.filter((a) => !a.present).map((a) => a.artifact)).toEqual([1, 3]);
+    expect(row.gap).toBe("G5"); // still short, and honestly so
+  });
+
+  it("refuses to compute the two artifacts that are the provider's own claims", async () => {
+    for (const artifact of [1, 3]) {
+      await expect(
+        mintComputedArtifact({
+          repo,
+          ksiId: evidencedKsi,
+          // deliberately past the type: the refusal must be structural, not
+          // a matter of which values a caller happens to be able to spell
+          artifact: artifact as 2 | 4 | 5,
+          projection,
+          offeringClass: "b",
+          datasetDir: DATASET_DIR,
+          datasetPin: DEFAULT_DATASET_PIN,
+          ledgerDir,
+          keysDir,
+        }),
+      ).resolves.toMatchObject({ minted: false });
+    }
+  });
+
   it("refuses where nothing is automated, with the reason §13.4 requires", async () => {
     const minted = await mintComputedArtifact({
       repo,
       ksiId: unautomatedKsi,
       artifact: 4,
       projection,
+      offeringClass: "b",
       datasetDir: DATASET_DIR,
       datasetPin: DEFAULT_DATASET_PIN,
       ledgerDir,
@@ -163,6 +214,7 @@ describe("computed artifact 4 from the exec journal (R1.2)", () => {
       ksiId: evidencedKsi,
       artifact: 4,
       projection,
+      offeringClass: "b",
       datasetDir: DATASET_DIR,
       datasetPin: DEFAULT_DATASET_PIN,
       ledgerDir,
@@ -170,7 +222,10 @@ describe("computed artifact 4 from the exec journal (R1.2)", () => {
     });
     expect(again.minted).toBe(true);
     const entries = (await createLocalLedger(ledgerDir).list()).filter(
-      (e) => isArtifact(e.bundle) && e.bundle.predicate.ksi_id === evidencedKsi,
+      (e) =>
+        isArtifact(e.bundle) &&
+        e.bundle.predicate.ksi_id === evidencedKsi &&
+        e.bundle.predicate.artifact === 4,
     );
     const digests = new Set(
       entries.map((e) => (e.bundle as { predicate: { body_digest: string } }).predicate.body_digest),

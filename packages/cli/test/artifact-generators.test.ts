@@ -6,7 +6,7 @@ import type {
   ScanRunRow,
 } from "@rampscan/core";
 import type { CollectorRun } from "@rampscan/schema";
-import { generateArtifact4 } from "../src/artifact-generators.js";
+import { generateArtifact2, generateArtifact4, generateArtifact5 } from "../src/artifact-generators.js";
 import type { ArtifactGenerationInput } from "../src/artifact-generators.js";
 
 // R1.2 — computed artifact 4, from the exec journal:
@@ -23,8 +23,16 @@ const REPO = "fixtures/vulnerable-app";
 const KSI = "KSI-SCR-MIT";
 const T1 = "2026-09-10T00:00:00.000Z";
 
-function method(overrides: Partial<MethodCell> = {}): MethodCell {
-  return {
+/**
+ * A method cell. An override of `undefined` OMITS the field rather than
+ * setting it — the tree has `exactOptionalPropertyTypes` on, and "this method
+ * has no recipe" and "this method has a recipe of undefined" are not the same
+ * shape anywhere else in this codebase either.
+ */
+function method(
+  overrides: { [K in keyof MethodCell]?: MethodCell[K] | undefined } = {},
+): MethodCell {
+  const cell: Record<string, unknown> = {
     methodId: "pipeline:pinned-actions@repo",
     source: "pipeline",
     automated: true,
@@ -39,6 +47,10 @@ function method(overrides: Partial<MethodCell> = {}): MethodCell {
     freshMet: true,
     ...overrides,
   };
+  for (const key of Object.keys(cell)) {
+    if (cell[key] === undefined) delete cell[key];
+  }
+  return cell as unknown as MethodCell;
 }
 
 function collectorRun(overrides: Partial<CollectorRun> = {}): CollectorRun {
@@ -365,5 +377,222 @@ describe("generateArtifact4 (R1.2)", () => {
     const body = bodyOf(generateArtifact4(input({ runs: [newer, older] })));
     expect(body).toContain("run run-1");
     expect(body).not.toContain("run run-2");
+  });
+});
+
+// R1.3 — the two artifacts the fold may legitimately compute:
+//
+//   [2] "Explanation of the cycle for any measures that are implemented
+//        persistently (if applicable)."
+//   [5] "Validation that the measures are accurately produced and are in place
+//        and working as intended, or that the reason for not having them is
+//        valid."
+//
+// Both carry an "or …" or "(if applicable)" half that is the provider's claim,
+// and both refuse rather than write it. What they do carry is the half a
+// schedule and a green badge leave out: where the cycle actually lapsed, and
+// what a verdict was reached OVER.
+
+describe("generateArtifact2 — the cycle (R1.3)", () => {
+  it("reads the cycle from repetitions that are recorded, citing the owed rule", () => {
+    const body = bodyOf(
+      generateArtifact2({
+        ...input({}),
+        clockRules: { machine: "VDR-TFR-MVX", nonMachine: "VDR-TFR-NMV" },
+      }),
+    );
+    expect(body).toContain("1 of 1 measure(s) for this indicator have run at least once");
+    expect(body).toContain("owed every 7 days under VDR-TFR-MVX");
+    expect(body).toContain(`last validated ${T1}, inside its window`);
+    expect(body).toContain("not from the schedule anyone intended to keep");
+  });
+
+  it("refuses where no measure has ever run — '(if applicable)' is not ours to answer", () => {
+    const result = generateArtifact2(
+      input({ methods: [method({ freshAsOf: undefined, bundleDigest: undefined, state: "unevidenced" })] }),
+    );
+    expect(result.generated).toBe(false);
+    expect((result as { reason: string }).reason).toContain("has run even once");
+    expect((result as { reason: string }).reason).toContain("rampscan does not write it");
+  });
+
+  it("names the lapses the fold computed, longest first, and says when one is still open", () => {
+    const body = bodyOf(
+      generateArtifact2({
+        ...input({}),
+        gaps: [
+          {
+            repo: REPO,
+            recipeId: "pinned-actions",
+            bundleDigest: "b".repeat(64),
+            start: "2026-08-01T00:00:00.000Z",
+            end: "2026-08-21T00:00:00.000Z",
+            durationMs: 20 * 86_400_000,
+            ongoing: false,
+          },
+          {
+            repo: REPO,
+            recipeId: "pinned-actions",
+            bundleDigest: "c".repeat(64),
+            start: "2026-09-01T00:00:00.000Z",
+            end: "2026-09-05T00:00:00.000Z",
+            durationMs: 4 * 86_400_000,
+            ongoing: true,
+          },
+        ],
+      }),
+    );
+    expect(body).toContain("2 interval(s) past the owed window");
+    expect(body).toContain("(20d)");
+  });
+
+  it("states nothing rather than reporting a clean record it never checked", () => {
+    const body = bodyOf(generateArtifact2(input({ methods: [method({ window: null, freshMet: null })] })));
+    expect(body).toContain("no lapse can be computed");
+    expect(body).toContain("rather than reporting a clean record it never checked");
+  });
+
+  it("says which measures keep no cycle yet", () => {
+    const body = bodyOf(
+      generateArtifact2(
+        input({
+          methods: [
+            method(),
+            method({
+              methodId: "pipeline:never-ran@repo",
+              recipeId: "never-ran",
+              freshAsOf: undefined,
+              bundleDigest: undefined,
+              state: "unevidenced",
+            }),
+          ],
+        }),
+      ),
+    );
+    expect(body).toContain("1 measure(s) have never run, so they keep no cycle yet");
+  });
+});
+
+describe("generateArtifact5 — validation standing (R1.3)", () => {
+  it("carries what each verdict was reached OVER, not only the word", () => {
+    const body = bodyOf(
+      generateArtifact5(
+        input({
+          registers: [
+            {
+              repo: REPO,
+              recipeId: "pinned-actions",
+              ksiIds: [KSI],
+              controlIds: ["si-7.1"],
+              state: "evidenced",
+              runId: "run-1",
+              population: 412,
+            },
+          ],
+        }),
+      ),
+    );
+    expect(body).toContain("over 412 observation(s)");
+    expect(body).toContain("bundle bbbbbbbbbbbb…");
+  });
+
+  it("calls a verdict reached over nothing what it is", () => {
+    const body = bodyOf(
+      generateArtifact5(
+        input({
+          registers: [
+            {
+              repo: REPO,
+              recipeId: "pinned-actions",
+              ksiIds: [KSI],
+              controlIds: ["si-7.1"],
+              state: "evidenced",
+              runId: "run-1",
+              population: 0,
+            },
+          ],
+        }),
+      ),
+    );
+    expect(body).toContain("over NOTHING — the check found no row to evaluate");
+  });
+
+  it("refuses where nothing holds live evidence, and does not argue the absence was fine", () => {
+    const result = generateArtifact5(
+      input({ methods: [method({ bundleDigest: undefined, state: "unevidenced" })] }),
+    );
+    expect(result.generated).toBe(false);
+    expect((result as { reason: string }).reason).toContain("nothing whose production");
+    expect((result as { reason: string }).reason).toContain("rampscan does not write it");
+  });
+
+  it("says out loud that an open failure means the measure is NOT working as intended", () => {
+    const body = bodyOf(
+      generateArtifact5({
+        ...input({}),
+        vulnerabilities: [
+          {
+            repo: REPO,
+            recipeId: "pinned-actions",
+            ksiIds: [KSI],
+            detectedAt: "2026-09-09T00:00:00.000Z",
+            commit: "d".repeat(40),
+            bundleDigest: "e".repeat(64),
+            status: "open",
+          },
+        ],
+      }),
+    );
+    expect(body).toContain("still OPEN");
+    expect(body).toContain("NOT working as intended");
+    expect(body).toContain("rather than averaging it away");
+  });
+
+  it("applies FRR-PVA-AA-06 to itself: point-in-time standing alone is said so", () => {
+    const body = bodyOf(
+      generateArtifact5(input({ methods: [method({ evidenceClass: "point-in-time" })] })),
+    );
+    expect(body).toContain("reject point-in-time evidence as STANDALONE");
+  });
+
+  it("quotes a signed not-applicable decision with its approver, and endorses nothing", () => {
+    const body = bodyOf(
+      generateArtifact5(
+        input({
+          methods: [method(), method({ methodId: "pipeline:scoped@repo", recipeId: "scoped", state: "notApplicable" })],
+          registers: [
+            {
+              repo: REPO,
+              recipeId: "pinned-actions",
+              ksiIds: [KSI],
+              controlIds: ["si-7.1"],
+              state: "evidenced",
+              runId: "run-1",
+            },
+            {
+              repo: REPO,
+              recipeId: "scoped",
+              ksiIds: [KSI],
+              controlIds: ["si-7.1"],
+              state: "notApplicable",
+              scoping: {
+                digest: "f".repeat(64),
+                justification: "the offering ships no container image",
+                proposedBy: "viewer@rampscan.local (pb:u1)",
+                approvedBy: "approver@rampscan.local (pb:u2)",
+                timestamp: "2026-09-01T00:00:00.000Z",
+              },
+            },
+          ],
+        }),
+      ),
+    );
+    expect(body).toContain("the offering ships no container image");
+    expect(body).toContain("approver@rampscan.local (pb:u2)");
+    expect(body).toContain("does not endorse it");
+  });
+
+  it("is deterministic — the same fold renders the same bytes", () => {
+    expect(bodyOf(generateArtifact5(input({})))).toBe(bodyOf(generateArtifact5(input({}))));
   });
 });
