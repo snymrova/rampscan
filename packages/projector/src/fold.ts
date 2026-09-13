@@ -20,6 +20,7 @@ import type {
 } from "@rampscan/core";
 import type {
   Artifact,
+  ArtifactDeclarations,
   ArtifactJudgment,
   ArtifactSlot,
   Attestation,
@@ -32,6 +33,7 @@ import type {
 } from "@rampscan/schema";
 import {
   isArtifact,
+  isArtifactDeclarations,
   isArtifactJudgment,
   isAttestation,
   isEvidenceBundle,
@@ -74,6 +76,9 @@ interface AttestationEntry extends LedgerEntry {
 }
 interface ArtifactEntry extends LedgerEntry {
   bundle: Artifact;
+}
+interface ArtifactDeclarationsEntry extends LedgerEntry {
+  bundle: ArtifactDeclarations;
 }
 
 /**
@@ -232,6 +237,9 @@ export function foldEntries(
   );
   const attestations = sorted.filter((e): e is AttestationEntry => isAttestation(e.bundle));
   const artifactStatements = sorted.filter((e): e is ArtifactEntry => isArtifact(e.bundle));
+  const declarationStatements = sorted.filter((e): e is ArtifactDeclarationsEntry =>
+    isArtifactDeclarations(e.bundle),
+  );
 
   // latest observation of every (repo, path): who saw this content last, when
   const pathObservations = new Map<
@@ -367,6 +375,43 @@ export function foldEntries(
     artifactByCell.set(`${p.repo} ${p.ksi_id} ${p.artifact}`, entry);
     artifactKsis.add(p.ksi_id);
   }
+  // a declared slot is a record about a KSI too: a repo that declares an
+  // artifact and cannot resolve it should see the row, not lose it
+  for (const entry of declarationStatements) {
+    for (const decl of entry.bundle.predicate.declarations) artifactKsis.add(decl.ksi_id);
+  }
+
+  // The scan's latest word on each declared slot (R1.4). This is how an
+  // AUTHORED body dies: an `Artifact` has no withdrawal, so a deleted file has
+  // no bytes to supersede it with, and without this the body would keep
+  // counting toward its KSI's `k / 5` until the three-month clock ran out.
+  //
+  // Only an UNRESOLVED entry kills, and only one made after the body was
+  // signed. A slot that has simply left the config is not killed: the
+  // repository has stopped claiming that file answers for this KSI, which is
+  // not the same as saying the answer is gone — silence is not a statement, and
+  // the clock is what ages an artifact nobody maintains.
+  const unresolvedByCell = new Map<
+    string,
+    { reason: string; at: string; path: string }
+  >();
+  for (const entry of declarationStatements) {
+    const p = entry.bundle.predicate;
+    for (const decl of p.declarations) {
+      const key = `${p.repo} ${decl.ksi_id} ${decl.artifact}`;
+      // sorted order → the latest observation of this slot wins, resolved or
+      // not: a re-resolved declaration must be able to UN-kill the slot, or a
+      // restored file would leave the board wrong until the ledger was reread
+      if (decl.resolved) unresolvedByCell.delete(key);
+      else {
+        unresolvedByCell.set(key, {
+          reason: decl.reason ?? "the declaration did not resolve",
+          at: p.timestamp,
+          path: decl.path,
+        });
+      }
+    }
+  }
 
   // Live attestation per (repo, statement_id, KSI) — Q4.2, SPEC §12.9. Sorted
   // order → the latest wins, so a signed `withdrawn` retracts a standing
@@ -394,9 +439,14 @@ export function foldEntries(
   // otherwise have no rows at all.
   const repos = [
     ...new Set(
-      [...evidence, ...scopings, ...judgments, ...attestations, ...artifactStatements].map(
-        (e) => e.bundle.predicate.repo,
-      ),
+      [
+        ...evidence,
+        ...scopings,
+        ...judgments,
+        ...attestations,
+        ...artifactStatements,
+        ...declarationStatements,
+      ].map((e) => e.bundle.predicate.repo),
     ),
   ].sort();
   const cells = new Set<string>();
@@ -764,9 +814,21 @@ export function foldEntries(
         //                those bytes is unjudged until judged again. Artifact 4
         //                (accuracy of the measurement system) is where the #23
         //                class of defect formally lives.
+        const lostOf = (n: ArtifactSlot) => {
+          const entry = artifactByCell.get(`${repo} ${ksi} ${n}`);
+          const unresolved = unresolvedByCell.get(`${repo} ${ksi} ${n}`);
+          if (unresolved === undefined) return undefined;
+          // an observation older than the body it would kill says nothing about
+          // it: the body was signed after the scan that could not find it
+          if (entry !== undefined && unresolved.at <= entry.bundle.predicate.timestamp) {
+            return undefined;
+          }
+          return unresolved;
+        };
         const bodyOf = (n: ArtifactSlot): ArtifactBodyInfo | undefined => {
           const entry = artifactByCell.get(`${repo} ${ksi} ${n}`);
           if (entry === undefined) return undefined;
+          if (lostOf(n) !== undefined) return undefined;
           const p = entry.bundle.predicate;
           const info: ArtifactBodyInfo = {
             digest: entry.digest,
@@ -813,6 +875,8 @@ export function foldEntries(
               !(applies && entry?.bundle.predicate.action === "insufficient"),
           };
           if (body !== undefined) cell.body = body;
+          const lost = lostOf(n);
+          if (lost !== undefined) cell.absent = lost;
           if (entry !== undefined) {
             const p = entry.bundle.predicate;
             cell.judgment = {
@@ -837,6 +901,8 @@ export function foldEntries(
             present: body !== undefined,
           };
           if (body !== undefined) cell.body = body;
+          const lost = lostOf(n);
+          if (lost !== undefined) cell.absent = lost;
           // stated only while it is the interesting fact: a slot that already
           // holds its body does not need to be told it could have one
           if (body === undefined) cell.derivable = derivable;

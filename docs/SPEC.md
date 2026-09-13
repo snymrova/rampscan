@@ -651,6 +651,24 @@ That is the whole reason to sequence the plane before anything else: today the s
 - **`body_digest` is optional in the schema and required at the write path.** The ledger is append-only, so a judgment signed before the artifact plane existed must stay readable — the same rule a pre-Q3.4 bundle's absent `evidence_class` keeps. `recordArtifactJudgment` refuses to append a new one for a slot that holds no body: there is no honest digest to name for prose nobody has written, and "artifact 3 is sufficient" about nothing is exactly the checkbox this plane retires. A judgment that names no bytes therefore **applies to none** — it is carried, printed, and decides nothing.
 - **Presence on the board is a body.** G5 counts a slot as filled when a signed `Artifact` stands in it and no *applicable* judgment calls those bytes insufficient. The two readings the old counter conflated survive as what they honestly were: `derivable` (the fold holds the material to generate artifacts 2 and 5, and nobody has minted them — a work queue) and `judgment` (the two-key call on 1, 3 and 4). R2 has to render these five into the SDR, and a slot that counted as present with nothing to render would be a gap the document discovers instead of the board.
 
+### 13.6a How an authored artifact dies — the R1.4 amendment (DECIDED 2026-09-13)
+
+§13.3 says an authored artifact "dies by anchor drift like any other evidence". Implementing it exposed a gap the entity did not cover, and this is the decision that closes it.
+
+**The gap.** An `Artifact` has no withdrawal, by §13.2's design: an append-only ledger revises by writing again. That works when a declared file **changes** — the new bytes supersede the old — and fails when a file is **deleted**, because there are no bytes to append. Evidence does not have this problem: a later bundle that *observed* the path is what kills the earlier one. The artifact plane had no equivalent observer, so a deleted artifact would have kept counting toward its KSI's `k / 5` until the three-month clock ran out — the exact failure mode this plane exists to prevent.
+
+**DECIDED: the scan signs what it observed of the declarations, and an explicit absence is what kills the body.** `ArtifactDeclarations` (`packages/schema/src/artifact-declarations.ts`) records, per scan, every declared slot with whether it resolved and — when it did not — why, in the scan's own words. The fold drops a body whose slot a *later* observation names unresolved, and the empty cell carries that sentence, so "nobody filled this" and "this emptied, and here is what happened" are different rows.
+
+Three constraints ride with it:
+
+1. **It may move a board cell, and a run record may not.** `ScanRun` (J1) is about the machinery — which collector ran, which tool resolved — and letting it move a cell would make the board partly a function of the run log. This statement is an observation *of the repository*, signed and anchored to the commit it read, which is the same kind of claim an evidence bundle carries.
+2. **Silence is not a statement.** Only an entry naming a slot unresolved kills. A slot that has simply left the config is not killed: a repository that stops declaring a file has stopped claiming it answers for this KSI, which is not the same as saying the answer is gone — and the clock is what ages an artifact nobody maintains. A later *resolved* observation un-kills the slot, so a restored file is restored on the next fold rather than staying wrong until someone re-reads the ledger.
+3. **An unresolved entry must carry its reason, in the schema.** The sentence is the record: it is what the board prints and what an assessor reads.
+
+The same amendment settles the authored clock. An authored artifact's anchor is the commit that **last touched its file**, not the commit being scanned, because §13.5's three-month window is asking whether the writing has been revisited and a clock restarted by every scan would answer "yes" forever. That is a read of git history, which `documents.ts` had deliberately not done since the batch-1 audit cut the *currency* limb from both document recipes — and it is not that claim. Reading which commit last touched a file, in order to date the clock the rule owes, asserts nothing about whether the contents are still true; the window is what asks that, and it can only ask it if the clock starts when the writing happened.
+
+Asymmetry worth stating: an **unchanged** authored body is not re-appended on the next scan, while a computed one always is. A computed body's clock restarts because it was genuinely recomputed from current evidence; an authored body's `valid_from` is its anchor commit's date and does not move, so a second identical statement would say nothing and cost a ledger entry per scan.
+
 ### 13.7 Class-optional KSIs — the denominator decision
 
 **DECIDED: optionality is read, never inferred, and an unstated class is required.**

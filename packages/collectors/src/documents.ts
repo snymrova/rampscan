@@ -1,10 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
-import type { DeclaredDocument, DocumentKind, Finding } from "@rampscan/schema";
-import { DocumentsConfig } from "@rampscan/schema";
+import type { DeclaredArtifact, DeclaredDocument, DocumentKind, Finding } from "@rampscan/schema";
+import { ArtifactsConfig, DocumentsConfig, MAX_ARTIFACT_BODY_BYTES } from "@rampscan/schema";
 import { GRAPH_CONFIG_FILE } from "@rampscan/graph";
-import { fileSha256, makeFinding } from "./support.js";
+import { exec, fileSha256, makeFinding } from "./support.js";
 
 // documents — the N1b wave-1 gate: the scanned repo DECLARES its governing
 // documents in rampscan.config.json's `documents` array, and this collector
@@ -253,3 +253,169 @@ export const documents: Collector = {
     };
   },
 };
+
+// ---------------------------------------------------------------------------
+// Authored KSI artifacts (plan R1.4, SPEC §13.3)
+//
+// The generalization this module was built toward: from two declared KINDS to
+// per-KSI artifact declarations. A repo names the file that is its answer to
+// slot N of KSI Y, and the scan appends it to the ledger as a signed,
+// commit-anchored `Artifact` with `source: authored`.
+//
+// The discipline that makes this different from a document management system
+// is the anchor. An authored artifact carries the commit that last TOUCHED its
+// file, not the commit being scanned, for the reason §13.5 states: dating it
+// from the scan that found it would restart its three-month clock every time
+// anyone ran a scan, and `SDR-CSX-KSI` item 2 asks the cycle question precisely
+// to catch documents that were written once and never revisited.
+//
+// That is a read of git history, which this module has deliberately not done
+// until now — the batch-1 audit cut the CURRENCY limb from both document
+// recipes because nothing here could support a claim that a policy was current.
+// This is not that claim. Reading which commit last touched a file, in order to
+// date the clock the rule owes, asserts nothing about whether the contents are
+// still true; the three-month window is what asks that question, and it can
+// only ask it if the clock starts when the writing happened.
+
+/** what a declared artifact resolved to in the checkout, ready to be signed */
+export interface AuthoredArtifact {
+  ksi: string;
+  artifact: 1 | 2 | 3 | 4 | 5;
+  path: string;
+  /** the file's bytes, as UTF-8 — the artifact's body (§13.2) */
+  body: string;
+  /** the commit that last touched this path, and the path itself (§13.2) */
+  anchor: { commit: string; path: string };
+  /** that commit's committer date — where the VDR-TFR-NMV clock starts (§13.5) */
+  validFrom: string;
+}
+
+/** a declaration that could not be resolved, with the reason said out loud */
+export interface AuthoredArtifactProblem {
+  ksi: string;
+  artifact: 1 | 2 | 3 | 4 | 5;
+  path: string;
+  reason: string;
+}
+
+export interface AuthoredArtifactScan {
+  found: AuthoredArtifact[];
+  problems: AuthoredArtifactProblem[];
+}
+
+/**
+ * The declared `artifacts` block, parsed strictly. `undefined` when the file or
+ * the key is honestly absent — a repository that declares nothing has not
+ * failed anything, it has made no claim. A PRESENT block that fails the schema
+ * throws, for the same reason `loadDocuments` throws: a mistyped declaration
+ * must not silently waive itself.
+ */
+export async function loadDeclaredArtifacts(root: string): Promise<DeclaredArtifact[] | undefined> {
+  let raw: string;
+  try {
+    raw = await readFile(join(root, GRAPH_CONFIG_FILE), "utf8");
+  } catch {
+    return undefined;
+  }
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+  if (parsed["artifacts"] === undefined) return undefined;
+  try {
+    return ArtifactsConfig.parse(parsed["artifacts"]);
+  } catch (cause) {
+    const issue =
+      cause instanceof Error && "issues" in cause
+        ? (cause as { issues: Array<{ path: Array<string | number>; message: string }> }).issues
+            .map((i) => `${["artifacts", ...i.path].join(".")}: ${i.message}`)
+            .join("; ")
+        : String(cause);
+    throw new Error(
+      `the artifacts block in ${GRAPH_CONFIG_FILE} failed validation (exit refused): ${issue} — a mistyped declaration must not silently waive itself`,
+      { cause },
+    );
+  }
+}
+
+/** the commit that last touched `rel`, and its committer date */
+async function lastTouchedBy(
+  root: string,
+  rel: string,
+): Promise<{ commit: string; date: string } | undefined> {
+  const res = await exec("git", ["log", "-1", "--format=%H%x00%cI", "--", rel], {
+    cwd: root,
+  }).catch(() => undefined);
+  if (res === undefined || res.exitCode !== 0) return undefined;
+  const [commit, date] = res.stdout.trim().split("\0");
+  if (commit === undefined || date === undefined || commit.length === 0) return undefined;
+  return { commit, date };
+}
+
+/**
+ * Resolve every declared artifact against the checkout (R1.4). Reads bytes,
+ * asks git which commit last touched each path, and reports what it could not
+ * resolve rather than dropping it: a declaration pointing at a path that is not
+ * there is the repo's own mistake, and a scan that silently ignored it would
+ * leave the slot empty with nobody told why.
+ *
+ * The catalog is NOT consulted here — the scan validates the KSI against the
+ * pinned catalog where it validates everything else, and a collector module
+ * that loaded the dataset to second-guess it would be a second answer about
+ * what exists at this pin.
+ */
+export async function collectAuthoredArtifacts(
+  root: string,
+  declared: readonly DeclaredArtifact[],
+): Promise<AuthoredArtifactScan> {
+  const found: AuthoredArtifact[] = [];
+  const problems: AuthoredArtifactProblem[] = [];
+
+  for (const decl of [...declared].sort((a, b) =>
+    `${a.ksi} ${a.artifact}`.localeCompare(`${b.ksi} ${b.artifact}`),
+  )) {
+    const where = { ksi: decl.ksi, artifact: decl.artifact, path: decl.path };
+    const state = await inspect(root, decl.path);
+    if (!state.present) {
+      problems.push({ ...where, reason: "no file at the declared path" });
+      continue;
+    }
+    if (state.bytes === 0) {
+      // an empty file is not a body: §13.4's absence-with-a-reason is a thing
+      // somebody writes, not a thing they leave blank
+      problems.push({ ...where, reason: "the declared file is empty" });
+      continue;
+    }
+    if (state.bytes > MAX_ARTIFACT_BODY_BYTES) {
+      problems.push({
+        ...where,
+        reason:
+          `the declared file is ${state.bytes} bytes and an artifact body is bounded at ` +
+          `${MAX_ARTIFACT_BODY_BYTES} — SDR-CSX-KSI asks for "short and simple high-level ` +
+          `summaries", and a document larger than its own summary belongs behind an ` +
+          `evidenceLocation with a summary declared here instead`,
+      });
+      continue;
+    }
+    const touched = await lastTouchedBy(root, decl.path);
+    if (touched === undefined) {
+      // No anchor means no death by drift, which is the whole discipline of
+      // this source (§13.2) — so an unanchorable file is refused rather than
+      // recorded as an artifact that can never age or die.
+      problems.push({
+        ...where,
+        reason:
+          "git names no commit that touched this path — an uncommitted or untracked file cannot " +
+          "be anchored, and an artifact that cannot die by anchor drift is not this source",
+      });
+      continue;
+    }
+    found.push({
+      ksi: decl.ksi,
+      artifact: decl.artifact,
+      path: decl.path,
+      body: await readFile(join(root, decl.path), "utf8"),
+      anchor: { commit: touched.commit, path: decl.path },
+      validFrom: touched.date,
+    });
+  }
+
+  return { found, problems };
+}

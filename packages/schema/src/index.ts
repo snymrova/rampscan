@@ -7,6 +7,7 @@ export * from "./scan-run.js";
 export * from "./scoping.js";
 export * from "./artifact-judgment.js";
 export * from "./artifact.js";
+export * from "./artifact-declarations.js";
 export * from "./attestation.js";
 export * from "./manifest.js";
 export * from "./ingest.js";

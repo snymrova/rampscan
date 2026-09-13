@@ -382,11 +382,13 @@ function ArtifactRowView({
       (cell.body.freshMet === false ? " (past VDR-TFR-NMV)" : "") +
       (cell.body.anchor ? ` · ${cell.body.anchor.path}` : "") +
       (cell.body.reviewed ? " · reviewed" : " · no review on record")
-    : cell.basis === "computed"
-      ? cell.derivable
-        ? derivable
-        : "no body, and nothing to generate one from"
-      : "no body recorded";
+    : cell.absent
+      ? `the body that stood here is gone — ${cell.absent.reason} (${cell.absent.path}, seen ${cell.absent.at.slice(0, 10)})`
+      : cell.basis === "computed"
+        ? cell.derivable
+          ? derivable
+          : "no body, and nothing to generate one from"
+        : "no body recorded";
   const verdict = cell.judgment
     ? `judged ${cell.judgment.action} — proposed ${cell.judgment.proposedBy}, approved ${cell.judgment.approvedBy}` +
       (cell.judgment.appliesToLiveBody ? "" : " (about bytes that have since been revised)")

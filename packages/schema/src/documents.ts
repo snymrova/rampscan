@@ -64,3 +64,53 @@ export const DocumentsConfig = z
       "two declarations name the same path — one file cannot answer for two documents, and a duplicate is a copy-paste that would count one artifact twice",
   });
 export type DocumentsConfig = z.infer<typeof DocumentsConfig>;
+
+// ---------------------------------------------------------------------------
+// Declared KSI artifacts (plan R1.4, SPEC §13.3 `authored`)
+//
+// The `artifacts` block of rampscan.config.json, and the generalization the
+// `documents` block above could not be: a repo names the file that IS one of
+// its five owed artifacts for one KSI, and the artifact plane picks it up as a
+// signed, commit-anchored body.
+//
+// Why this is a SECOND block rather than a third `kind`. The `documents`
+// vocabulary is closed on purpose — a generic "policy" value would let a repo
+// declare its incident-response policy and collect AC-01 evidence for it, the
+// over-claim the batch-1 audit caught twice. An artifact declaration makes a
+// different claim entirely: not "this file is a policy of type X", but "this
+// file is our answer to slot N of KSI Y". Its vocabulary is closed too, and
+// closed by something stronger than an enum — the pinned catalog, 46 × 5, which
+// the scan validates the declaration against. A KSI that is not in the catalog
+// at this pin, or a slot outside 1..5, is refused rather than recorded.
+//
+// This is the CSP engineer's habitat and the reason the plane exists: the
+// artifact lives beside the code, moves through the same review, and dies by
+// anchor drift like any other evidence when the thing it describes changes.
+
+export const DeclaredArtifact = z.strictObject({
+  /** exactly one KSI id, mnemonic form — checked against the pinned catalog */
+  ksi: z.string().min(1),
+  /** 1-based into default_artifacts.KSI, the rules' own order */
+  artifact: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+  /** repo-relative path, no globs — a declaration names a file, not a pattern */
+  path: z.string().min(1),
+  description: declaredDescription,
+});
+export type DeclaredArtifact = z.infer<typeof DeclaredArtifact>;
+
+export const ArtifactsConfig = z
+  .array(DeclaredArtifact)
+  .refine(
+    (list) => new Set(list.map((a) => `${a.ksi} ${a.artifact}`)).size === list.length,
+    {
+      message:
+        "two declarations name the same (KSI, artifact) slot — a slot holds one body, and a " +
+        "duplicate is a copy-paste that would make which one stands a matter of file order",
+    },
+  )
+  .refine((list) => new Set(list.map((a) => a.path)).size === list.length, {
+    message:
+      "two declarations name the same path — one file answering two slots would put identical " +
+      "prose behind two different questions, and the digest would make them indistinguishable",
+  });
+export type ArtifactsConfig = z.infer<typeof ArtifactsConfig>;

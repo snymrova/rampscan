@@ -3,6 +3,7 @@ import { ARTIFACT_CLOCK_RULE } from "@rampscan/core";
 import {
   canonicalJson,
   isArtifact,
+  isArtifactDeclarations,
   isAttestation,
   isEvidenceBundle,
   isScanRun,
@@ -165,6 +166,22 @@ export async function verify(options: {
       }`,
       `repo     ${p.repo}`,
       `clock    ${ARTIFACT_CLOCK_RULE} from ${p.valid_from}`,
+      `signed   ${p.timestamp}`,
+    );
+  } else if (isArtifactDeclarations(entry.bundle)) {
+    // what a scan observed about the repo's declared artifacts (R1.4) — the
+    // statement that lets a DELETED artifact stop counting, since an artifact
+    // has no withdrawal and a missing file has no body to supersede it with.
+    // The unresolved entries are printed in full: each one is a sentence that
+    // will appear on an empty cell, and an assessor reading this should see the
+    // same words the board shows.
+    const p = entry.bundle.predicate;
+    const unresolved = p.declarations.filter((d) => !d.resolved);
+    lines.push(
+      `declared ${options.digest.slice(0, 16)}…`,
+      `slots    ${p.declarations.length} declared — ${p.declarations.length - unresolved.length} resolved, ${unresolved.length} not`,
+      ...unresolved.map((d) => `  ✗ ${d.ksi_id} #${d.artifact} (${d.path}): ${d.reason}`),
+      `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
       `signed   ${p.timestamp}`,
     );
   } else {

@@ -4,7 +4,9 @@ import { join, resolve } from "node:path";
 import {
   OPENVEX_ARTIFACT,
   cacheKeySalt,
+  collectAuthoredArtifacts,
   createJournaledRunner,
+  loadDeclaredArtifacts,
   loadToolManifest,
 } from "@rampscan/collectors";
 import {
@@ -23,23 +25,30 @@ import type {
   LedgerEntry,
   RunResult,
 } from "@rampscan/core";
-import { loadLocalDataset } from "@rampscan/dataset";
+import { loadKsiCatalogFromSlices, loadLocalDataset } from "@rampscan/dataset";
+import { GRAPH_CONFIG_FILE } from "@rampscan/graph";
 import { createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner } from "@rampscan/signer";
 import {
+  Artifact,
+  ArtifactDeclarations,
   IN_TOTO_STATEMENT_TYPE,
   RAMPSCAN_SCAN_RUN_TYPE,
   ScanResult,
   ScanRun,
+  isArtifact,
+  isArtifactDeclarations,
   isEvidenceBundle,
 } from "@rampscan/schema";
 import type {
   CacheRecord,
   CollectorRun,
+  DeclarationObservation,
   PipelineRecipe,
   ScanRunTrigger,
   Subject,
 } from "@rampscan/schema";
+import { toArtifact, toArtifactDeclarations } from "@rampscan/core";
 import { buildRepoModel, REPO_MODEL_ARTIFACT, serializeRepoModel } from "./model.js";
 import { loadRecipes, validateRecipeIds } from "./recipes.js";
 import { buildToolMap } from "./tools.js";
@@ -113,6 +122,20 @@ export interface ScanOutcome {
    * there is nothing to derive it from.
    */
   model?: { path: string; sha256: string; nodes: number; links: number };
+  /**
+   * Authored KSI artifacts (R1.4), when a ledger was configured: the declared
+   * bodies this scan appended, the ones already standing unchanged, and the
+   * declarations it could not resolve. Problems are REPORTED rather than
+   * thrown: a declaration pointing at a missing file is the repo's own mistake
+   * and the slot it names stays empty, which the board already says out loud —
+   * but nobody would know why without this list.
+   */
+  artifacts?: {
+    appended: Array<{ ksi: string; artifact: number; digest: Digest }>;
+    /** identical bytes at an unchanged anchor — nothing new to say (R1.4) */
+    unchanged: Array<{ ksi: string; artifact: number }>;
+    problems: Array<{ ksi: string; artifact: number; path: string; reason: string }>;
+  };
 }
 
 /**
@@ -387,6 +410,176 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
       `${result.summary.unevidenced} recipe(s) unevidenced (never recorded)`,
   );
   outcome.evidence = { appended, survived, refreshed };
+
+  // Authored KSI artifacts (R1.4, SPEC §13.3): the repo's declared bodies,
+  // appended as signed `Artifact` statements beside the evidence they sit next
+  // to. Appending one is a collector observation signed like evidence, NOT a
+  // two-key write — §13.3 is explicit that the repository's own review is the
+  // second key, and adding a ceremony the pull request already performed would
+  // teach people to click through it.
+  //
+  // Unchanged bodies are NOT re-appended, which is the opposite of the computed
+  // artifacts' rule and for a reason: a computed body's clock restarts because
+  // it was genuinely recomputed from current evidence, while an authored body's
+  // `valid_from` is its anchor commit's date and does not move. A second
+  // identical statement would say nothing and cost a ledger entry per scan.
+  const declaredArtifacts = await loadDeclaredArtifacts(workspace.root);
+  if (declaredArtifacts !== undefined && declaredArtifacts.length > 0) {
+    // the pinned catalog, read the same way every other KSI check in this
+    // codebase reads it — not `dataset`, whose slices answer control questions
+    const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+    const known = new Set(catalog.ksis.map((k) => k.id));
+    const scanned = await collectAuthoredArtifacts(workspace.root, declaredArtifacts);
+    const appendedArtifacts: Array<{ ksi: string; artifact: number; digest: Digest }> = [];
+    const unchangedArtifacts: Array<{ ksi: string; artifact: number }> = [];
+    const artifactProblems = scanned.problems.map((p) => ({ ...p }));
+
+    const priorArtifacts = new Map<string, Artifact>();
+    for (const entry of await ledger.list({ repo: workspace.repo })) {
+      if (!isArtifact(entry.bundle)) continue;
+      const p = entry.bundle.predicate;
+      priorArtifacts.set(`${p.ksi_id} ${p.artifact}`, entry.bundle); // append order: latest wins
+    }
+
+    for (const found of scanned.found) {
+      // the pinned catalog is the declaration's vocabulary (§13.3): a KSI that
+      // is not in it at this pin is a typo, and a typo that recorded an
+      // artifact would put a body in a slot no rule owes
+      if (!known.has(found.ksi)) {
+        artifactProblems.push({
+          ksi: found.ksi,
+          artifact: found.artifact,
+          path: found.path,
+          reason: `${found.ksi} is not in the pinned catalog at ${dataset.version()}`,
+        });
+        continue;
+      }
+      const prior = priorArtifacts.get(`${found.ksi} ${found.artifact}`);
+      const statement = toArtifact({
+        repo: workspace.repo,
+        ksiId: found.ksi,
+        artifact: found.artifact,
+        source: "authored",
+        body: found.body,
+        anchor: found.anchor,
+        validFrom: found.validFrom,
+        datasetVersion: dataset.version(),
+        timestamp: now.toISOString(),
+      });
+      if (
+        prior !== undefined &&
+        prior.predicate.body_digest === statement.predicate.body_digest &&
+        prior.predicate.anchor?.commit === found.anchor.commit
+      ) {
+        unchangedArtifacts.push({ ksi: found.ksi, artifact: found.artifact });
+        continue;
+      }
+      if (prior !== undefined && prior.predicate.body_digest !== statement.predicate.body_digest) {
+        statement.predicate.supersedes = prior.predicate.body_digest;
+      }
+      const parsed = Artifact.safeParse(statement);
+      if (!parsed.success) {
+        artifactProblems.push({
+          ksi: found.ksi,
+          artifact: found.artifact,
+          path: found.path,
+          reason: parsed.error.issues
+            .map((i) => `${i.path.join(".") || "statement"}: ${i.message}`)
+            .join("; "),
+        });
+        continue;
+      }
+      const digest = await ledger.append(parsed.data, await signer.sign(parsed.data));
+      appendedArtifacts.push({ ksi: found.ksi, artifact: found.artifact, digest });
+    }
+
+    // The observation (R1.4): what this scan saw of every declared slot,
+    // signed and anchored to the commit it read. This is how an AUTHORED body
+    // dies — an `Artifact` has no withdrawal, so a deleted file has no bytes to
+    // supersede it with, and without this statement the body would keep
+    // counting toward `k / 5` until its three-month clock ran out.
+    //
+    // Skipped when it would repeat the standing observation verbatim, for the
+    // same reason an unchanged body is not re-appended: a scan that saw exactly
+    // what the last scan saw has nothing new to say, and the run record already
+    // carries the clock proving a scan happened.
+    const observations: DeclarationObservation[] = [
+      ...appendedArtifacts.map((a) => {
+        const found = scanned.found.find((f) => f.ksi === a.ksi && f.artifact === a.artifact)!;
+        return {
+          ksi_id: a.ksi,
+          artifact: a.artifact as 1 | 2 | 3 | 4 | 5,
+          path: found.path,
+          resolved: true,
+          body_digest: createHash("sha256").update(found.body, "utf8").digest("hex"),
+        };
+      }),
+      ...unchangedArtifacts.map((a) => {
+        const found = scanned.found.find((f) => f.ksi === a.ksi && f.artifact === a.artifact)!;
+        return {
+          ksi_id: a.ksi,
+          artifact: a.artifact as 1 | 2 | 3 | 4 | 5,
+          path: found.path,
+          resolved: true,
+          body_digest: createHash("sha256").update(found.body, "utf8").digest("hex"),
+        };
+      }),
+      ...artifactProblems.map((p) => ({
+        ksi_id: p.ksi,
+        artifact: p.artifact as 1 | 2 | 3 | 4 | 5,
+        path: p.path,
+        resolved: false,
+        reason: p.reason,
+      })),
+    ];
+    const declarationStatement = toArtifactDeclarations({
+      repo: workspace.repo,
+      commit: workspace.commit,
+      source: {
+        path: GRAPH_CONFIG_FILE,
+        // the declaration file as it was read — signing it is what lets a
+        // reader check the observation was made over these declarations
+        sha256: createHash("sha256")
+          .update(await readFile(join(workspace.root, GRAPH_CONFIG_FILE)))
+          .digest("hex"),
+      },
+      declarations: observations,
+      datasetVersion: dataset.version(),
+      timestamp: now.toISOString(),
+    });
+    let priorObservation: ArtifactDeclarations | undefined;
+    for (const entry of await ledger.list({ repo: workspace.repo })) {
+      if (isArtifactDeclarations(entry.bundle)) priorObservation = entry.bundle;
+    }
+    const sameAsBefore =
+      priorObservation !== undefined &&
+      JSON.stringify(priorObservation.predicate.declarations) ===
+        JSON.stringify(declarationStatement.predicate.declarations);
+    if (!sameAsBefore) {
+      const parsed = ArtifactDeclarations.safeParse(declarationStatement);
+      if (!parsed.success) {
+        throw new Error(
+          `the artifact declaration observation could not be built: ${parsed.error.issues
+            .map((i) => `${i.path.join(".")}: ${i.message}`)
+            .join("; ")}`,
+        );
+      }
+      await ledger.append(parsed.data, await signer.sign(parsed.data));
+    }
+
+    outcome.artifacts = {
+      appended: appendedArtifacts,
+      unchanged: unchangedArtifacts,
+      problems: artifactProblems,
+    };
+    log(
+      `artifacts: ${appendedArtifacts.length} authored body(ies) appended, ` +
+        `${unchangedArtifacts.length} unchanged, ${artifactProblems.length} declaration(s) unresolved`,
+    );
+    for (const problem of artifactProblems) {
+      log(`  ${problem.ksi} #${problem.artifact} (${problem.path}): ${problem.reason}`);
+    }
+  }
 
   // The repo model (L2), derived HERE — after this scan's evidence is in the
   // ledger and before the run record is written. The order is the whole point:

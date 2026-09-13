@@ -11,6 +11,7 @@ import {
   LedgerStatement,
   canonicalJson,
   isArtifact,
+  isArtifactDeclarations,
   isArtifactJudgment,
   isAttestation,
   isEvidenceBundle,
@@ -131,14 +132,15 @@ export function createLocalLedger(dir: string): LedgerStore {
       // attested or assessed body has no anchor and gets no commit — §13.2's
       // "absent means absent" reaches the index too, because a commit invented
       // here is a commit `list({ commit })` would hand back as evidence that
-      // this body describes that tree.
+      // this body describes that tree. A declaration observation (R1.4) DOES
+      // fill it: it is a claim about a tree, made at the commit it names.
       const row: IndexRow = {
         digest,
         appended_at: new Date().toISOString(),
         recipe_id:
           isEvidenceBundle(parsed) || isScopingEvent(parsed) ? parsed.predicate.recipe_id : "",
         repo: parsed.predicate.repo,
-        commit: isEvidenceBundle(parsed) || isScanRun(parsed)
+        commit: isEvidenceBundle(parsed) || isScanRun(parsed) || isArtifactDeclarations(parsed)
           ? parsed.predicate.commit
           : isArtifact(parsed)
             ? (parsed.predicate.anchor?.commit ?? "")
