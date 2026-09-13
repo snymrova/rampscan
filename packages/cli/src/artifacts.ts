@@ -1,0 +1,134 @@
+import { toArtifact } from "@rampscan/core";
+import type { Digest } from "@rampscan/core";
+import { loadKsiCatalogFromSlices } from "@rampscan/dataset";
+import { createLocalLedger } from "@rampscan/ledger";
+import type {
+  ArtifactAnchor,
+  ArtifactGenerator,
+  ArtifactReview,
+  ArtifactSlot,
+  ArtifactSource,
+} from "@rampscan/schema";
+import { Artifact, isArtifact } from "@rampscan/schema";
+import { createLocalSigner } from "@rampscan/signer";
+
+// The artifact plane's write path (plan R1.1, SPEC §13.2) — `recordScoping`,
+// `recordArtifactJudgment` and `recordAttestation`'s fourth sibling, and the
+// one that is NOT a two-key write. §13.3 is explicit about why: appending an
+// authored artifact is a collector observation signed like evidence, because
+// the repository's own review is the second key, and adding a ceremony the
+// pull request already performed would teach people to click through it.
+//
+// (Its neighbour `artifact.ts` is a different thing entirely: J4's resolution
+// of TOOL artifacts — sboms, scan reports — by digest out of the output dir.)
+//
+// Everything a body must satisfy is checked HERE, at the append, against the
+// schema rather than against a convention: the 64 KiB bound, the refusal to
+// compute artifacts 1 and 3 (§13.4), and the anchor discipline that makes an
+// authored body die when the file it quotes moves.
+
+export interface RecordArtifactOptions {
+  repo: string;
+  ksiId: string;
+  /** 1-based into `default_artifacts.KSI`, the rules' own order */
+  artifact: ArtifactSlot;
+  source: ArtifactSource;
+  /** Markdown — a short, high-level summary, bounded at 64 KiB by the schema */
+  body: string;
+  /** authored only: where the body lives, and what kills it when it moves */
+  anchor?: ArtifactAnchor;
+  /** computed only: the pin set, the tool versions, the exec-journal digest */
+  generator?: ArtifactGenerator;
+  /** R4's forge plane, when it knows — never asserted here */
+  review?: ArtifactReview;
+  /**
+   * The clock's start (§13.5). Omit and it falls to the append instant, which
+   * is right for a computed, attested or assessed body. An AUTHORED one should
+   * pass its anchor commit's date: dating it from the scan that found it would
+   * restart a three-month clock every time anyone ran a scan.
+   */
+  validFrom?: string;
+  datasetDir: string;
+  datasetPin: string;
+  ledgerDir: string;
+  keysDir: string;
+  now?: Date;
+  log?: (line: string) => void;
+}
+
+export async function recordArtifact(
+  options: RecordArtifactOptions,
+): Promise<{ digest: Digest; bodyDigest: string; supersedes?: string }> {
+  const log = options.log ?? (() => {});
+  const body = options.body.trim();
+  if (body.length === 0) {
+    throw new Error(
+      "an artifact requires a body — an empty slot is an absence, and SPEC §13.4 says an " +
+        "absence is recorded with a reason rather than signed as a blank",
+    );
+  }
+
+  const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+  if (!catalog.ksis.some((k) => k.id === options.ksiId)) {
+    throw new Error(`unknown KSI ${options.ksiId} — an artifact must reference the pinned catalog`);
+  }
+
+  const ledger = createLocalLedger(options.ledgerDir);
+  // What this body revises, read from the record rather than asked for: the
+  // live body in this slot is the one being replaced, and a caller who forgot
+  // to say so would leave a supersession chain with a hole in it. Sorted by
+  // append order — the same "latest wins" the fold applies (§13.2).
+  let supersededDigest: string | undefined;
+  for (const entry of await ledger.list({ repo: options.repo })) {
+    if (!isArtifact(entry.bundle)) continue;
+    const p = entry.bundle.predicate;
+    if (p.ksi_id !== options.ksiId || p.artifact !== options.artifact) continue;
+    supersededDigest = p.body_digest; // list is append-ordered: the last wins
+  }
+
+  const statement = toArtifact({
+    repo: options.repo,
+    ksiId: options.ksiId,
+    artifact: options.artifact,
+    source: options.source,
+    body,
+    ...(options.anchor !== undefined ? { anchor: options.anchor } : {}),
+    ...(options.generator !== undefined ? { generator: options.generator } : {}),
+    ...(options.review !== undefined ? { review: options.review } : {}),
+    ...(options.validFrom !== undefined ? { validFrom: options.validFrom } : {}),
+    datasetVersion: catalog.datasetVersion,
+    timestamp: (options.now ?? new Date()).toISOString(),
+  });
+  // an identical body is not a revision of itself — re-signing the same bytes
+  // restarts the clock (§13.5) and supersedes nothing
+  if (supersededDigest !== undefined && supersededDigest !== statement.predicate.body_digest) {
+    statement.predicate.supersedes = supersededDigest;
+  }
+
+  const parsed = Artifact.safeParse(statement);
+  if (!parsed.success) {
+    throw new Error(
+      `this artifact cannot be appended:\n  ` +
+        parsed.error.issues.map((i) => `${i.path.join(".") || "statement"}: ${i.message}`).join("\n  "),
+    );
+  }
+
+  const signer = createLocalSigner(options.keysDir, { log });
+  const envelope = await signer.sign(parsed.data);
+  const digest = await ledger.append(parsed.data, envelope);
+  log(
+    `artifact recorded: ${options.ksiId} #${options.artifact} (${options.source}) for ` +
+      `${options.repo} → ${digest.slice(0, 12)}…` +
+      (statement.predicate.supersedes !== undefined
+        ? ` — supersedes ${statement.predicate.supersedes.slice(0, 12)}…`
+        : ""),
+  );
+  const result: { digest: Digest; bodyDigest: string; supersedes?: string } = {
+    digest,
+    bodyDigest: parsed.data.predicate.body_digest,
+  };
+  if (statement.predicate.supersedes !== undefined) {
+    result.supersedes = statement.predicate.supersedes;
+  }
+  return result;
+}

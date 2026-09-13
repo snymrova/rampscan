@@ -219,7 +219,7 @@ function KsiRowView({
         {/* the five owed artifacts (Q3.3): the fold's count when a scan is
             recorded; "–/5" only when there is no ledger row to measure
             against — unmeasured, never a fake 0 (§12.5 rule 3) */}
-        <td title="the five KSI default artifacts — 2, 5 computed · 1, 3, 4 two-key judged">
+        <td title="the five KSI default artifacts (SDR-CSX-KSI) — a cell counts when a signed body fills it; 2 and 5 are computed, 1, 3 and 4 are two-key judged">
           {register ? (
             <span className={`pill ${register.artifacts_present === 5 ? "evidenced" : "unevidenced"}`}>
               {register.artifacts_present}/5
@@ -324,10 +324,13 @@ function KsiRowView({
 
 /**
  * The five owed artifacts for one (repo, KSI) — default_artifacts.KSI in the
- * rules' own order. Presence of 2 and 5 is the fold's computation; 1, 3, and
- * 4 hold only while a signed two-key judgment says sufficient, and the form
- * below drafts that judgment's proposal (an approver's key turn on the
- * Approvals tab makes it real).
+ * rules' own order. Since R1.1 a cell is present when a signed BODY fills it:
+ * the row names where those bytes came from, when their three-month clock
+ * started, and what a judgment has said about them. An empty computed cell
+ * says whether the fold could generate it, which is a work queue rather than
+ * a scold. The judgment form stays exactly as it was — this view reads the
+ * plane and never writes it (R1.6: if this grows an artifact editor, the plan
+ * has failed).
  */
 function ArtifactChecklist({
   register,
@@ -370,14 +373,27 @@ function ArtifactRowView({
   ksi: string;
 }) {
   const [proposing, setProposing] = useState(false);
-  const basis =
-    cell.basis === "computed"
-      ? cell.artifact === 5
-        ? "computed — the methods' own live evidence"
-        : "computed — the scheduler's cadence record on an evidenced method"
-      : cell.judgment
-        ? `judged ${cell.judgment.action} — proposed ${cell.judgment.proposedBy}, approved ${cell.judgment.approvedBy}`
-        : "judged — no judgment recorded";
+  const derivable =
+    cell.artifact === 5
+      ? "no body yet — derivable from the methods' own live evidence"
+      : "no body yet — derivable from the scheduler's cadence record";
+  const origin = cell.body
+    ? `${cell.body.source} · ${cell.body.bodyBytes} bytes · clock from ${cell.body.validFrom.slice(0, 10)}` +
+      (cell.body.freshMet === false ? " (past VDR-TFR-NMV)" : "") +
+      (cell.body.anchor ? ` · ${cell.body.anchor.path}` : "") +
+      (cell.body.reviewed ? " · reviewed" : " · no review on record")
+    : cell.basis === "computed"
+      ? cell.derivable
+        ? derivable
+        : "no body, and nothing to generate one from"
+      : "no body recorded";
+  const verdict = cell.judgment
+    ? `judged ${cell.judgment.action} — proposed ${cell.judgment.proposedBy}, approved ${cell.judgment.approvedBy}` +
+      (cell.judgment.appliesToLiveBody ? "" : " (about bytes that have since been revised)")
+    : cell.basis === "judged"
+      ? "no judgment recorded"
+      : "computed — no signature may override it";
+  const basis = `${origin} · ${verdict}`;
   return (
     <>
       <tr>
@@ -390,6 +406,14 @@ function ArtifactRowView({
           {text}
           <div className="faint" style={{ marginTop: 2 }}>
             {basis}
+            {cell.body && (
+              <>
+                {" "}·{" "}
+                <Link href={`/evidence/${cell.body.digest}`} className="mono">
+                  {cell.body.bodyDigest.slice(0, 12)}…
+                </Link>
+              </>
+            )}
             {cell.judgment && (
               <>
                 {" "}·{" "}
@@ -398,7 +422,9 @@ function ArtifactRowView({
                 </Link>
               </>
             )}
-            {cell.basis === "judged" && (
+            {/* R1.1: a judgment names the bytes it approved (§13.6), so there
+                is nothing to propose until a body fills the slot */}
+            {cell.basis === "judged" && cell.body && (
               <>
                 {" "}·{" "}
                 <button

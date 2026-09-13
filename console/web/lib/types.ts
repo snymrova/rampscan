@@ -175,17 +175,34 @@ export interface MethodCellRecord {
 }
 
 /**
- * One of the five owed KSI artifacts (Q3.3, G5), as the fold computes it
- * inside a method_registers row. Presence of 2 and 5 is computed (artifact 5
- * is the methods' own live evidence; artifact 2 the scheduler's cadence
- * record); 1, 3, and 4 are present only while a signed two-key judgment
- * says sufficient.
+ * One of the five owed KSI artifacts (Q3.3, G5; R1.1), as the fold computes it
+ * inside a method_registers row. PRESENCE IS A BODY: a slot is present when a
+ * signed `Artifact` statement fills it and no live judgment calls those bytes
+ * insufficient. `basis` still says how the slot is answered for — `computed`
+ * for 2 and 5, whose bodies are a function of the fold, `judged` for 1, 3 and
+ * 4, whose sufficiency is the provider's call through the two-key path.
  */
 export interface ArtifactCellRecord {
   /** 1-based into default_artifacts.KSI — the rules' own order */
   artifact: 1 | 2 | 3 | 4 | 5;
   basis: "computed" | "judged";
   present: boolean;
+  /** the live body, when one has been appended (R1.1, SPEC §13.2) */
+  body?: {
+    digest: string;
+    bodyDigest: string;
+    source: "authored" | "computed" | "attested" | "assessed";
+    /** the VDR-TFR-NMV clock's start — three months, whatever the source */
+    validFrom: string;
+    freshMet: boolean | null;
+    bodyBytes: number;
+    anchor?: { commit: string; path: string };
+    supersedes?: string;
+    /** R4's forge plane, when it knows — absence is printed, never assumed */
+    reviewed?: boolean;
+  };
+  /** computed slots only: the fold holds the material, nobody minted the body */
+  derivable?: boolean;
   /** judged artifacts only: the live judgment, when one is recorded */
   judgment?: {
     digest: string;
@@ -194,6 +211,10 @@ export interface ArtifactCellRecord {
     proposedBy: string;
     approvedBy: string;
     timestamp: string;
+    /** the artifact body these two keys approved (§13.6) */
+    bodyDigest?: string;
+    /** false when the body was revised after this judgment, or it named none */
+    appliesToLiveBody: boolean;
   };
 }
 

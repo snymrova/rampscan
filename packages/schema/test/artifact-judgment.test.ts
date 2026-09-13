@@ -73,6 +73,25 @@ describe("ArtifactJudgment", () => {
     expect(ArtifactJudgment.parse(withdrawn).predicate.action).toBe("insufficient");
   });
 
+  it("names the bytes it approved, and the subject must carry them (§13.6, R1.1)", () => {
+    const bodyDigest = "c".repeat(64);
+    const judged = {
+      ...judgment,
+      subject: [...judgment.subject, { name: "artifact.md", digest: { sha256: bodyDigest } }],
+      predicate: { ...judgment.predicate, body_digest: bodyDigest },
+    };
+    expect(ArtifactJudgment.parse(judged).predicate.body_digest).toBe(bodyDigest);
+    // a pointer the signature does not cover is not an address
+    const unsigned = { ...judgment, predicate: { ...judgment.predicate, body_digest: bodyDigest } };
+    expect(() => ArtifactJudgment.parse(unsigned)).toThrow(/must carry the body_digest/);
+  });
+
+  it("still parses a judgment appended before the artifact plane existed", () => {
+    // the ledger is append-only: a statement signed under the old shape must
+    // stay readable, exactly as a pre-Q3.4 bundle carries no evidence_class
+    expect(ArtifactJudgment.parse(judgment).predicate.body_digest).toBeUndefined();
+  });
+
   it("discriminates in the LedgerStatement union", () => {
     const parsed = LedgerStatement.parse(judgment);
     expect(isArtifactJudgment(parsed)).toBe(true);

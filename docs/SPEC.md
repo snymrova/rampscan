@@ -646,6 +646,11 @@ A **computed** artifact's clock restarts at each fold that produces it. That is 
 
 That is the whole reason to sequence the plane before anything else: today the system can sign that an artifact is sufficient and cannot show you the artifact.
 
+**Two consequences, settled when R1.1 implemented this (2026-09-13):**
+
+- **`body_digest` is optional in the schema and required at the write path.** The ledger is append-only, so a judgment signed before the artifact plane existed must stay readable — the same rule a pre-Q3.4 bundle's absent `evidence_class` keeps. `recordArtifactJudgment` refuses to append a new one for a slot that holds no body: there is no honest digest to name for prose nobody has written, and "artifact 3 is sufficient" about nothing is exactly the checkbox this plane retires. A judgment that names no bytes therefore **applies to none** — it is carried, printed, and decides nothing.
+- **Presence on the board is a body.** G5 counts a slot as filled when a signed `Artifact` stands in it and no *applicable* judgment calls those bytes insufficient. The two readings the old counter conflated survive as what they honestly were: `derivable` (the fold holds the material to generate artifacts 2 and 5, and nobody has minted them — a work queue) and `judgment` (the two-key call on 1, 3 and 4). R2 has to render these five into the SDR, and a slot that counted as present with nothing to render would be a gap the document discovers instead of the board.
+
 ### 13.7 Class-optional KSIs — the denominator decision
 
 **DECIDED: optionality is read, never inferred, and an unstated class is required.**
