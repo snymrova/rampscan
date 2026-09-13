@@ -68,7 +68,7 @@ export interface FedrampExportInput {
 }
 
 export interface FedrampExport {
-  /** the name this lands under in `out/exports/` */
+  /** the name this lands under in `out/exports/fedramp/` */
   filename: string;
   /** the pinned schema that gates it (Q5.2) */
   schemaFile: string;

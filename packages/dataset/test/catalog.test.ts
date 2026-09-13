@@ -8,8 +8,10 @@ import {
   CatalogSourceError,
   DatasetVersionMismatchError,
   assertCatalogsEquivalent,
+  loadKsiCatalog,
   loadKsiCatalogFromRules,
   loadKsiCatalogFromSlices,
+  requiredKsis,
   type KsiCatalog,
 } from "../src/index.js";
 
@@ -32,8 +34,59 @@ describe("the dual-source equivalence contract", () => {
     const a = await loadKsiCatalogFromSlices(derivedDir, PIN);
     const b = await loadKsiCatalogFromRules(rulesFile, PIN);
     expect(() => assertCatalogsEquivalent(a, b)).not.toThrow();
-    // and the blunt instrument agrees with the walking one
-    expect(a).toEqual(b);
+    // and the blunt instrument agrees with the walking one — on every owed
+    // fact BOTH paths state. `applicability` is the one field a path may
+    // legitimately not carry (§13.7 rule 3) and it is asserted on its own
+    // below rather than smuggled through an equality that would have to be
+    // loosened to accommodate it.
+    expect({ ...a, applicability: null }).toEqual({ ...b, applicability: null });
+  });
+
+  // R0.2 (§13.7): applicability is the asymmetry, stated rather than hidden.
+  it("only the canonical source states class applicability at this pin", async () => {
+    const a = await loadKsiCatalogFromSlices(derivedDir, PIN);
+    const b = await loadKsiCatalogFromRules(rulesFile, PIN);
+    expect(a.applicability.stated).toBe(false);
+    expect(b.applicability.stated).toBe(true);
+  });
+
+  // The five are pinned LITERALLY, for the reason the owed numbers below are:
+  // the rules JSON marks an optional indicator by prefixing its class
+  // statement `**Optional:**` and nothing else, so a republication that
+  // changes that vocabulary has to arrive here as a failing test rather than
+  // as a denominator quietly returning to 46 (§13.7 rule 1).
+  it("class b leaves five indicators optional, and no other class leaves any", async () => {
+    const catalog = await loadKsiCatalog({ derivedDir, rulesFile, pin: PIN });
+    expect(catalog.applicability.stated).toBe(true);
+    if (!catalog.applicability.stated) return;
+    expect(catalog.applicability.optionalAt.b).toEqual([
+      "KSI-CNA-EIS",
+      "KSI-MLA-ALA",
+      "KSI-SVC-PRR",
+      "KSI-SVC-RUD",
+      "KSI-SVC-VCM",
+    ]);
+    expect(catalog.applicability.optionalAt.a).toEqual([]);
+    expect(catalog.applicability.optionalAt.c).toEqual([]);
+    expect(catalog.applicability.optionalAt.d).toEqual([]);
+  });
+
+  it("the denominator is 41 at class b and 46 everywhere else", async () => {
+    const catalog = await loadKsiCatalog({ derivedDir, rulesFile, pin: PIN });
+    expect(catalog.ksis).toHaveLength(46);
+    expect(requiredKsis(catalog, "b")).toHaveLength(41);
+    expect(requiredKsis(catalog, "a")).toHaveLength(46);
+    expect(requiredKsis(catalog, "c")).toHaveLength(46);
+    expect(requiredKsis(catalog, "d")).toHaveLength(46);
+  });
+
+  it("the union loader cross-checks both paths and carries the stated one", async () => {
+    const catalog = await loadKsiCatalog({ derivedDir, rulesFile, pin: PIN });
+    const slices = await loadKsiCatalogFromSlices(derivedDir, PIN);
+    // everything else is the slices' value, unchanged — the union adds the
+    // one fact only the canonical source states, it does not re-source the rest
+    expect({ ...catalog, applicability: null }).toEqual({ ...slices, applicability: null });
+    expect(catalog.applicability.stated).toBe(true);
   });
 
   it("names the first differing owed fact rather than diffing two catalogs", async () => {

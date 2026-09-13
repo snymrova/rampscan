@@ -66,6 +66,41 @@ export interface KsiEntry {
   controls: readonly string[];
 }
 
+/**
+ * Which indicators a class does not oblige — the R0.2 denominator fix
+ * (SPEC §13.7).
+ *
+ * Five indicators carry `varies_by_class` with a class-`b` statement that
+ * begins `**Optional:**` and a class-`c` statement that does not, so class B
+ * owes 41 of the 46 and every meter that divides by 46 at class b overstates
+ * what a provider is on the hook for.
+ *
+ * Read, never inferred, in three parts (§13.7):
+ *   1. the prefix at the START of the class statement is the only signal the
+ *      pinned JSON gives, so it is the only signal read — and the five
+ *      indicators carrying it are pinned in a test, so a republication that
+ *      changes the vocabulary fails there rather than quietly restoring 46;
+ *   2. a class the map does not name is REQUIRED. Under-counting the
+ *      denominator flatters the provider and over-counting only ever creates
+ *      work, and only one of those errors is found by an assessor;
+ *   3. `stated: false` is a source saying nothing, which is NOT the same as a
+ *      source saying "none are optional". The ramprules derived slices carry
+ *      no class variants at this pin (`checks[].statement` is null for exactly
+ *      those five and the variants are not served), so Path A alone cannot
+ *      answer and says so. `loadKsiCatalog` is what closes that by loading
+ *      both sources — the arrangement §12.4 rule 1 always allowed and R0.2
+ *      makes the default.
+ */
+export type ClassApplicability =
+  | {
+      stated: true;
+      /** ids optional at each class, ascending; the rest are required */
+      optionalAt: Readonly<Record<OfferingClass, readonly string[]>>;
+      /** which source stated it, for the line a reader sees under a number */
+      source: string;
+    }
+  | { stated: false; reason: string };
+
 /** FRC-CSX-VVK, per class: automated methods owed per KSI. */
 export interface MethodFloor {
   requirementId: string;
@@ -109,6 +144,13 @@ export interface KsiCatalog {
   windows: Readonly<Record<OfferingClass, ValidationWindow | null>>;
   /** VDR-TFR-NMV: the non-machine validation clock, not class-varied */
   nonMachineWindow: ValidationWindow;
+  /**
+   * Which indicators each class does not oblige (§13.7). Unlike every other
+   * field here this one is NOT an owed fact both paths state — the slices do
+   * not carry the class variants — so it is excluded from the §12.4
+   * equivalence walk and carries its own `stated` discriminant instead.
+   */
+  applicability: ClassApplicability;
 }
 
 /**
@@ -394,6 +436,13 @@ export async function loadKsiCatalogFromSlices(
     historyFloors,
     windows,
     nonMachineWindow,
+    // Path A cannot answer this and says so rather than returning an empty
+    // list, which a reader would take for "none are optional" (§13.7).
+    applicability: {
+      stated: false,
+      reason:
+        "the ramprules derived slices carry no class variants at this pin — checks.json nulls the statement for the five class-varying indicators and serves neither variant",
+    },
   };
 }
 
@@ -404,6 +453,41 @@ export async function loadKsiCatalogFromSlices(
 
 // string-keyed on purpose: an enum-keyed record demands every class, and
 // VDR-TFR-MVX legitimately carries no class d (SPEC §11 q6)
+/**
+ * The class-varied form a KSI INDICATOR carries: statements only, no `force`
+ * and no timeframe — unlike the FRR floors below, which is why it gets its own
+ * shape rather than reusing `VariesByClass`.
+ */
+const IndicatorVariesByClass = z.record(
+  z.string(),
+  z.object({ statement: z.string() }).passthrough(),
+);
+
+/**
+ * The rules JSON marks an indicator a class does not oblige by prefixing that
+ * class's statement — there is no `optional` field to read. The prefix is
+ * matched at the START of the statement and nowhere else: a sentence that
+ * merely mentions the word somewhere in its body is prose, not a marker, and
+ * a checker that matched it anywhere would turn a rewording into a silent
+ * exemption (§13.7 rule 1).
+ */
+const OPTIONAL_PREFIX = "**Optional:**";
+
+function optionalClassesOf(variesByClass: unknown, id: string, where: string): OfferingClass[] {
+  const parsed = IndicatorVariesByClass.parse(variesByClass);
+  const optional: OfferingClass[] = [];
+  for (const [cls, variant] of Object.entries(parsed)) {
+    if (!OFFERING_CLASSES.includes(cls as OfferingClass)) {
+      throw new CatalogSourceError(where, `${id} varies by class ${cls}, which is not a 20x class`);
+    }
+    if (variant.statement.trimStart().startsWith(OPTIONAL_PREFIX)) {
+      optional.push(cls as OfferingClass);
+    }
+  }
+  // A class the map does not name is REQUIRED, not optional — §13.7 rule 2.
+  return optional;
+}
+
 const VariesByClass = z.record(
   z.string(),
   z
@@ -478,11 +562,17 @@ export async function loadKsiCatalogFromRules(
 
   const themes: KsiTheme[] = [];
   const ksis: KsiEntry[] = [];
+  const optionalAt: Record<OfferingClass, string[]> = { a: [], b: [], c: [], d: [] };
   for (const theme of Object.values(rules.KSI)) {
     themes.push({ key: theme.short_name, name: theme.name });
     for (const [id, indicator] of Object.entries(theme.indicators)) {
       if (indicator.statement === undefined && indicator.varies_by_class === undefined) {
         throw new CatalogSourceError(where, `${id} carries neither a statement nor varies_by_class`);
+      }
+      if (indicator.varies_by_class !== undefined) {
+        for (const cls of optionalClassesOf(indicator.varies_by_class, id, where)) {
+          optionalAt[cls].push(id);
+        }
       }
       ksis.push({
         id,
@@ -569,6 +659,16 @@ export async function loadKsiCatalogFromRules(
       num: parseEveryNMonths(nmvRule.statement, `${where} (VDR-TFR-NMV)`),
       unit: "months",
     },
+    applicability: {
+      stated: true,
+      optionalAt: {
+        a: [...optionalAt.a].sort(),
+        b: [...optionalAt.b].sort(),
+        c: [...optionalAt.c].sort(),
+        d: [...optionalAt.d].sort(),
+      },
+      source: where,
+    },
   };
 }
 
@@ -582,6 +682,12 @@ export async function loadKsiCatalogFromRules(
  */
 export function assertCatalogsEquivalent(a: KsiCatalog, b: KsiCatalog): void {
   const walk = (x: unknown, y: unknown, at: string): void => {
+    // `applicability` is the one field here a path may legitimately not state
+    // (§13.7 rule 3): the slices carry no class variants, so Path A answers
+    // `stated: false`. Rule 2's hard-fail is for two sources DISAGREEING about
+    // an owed fact, and silence is not disagreement — walking it would refuse
+    // a load over a difference that means "one of us cannot see this".
+    if (at === "applicability") return;
     if (Array.isArray(x) && Array.isArray(y)) {
       if (x.length !== y.length) throw new CatalogDivergenceError(`${at}.length`, x.length, y.length);
       x.forEach((v, i) => walk(v, y[i], `${at}[${i}]`));
@@ -601,4 +707,66 @@ export function assertCatalogsEquivalent(a: KsiCatalog, b: KsiCatalog): void {
     if (x !== y) throw new CatalogDivergenceError(at, x, y);
   };
   walk(a, b, "");
+}
+
+// ---------------------------------------------------------------------------
+
+/** Where a catalog's two sources live. Both are vendored at the same pin. */
+export interface KsiCatalogSources {
+  /** the ramprules derived-slice directory — Path A */
+  derivedDir: string;
+  /** fedramp-consolidated-rules.json — Path B, the canonical upstream */
+  rulesFile: string;
+  pin: string;
+}
+
+/**
+ * Load BOTH paths and cross-check them — the default catalog surface from R0.2
+ * (SPEC §13.7).
+ *
+ * §12.4 always allowed this ("a consumer that loads both paths can call it
+ * too"); what makes it the default rather than a belt-and-suspenders option is
+ * that class applicability is an owed fact only the canonical source states,
+ * and a tool that printed a 46 denominator at class b because its default path
+ * could not see the five optional indicators would be typing a number the
+ * rules JSON owns.
+ *
+ * The cross-check is the point, not a cost: two independent parses of the same
+ * pin disagreeing on an owed fact is a broken port, and this is where that is
+ * discovered — at load, naming the fact, rather than in a document an assessor
+ * reads. Everything except `applicability` must be identical; that one field
+ * is taken from whichever source states it, and it is an error for BOTH to be
+ * silent, because then nothing is stating the denominator.
+ */
+export async function loadKsiCatalog(sources: KsiCatalogSources): Promise<KsiCatalog> {
+  const [slices, rules] = await Promise.all([
+    loadKsiCatalogFromSlices(sources.derivedDir, sources.pin),
+    loadKsiCatalogFromRules(sources.rulesFile, sources.pin),
+  ]);
+  assertCatalogsEquivalent(slices, rules);
+  const applicability = rules.applicability.stated ? rules.applicability : slices.applicability;
+  if (!applicability.stated) {
+    throw new CatalogSourceError(
+      basename(sources.rulesFile),
+      `neither source states class applicability at ${sources.pin} — ${applicability.reason}. Every class denominator would have to assume all 46 indicators are required, which is a number neither source owns`,
+    );
+  }
+  return { ...slices, applicability };
+}
+
+/**
+ * The indicators a class does not oblige, and the ones it does — the shape
+ * every denominator divides by. Kept beside the loader so no consumer
+ * re-derives "required" from "not optional" and gets the empty-list case
+ * wrong.
+ */
+export function requiredKsis(catalog: KsiCatalog, cls: OfferingClass): readonly KsiEntry[] {
+  if (!catalog.applicability.stated) return catalog.ksis;
+  const optional = new Set(catalog.applicability.optionalAt[cls]);
+  return catalog.ksis.filter((k) => !optional.has(k.id));
+}
+
+/** The ids this class leaves optional, ascending; empty when none or unstated. */
+export function optionalKsis(catalog: KsiCatalog, cls: OfferingClass): readonly string[] {
+  return catalog.applicability.stated ? catalog.applicability.optionalAt[cls] : [];
 }

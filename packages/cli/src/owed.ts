@@ -5,6 +5,7 @@ import type {
   OfferingClass,
   ValidationWindow,
 } from "@rampscan/dataset";
+import { optionalKsis, requiredKsis } from "@rampscan/dataset";
 
 // `rampscan owed` — the Q1 exit gate: the owed state for any (KSI, class)
 // pair, every number traceable to the pinned JSON. A pure derivation over the
@@ -68,17 +69,23 @@ export function renderOwed(catalog: KsiCatalog, cls: OfferingClass): string {
     "rampscan owed — the owed side of the register (SPEC §12)",
     `class ${CLASS_NAMES[cls]} · dataset ${catalog.datasetVersion}`,
     "",
-    `owed for EACH of the ${catalog.ksis.length} KSIs at class ${cls}:`,
+    `owed for EACH of the ${requiredKsis(catalog, cls).length} KSIs class ${cls} obliges:`,
     ...owedLines(catalog, cls),
     "",
     `  ${"KSI".padEnd(14)} ${"name".padEnd(38)} controls`,
   ];
+  // Optional indicators keep their row and say so — the class does not oblige
+  // them, and a provider who evidences one anyway has done real work (§13.7).
+  const optional = new Set(optionalKsis(catalog, cls));
   for (const ksi of catalog.ksis) {
-    lines.push(`  ${ksi.id.padEnd(14)} ${ksi.name.padEnd(38)} ${ksi.controls.length}`);
+    const tag = optional.has(ksi.id) ? `  optional at class ${cls}` : "";
+    lines.push(`  ${ksi.id.padEnd(14)} ${ksi.name.padEnd(38)} ${ksi.controls.length}${tag}`);
   }
   lines.push(
     "",
-    `${catalog.ksis.length} KSIs · ${catalog.themes.length} themes · every number above is read from the pinned JSON, never typed`,
+    optional.size === 0
+      ? `${catalog.ksis.length} KSIs · ${catalog.themes.length} themes · every number above is read from the pinned JSON, never typed`
+      : `${catalog.ksis.length} KSIs, ${catalog.ksis.length - optional.size} owed at class ${cls} · ${catalog.themes.length} themes · every number above is read from the pinned JSON, never typed`,
   );
   return lines.join("\n");
 }

@@ -4,7 +4,7 @@ import { basename, join, relative } from "node:path";
 import { z } from "zod";
 import { toIngestedBundle } from "@rampscan/core";
 import type { Digest } from "@rampscan/core";
-import { loadKsiCatalogFromSlices } from "@rampscan/dataset";
+import { loadKsiCatalog } from "@rampscan/dataset";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import type { IngestManifest, IngestManifestEntry, IngestSubmission } from "@rampscan/schema";
 import {
@@ -57,6 +57,8 @@ export interface IngestOptions {
   /** the offering/repo whose register this evidence joins — never guessed */
   repo: string;
   datasetDir: string;
+  /** the canonical rules JSON, loaded beside the slices and cross-checked (R0.2) */
+  rulesFile: string;
   datasetPin: string;
   ledgerDir: string;
   keysDir: string;
@@ -209,7 +211,11 @@ export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
   // Refusal before append: unknown KSIs and in-batch duplicates are collected
   // and reported TOGETHER, and nothing is signed while any stand — a batch
   // that half-landed is a ledger that says something no one decided.
-  const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+  const catalog = await loadKsiCatalog({
+    derivedDir: options.datasetDir,
+    rulesFile: options.rulesFile,
+    pin: options.datasetPin,
+  });
   const known = new Set(catalog.ksis.map((k) => k.id));
   const problems: string[] = [];
   const seen = new Set<string>();

@@ -76,12 +76,22 @@ function KsiBoard() {
     (k) => themeFilter === "all" || k.theme_key === themeFilter,
   );
 
-  const all = catalog.records.map((k) => byKsi.get(k.ksi));
+  // The meters count the indicators THIS class obliges (R0.2, §13.7). An
+  // optional row keeps its place on the board — the board has 46 rows at
+  // every class — and stays out of every numerator and denominator, so a
+  // provider who evidences one anyway is never shown 42 of 41.
+  const certClass = metaRow?.settings?.certClass;
+  const isOptional = (k: KsiCatalogRecord) =>
+    certClass !== undefined && (k.optional_at ?? []).includes(certClass);
+  const optional = catalog.records.filter(isOptional);
+  const obliged = catalog.records.filter((k) => !isOptional(k));
+  const all = obliged.map((k) => byKsi.get(k.ksi));
   const summary = {
-    total: catalog.records.length,
+    total: obliged.length,
     floorMet: all.filter((r) => r?.floor_met === true).length,
     automated: all.filter((r) => (r?.automated_methods ?? 0) > 0).length,
     noMethod: all.filter((r) => (r?.methods?.length ?? 0) === 0).length,
+    optional: optional.map((k) => k.ksi),
   };
 
   return (
@@ -106,6 +116,12 @@ function KsiBoard() {
             <span className="muted">
               covering all {summary.total} — a row with nothing to say is still a row
             </span>
+            {summary.optional.length > 0 && (
+              <span className="muted" title={summary.optional.join(", ")}>
+                {summary.optional.length} optional at class {certClass}, outside every
+                meter — {summary.optional.join(", ")}
+              </span>
+            )}
           </>
         )}
         <span style={{ marginLeft: "auto" }} />
@@ -144,7 +160,12 @@ function KsiBoard() {
           </thead>
           <tbody>
             {rows.map((k) => (
-              <KsiRowView key={k.ksi} entry={k} register={byKsi.get(k.ksi)} />
+              <KsiRowView
+                key={k.ksi}
+                entry={k}
+                register={byKsi.get(k.ksi)}
+                optional={isOptional(k)}
+              />
             ))}
             {!catalog.loading && rows.length === 0 && (
               <tr>
@@ -164,9 +185,12 @@ function KsiBoard() {
 function KsiRowView({
   entry,
   register,
+  optional,
 }: {
   entry: KsiCatalogRecord;
   register: MethodRegisterRecord | undefined;
+  /** this class does not oblige the indicator (R0.2, §13.7) — shown, not hidden */
+  optional?: boolean;
 }) {
   // the interrogation view is the DEFAULT detail view: one click on the row
   const [open, setOpen] = useState(false);
@@ -179,7 +203,10 @@ function KsiRowView({
     <>
       <tr className="rowlink" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <td className="mono">{entry.ksi}</td>
-        <td className="muted">{entry.name}</td>
+        <td className="muted">
+          {entry.name}
+          {optional === true && <span className="muted"> · optional at this class</span>}
+        </td>
         <td>
           <span className={`pill ${register?.floor_met === true ? "evidenced" : "unevidenced"}`}>
             {automated}/{floor ?? "—"}

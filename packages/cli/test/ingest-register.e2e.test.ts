@@ -23,6 +23,7 @@ import { deriveCatalogMethods, loadRecipes } from "../src/recipes.js";
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const RECIPES_DIR = join(REPO_ROOT, "recipes/commit");
 const DATASET_DIR = join(REPO_ROOT, "docs/context/ramprules/derived");
+const RULES_FILE = join(REPO_ROOT, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
 const TREE = join(REPO_ROOT, "fixtures/ingest-evidence-tree");
 const REPO = "fixtures/vulnerable-app";
 
@@ -53,6 +54,7 @@ describe("ingested results count on the board (Q4.3)", () => {
       path: TREE,
       repo: REPO,
       datasetDir: DATASET_DIR,
+      rulesFile: RULES_FILE,
       datasetPin: DEFAULT_DATASET_PIN,
       ledgerDir: inputs.ledgerDir,
       keysDir: join(work, "keys"),
@@ -133,6 +135,7 @@ describe("ingested results count on the board (Q4.3)", () => {
       path: TREE,
       repo: REPO,
       datasetDir: DATASET_DIR,
+      rulesFile: RULES_FILE,
       datasetPin: DEFAULT_DATASET_PIN,
       ledgerDir: a.ledgerDir,
       keysDir: join(withIngest, "keys"),

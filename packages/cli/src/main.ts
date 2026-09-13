@@ -7,8 +7,7 @@ import {
   DEFAULT_DATASET_PIN,
   DEFAULT_OVERLAY_PINS,
   OFFERING_CLASSES,
-  loadKsiCatalogFromRules,
-  loadKsiCatalogFromSlices,
+  loadKsiCatalog,
   loadLocalDataset,
   type OfferingClass,
 } from "@rampscan/dataset";
@@ -101,23 +100,23 @@ function usage(): never {
       "                    Package Overview (FRC-CSO-PKG) and an Ongoing Certification Report",
       "                    (CCM-OCR-AVL) as JSON valid against the PINNED FedRAMP schemas —",
       "                    the scanned repo's declared `offering` block joined to the fold.",
-      "                    Lands in <out>/exports/. Exits 1 on a nonconforming document",
+      "                    Lands in <out>/exports/fedramp/. Exits 1 on a nonconforming document",
       "                    (FRC-CSO-JSN); every document carries its own conformance verdict",
       "  conformance [path]  the package conformance check (plan Q5.2 — G10, FRC-CSO-JSN):",
       "                    certification JSON on disk validated against the PINNED FedRAMP",
       "                    schemas — rampscan's own exports or a document another tool wrote.",
-      "                    Defaults to <out>/exports/; takes a file or a directory. Also checks",
-      "                    each document's own conformance stamp AGAINST a fresh validation, so",
-      "                    a file claiming a verdict it no longer earns fails. Exits 1 on any",
-      "                    violation, disagreement, or unresolvable schema — never a skip",
+      "                    Defaults to <out>/exports/fedramp/; takes a file or a directory. Also",
+      "                    checks each document's own conformance stamp AGAINST a fresh",
+      "                    validation, so a file claiming a verdict it no longer earns fails.",
+      "                    Exits 1 on any violation, disagreement, or unresolvable schema",
+      "                    — never a skip",
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
       "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
       "                    method floor, validation window, artifact count — every number read",
       "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
-      "                    the scheduler still refuses d). --rules <file> loads the canonical",
-      "                    fedramp-consolidated-rules.json instead of the ramprules slices",
+      "                    the scheduler still refuses d)",
       "",
       "options:",
       "  --out <dir>       scan/daemon output directory (default: ./rampscan-out);",
@@ -137,8 +136,9 @@ function usage(): never {
       "                    is a what-if",
       "                    against that class's floors (SPEC §12.3/§12.5); the scheduler still",
       "                    refuses d",
-      "  --rules <file>    owed: load the canonical fedramp-consolidated-rules.json (Path B",
-      "                    of the dual-source contract) instead of the ramprules slices",
+      "  --rules <file>    path to fedramp-consolidated-rules.json (Path B of the dual-source",
+      "                    contract). Loaded beside the ramprules slices and cross-checked",
+      "                    against them at every command; defaults to the vendored copy",
       "  --as-of <iso>     board: fold only statements at or before this instant (I1b)",
       "  --since <v>       board: lead with the diff against a baseline board — `previous`",
       "                    (the scan before the current one) or an ISO instant (I2d)",
@@ -210,7 +210,15 @@ async function main(): Promise<void> {
   const ledgerDir = values.ledger ?? "./rampscan-ledger";
   const keysDir = values.keys ?? "./rampscan-keys";
   const datasetDir = values.dataset ?? join(REPO_ROOT, "docs/context/ramprules/derived");
+  // Both legs of the dual-source contract are vendored at the same pin, and
+  // R0.2 loads BOTH by default (SPEC §13.7): class applicability is an owed
+  // fact only the canonical rules JSON states, and the slices alone would
+  // divide every class-b meter by 46 where the rules oblige 41. `--rules`
+  // now points the canonical leg somewhere else rather than switching paths.
+  const rulesFile =
+    values.rules ?? join(REPO_ROOT, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
   const datasetPin = values.pin ?? DEFAULT_DATASET_PIN;
+  const catalogSources = { derivedDir: datasetDir, rulesFile, pin: datasetPin };
   const recipesDir = values.recipes ?? join(REPO_ROOT, "recipes/commit");
   const adjudicationsDir = values.adjudications ?? join(REPO_ROOT, "recipes/adjudications");
   const useColor = values["no-color"] ? false : (process.stdout.isTTY ?? false);
@@ -305,6 +313,7 @@ async function main(): Promise<void> {
         path: target,
         repo: values.repo,
         datasetDir,
+        rulesFile,
         datasetPin,
         ledgerDir,
         keysDir,
@@ -364,7 +373,7 @@ async function main(): Promise<void> {
 
     case "rebuild": {
       // PocketBase needs no flag here: `rampscan serve` re-projects it on every ledger append
-      const rebuildCatalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      const rebuildCatalog = await loadKsiCatalog(catalogSources);
       const report = await rebuild({
         ledgerDir,
         recipesDir,
@@ -487,7 +496,7 @@ async function main(): Promise<void> {
         // the denominator, never the checks.
         const registerClass = (values.class ?? "b") as OfferingClass;
         if (!OFFERING_CLASSES.includes(registerClass)) usage();
-        const catalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+        const catalog = await loadKsiCatalog(catalogSources);
         const methods = deriveCatalogMethods(
           recipes,
           allCollectors.map((c) => c.manifest),
@@ -554,7 +563,7 @@ async function main(): Promise<void> {
       });
       const registerClass = (values.class ?? "b") as OfferingClass;
       if (!OFFERING_CLASSES.includes(registerClass)) usage();
-      const catalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      const catalog = await loadKsiCatalog(catalogSources);
       const methods = deriveCatalogMethods(
         recipes,
         allCollectors.map((c) => c.manifest),
@@ -605,7 +614,7 @@ async function main(): Promise<void> {
       }
       const exportClass = (values.class ?? "b") as OfferingClass;
       if (!OFFERING_CLASSES.includes(exportClass)) usage();
-      const exportCatalog = await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      const exportCatalog = await loadKsiCatalog(catalogSources);
       const exportRecipes = await loadRecipes(recipesDir);
       const exportProjector = createProjector({
         recipes: exportRecipes,
@@ -632,7 +641,11 @@ async function main(): Promise<void> {
       const exportRepo = values.repo ?? exportRepos[0];
       const exportResult = await writeFedrampExports({
         schemaRoot: REPO_ROOT,
-        exportsDir: join(values.out ?? "./rampscan-out", "exports"),
+        // The schema-gated family gets its own directory (R0.3, SPEC §13.8):
+        // `scan` writes openvex.json into <out>/exports/, and a conformance
+        // check whose default path met a document no FedRAMP schema gates
+        // would exit — correctly and uselessly.
+        exportsDir: join(values.out ?? "./rampscan-out", "exports", "fedramp"),
         offering,
         offeringClass: exportClass,
         ...(exportRepo !== undefined ? { repo: exportRepo } : {}),
@@ -659,7 +672,8 @@ async function main(): Promise<void> {
       // certification package another tool wrote, one edited by hand, or one
       // this appliance generated before the pins moved. Fails closed: a
       // document whose schema cannot be resolved is an exit, not a skip.
-      const conformanceTarget = target ?? join(values.out ?? "./rampscan-out", "exports");
+      const conformanceTarget =
+        target ?? join(values.out ?? "./rampscan-out", "exports", "fedramp");
       let conformanceResult;
       try {
         conformanceResult = await checkConformance({
@@ -681,14 +695,12 @@ async function main(): Promise<void> {
     case "owed": {
       // The Q1 exit gate: the owed state for any (KSI, class) pair, every
       // number read from the pinned JSON. Both legs of the dual-source
-      // contract (SPEC §12.4) reach this one surface: the ramprules slices by
-      // default, the canonical rules JSON under --rules — same catalog value,
-      // by test.
+      // contract (SPEC §12.4) reach this one surface and are cross-checked
+      // against each other at load (R0.2, §13.7) — a disagreement at the same
+      // pin is a broken port and is refused here rather than printed.
       const owedClass = (values.class ?? "b") as OfferingClass;
       if (!OFFERING_CLASSES.includes(owedClass)) usage();
-      const catalog = values.rules
-        ? await loadKsiCatalogFromRules(values.rules, datasetPin)
-        : await loadKsiCatalogFromSlices(datasetDir, datasetPin);
+      const catalog = await loadKsiCatalog(catalogSources);
       if (values.json) {
         console.log(
           JSON.stringify(
@@ -749,6 +761,7 @@ async function main(): Promise<void> {
         keysDir: resolve(keysDir),
         recipesDir: resolve(recipesDir),
         datasetDir: resolve(datasetDir),
+        rulesFile: resolve(rulesFile),
         datasetPin,
         outDir: resolve(values.out ?? "./rampscan-out"),
         certClass,

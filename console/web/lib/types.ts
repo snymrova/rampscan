@@ -248,6 +248,13 @@ export interface KsiCatalogRecord {
   controls: string[];
   /** the five owed artifact texts (default_artifacts.KSI), rules' order (Q3.3) */
   artifacts: string[];
+  /**
+   * The classes that do NOT oblige this indicator (R0.2, SPEC §13.7) — read
+   * from the rules JSON's own `**Optional:**` prefix by the catalog loader,
+   * mirrored here so the board divides by the denominator the CLI prints
+   * rather than computing a second one.
+   */
+  optional_at: string[];
 }
 
 export interface CoverageRecord {

@@ -55,6 +55,9 @@ const catalog: KsiCatalog = {
     d: null,
   },
   nonMachineWindow: { requirementId: "VDR-TFR-NMV", force: "MUST", num: 3, unit: "months" },
+  // every class obliges every indicator in this fixture — the optional-row
+  // arithmetic has its own test beside the loader that reads the prefix
+  applicability: { stated: true, optionalAt: { a: [], b: [], c: [], d: [] }, source: "fixture" },
 };
 
 const recipes = [recipe("covered", ["KSI-SCR-MIT"]), recipe("both", ["KSI-SCR-MIT", "KSI-CMT-CHG"])];

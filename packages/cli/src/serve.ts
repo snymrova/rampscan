@@ -12,7 +12,7 @@ import {
 } from "@rampscan/projector";
 import type { ProjectionSettings } from "@rampscan/projector";
 import { allCollectors } from "@rampscan/collectors";
-import { loadKsiCatalogFromSlices } from "@rampscan/dataset";
+import { OFFERING_CLASSES, loadKsiCatalog, optionalKsis } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import type { CertClass } from "@rampscan/core";
 import { windowMsFor } from "@rampscan/scheduler";
@@ -40,6 +40,8 @@ export interface ServeOptions {
   keysDir: string;
   recipesDir: string;
   datasetDir: string;
+  /** the canonical rules JSON, loaded beside the slices and cross-checked (R0.2) */
+  rulesFile: string;
   datasetPin: string;
   /** scan/daemon output dir — serve tails outDir/daemon-events.jsonl into the console */
   outDir: string;
@@ -72,7 +74,11 @@ export async function serve(options: ServeOptions): Promise<void> {
   // The KSI pivot's inputs (Q2.5): the owed catalog and the derived methods,
   // so every fold this serve writes carries the method register — and the
   // console's board can be keyed the way the product is.
-  const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+  const catalog = await loadKsiCatalog({
+    derivedDir: options.datasetDir,
+    rulesFile: options.rulesFile,
+    pin: options.datasetPin,
+  });
   const methods = deriveCatalogMethods(
     recipes,
     allCollectors.map((c) => c.manifest),
@@ -137,6 +143,9 @@ export async function serve(options: ServeOptions): Promise<void> {
       // the five owed artifact texts (Q3.3) — catalog-wide at this pin,
       // carried per row so the checklist quotes the pinned JSON
       artifacts: catalog.defaultArtifacts,
+      // R0.2 (§13.7): which classes leave this indicator optional, so the
+      // board's denominator is the CLI's denominator
+      optionalAt: OFFERING_CLASSES.filter((cls) => optionalKsis(catalog, cls).includes(k.id)),
     })),
     pb.admin,
   );
