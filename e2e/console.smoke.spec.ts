@@ -71,9 +71,14 @@ test("KSI board: 46 rows always, a covered KSI expands to the interrogation view
   await expect(page.locator("table.reg > tbody > tr.rowlink")).toHaveCount(46);
   await expect(page.locator(".pill", { hasText: "G1 coverage" }).first()).toBeVisible();
 
-  // the summary states cover and automate side by side (ground rule 2)
+  // the summary states cover and automate side by side (ground rule 2), and
+  // it divides by what class b OBLIGES — 41 of the 46 (R0.2, SPEC §13.7).
+  // The five optional rows are still rows above; they are simply outside
+  // every meter, and the board names them rather than absorbing them.
   await expect(page.locator(".filters")).toContainText("floor met on");
-  await expect(page.locator(".filters")).toContainText("covering all 46");
+  await expect(page.locator(".filters")).toContainText("covering all 41");
+  await expect(page.locator(".filters")).toContainText("5 optional at class b");
+  await expect(page.locator(".filters")).toContainText("KSI-SVC-RUD");
 
   // a KSI the fixture scan evidences: expand → methods with declared scope,
   // the crosswalk drawer, and the hop to signed evidence (FRR-PVA-AA-06).
