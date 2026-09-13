@@ -1,5 +1,5 @@
 import { toArtifact } from "@rampscan/core";
-import type { Digest } from "@rampscan/core";
+import type { Digest, Projection } from "@rampscan/core";
 import { loadKsiCatalogFromSlices } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
 import type {
@@ -11,6 +11,7 @@ import type {
 } from "@rampscan/schema";
 import { Artifact, isArtifact } from "@rampscan/schema";
 import { createLocalSigner } from "@rampscan/signer";
+import { generateArtifact4 } from "./artifact-generators.js";
 
 // The artifact plane's write path (plan R1.1, SPEC §13.2) — `recordScoping`,
 // `recordArtifactJudgment` and `recordAttestation`'s fourth sibling, and the
@@ -130,5 +131,95 @@ export async function recordArtifact(
   if (statement.predicate.supersedes !== undefined) {
     result.supersedes = statement.predicate.supersedes;
   }
+  return result;
+}
+
+/**
+ * Mint a computed artifact from the fold (plan R1.2 — artifact 4 today, 2 and
+ * 5 in R1.3) and append it, or report the reason there was nothing to compute.
+ *
+ * The refusal is a first-class outcome, not an error: SPEC §13.4 makes an
+ * absence with a reason the generator's honest output for an artifact nobody
+ * has grounds to write, and a caller that treated it as a failure would push
+ * whoever runs it toward writing the paragraph by hand to make the tool stop
+ * complaining. `rampscan artifacts` (R1.5) prints these as a work queue.
+ */
+export interface MintComputedArtifactOptions {
+  repo: string;
+  ksiId: string;
+  /** the computed slots — 2, 4 and 5 are the only ones §13.4 allows */
+  artifact: 2 | 4 | 5;
+  /** a fold of the ledger this artifact will be appended to */
+  projection: Projection;
+  datasetDir: string;
+  datasetPin: string;
+  ledgerDir: string;
+  keysDir: string;
+  now?: Date;
+  log?: (line: string) => void;
+}
+
+export type MintedArtifact =
+  | { minted: true; digest: Digest; bodyDigest: string; supersedes?: string }
+  | { minted: false; reason: string };
+
+// Minting the same bytes twice is not an error and is not skipped. §13.5 is
+// explicit that a computed artifact's clock restarts at each generation that
+// produces it — "the body was recomputed from current evidence at that
+// instant" is a true and useful statement, and suppressing the append to save
+// a ledger entry would leave a recomputed artifact ageing out at three months
+// as though nobody had looked. `supersedes` stays absent when the bytes are
+// identical, because identical bytes are not a revision of themselves.
+
+export async function mintComputedArtifact(
+  options: MintComputedArtifactOptions,
+): Promise<MintedArtifact> {
+  const row = options.projection.methodRegisters.find(
+    (r) => r.repo === options.repo && r.ksi === options.ksiId,
+  );
+  if (row === undefined) {
+    return {
+      minted: false,
+      reason:
+        `${options.ksiId} has no row on ${options.repo}'s method register — nothing has been ` +
+        `folded for it, so there is nothing to compute from`,
+    };
+  }
+
+  const catalog = await loadKsiCatalogFromSlices(options.datasetDir, options.datasetPin);
+  const input = {
+    repo: options.repo,
+    ksiId: options.ksiId,
+    row,
+    registers: options.projection.registers,
+    scanRuns: options.projection.scanRuns,
+    datasetVersion: catalog.datasetVersion,
+  };
+  const generated =
+    options.artifact === 4
+      ? generateArtifact4(input)
+      : { generated: false as const, reason: `artifact ${options.artifact} has no generator yet (R1.3)` };
+  if (!generated.generated) return { minted: false, reason: generated.reason };
+
+  const recorded = await recordArtifact({
+    repo: options.repo,
+    ksiId: options.ksiId,
+    artifact: options.artifact,
+    source: "computed",
+    body: generated.body,
+    generator: generated.generator,
+    datasetDir: options.datasetDir,
+    datasetPin: options.datasetPin,
+    ledgerDir: options.ledgerDir,
+    keysDir: options.keysDir,
+    ...(options.now !== undefined ? { now: options.now } : {}),
+    ...(options.log !== undefined ? { log: options.log } : {}),
+  });
+  const result: MintedArtifact = {
+    minted: true,
+    digest: recorded.digest,
+    bodyDigest: recorded.bodyDigest,
+  };
+  if (recorded.supersedes !== undefined) result.supersedes = recorded.supersedes;
   return result;
 }
