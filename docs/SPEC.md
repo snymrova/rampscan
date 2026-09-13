@@ -1,8 +1,8 @@
 # rampscan — working spec
 
 **Status:** draft spec, brainstorm-grade. Decisions marked **DECIDED** are settled unless contradicted by building; everything else is a recommendation with the reasoning attached.
-**Date:** 2026-08-13 · **amended 2026-09-11** (§12, the KSI pivot — the Q0 spec amendment of `docs/PLAN-KSI-PIVOT.md`)
-**Reads against:** `docs/COMPLIANCE-SCAN-HARNESS.md` (the founding doc — its §11 decisions bind this spec), `docs/context/ramprules/` (dataset 2026.07.14.01), `docs/context/harnessarch/` (the code-graph and domain-harness arguments); §12 additionally reads against `docs/RESEARCH-KSI-GAP-ENGINE.md` and `docs/RESEARCH-PARAMIFY-PILOT.md`.
+**Date:** 2026-08-13 · **amended 2026-09-11** (§12, the KSI pivot — the Q0 spec amendment of `docs/PLAN-KSI-PIVOT.md`) · **amended 2026-09-13** (§13, the artifact plane — the R0 spec amendment of `docs/PLAN-ARTIFACT-PLANE.md`)
+**Reads against:** `docs/COMPLIANCE-SCAN-HARNESS.md` (the founding doc — its §11 decisions bind this spec), `docs/context/ramprules/` (dataset 2026.07.14.01), `docs/context/harnessarch/` (the code-graph and domain-harness arguments); §12 additionally reads against `docs/RESEARCH-KSI-GAP-ENGINE.md` and `docs/RESEARCH-PARAMIFY-PILOT.md`, and §13 against `docs/PLAN-ARTIFACT-PLANE.md`, `docs/RESEARCH-KSI-FULFILMENT.html` and `docs/RESEARCH-UPSTREAM-READINESS.html`.
 
 ---
 
@@ -564,3 +564,108 @@ What remains — and it is the reason this step is not ceremony — is **the div
 **Both readings are published, neither is chosen.** The rules text supports an argument that `FRC-APP-FCP` governs everything in the package, and an argument that it speaks only to what a machine re-verifies while `VDR-TFR-NMV` keeps its three months for an attestation. `fresh` answers the first and `machineOnlyFresh` the second, both computed, both in the document. An appliance settling that question silently would be making a regulatory interpretation on a provider's behalf in a field the provider is the one who signs.
 
 **Unmet is a stated problem, not a refused export.** A stale package is a true statement about a real posture; refusing to write it would hide it. The document is written, `fresh` reads false, and `problems` names which of the two causes drove it and how many methods each. The conformance gate stays about `FRC-CSO-JSN` — schema validity — and does not fail on freshness, because those are different rules and a gate that conflated them would report the wrong one.
+
+## 13. The artifact plane — the R0 spec amendment (DECIDED 2026-09-13)
+
+This section is the spec side of `docs/PLAN-ARTIFACT-PLANE.md` Phase R0: the decisions locked before any code changes, because one of them — the `Artifact` entity — is the costly-to-reverse decision of this plane exactly as `ValidationMethod` was of the pivot. Everything here is **DECIDED** on merge. The plan's four ground rules apply from here on, and rules 1–10 of the depth and launch plans and the five pivot rules stay active unchanged.
+
+**The addition in one sentence:** rampscan holds an *owed* plane and a *proven* plane and nothing between them — `SDR-CSX-KSI` (MUST) makes the five artifacts the required content of the Security Decision Record, the document `FRD-SDR` defines as the SSP's replacement, so the artifact becomes a first-class signed object with the same lifecycle as evidence and the deliverable documents fall out of it.
+
+### 13.1 Where the plane sits
+
+```
+OWED (§12.1)  ──┐                                    ┌── PROVEN (§12.1)
+ catalog,       │   ┌─ ARTIFACT (this section) ──┐   │  pipeline · ingested
+ floors,        └──►│ (repo, ksi, n∈1..5) → body │◄──┘  · attested
+ 5 artifacts        │ signed · addressed · clocked│
+                    └──────────────┬──────────────┘
+                                   ▼
+                          GAP ENGINE — G5 stops being unanswerable
+                                   ▼
+                    SDR (R2) · historical metrics (R3) · VER trio (R4)
+```
+
+No new store, no new signature format, and no change to the ten `ARCHITECTURE.md` §9 invariants. The projector stays the only writer (invariant 6); an artifact enters the same way everything else does, as a signed statement appended to the ledger and folded.
+
+### 13.2 The `Artifact` entity
+
+**DECIDED: an artifact fills a slot, and the slot is `(repo, ksi_id, artifact)`.** The KSI is one, mnemonic form, as everywhere since §12.2; `artifact` is 1-based into `info.default_artifacts.KSI`, the rules' own order. A later artifact for the same slot **supersedes** the earlier one — an append-only ledger revises by writing again, never by editing, which is the same rule scoping, judgment and attestation already keep.
+
+**DECIDED: the body rides the predicate and the subject digests it**, exactly as an attestation carries the attestor's statement. The alternative — a digest pointing at bytes in the output dir, the J4 arrangement for tool artifacts — was rejected for one reason: R2 must render `ksiImplementation` *into* a document and R3 must refold a year of them, and a plane whose prose is only reachable through a directory that later runs overwrite would make the SDR unreproducible from the record. What the ledger holds, an assessor holding the ledger can read.
+
+```
+Artifact
+  ksi_id        exactly one KSI id, mnemonic form
+  artifact      1 | 2 | 3 | 4 | 5     (default_artifacts.KSI, the rules' order)
+  repo          the offering this speaks for — one offering per document (§12.11)
+  source        authored | computed | attested | assessed
+  body          Markdown. The SDR's statements are Markdown-typed, so the
+                artifact is stored in the form the document wants it.
+  body_digest   sha256 over the canonical body bytes — the subject, and the
+                address everywhere else
+  anchor        { commit, path } when source = authored; ABSENT otherwise, and
+                absent means absent — never a commit that merely happened to be
+                checked out when a generator ran
+  generator     when source = computed: the pin set, the tool versions and the
+                exec-journal digest that produced these bytes
+  review        when known: the record that this body was reviewed, with its
+                own source (R4's forge plane). NEVER asserted, never defaulted,
+                and its absence is printed rather than assumed benign
+  supersedes    the body_digest this revises, when it revises one
+  valid_from    the clock's start (§13.5)
+```
+
+**A body is prose, and the ledger is not a document store.** `SDR-CSX-KSI` asks for "short and simple high-level summaries"; a body is bounded at 64 KiB and a longer one is **refused** at append with that sentence quoted. A document larger than its own summary is a document, and a document belongs behind an `evidenceLocation` the SDR already has a slot for — resolved through J4's digest addressing, which is the one place in this system bytes are served from.
+
+### 13.3 The four sources, and what each is allowed to mean
+
+The distinction is load-bearing, not decorative: it is what an assessor reads to know who stood behind a sentence.
+
+- **`authored`** — a file in the scanned repository, commit-anchored, discovered by the generalized `documents` collector (R1.4). This is the CSP engineer's habitat: the artifact lives beside the code, moves through the same review, and **dies by anchor drift** like any other evidence when the thing it describes changes. Appending one is a collector observation signed like evidence — *not* a two-key write, because the repository's own review is the second key and adding a ceremony the pull request already performed would teach people to click through it.
+- **`computed`** — rampscan generates the body from the fold. Legitimate for **2**, **4** and **5** only (§13.4). A computed artifact carries `generator` and is regenerated, never edited; its body is a function of the fold, so two runs over the same ledger at the same instant produce the same digest — the same reproducibility R3's metrics are held to.
+- **`attested`** — the existing two-key path of §12.9, unchanged, for the acts-on-people remainder. The attestation *is* the body's signature; nothing new is invented here.
+- **`assessed`** — the `IVV-IAS-SUM` inbound (R4.5). The independent assessor's summary is **ingested** like a client-run result rather than typed, so the SDR's `ksiAssessment` carries a provenance instead of a paste. Where a paste is the only thing on offer, it is labelled `declared` and says so in the document.
+
+### 13.4 What rampscan will never author
+
+**DECIDED, and this is the constraint the plane exists under.** Artifacts **1** (the explanation of measures, or of the reason and resulting customer risk for not having them) and **3** (verification that the measures demonstrate the indicator, or that the reason is accepted) are the provider's own claims, and `source: computed` is **refused** for them by the schema rather than by a convention somebody remembers.
+
+The generator's output for an unwritten artifact is an **absence with a reason**, never a draft: `artifacts scaffold` writes the computed halves and leaves the human halves conspicuously empty and labelled. An LLM in the loop makes authoring these trivially possible and that is exactly why the refusal is written down here — the moment this appliance emits plausible compliance narrative, `SDR-CSX-KSI` becomes a text-generation benchmark and every signature in the ledger is worth less.
+
+The reason-for-absence path is **first-class, not a failure**: artifact 1 explicitly permits "an explanation of the reason and resulting risk to customers for not having measures available" for that indicator. A provider who writes that has satisfied the rule, and the board must count it as satisfied rather than scold them for it.
+
+### 13.5 The artifact clock
+
+**An artifact is non-machine validation and answers to `VDR-TFR-NMV` — three months — whatever its source.** It is not `VDR-TFR-MVX` (7 days class b, 3 days class c), which is the machine cadence of §12.2's `clock: "machine"` family, and it is not `FRC-APP-FCP`'s flat 7-day application window (§12.12). Three clocks that read a number each is three clocks; the artifact one gets `valid_from` and nothing else.
+
+A **computed** artifact's clock restarts at each fold that produces it. That is not a loophole — it is the true statement that the body was recomputed from current evidence at that instant, and it is exactly as strong as the evidence underneath it, which the same board already ages. An **authored** artifact's clock starts at its anchor's commit date and runs out at three months, which is the point of the plane: every other document tool treats a written artifact as done, and `SDR-CSX-KSI` item 2 asks for the *cycle*.
+
+### 13.6 Judgment, unchanged — and what it now judges
+
+`ArtifactJudgment` (§12's two-key path, `packages/schema/src/artifact-judgment.ts`) keeps its closed `1 | 3 | 4` union: artifacts 2 and 5 are computed by the fold and **no signature may override a computation**. What changes is that the judgment finally judges a body that exists — its `subject` points at the judged `body_digest`, so "artifact 3 is sufficient" names the bytes it approved and a later revision of those bytes is unjudged until judged again.
+
+That is the whole reason to sequence the plane before anything else: today the system can sign that an artifact is sufficient and cannot show you the artifact.
+
+### 13.7 Class-optional KSIs — the denominator decision
+
+**DECIDED: optionality is read, never inferred, and an unstated class is required.**
+
+Five indicators carry `varies_by_class` with a class-`b` statement beginning `**Optional:**` and a class-`c` statement that does not — `KSI-CNA-EIS`, `KSI-MLA-ALA`, `KSI-SVC-PRR`, `KSI-SVC-RUD`, `KSI-SVC-VCM`. The catalog loader reads `varies_by_class` for the three class-varying FRR floors and only those, so every meter prints a 46 denominator at every class when class B's honest figure is 41. A tool whose pitch is *computed, never typed* cannot leave that standing, and it is fixed here rather than later because every number R1 onward prints divides by it.
+
+Three decisions make it honest:
+
+1. **The prefix is the only signal the pinned JSON gives, so the prefix is what is read** — at the start of the class statement, exactly. The five indicators carrying it today are pinned in a test, so a republication that changes the vocabulary (an `optional` field, a different marker) fails that test rather than quietly restoring 46. Ground rule 7 applied to our own reader.
+2. **A class the map does not name is required, not optional.** `varies_by_class` on these indicators names `b` and `c` and nothing else; `VDR-TFR-MVX` already establishes that an absent class means the rule states nothing there, and the honest response to silence is the conservative one. Under-counting the denominator flatters the provider; over-counting only ever creates work that turns out to be unnecessary, and only one of those errors is discovered by an assessor.
+3. **An optional KSI keeps its row and leaves the denominators.** Invariant 4 is unchanged — the board has 46 rows at every class, because a KSI that vanished from the board would be a KSI nobody remembers at the class where it returns. It is excluded from both the numerator and the denominator of the class meters, labelled optional with the rule's own word, and counted on its own line: `5 optional at class b`, named, with how many are evidenced anyway. A provider who exceeds what their class owes should see that they did, and should never see 42 of 41.
+
+### 13.8 One directory per gated family
+
+**DECIDED: the schema-gated package documents land in `<out>/exports/fedramp/`, and `conformance` defaults there.**
+
+`scan` writes `openvex.json` into `<out>/exports/` (§M4, a published path that does not move) and `exports` writes the FedRAMP documents beside it, so `conformance` on its own default path meets a document no FedRAMP schema gates and exits — correctly, per §12.12's fail-closed resolution, and uselessly. CI dodges it today by exporting into a temp directory with an absent ledger.
+
+The fix is the directory, not the resolution rule. Loosening resolution to skip what it does not recognise would trade a false alarm for the one failure mode a conformance checker must not have — reporting a clean directory it never read. Giving the gated family its own directory means every document in the checked path is a document the check gates, which stays true as R2's SDR and R4's VER trio join it, and `conformance <path>` over an arbitrary file is unchanged for the case it was built for: a document another tool wrote.
+
+### 13.9 Adoption mechanics
+
+The plan's phases live as GitHub milestones (`R0 — the object, locked` … `R5 — the reviewer surface`) with issues per numbered item, created at adoption 2026-09-13 (#92). The milestones are the plan of record; this section is the specification the R1–R5 issues implement.
