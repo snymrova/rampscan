@@ -390,6 +390,8 @@ export function entrypointSourceNote(source: string): string {
       return "declared in rampscan.config.json — this repo told the scanner where its entry points are";
     case "package.json":
       return "inferred from package.json (main/module/bin/exports) — nothing declared them, so they were read off the manifest";
+    case "framework":
+      return "inferred from framework file conventions (Next.js app/, pages/, middleware) — no manifest declared them, and the framework loads these on its own";
     case "fallback":
       return "guessed from conventional filenames (index/main/server/app) — nothing declared them and package.json named none, which is the weakest of the three";
     case "none":
@@ -407,5 +409,6 @@ export function basisStrength(basis: ClaimBasisRecord): "weak" | "stated" {
   if (basis.entrypoints.length === 0) return "weak";
   if (basis.entrypoint_source === "fallback" || basis.entrypoint_source === "none") return "weak";
   if ((basis.entrypoints_unresolved?.length ?? 0) > 0) return "weak";
+  if (basis.entrypoints_excluded?.some((e) => !e.reached)) return "weak";
   return "stated";
 }

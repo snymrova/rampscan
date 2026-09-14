@@ -154,6 +154,24 @@ export const ClaimBasis = z.object({
       }),
     )
     .optional(),
+  /**
+   * What entry-point detection found that the config left out (S1-4), each
+   * with whether the walk reached it anyway. Config still decides where the
+   * walk starts; this is the record of what it decided against, signed with
+   * the claim so a reader can see the narrowing rather than infer it. One
+   * not reached is a place the program starts that no walk covered, and the
+   * gate refuses `not_affected` for the run while one exists.
+   */
+  entrypoints_excluded: z
+    .array(
+      z.object({
+        file: z.string(),
+        via: z.string(),
+        root: z.string(),
+        reached: z.boolean(),
+      }),
+    )
+    .optional(),
   /** what the walk was over — the graph's own identity and shape */
   graph: z
     .object({

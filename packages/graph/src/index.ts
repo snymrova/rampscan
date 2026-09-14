@@ -16,7 +16,9 @@ export * from "./sbom.js";
 // negative claim about the ones it did not
 // 0.4.0: `export … from "x"` is an imports edge — a package barrel no longer
 // stops the walk (the self-scan measured `core` 1 of 20 files reached)
-export const GRAPH_VERSION = "0.4.0";
+// 0.5.0: entry-point detection runs over every application root, reads
+// Next.js file conventions, and graph.db records what config excluded (S1-4)
+export const GRAPH_VERSION = "0.5.0";
 
 /** tool version string for manifests/bundles: extractor + the parser it rides on */
 export function graphToolVersion(): string {

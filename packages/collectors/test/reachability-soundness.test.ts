@@ -8,6 +8,7 @@ import {
   DEFAULT_AUTH_PATTERNS,
   GRAPH_DB_ARTIFACT,
   detectApplicationRoots,
+  detectEntrypoints,
   extractGraph,
   graphToolVersion,
   writeGraphDb,
@@ -20,6 +21,7 @@ import {
   OPENVEX_ARTIFACT,
   OSV_RESULTS_ARTIFACT,
   SBOM_ARTIFACT,
+  UNRECORDED_EXCLUSIONS_NOTE,
   UNRECORDED_ROOTS_NOTE,
 } from "../src/index.js";
 
@@ -265,14 +267,20 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     const graph = await extractGraph(root, files, "worktree");
     const dir = await mkdtemp(join(tmpdir(), "rampscan-s13-out-"));
     const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    // the same detection the graph collector runs (S1-4): config wins, and
+    // what it left out is recorded — here nothing, because apps/web declares
+    // no entry point for detection to find
+    const entry = await detectEntrypoints(root, new Set(files), entrypoints, applicationRoots);
     writeGraphDb(dbPath, graph, {
       extractorVersion: graphToolVersion(),
       commit: "d".repeat(40),
-      entrypoints,
-      entrypointSource: "config",
-      entrypointsUnresolved: [],
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
       authPatterns: DEFAULT_AUTH_PATTERNS,
       ...(applicationRoots !== undefined ? { applicationRoots } : {}),
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
     });
     const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
     await writeFile(osvPath, JSON.stringify(TWO_APP_OSV));
@@ -395,5 +403,150 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
       entrypoints: ["apps/cli/src/main.js", "apps/web/src/page.js"],
       entrypoint_source: "config",
     });
+  });
+});
+
+// S1-4 — configured entry points stop hiding detection (docs/PLAN-SOUNDNESS.md
+// §5, S1-4). Before it, `detectEntrypoints` returned ONLY the configured
+// entries when any were configured: package.json detection was skipped
+// entirely and silently, so declaring one entry point to quiet a warning
+// converted the rest of a repository into not-affected territory with
+// nothing said about it. Below, the smallest tree that shows it: one package
+// with a `main` and a `bin`, the vulnerable package required only by the bin,
+// and a config naming only the main. S1-3's width is whole — one root, and
+// the walk enters it — so this is the hole S1-3 does not cover.
+describe("S1-4 — an entry point config left out is named, and a negative is refused while the walk never reached it", () => {
+  let root: string;
+  let files: string[];
+  let roots: ApplicationRoot[];
+
+  const ONE_APP_OSV = {
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: [
+          {
+            package: { name: "minimist", version: "1.2.5", ecosystem: "npm" },
+            vulnerabilities: [{ id: "GHSA-xvch-5gv4-984h", summary: "Prototype pollution in minimist", aliases: ["CVE-2021-44906"] }],
+            groups: [{ ids: ["GHSA-xvch-5gv4-984h", "CVE-2021-44906"], max_severity: "9.8" }],
+          },
+        ],
+      },
+    ],
+  };
+
+  async function gate(config: string[] | undefined, record = true): Promise<CollectOutput> {
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s14-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(root, new Set(files), config, roots);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "e".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: roots,
+      ...(record ? { entrypointsDetected: entry.detected, entrypointsExcluded: entry.excluded } : {}),
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(ONE_APP_OSV));
+    return reachability.collect({
+      workspace: { root, repo: "one-app", commit: "e".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s1-4",
+    });
+  }
+
+  async function vexOf(out: CollectOutput): Promise<Array<Record<string, unknown>>> {
+    const vexPath = out.artifacts.find((a) => a.name === OPENVEX_ARTIFACT)!.path;
+    return (JSON.parse(await readFile(vexPath, "utf8")) as { statements: Array<Record<string, unknown>> }).statements;
+  }
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), "rampscan-s14-"));
+    const put = async (rel: string, content: string) => {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    };
+    await put(
+      "package.json",
+      JSON.stringify({ name: "one-app", main: "src/main.js", bin: { tool: "src/tool.js" }, dependencies: { minimist: "1.2.5" } }),
+    );
+    await put("src/main.js", "module.exports = { run() {} };\n");
+    // the bin is a second place the program starts, and the only importer
+    await put("src/tool.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    files = ["src/main.js", "src/tool.js"];
+    roots = await detectApplicationRoots(root, new Set(files), "worktree");
+  });
+
+  it("config names the main only: the bin is named as left out, and not_affected is refused", async () => {
+    const out = await gate(["src/main.js"]);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+
+    // S1-3 is satisfied — one root, entered — and the negative is still not
+    // earned: the program also starts at src/tool.js, and no walk began there
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["reachable"]).toBe("unknown");
+    expect(String(minimist["gate_note"])).toContain("src/tool.js (package.json, under .)");
+    expect(String(minimist["gate_note"])).toContain("the config left out");
+    expect(String(minimist["gate_note"])).toContain("not_affected is refused for this run");
+    expect(out.findings.filter((f) => f.variable === "advisories")).toHaveLength(1);
+
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.entrypoint_source).toBe("config");
+    expect(basis.entrypoints).toEqual(["src/main.js"]);
+    expect(basis.application_roots).toEqual([{ dir: ".", name: "one-app", file_count: 2, reached_file_count: 1 }]);
+    expect(basis.entrypoints_excluded).toEqual([{ file: "src/tool.js", via: "package.json", root: ".", reached: false }]);
+    expect(basis.degraded).toBe(minimist["gate_note"]);
+
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("under_investigation");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["entrypoints_excluded"]).toEqual([
+      { file: "src/tool.js", via: "package.json", root: ".", reached: false },
+    ]);
+  });
+
+  it("no config: detection starts the walk from both, and the advisory is reachable with the bin as its path", async () => {
+    const out = await gate(undefined);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+    expect(minimist["reachable"]).toBe("true");
+    expect(String(minimist["path"])).toMatch(/^src\/tool\.js » minimist$/);
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.entrypoint_source).toBe("package.json");
+    expect(basis.entrypoints).toEqual(["src/main.js", "src/tool.js"]);
+    expect(basis.entrypoints_excluded).toBeUndefined();
+    expect(basis.degraded).toBeUndefined();
+  });
+
+  it("config names both: nothing is left out, and the same walk is the same verdict", async () => {
+    const out = await gate(["src/main.js", "src/tool.js"]);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+    expect(minimist["reachable"]).toBe("true");
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.entrypoints_excluded).toBeUndefined();
+    expect(basis.degraded).toBeUndefined();
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("affected");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["entrypoints_excluded"]).toBeUndefined();
+  });
+
+  it("a config-narrowed graph that never recorded what it narrowed away has an unknown narrowing, and refuses", async () => {
+    const out = await gate(["src/main.js"], false);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["gate_note"]).toBe(UNRECORDED_EXCLUSIONS_NOTE);
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.entrypoints_excluded).toBeUndefined();
+    expect(basis.degraded).toBe(UNRECORDED_EXCLUSIONS_NOTE);
   });
 });

@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { readGraphMeta } from "./db.js";
-import { nearestRoot } from "./entrypoints.js";
+import { nearestRoot, type DetectedEntrypoint } from "./entrypoints.js";
 import { fileId, type EdgeKind, type Resolution } from "./extract.js";
 import type { SbomDependencyGraph } from "./sbom.js";
 
@@ -184,6 +184,30 @@ export function applicationRootCoverage(db: DatabaseSync): ApplicationRootCovera
     if (reach.has(f.id)) row.reached_file_count += 1;
   }
   return [...out.values()];
+}
+
+/** an entry point detection found that the config left out, and whether the walk got there anyway */
+export interface ExcludedEntrypointCoverage extends DetectedEntrypoint {
+  reached: boolean;
+}
+
+/**
+ * The entry points config excluded (S1-4), each with whether the walk from
+ * the configured set reached it regardless. One it did not reach is a place
+ * the program starts that no walk began from or arrived at — a negative made
+ * over that walk is scoped to less than the program, and the gate refuses it.
+ * Undefined when the graph does not carry the record and its entry points
+ * came from config: the narrowing is then unknown, which is not none. A graph
+ * whose entry points were detected rather than configured excluded nothing.
+ */
+export function excludedEntrypointCoverage(db: DatabaseSync): ExcludedEntrypointCoverage[] | undefined {
+  const meta = readGraphMeta(db);
+  if (meta.entrypointsExcluded === undefined) {
+    return meta.entrypointSource === "config" ? undefined : [];
+  }
+  if (meta.entrypointsExcluded.length === 0) return [];
+  const reach = reachableSet(db, entryRoots(db));
+  return meta.entrypointsExcluded.map((e) => ({ ...e, reached: reach.has(fileId(e.file)) }));
 }
 
 /**
