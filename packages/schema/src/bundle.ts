@@ -133,6 +133,27 @@ export const ClaimBasis = z.object({
   entrypoints_unresolved: z.array(z.string()).optional(),
   /** declared routes seeded the walk too (the gates root at entry points AND routes) */
   route_roots: z.number().int().optional(),
+  /**
+   * The width of every negative claim in this bundle (S1-3): each application
+   * root the tree declares — a directory with its own package.json that owns
+   * source files — with how many of its files the walk reached. A root with
+   * `reached_file_count: 0` is an application the walk never entered, and
+   * while any such root exists the gate refuses `not_affected` for the whole
+   * run (`degraded` then says so). Signed with the claim for the same reason
+   * the entry-point set is: "not reachable from the entry points" is only a
+   * statement about the repository if the entry points cover the repository,
+   * and this is where a reader checks that they do.
+   */
+  application_roots: z
+    .array(
+      z.object({
+        dir: z.string(),
+        name: z.string().optional(),
+        file_count: z.number().int(),
+        reached_file_count: z.number().int(),
+      }),
+    )
+    .optional(),
   /** what the walk was over — the graph's own identity and shape */
   graph: z
     .object({

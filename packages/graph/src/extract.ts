@@ -182,6 +182,11 @@ export function listSourceFiles(root: string, mode: TreeMode = "committed"): Pro
   return listPaths(root, isSourceFile, mode);
 }
 
+/** every package.json in the same tree the source walk is over, sorted */
+export function listManifests(root: string, mode: TreeMode = "committed"): Promise<string[]> {
+  return listPaths(root, (rel) => rel === "package.json" || rel.endsWith("/package.json"), mode);
+}
+
 /**
  * Workspace package map: package name → its entry SOURCE file, for packages
  * whose source lives in this repo. Without it, a monorepo import like
@@ -196,11 +201,7 @@ export async function workspacePackageMap(
   fileSet: ReadonlySet<string>,
   mode: TreeMode = "committed",
 ): Promise<Map<string, string>> {
-  const manifests = await listPaths(
-    root,
-    (rel) => rel === "package.json" || rel.endsWith("/package.json"),
-    mode,
-  );
+  const manifests = await listManifests(root, mode);
   const map = new Map<string, string>();
   for (const rel of manifests) {
     let parsed: {

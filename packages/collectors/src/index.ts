@@ -27,6 +27,8 @@ export { OSV_RESULTS_ARTIFACT, advisoryRows, normalizeSeverity } from "./osv-rep
 export { grype, finalBaseImage } from "./grype.js";
 export { graphCollector } from "./graph.js";
 export { reachability, ABSENT_NODE_NOTE, OPENVEX_ARTIFACT, REACHABILITY_VERSION, purlOf } from "./reachability.js";
+export { UNRECORDED_ROOTS_NOTE, scopeRefusalNote, unrecordedRootsNote, walkWidth } from "./scope.js";
+export type { ClaimScope, WalkWidth } from "./scope.js";
 export { semgrep, SEMGREP_RESULTS_ARTIFACT, SEMGREP_RULES_PATH, SemgrepResults, relativizeResultPath } from "./semgrep.js";
 export { sastGate, SAST_GATE_VERSION } from "./sast-gate.js";
 export {

@@ -14,6 +14,7 @@ import {
 } from "@rampscan/graph";
 import type { DepReachability, SbomDependencyGraph } from "@rampscan/graph";
 import { OSV_RESULTS_ARTIFACT, OsvResults, advisoryRows } from "./osv-report.js";
+import { walkWidth, type ClaimScope } from "./scope.js";
 import { fileSha256, makeFinding, sha256 } from "./support.js";
 import { SBOM_ARTIFACT } from "./syft.js";
 
@@ -26,9 +27,13 @@ import { SBOM_ARTIFACT } from "./syft.js";
 // to the honest M1 posture — every advisory counts, marked "unknown", never
 // silently waved through. The SBOM's dependsOn edges continue the walk
 // forward from any package it reached — they upgrade unknown to true, with
-// their hops marked `sbom`, and can never justify a negative.
+// their hops marked `sbom`, and can never justify a negative. And a negative
+// is only ever signed at the width of the whole tree (S1-3): where the tree
+// declares an application root no entry point covers, not_affected is refused
+// for the run, the reason is recorded, and every statement carries the
+// entry-point set and the roots the walk entered as structured fields.
 
-export const REACHABILITY_VERSION = "0.2.0";
+export const REACHABILITY_VERSION = "0.3.0";
 export const OPENVEX_ARTIFACT = "openvex.json";
 
 /**
@@ -38,7 +43,7 @@ export const OPENVEX_ARTIFACT = "openvex.json";
  * standing version of it for the recipe as a whole.
  */
 export const OVER_APPROXIMATION_STATEMENT =
-  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it. The SBOM's declared dependsOn edges continue the walk forward from any package it reached, with those hops marked sbom; they prove presence only — the manifest graph is partial, so no absence of a chain is ever read as unreachable.";
+  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it. The SBOM's declared dependsOn edges continue the walk forward from any package it reached, with those hops marked sbom; they prove presence only — the manifest graph is partial, so no absence of a chain is ever read as unreachable. A negative claim is as wide as the application roots the walk entered: where the tree declares a package root that no entry point covers, not_affected is refused for the whole run and the reason is recorded, because a claim scoped to part of a repository is not a claim about the repository.";
 
 /**
  * Why an advisory against a package with no graph node is unknown rather than
@@ -55,6 +60,7 @@ interface OpenVexStatement {
   justification?: string;
   impact_statement?: string;
   action_statement?: string;
+  "rampscan:scope"?: ClaimScope;
 }
 
 /** package URL for an OSV row — npm names with scopes get percent-encoded */
@@ -107,7 +113,11 @@ export const reachability: Collector = {
     const graphPath = ctx.inputs.get(GRAPH_DB_ARTIFACT);
     let deps: Map<string, DepReachability> | undefined;
     let gateNote: string | undefined;
+    // the width of the walk (S1-3): set only when it fell short of the tree,
+    // and then every would-be not_affected reads unknown with this reason
+    let refusal: string | undefined;
     let entrypoints: string[] = [];
+    let scope: ClaimScope | undefined;
     // the basis (I3f): the ground under every not_affected claim below, built
     // from the same graph read that decides them
     const basis: ClaimBasis = {
@@ -147,6 +157,13 @@ export const reachability: Collector = {
           basis.degraded = gateNote;
         } else {
           deps = dependencyReachability(db, sbom);
+          const width = walkWidth(db, basis, {
+            subject: "the package",
+            counts: "the advisory",
+            countsAll: "every advisory",
+          });
+          scope = width.scope;
+          refusal = width.refusal;
         }
       } finally {
         db.close();
@@ -173,9 +190,15 @@ export const reachability: Collector = {
       // dependsOn chain leads to from a reached one — always `reachable`, so
       // the SBOM shrinks the unknown set and never grows the negative one
       const absent = gated && dep === undefined;
-      const notAffected = gated && dep !== undefined && !dep.reachable;
-      const reachable = !gated || absent ? "unknown" : notAffected ? "false" : "true";
-      const rowNote = gateNote ?? (absent ? ABSENT_NODE_NOTE : undefined);
+      // the walk had a node and missed it — the only shape a negative can take,
+      // and it is signed only when the walk was as wide as the tree (S1-3):
+      // otherwise the miss says "not from these entry points", which is
+      // unknown for the repository, and the refusal is the row's note
+      const missed = gated && dep !== undefined && !dep.reachable;
+      const notAffected = missed && refusal === undefined;
+      const refused = missed && !notAffected;
+      const reachable = notAffected ? "false" : gated && dep?.reachable ? "true" : "unknown";
+      const rowNote = gateNote ?? (absent ? ABSENT_NODE_NOTE : refused ? refusal : undefined);
       const path = dep?.reachable ? (dep.path ?? null) : null;
 
       rows.push({
@@ -197,6 +220,8 @@ export const reachability: Collector = {
       const product = purlOf(adv.ecosystem, adv.package, adv.version);
       const vulnerability: OpenVexStatement["vulnerability"] = { name: adv.advisory };
       if (adv.aliases.length > 1) vulnerability.aliases = adv.aliases.filter((a) => a !== adv.advisory);
+      // every statement of a gated run says how wide the walk behind it was
+      const scoped = scope !== undefined ? { "rampscan:scope": scope } : {};
       if (notAffected) {
         statements.push({
           vulnerability,
@@ -205,7 +230,9 @@ export const reachability: Collector = {
           justification: "vulnerable_code_not_in_execute_path",
           impact_statement:
             `${adv.package}@${adv.version} is not reachable from any entry point ` +
-            `(${entrypoints.join(", ")}) or declared route in the code graph at commit ${ctx.workspace.commit}`,
+            `(${entrypoints.join(", ")}) or declared route in the code graph at commit ${ctx.workspace.commit}` +
+            `; the walk entered every application root the tree declares`,
+          ...scoped,
         });
       } else if (reachable === "true") {
         statements.push({
@@ -215,6 +242,7 @@ export const reachability: Collector = {
           action_statement:
             `upgrade ${adv.package} beyond ${adv.version}; the vulnerable package is in the execute path` +
             (path ? ` (${path})` : ""),
+          ...scoped,
         });
       } else {
         statements.push({
@@ -222,6 +250,7 @@ export const reachability: Collector = {
           products: [{ "@id": product }],
           status: "under_investigation",
           ...(rowNote !== undefined ? { impact_statement: rowNote } : {}),
+          ...scoped,
         });
       }
 
