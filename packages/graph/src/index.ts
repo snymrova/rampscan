@@ -14,7 +14,9 @@ export * from "./sbom.js";
 // 0.3.0: graph.db records the tree's application roots (S1-3), so a gate
 // reading it can say which applications its walk covered — and refuse a
 // negative claim about the ones it did not
-export const GRAPH_VERSION = "0.3.0";
+// 0.4.0: `export … from "x"` is an imports edge — a package barrel no longer
+// stops the walk (the self-scan measured `core` 1 of 20 files reached)
+export const GRAPH_VERSION = "0.4.0";
 
 /** tool version string for manifests/bundles: extractor + the parser it rides on */
 export function graphToolVersion(): string {
