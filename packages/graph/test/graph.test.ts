@@ -455,7 +455,7 @@ describe("graph.db provenance", () => {
   });
 
   it("tool version pins the extractor and the parser", () => {
-    expect(graphToolVersion()).toMatch(/^0\.3\.0\+ts\d/);
+    expect(graphToolVersion()).toMatch(/^0\.4\.0\+ts\d/);
   });
 });
 
@@ -488,6 +488,28 @@ describe("workspace-aware import resolution (0.2.0)", () => {
     );
     await w("packages/lib/src/index.js", "function helper() {}\nmodule.exports = { helper };\n");
     await w("packages/lib/src/dead.js", "function never() {}\nmodule.exports = { never };\n");
+    // a second package whose entry is a barrel — every line is `export … from`,
+    // the shape of each @rampscan/* index.ts; nothing is declared here at all
+    await w(
+      "packages/barrel/package.json",
+      JSON.stringify({ name: "@acme/barrel", main: "src/index.ts" }),
+    );
+    await w(
+      "packages/barrel/src/index.ts",
+      [
+        'export * from "./named.js";',
+        'export { one as uno } from "./renamed.js";',
+        'export * as ns from "./namespaced.js";',
+        'export type { Shape } from "./types-only.js";',
+        "",
+      ].join("\n"),
+    );
+    await w("packages/barrel/src/named.ts", "export function named() {}\n");
+    await w("packages/barrel/src/renamed.ts", "export function one() {}\n");
+    await w("packages/barrel/src/namespaced.ts", "export function inner() {}\n");
+    await w("packages/barrel/src/types-only.ts", "export interface Shape { x: number }\n");
+    await w("packages/barrel/src/orphan.ts", "export function orphan() {}\n");
+    await w("packages/app/src/uses-barrel.js", 'const { named } = require("@acme/barrel");\nnamed();\n');
     wsGraph = await extractGraph(wsRoot);
   });
 
@@ -521,6 +543,54 @@ describe("workspace-aware import resolution (0.2.0)", () => {
 
   it("a package whose source is NOT in the repo still becomes a dependency node", () => {
     expect(wsGraph.nodes.some((n) => n.id === "dep:left-pad")).toBe(true);
+  });
+
+  describe("the barrel edge (0.4.0) — `export … from` is an import too", () => {
+    // The self-scan's second extractor hole: the walk entered each @rampscan/*
+    // package at its index.ts and stopped there, because a re-export produced
+    // no edge (core 1 of 13 files reached, schema 1 of 14). Everything behind a
+    // barrel was "unreachable" — the one shape that signs not_affected, and it
+    // was false. This is a lexical fact about the source, so it is an exact
+    // edge from the extractor, not a test asserting unknown.
+    const barrel = fileId("packages/barrel/src/index.ts");
+
+    it("every re-export form is an exact imports edge from the barrel", () => {
+      const targets = wsGraph.edges
+        .filter((e) => e.src === barrel && e.kind === "imports")
+        .map((e) => [e.dst, e.resolution] as const);
+      expect(targets).toEqual(
+        expect.arrayContaining([
+          [fileId("packages/barrel/src/named.ts"), "exact"],
+          [fileId("packages/barrel/src/renamed.ts"), "exact"],
+          [fileId("packages/barrel/src/namespaced.ts"), "exact"],
+          [fileId("packages/barrel/src/types-only.ts"), "exact"],
+        ]),
+      );
+      expect(targets).toHaveLength(4);
+    });
+
+    it("the walk goes through the barrel — and still not into a file nothing re-exports", () => {
+      const tmpDb = join(wsRoot, "barrel-graph.db");
+      writeGraphDb(tmpDb, wsGraph, {
+        extractorVersion: GRAPH_VERSION,
+        commit: "test-commit",
+        entrypoints: ["packages/app/src/uses-barrel.js"],
+        entrypointSource: "test",
+        entrypointsUnresolved: [],
+        authPatterns: DEFAULT_AUTH_PATTERNS,
+      });
+      const wsDb = openGraphDb(tmpDb);
+      try {
+        const reach = reachableSet(wsDb, [fileId("packages/app/src/uses-barrel.js")]);
+        expect(reach.has(barrel)).toBe(true);
+        for (const f of ["named", "renamed", "namespaced", "types-only"]) {
+          expect(reach.has(fileId(`packages/barrel/src/${f}.ts`)), f).toBe(true);
+        }
+        expect(reach.has(fileId("packages/barrel/src/orphan.ts"))).toBe(false);
+      } finally {
+        wsDb.close();
+      }
+    });
   });
 });
 

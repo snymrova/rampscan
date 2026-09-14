@@ -592,6 +592,15 @@ function walkSourceFile(
     }
 
     if (ts.isExportDeclaration(node)) {
+      // `export … from "x"` is an import as well as an export: the module is
+      // loaded, so the walk must cross into it. Without this edge every
+      // package barrel (`index.ts` made of re-exports) was a dead end — the
+      // self-scan measured `core` 1 of 13 files reached, `schema` 1 of 14 —
+      // and "unreachable" claims about everything behind a barrel were false.
+      // A lexical fact, hence `exact`, like any other import specifier.
+      if (node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier)) {
+        importEdge(importTarget(node.moduleSpecifier.text));
+      }
       if (node.exportClause && ts.isNamedExports(node.exportClause)) {
         for (const el of node.exportClause.elements) {
           info.exportNames.add((el.propertyName ?? el.name).text);
