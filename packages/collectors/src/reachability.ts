@@ -33,7 +33,7 @@ import { SBOM_ARTIFACT } from "./syft.js";
 // for the run, the reason is recorded, and every statement carries the
 // entry-point set and the roots the walk entered as structured fields.
 
-export const REACHABILITY_VERSION = "0.3.0";
+export const REACHABILITY_VERSION = "0.4.0";
 export const OPENVEX_ARTIFACT = "openvex.json";
 
 /**

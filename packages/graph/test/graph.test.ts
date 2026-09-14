@@ -10,6 +10,7 @@ import {
   dependencyReachability,
   detectApplicationRoots,
   detectEntrypoints,
+  excludedEntrypointCoverage,
   extractGraph,
   fileId,
   graphShape,
@@ -26,7 +27,7 @@ import {
   symId,
   writeGraphDb,
 } from "../src/index.js";
-import type { ExtractedGraph } from "../src/index.js";
+import type { ApplicationRoot, ExtractedGraph } from "../src/index.js";
 import type { DatabaseSync } from "node:sqlite";
 
 // The M4 graph on a synthetic mini-app that mirrors the fixture's shape:
@@ -205,6 +206,143 @@ describe("entry points", () => {
 
   it("loadGraphConfig returns {} when the scanned repo has no config file", async () => {
     expect(await loadGraphConfig(root)).toEqual({});
+  });
+
+  it("detection is recorded beside the config it lost to, and what config left out is named (S1-4)", async () => {
+    const entry = await detectEntrypoints(root, new Set(graph.files), ["src/server.js"]);
+    expect(entry.files).toEqual(["src/server.js"]);
+    expect(entry.detected).toEqual([{ file: "src/index.js", via: "package.json", root: "." }]);
+    expect(entry.excluded).toEqual([{ file: "src/index.js", via: "package.json", root: "." }]);
+    // and naming it in the config empties the exclusion — config that matches
+    // detection narrowed nothing
+    const both = await detectEntrypoints(root, new Set(graph.files), ["src/server.js", "src/index.js"]);
+    expect(both.excluded).toEqual([]);
+    expect(both.detected).toHaveLength(1);
+  });
+});
+
+describe("entry-point detection over every application root (S1-4)", () => {
+  // The self-scan's shape: a workspace root whose package.json declares no
+  // entry point, a CLI package with a bin, and a Next.js app that declares
+  // nothing a manifest reader would recognise — which is why, before S1-4,
+  // detection on a monorepo found nothing and config was the only way to
+  // start a walk, with what it left out never counted.
+  let monoRoot: string;
+  let monoFiles: Set<string>;
+  let monoRoots: ApplicationRoot[];
+
+  beforeAll(async () => {
+    monoRoot = await mkdtemp(join(tmpdir(), "rampscan-graph-mono-"));
+    const w = async (rel: string, content: string): Promise<void> => {
+      const abs = join(monoRoot, rel);
+      await mkdir(dirname(abs), { recursive: true });
+      await writeFile(abs, content);
+    };
+    // the workspace root runs the CLI through a script, as this repository does — no bin
+    await w("package.json", JSON.stringify({ name: "mono", private: true, scripts: { mono: "tsx packages/cli/src/run.ts --flag", test: "vitest run" } }));
+    await w("packages/cli/package.json", JSON.stringify({ name: "@mono/cli", bin: { mono: "./dist/main.js" }, main: "src/main.ts" }));
+    await w("packages/cli/src/main.ts", "export const run = () => {};\n");
+    await w("packages/cli/src/run.ts", "export const cli = () => {};\n");
+    await w("packages/cli/src/other.ts", "export const other = () => {};\n");
+    await w("apps/web/package.json", JSON.stringify({ name: "@mono/web", private: true, scripts: { dev: "next dev" } }));
+    await w("apps/web/next.config.mjs", "export default {};\n");
+    await w("apps/web/app/layout.tsx", "export default function L() { return null; }\n");
+    await w("apps/web/app/page.tsx", "export default function P() { return null; }\n");
+    await w("apps/web/app/api/health/route.ts", "export function GET() {}\n");
+    await w("apps/web/app/lib/helper.ts", "export const h = 1;\n"); // not a convention file
+    await w("apps/web/middleware.ts", "export function middleware() {}\n");
+    await w("apps/web/src/pages/legacy.tsx", "export default function Legacy() { return null; }\n");
+    // PocketBase under the workspace root: loaded by directory convention, imported by nothing
+    await w("pocketbase/pb_migrations/1700000000_created_things.js", "migrate((app) => {}, (app) => {});\n");
+    await w("pocketbase/pb_hooks/main.pb.js", "onBootstrap((e) => { e.next(); });\n");
+    await w("pocketbase/pb_hooks/helper.js", "module.exports = {};\n"); // not a hook file
+    const extracted = await extractGraph(monoRoot);
+    monoFiles = new Set(extracted.files);
+    monoRoots = await detectApplicationRoots(monoRoot, monoFiles);
+  });
+
+  it("the tree root declares no main: a root-only detector finds its script target and PocketBase files — the S1-3 roots widen it", async () => {
+    const rootOnly = await detectEntrypoints(monoRoot, monoFiles);
+    expect(rootOnly.source).toBe("package.json");
+    expect(rootOnly.detected).toEqual([
+      { file: "packages/cli/src/run.ts", via: "scripts", root: "." },
+      { file: "pocketbase/pb_hooks/main.pb.js", via: "pocketbase", root: "." },
+      { file: "pocketbase/pb_migrations/1700000000_created_things.js", via: "pocketbase", root: "." },
+    ]);
+    const overRoots = await detectEntrypoints(monoRoot, monoFiles, undefined, monoRoots);
+    expect(overRoots.source).toBe("package.json");
+    expect(overRoots.files).toContain("packages/cli/src/main.ts");
+    expect(overRoots.files).not.toContain("packages/cli/src/other.ts");
+    // the bin points at a build output the committed tree does not hold — reported, not dropped
+    expect(overRoots.unresolved).toEqual(["packages/cli/dist/main.js"]);
+    expect(overRoots.excluded).toEqual([]);
+  });
+
+  it("a Next.js app's convention files are its entry points, marked as found by the framework", async () => {
+    const entry = await detectEntrypoints(monoRoot, monoFiles, undefined, monoRoots);
+    const next = entry.detected.filter((d) => d.via === "next").map((d) => d.file);
+    expect(next).toEqual([
+      "apps/web/app/api/health/route.ts",
+      "apps/web/app/layout.tsx",
+      "apps/web/app/page.tsx",
+      "apps/web/middleware.ts",
+      "apps/web/src/pages/legacy.tsx",
+    ]);
+    expect(entry.detected.every((d) => d.via !== "next" || d.root === "apps/web")).toBe(true);
+    // the source is "framework" only when no manifest declared anything at all
+    const webOnly = await detectEntrypoints(monoRoot, monoFiles, undefined, [{ dir: "apps/web", name: "@mono/web" }]);
+    expect(webOnly.source).toBe("framework");
+  });
+
+  it("config still wins for the walk, and everything detection found beside it is the exclusion", async () => {
+    const entry = await detectEntrypoints(monoRoot, monoFiles, ["packages/cli/src/main.ts"], monoRoots);
+    expect(entry.source).toBe("config");
+    expect(entry.files).toEqual(["packages/cli/src/main.ts"]);
+    expect(entry.excluded.map((d) => d.file)).toEqual([
+      "apps/web/app/api/health/route.ts",
+      "apps/web/app/layout.tsx",
+      "apps/web/app/page.tsx",
+      "apps/web/middleware.ts",
+      "apps/web/src/pages/legacy.tsx",
+      "packages/cli/src/run.ts",
+      "pocketbase/pb_hooks/main.pb.js",
+      "pocketbase/pb_migrations/1700000000_created_things.js",
+    ]);
+    expect(entry.excluded.find((d) => d.file === "packages/cli/src/run.ts")).toEqual({ file: "packages/cli/src/run.ts", via: "scripts", root: "." });
+    expect(entry.detected).toHaveLength(9);
+  });
+
+  it("graph.db carries the record, and the coverage query says which exclusions the walk reached anyway", async () => {
+    const extracted = await extractGraph(monoRoot);
+    const entry = await detectEntrypoints(monoRoot, monoFiles, ["packages/cli/src/main.ts"], monoRoots);
+    const dbPath = join(monoRoot, "mono-graph.db");
+    writeGraphDb(dbPath, extracted, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "test-commit",
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: monoRoots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const monoDb = openGraphDb(dbPath);
+    try {
+      const meta = readGraphMeta(monoDb);
+      expect(meta.entrypointsExcluded).toEqual(entry.excluded);
+      expect(meta.entrypointsDetected).toHaveLength(9);
+      const coverage = excludedEntrypointCoverage(monoDb)!;
+      expect(coverage).toHaveLength(8);
+      expect(coverage.every((e) => e.reached === false)).toBe(true);
+    } finally {
+      monoDb.close();
+    }
+  });
+
+  it("a config-sourced graph written without the record has an unknown narrowing; a detected one has none", () => {
+    // the graph at the top of this file: detected from package.json, no config
+    expect(excludedEntrypointCoverage(db)).toEqual([]);
   });
 });
 
@@ -455,7 +593,7 @@ describe("graph.db provenance", () => {
   });
 
   it("tool version pins the extractor and the parser", () => {
-    expect(graphToolVersion()).toMatch(/^0\.4\.0\+ts\d/);
+    expect(graphToolVersion()).toMatch(/^0\.5\.0\+ts\d/);
   });
 });
 

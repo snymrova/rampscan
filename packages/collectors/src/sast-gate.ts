@@ -31,7 +31,7 @@ import { fileSha256, makeFinding, sha256 } from "./support.js";
 // is only signed at the width of the whole tree (S1-3): while an application
 // root no entry point covers exists, not_affected is refused for the run.
 
-export const SAST_GATE_VERSION = "0.2.0";
+export const SAST_GATE_VERSION = "0.3.0";
 
 /**
  * The sentence a not-affected claim from this gate has to be read with (I3f) —

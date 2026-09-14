@@ -231,6 +231,31 @@ function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
               </dd>
             </>
           )}
+          {(basis.entrypoints_excluded?.length ?? 0) > 0 && (
+            <>
+              <dt>detected, left out by config</dt>
+              {/* the other half of the width (S1-4): entry points detection
+                  found under the applications above that the config did not
+                  name. One the walk never reached is a place the program
+                  starts that no walk covered — named, and no not-affected
+                  claim rests on the walk while one exists */}
+              <dd className="mono">
+                {basis.entrypoints_excluded!.map((e) => (
+                  <div key={e.file} className={e.reached ? undefined : "assertion-fail"}>
+                    {e.file} — {e.via}, under {e.root}
+                    {e.reached ? " — reached by the walk anyway" : " — never reached"}
+                  </div>
+                ))}
+                <div className="faint">
+                  rampscan.config.json decides where the walk starts; this is what detection would
+                  have started from that it did not
+                  {basis.entrypoints_excluded!.some((e) => !e.reached)
+                    ? " — and while one is never reached, no not-affected claim was signed for this run"
+                    : ""}
+                </div>
+              </dd>
+            </>
+          )}
           {basis.graph && (
             <>
               <dt>the graph walked</dt>

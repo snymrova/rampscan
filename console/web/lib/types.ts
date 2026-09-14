@@ -51,6 +51,17 @@ export interface ClaimBasisRecord {
     file_count: number;
     reached_file_count: number;
   }>;
+  /**
+   * What detection found that the config left out (S1-4), each with whether
+   * the walk got there anyway. One not reached is a place the program starts
+   * that no walk covered; `degraded` then carries the refusal.
+   */
+  entrypoints_excluded?: Array<{
+    file: string;
+    via: string;
+    root: string;
+    reached: boolean;
+  }>;
   graph?: {
     commit: string;
     extractor_version: string;

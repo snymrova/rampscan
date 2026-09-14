@@ -70,12 +70,14 @@ export const graphCollector: Collector = {
 
     const config = await loadGraphConfig(ctx.workspace.root);
     const graph = await extractGraph(ctx.workspace.root, files, tree);
-    const entry = await detectEntrypoints(ctx.workspace.root, new Set(files), config.entrypoints);
     // what the entry points COULD have covered (S1-3): every package root the
     // tree declares, recorded beside the roots the walk actually starts from,
     // so the reachability gate can tell a repository-wide negative from one
     // scoped to the applications the config happened to name
     const applicationRoots = await detectApplicationRoots(ctx.workspace.root, new Set(files), tree);
+    // detection runs over every root whether or not config wins (S1-4): what
+    // config left out travels with the graph, so narrowing is a recorded fact
+    const entry = await detectEntrypoints(ctx.workspace.root, new Set(files), config.entrypoints, applicationRoots);
     const authPatterns = config.authPatterns ?? DEFAULT_AUTH_PATTERNS;
 
     const dbPath = join(ctx.artifactDir, GRAPH_DB_ARTIFACT);
@@ -87,6 +89,8 @@ export const graphCollector: Collector = {
       entrypointsUnresolved: entry.unresolved,
       authPatterns,
       applicationRoots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
     });
 
     const db = openGraphDb(dbPath);

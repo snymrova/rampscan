@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import type { ApplicationRoot } from "./entrypoints.js";
+import type { ApplicationRoot, DetectedEntrypoint } from "./entrypoints.js";
 import type { ExtractedGraph } from "./extract.js";
 
 // graph.db — SPEC §3: "SQLite file per repo-snapshot, queried with recursive
@@ -30,6 +30,14 @@ export interface GraphMeta {
    * the walk covered them all.
    */
   applicationRoots?: ApplicationRoot[];
+  /**
+   * What entry-point detection found across those roots, and which of it the
+   * config left out (S1-4). Absent on a graph written before the field
+   * existed; for a graph whose entry points came from config, absence means
+   * the narrowing is unknown — which is not the same as none.
+   */
+  entrypointsDetected?: DetectedEntrypoint[];
+  entrypointsExcluded?: DetectedEntrypoint[];
 }
 
 export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphMeta): void {
@@ -98,6 +106,12 @@ export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphM
     if (meta.applicationRoots !== undefined) {
       insertMeta.run("application_roots", JSON.stringify(meta.applicationRoots));
     }
+    if (meta.entrypointsDetected !== undefined) {
+      insertMeta.run("entrypoints_detected", JSON.stringify(meta.entrypointsDetected));
+    }
+    if (meta.entrypointsExcluded !== undefined) {
+      insertMeta.run("entrypoints_excluded", JSON.stringify(meta.entrypointsExcluded));
+    }
     insertMeta.run("file_count", String(graph.files.length));
     db.exec("COMMIT");
   } catch (error) {
@@ -119,6 +133,8 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
   }>;
   const map = new Map(rows.map((r) => [r.key, r.value]));
   const roots = map.get("application_roots");
+  const detected = map.get("entrypoints_detected");
+  const excluded = map.get("entrypoints_excluded");
   return {
     extractorVersion: map.get("extractor_version") ?? "unknown",
     commit: map.get("commit") ?? "unknown",
@@ -127,5 +143,7 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
     entrypointsUnresolved: JSON.parse(map.get("entrypoints_unresolved") ?? "[]") as string[],
     authPatterns: JSON.parse(map.get("auth_patterns") ?? "[]") as string[],
     ...(roots !== undefined ? { applicationRoots: JSON.parse(roots) as ApplicationRoot[] } : {}),
+    ...(detected !== undefined ? { entrypointsDetected: JSON.parse(detected) as DetectedEntrypoint[] } : {}),
+    ...(excluded !== undefined ? { entrypointsExcluded: JSON.parse(excluded) as DetectedEntrypoint[] } : {}),
   };
 }
