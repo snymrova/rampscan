@@ -1,0 +1,106 @@
+# rampscan — way ahead, for a new working session
+
+**Purpose:** the first document to read at the start of a coding session. It says where the project is, what is decided, what is next, and how work is done here. It points at the plans rather than repeating them. Written 2026-09-14 at `main` = `c0a4d0a`; the session log at the bottom is where later sessions move the pointer.
+
+---
+
+## 1. What rampscan is, in three sentences
+
+rampscan turns a git checkout into signed, commit-anchored compliance evidence for FedRAMP 20x, one row per Key Security Indicator, and computes the gap between what the catalog owes and what has been proven. Evidence comes from three sources: pipeline recipes the tool runs over the checkout, client-run AWS results the tool ingests but never executes, and human attestations signed with two keys. The value proposition is that every claim is *computed, signed and anchored*, and unknowns count against you rather than being waved through.
+
+The appliance holds no AWS credential and makes no AWS call. That boundary is deliberate (`SECURITY.md`) and every plan below preserves it.
+
+## 2. Where it is
+
+| | |
+|---|---|
+| Version | `v0.1.0-beta`, public on GitHub since 2026-08-18. 0 stars, 0 forks, 2 views in the first fourteen days. Nobody outside this machine has read it yet. |
+| Suite | 1,121 tests across 91 files, 0 expected failures. `pnpm typecheck` clean. CI: `check`, `test`, `console-smoke`. |
+| Plan of record | **`docs/PLAN-SOUNDNESS.md`, phases S0–S4.** Adopted 2026-09-13 (#123). Milestones S0–S4 on GitHub. |
+| Paused | R2–R5 (`docs/PLAN-ARTIFACT-PLANE.md`, #102–#115). They resume at the S3 exit. Do not work them. |
+| Drafted, not adopted | `docs/PLAN-CLOUD-RUNNER.md`, phases T0–T5 (PR #146). Builds after S1 closes. |
+
+**Why the roadmap was reordered.** On 2026-09-13 the reachability gate was found to sign `not_affected` OpenVEX statements for any advisory in a package the code did not import directly, because "no node in the graph" was treated as proof of unreachability. That is the `SECURITY.md` class (a check that reports `evidenced` without the evidence). It is recorded in `docs/FINDING-VACUOUS-NOT-AFFECTED.md` and published as **GHSA-7jff-6v53-r56x**. Feature work stopped until soundness is restored and one stranger has looked.
+
+### Phase status
+
+| Phase | State | Notes |
+|---|---|---|
+| S0 record the finding | ✅ #144 | Advisory public, no embargo (S0-1). Supersede, never delete (S0-2). |
+| S1 reachability soundness | 🔄 1 of 5 | S1-1 done (#145, `c0a4d0a`): absent node → `unknown`, counts, `under_investigation`. **Next: S1-2 (#129).** Then #130, #131, #132. |
+| S2 the numbers gate | not started | #133–#136. README claims numbers no command prints. |
+| S3 the first stranger | not started | #137, #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
+| S4 the surface S1 leans on | not started | #139–#141. |
+| T cloud runner | drafted | Starts at the S1 exit. Three owner decisions pending (T0-1..T0-3). |
+
+### Open items outside any phase
+
+- **#147** — the ingest tree adapter treats a script's exit 0 as a pass; the Paramify scripts it was modelled on exit 0 on a non-compliant account. `SECURITY.md` class. **Must land before S3-1.** Proposed: its own numbered item, failing test first, `it.fails` until fixed (the S0-3 pattern).
+- **S3-1 needs a package-YAML adapter.** `paramify/fedramp-20x-pilot` ships no `Evidence/` tree output, only scripts and the assessed package. See `docs/RESEARCH-PARAMIFY-PILOT.md` §8.3.
+- #11 branch protection (owner-only), #13 retire the launch plan, #29 TypeScript 7, #30 Next 16, #142 fold cost (measured, not a problem), #143 register below the CLI (waits on S3).
+
+## 3. What is next, in order
+
+1. **S1-2 (#129).** `dependencyReachability` continues through CycloneDX `dependencies[].dependsOn` edges from any reachable dependency node. Hops sourced from the SBOM are marked `sbom`, distinct from `exact` and `inferred`. **This upgrades `unknown` to `true` and may never produce `not_affected`** — the SBOM graph is partial (34 of 173 components carry edges here), so it proves presence, never absence. The soundness plan §7.3 names this as the single most likely way S1-1 regresses.
+2. **S1-3, S1-4, S1-5.** S1-5 makes the self-scan *worse* on purpose (12/2 → 11/3); the README must lead with it, not hide it.
+3. **#147** before S3-1, in whatever slot the owner picks (S2 is short; it fits before or after).
+4. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
+5. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
+
+## 4. The decisions already made — do not re-open
+
+| Decision | Recorded |
+|---|---|
+| Disclosure: public advisory, no embargo, fix in the open | PLAN-SOUNDNESS §5 S0-1 |
+| False `openvex.json`: supersede, never delete | S0-2 |
+| Unreachability is proven positively or not claimed; SBOM edges prove presence only | PLAN-SOUNDNESS §0 rule 2, §7.3 |
+| No phase is exited by its author; S3's gate is an outsider's reply | §0 rule 4 |
+| Cloud evidence: one-click via a **client-deployed runner**, not guided upload, not appliance execution | PLAN-CLOUD-RUNNER, owner 2026-09-14 |
+| Cloud runner builds **after S1**, never ahead of #72 | same |
+| Exit 0 from a client script proves collection, not compliance | RESEARCH-PARAMIFY-PILOT §8.1, #147 |
+| Nothing from the Paramify repository is vendored (no license); shapes only | RESEARCH-PARAMIFY-PILOT header, §7 |
+
+## 5. How work is done here
+
+**Per item.** One squash PR per numbered item. Subject suffixed `(#NN)`, body carries `Closes #NN`. CI green (`check`, `test`, `console-smoke`) before merge. Update the phase checkbox and the session log in the plan document in the same PR. Failing test first for any soundness change, wrapped in `it.fails` until the fix unwraps it.
+
+**Verify.**
+```
+export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$HOME/.local/bin:$PATH"
+pnpm typecheck        # tsc --build; NOT tsc -p --noEmit, which let a red run through once
+pnpm test             # vitest; 1,121 at c0a4d0a
+```
+`pnpm typecheck` does not cover `console/web`; the console has its own `tsc --build`. Stale `tsbuildinfo` can fake a red typecheck in untouched files; `tsc --build --clean` first. Scan tools (syft, osv-scanner, grype, semgrep, gitleaks, checkov) live in `~/.local/bin`; without that `PATH` the tool recipes go silently unevidenced.
+
+**Ground rules that bite most often** (`CONTRIBUTING.md`, ten of them; `PLAN-SOUNDNESS.md` §0 adds four):
+- **Rule 4, computed never typed.** A number enters a published document only in the change that regenerates it. README currently violates this; S2 fixes it.
+- **Rule 7, no vacuous passes.** Absence of evidence is never evidence of absence. "0 of 0" is not a pass. This is the rule behind GHSA-7jff-6v53-r56x, #147, and the runner plan's ground rule 2.
+- **The console smoke reads the basis statement.** Keep "Unknowns count against us", "declared route" and `src/index.js` verbatim in `OVER_APPROXIMATION_STATEMENT` and the fixture.
+
+**Repository hygiene.** `rampscan-out/` and `rampscan-keys/` are gitignored and must stay so (`SECURITY.md`). Never surface the `sharma.trapti` identity anywhere. No AI attribution in commit messages or PR bodies. Reports go in `docs/` as local files, not published artifacts.
+
+**Shell.** Use `/usr/bin/grep`, not bare `grep` (a shell function shadows it and silently finds nothing in single files). Quote glob patterns under zsh. `echo ===` errors in zsh.
+
+## 6. Documents, by when to read them
+
+| Read when | Document |
+|---|---|
+| Every session | this file; `docs/PLAN-SOUNDNESS.md` §5 (checkboxes and session log) |
+| Touching reachability | `docs/FINDING-VACUOUS-NOT-AFFECTED.md`; `packages/collectors/src/reachability.ts`; `packages/collectors/test/reachability-soundness.test.ts` |
+| Touching ingest, AWS, or the runner | `docs/SPEC.md` §12.8–§12.10; `docs/PLAN-CLOUD-RUNNER.md`; `docs/RESEARCH-PARAMIFY-PILOT.md` §8 |
+| Touching the register, board, or gap classes | `docs/SPEC.md` §12; `docs/RESEARCH-KSI-GAP-ENGINE.md`; `docs/PLAN-KSI-PIVOT.md` |
+| Touching the console | `console/web/PRODUCT.md`, `console/web/DESIGN.md` |
+| Resuming R | `docs/PLAN-ARTIFACT-PLANE.md` — but not before the S3 exit |
+| Architecture | `docs/ARCHITECTURE.md`, reading the "Runs as" table as design, not deployment, until S2-3 marks it |
+
+## 7. What a good session looks like
+
+Start: read §2 and §3 here, then the plan's session log, then `gh issue view` the next item. Confirm `main` is clean and CI is green. Work one item. Before the PR: failing test existed and now passes, `pnpm typecheck` and `pnpm test` clean, plan checkbox and session log updated, numbers in prose came from a command. End: move the pointer in §8 below.
+
+Do not: start R work, start T code before S1 closes, add a `not_affected` path that rests on anything but a node the walk did not reach, type a number into README, or ask the owner a question the plans already answer.
+
+---
+
+## 8. Session log
+
+- **2026-09-14** — Written at `c0a4d0a` after S1-1 merged, the cloud-runner plan was drafted (#146), and the Paramify pilot re-read surfaced #147 and the package-YAML adapter gap (#148). Next item: S1-2 (#129).
