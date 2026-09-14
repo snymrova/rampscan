@@ -141,13 +141,17 @@ chain.
 
 ## It scans itself
 
-The clearest demonstration is the one you can reproduce in the clone you just made. `rampscan scan .` on this repository:
+The clearest demonstration is the one you can reproduce in the clone you just made. `rampscan scan .` on this repository, at `c0d1c73`:
 
 ```
-12 evidenced · 2 violated · 6 unevidenced · 2 findings
+11 evidenced · 3 violated · 6 unevidenced · 8 findings
 ```
 
-Both violations are real and both are left standing on purpose.
+All three violations are real and all three are left standing on purpose. The third is new, and it is the one this repository is proudest of.
+
+`no-critical-reachable-advisories` counts every CRITICAL or HIGH advisory that is reachable from an entry point, or whose reachability is unknown. Six count. Two are in `next@15.5.23` and are reachable by an exact one-hop path — `console/web/app/api/artifact/route.ts » next/server` — because the console is a Next.js app and every one of its routes imports the framework. Two are `HIGH` advisories in `postcss@8.4.31`, reachable through the SBOM's `next → postcss` edge, with that hop marked `sbom` so a reader can see where the parsed call sites stop and the manifest's word begins. Two are in `sharp@0.34.5`, which no first-party file imports and no dependency chain from a reached package names: unknown, and unknown counts. **Until 2026-09-14 this row read `evidenced`,** on the strength of five signed `not_affected` statements about `postcss` and `sharp`. They were false. The walk had never entered the console — the config named one entry point in the CLI and the detector took it as the whole tree — so "not reachable from the entry points" was true and meant nothing, and the code that emitted the statements treated a package with no node in the graph as proven absent. That is the finding in [`docs/FINDING-VACUOUS-NOT-AFFECTED.md`](docs/FINDING-VACUOUS-NOT-AFFECTED.md), published as [GHSA-7jff-6v53-r56x](https://github.com/snymrova/rampscan/security/advisories/GHSA-7jff-6v53-r56x), and phases S0–S1 of [`docs/PLAN-SOUNDNESS.md`](docs/PLAN-SOUNDNESS.md) are what it took to make the row go red: absence became `unknown`, the SBOM joined the walk as a presence-prover, every negative now states its width and is refused at less than the whole tree, detection stopped being something the config could switch off, and the config's override was deleted. A third standing violation, explained, is worth more than the suppression it replaces — and the temptation to make it green again by narrowing an entry point or accepting a risk is the exact pressure this product exists to resist.
+
+The same run signs exactly one `not_affected`: `vitest@4.1.10`, against a MODERATE advisory that did not exist in August. It is the earned kind. `vitest` has a node in the graph — the test files import it — and a walk that started from all 57 detected entry points, entered all 12 application roots the tree declares, and excluded nothing, never arrived at it. The statement carries that scope as structured fields (`rampscan:scope`), so the sentence "not in the execute path" comes with the entry points, the roots and the commit it was checked against. It is the only shape a negative is allowed to take now.
 
 `ci-provenance-present` wants a workflow step that attests a build. This repository **publishes no artifact** — every package is private, the CLI runs from a clone — so a provenance step here would attest nothing and the recipe would pass on it. Passing a control you cannot prove is not a wrong answer, it is a false attestation, and it is the one thing [`SECURITY.md`](SECURITY.md) asks you to report as a vulnerability. It flips when there is something to attest.
 
