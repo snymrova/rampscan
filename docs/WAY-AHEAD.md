@@ -43,10 +43,9 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 
 1. **Merge S1-4 (PR #154)** on green. The judgment call to review: an excluded entry point the walk never reached refuses the negative, like an unentered root. Reversible in `packages/collectors/src/scope.ts` (`excludedEntrypointsNote`) if the owner wants visibility without refusal.
 2. **S1-5 (#132).** Remove `graph.entrypoints` from `rampscan.config.json` (detection now finds all 57, including the CLI via the root `scripts` entry), re-run the self-scan, and let the board move — `postcss` reachable via `next`, `openvex.json` with zero `not_affected`, `12 evidenced · 2 violated` → `11 evidenced · 3 violated`. README leads with it. Keep the S1-2 invariant in `graph.test.ts`.
-3. **S1 exit gate**, then **#147** before S3-1.
-4. **#147** before S3-1, in whatever slot the owner picks (S2 is short; it fits before or after).
-5. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
-6. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
+3. **S1 exit gate**, then **#147** before S3-1, in whatever slot the owner picks (S2 is short; it fits before or after).
+4. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
+5. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
 
 ## 4. The decisions already made — do not re-open
 
