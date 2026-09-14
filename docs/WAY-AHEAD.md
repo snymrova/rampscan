@@ -15,7 +15,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | | |
 |---|---|
 | Version | `v0.1.0-beta`, public on GitHub since 2026-08-18. 0 stars, 0 forks, 2 views in the first fourteen days. Nobody outside this machine has read it yet. |
-| Suite | 1,127 tests across 91 files, 0 expected failures (at PR #150; 1,121 at `c0a4d0a`). `pnpm typecheck` clean. CI: `check`, `test`, `console-smoke`. |
+| Suite | 1,138 tests across 91 files, 0 expected failures (at PR #151; 1,127 at PR #150; 1,121 at `c0a4d0a`). `pnpm typecheck` clean. CI: `check`, `test`, `console-smoke`. |
 | Plan of record | **`docs/PLAN-SOUNDNESS.md`, phases S0–S4.** Adopted 2026-09-13 (#123). Milestones S0–S4 on GitHub. |
 | Paused | R2–R5 (`docs/PLAN-ARTIFACT-PLANE.md`, #102–#115). They resume at the S3 exit. Do not work them. |
 | Drafted, not adopted | `docs/PLAN-CLOUD-RUNNER.md`, phases T0–T5 (PR #146). Builds after S1 closes. |
@@ -27,7 +27,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | Phase | State | Notes |
 |---|---|---|
 | S0 record the finding | ✅ #144 | Advisory public, no embargo (S0-1). Supersede, never delete (S0-2). |
-| S1 reachability soundness | 🔄 2 of 5 | S1-1 done (#145, `c0a4d0a`): absent node → `unknown`, counts, `under_investigation`. S1-2 in PR #150: SBOM `dependsOn` edges continue the walk, hops marked `sbom`, presence-prover only. **Next: S1-3 (#130).** Then #131, #132. Note S1-5 now depends on S1-4: `next` is only imported by `console/web`, outside the configured entry point, so `postcss` cannot flip until the console root is walked (finding §4.4 corrected in #150). |
+| S1 reachability soundness | 🔄 3 of 5 | S1-1 done (#145, `c0a4d0a`): absent node → `unknown`, counts, `under_investigation`. S1-2 in PR #150: SBOM `dependsOn` edges continue the walk, hops marked `sbom`, presence-prover only. S1-3 in PR #151 (stacked on #150): application roots recorded in `graph.db`, `not_affected` refused while any root is never entered, `rampscan:scope` on every VEX statement, the SAST gate covered too. **Next: S1-4 (#131).** Then #132. S1-5 depends on S1-4: `next` is only imported by `console/web`, outside the configured entry point (finding §4.4 corrected in #150) — and on the barrel edge below. |
 | S2 the numbers gate | not started | #133–#136. README claims numbers no command prints. |
 | S3 the first stranger | not started | #137, #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
 | S4 the surface S1 leans on | not started | #139–#141. |
@@ -41,11 +41,12 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 
 ## 3. What is next, in order
 
-1. **S1-3 (#130).** The VEX statement carries the entry-point set and the walked application roots as structured fields; where the tree has an application root no entry point covers, `not_affected` is refused for that run with the reason recorded. This repository is the concrete case: `console/web` is an application root outside `packages/cli/src/main.ts`, and under the gate today an advisory against `next` would be signed `not_affected` (measured in #150).
-2. **S1-4, S1-5.** S1-4 must land before S1-5 can move `postcss`. S1-5 makes the self-scan *worse* on purpose (12/2 → 11/3); the README must lead with it, not hide it. The invariant S1-2 added (`graph.test.ts`: every package `false` with the SBOM was already `false` without it) is the guard the plan §7.3 asked for — do not weaken it.
-3. **#147** before S3-1, in whatever slot the owner picks (S2 is short; it fits before or after).
-4. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
-5. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
+1. **The barrel edge, before S1-4** (no issue yet — open one, or fold it into #131). `extract.ts` emits no edge for `export … from "x"`, so the walk stops at every `@rampscan/*` package's `index.ts`: `core` 1 of 13 files reached, `schema` 1 of 14 (measured in #151). It is the one shape that signs `not_affected`, produced by the extractor rather than the config; a lexical fact, so it is an `exact` edge in the extractor, not an S4-1 test asserting `unknown`. S1-3's refusal masks it on the self-scan only because two roots are unwalked anyway.
+2. **S1-4 (#131).** `detectEntrypoints` keeps honouring config and reports what package.json detection would have found and config excluded. Measured in #151: this repository has **twelve** application roots and two the walk never enters — `console/web` and the workspace root itself (28 files: PocketBase hooks and migrations, scripts, e2e, the config files). Note that package.json detection finds nothing for `console/web` either (no `main`/`bin`/`exports`; a Next.js app), so S1-4 has to learn `app/layout.tsx` / `next.config.*` or the owner declares the console root in `rampscan.config.json` — either way S1-5 needs it.
+3. **S1-5.** S1-4 (and the barrel edge) must land before S1-5 can move `postcss`. S1-5 makes the self-scan *worse* on purpose (12/2 → 11/3); the README must lead with it, not hide it. The invariant S1-2 added (`graph.test.ts`: every package `false` with the SBOM was already `false` without it) is the guard the plan §7.3 asked for — do not weaken it.
+4. **#147** before S3-1, in whatever slot the owner picks (S2 is short; it fits before or after).
+5. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
+6. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
 
 ## 4. The decisions already made — do not re-open
 
@@ -68,7 +69,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 ```
 export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$HOME/.local/bin:$PATH"
 pnpm typecheck        # tsc --build; NOT tsc -p --noEmit, which let a red run through once
-pnpm test             # vitest; 1,127 at PR #150
+pnpm test             # vitest; 1,138 at PR #151
 ```
 `pnpm typecheck` does not cover `console/web`; the console has its own `tsc --build`. Stale `tsbuildinfo` can fake a red typecheck in untouched files; `tsc --build --clean` first. Scan tools (syft, osv-scanner, grype, semgrep, gitleaks, checkov) live in `~/.local/bin`; without that `PATH` the tool recipes go silently unevidenced.
 
@@ -105,3 +106,4 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
 
 - **2026-09-14** — Written at `c0a4d0a` after S1-1 merged, the cloud-runner plan was drafted (#146), and the Paramify pilot re-read surfaced #147 and the package-YAML adapter gap (#148). Next item: S1-2 (#129).
 - **2026-09-14 (S1-2)** — PR #150 opened. Verifying it against this repository's own artifacts found that finding §4.4 was wrong: `next` is not reached from the configured entry point, so S1-2 moves nothing on the self-scan and S1-5 waits on S1-4. Next item: S1-3 (#130).
+- **2026-09-14 (S1-3)** — PR #151 opened, stacked on #150. Measuring the width of the walk on this repository found a third application the plan had not counted (the workspace root's own 28 files) and a second extractor hole: `export … from` produces no edge, so every package barrel stops the walk. Recorded under S4-1 and put first in §3. Next item: the barrel edge, then S1-4 (#131).
