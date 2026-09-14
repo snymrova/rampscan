@@ -36,11 +36,11 @@ import {
 // `next@15.5.23 → postcss@8.4.31` while `graph.db` has no `postcss` node and
 // `openvex.json` signs four `not_affected` statements about it.
 //
-// THIS TEST IS `it.fails` ON PURPOSE. Against the code at 2801f8c it throws,
-// which is what S0's exit gate requires; wrapping it keeps `main` green while
-// the finding is recorded rather than fixed. **S1-1 flips `it.fails` back to
-// `it`** — and `it.fails` will start failing the moment the behaviour is
-// corrected, so the flip cannot be forgotten.
+// S0 committed this under `it.fails`: against the code at 2801f8c it threw,
+// which was S0's exit gate, and the wrapper kept `main` green while the
+// finding was recorded rather than fixed. S1-1 (#128) removed the
+// `dep === undefined` disjunct and flipped it back to `it`; it is now the
+// regression guard for GHSA-7jff-6v53-r56x.
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureRoot = join(repoRoot, "fixtures/vulnerable-app");
@@ -115,12 +115,12 @@ describe("S0-3 — a package absent from the graph is not proof of unreachabilit
     );
   });
 
-  it.fails("does not sign not_affected for a package the walk never had a node for", async () => {
+  it("does not sign not_affected for a package the walk never had a node for", async () => {
     const rows = out.observations["no-critical-reachable-advisories"]!;
     const minimist = rows.find((r) => r["package"] === "minimist")!;
 
     // The whole finding, in one assertion: `minimist` has no node in graph.db,
-    // so nothing was walked and nothing may be claimed. Today this reads
+    // so nothing was walked and nothing may be claimed. Before S1-1 this read
     // `true`, from `dep === undefined` at reachability.ts:142.
     expect(minimist["not_affected"]).toBe(false);
 

@@ -191,4 +191,6 @@ Full remediation is `docs/PLAN-SOUNDNESS.md` phase S1 (#128–#132). Expected ou
 | 2026-09-13 | Found during a full read of the repository for the S plan; `docs/PLAN-SOUNDNESS.md` §2 written |
 | 2026-09-13 | Plan adopted (`2801f8c`, PR #123); S0 opened |
 | 2026-09-13 | S0-3 failing test committed; this record written; advisory filed publicly, no embargo (S0-1) |
-| — | S1 fix, and `openvex.json` regenerated rather than deleted (S0-2) |
+| 2026-09-14 | S0 merged (`c35b390`, PR #144); advisory published as [GHSA-7jff-6v53-r56x](https://github.com/snymrova/rampscan/security/advisories/GHSA-7jff-6v53-r56x) |
+| 2026-09-14 | S1-1 (#128): the `dep === undefined` disjunct removed — a package with no graph node is `reachable: unknown`, counts, and is stated `under_investigation` in OpenVEX; S0-3 unwrapped from `it.fails` and passing. On the fixture the flagship recipe's offenders go from 2 to 3 (`GHSA-xvch-5gv4-984h`, minimist, joins them) |
+| — | Remaining S1 (#129–#132), and `openvex.json` regenerated rather than deleted (S0-2) |

@@ -34,7 +34,15 @@ export const OPENVEX_ARTIFACT = "openvex.json";
  * standing version of it for the recipe as a whole.
  */
 export const OVER_APPROXIMATION_STATEMENT =
-  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the package. Unknowns count against us: a package the graph never saw as a node is only unreachable because nothing imports it, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it.";
+  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it.";
+
+/**
+ * Why an advisory against a package with no graph node is unknown rather than
+ * not_affected — stated on the row and in its OpenVEX statement, so the
+ * reader sees the gap the gate refused to paper over.
+ */
+export const ABSENT_NODE_NOTE =
+  "the package has no node in the code graph — no first-party file imports it directly, so no walk ever reached or excluded it; its reachability is unknown and the advisory counts";
 
 interface OpenVexStatement {
   vulnerability: { name: string; aliases?: string[] };
@@ -137,10 +145,16 @@ export const reachability: Collector = {
     for (const adv of advisories) {
       const dep = deps?.get(adv.package);
       const gated = deps !== undefined;
-      // proven unreachable = the package has no node in the graph (declared
-      // but never imported) or no walk from any entry point reaches it
-      const notAffected = gated && (dep === undefined || !dep.reachable);
-      const reachable = !gated ? "unknown" : notAffected ? "false" : "true";
+      // proven unreachable = the package HAS a node in the graph and no walk
+      // from any entry point or declared route arrives at it. A package with
+      // no node was never walked at all — dependency nodes come only from
+      // first-party import specifiers, so absence is the absence of evidence,
+      // never evidence of absence (S1-1, GHSA-7jff-6v53-r56x): it is unknown,
+      // and it counts
+      const absent = gated && dep === undefined;
+      const notAffected = gated && dep !== undefined && !dep.reachable;
+      const reachable = !gated || absent ? "unknown" : notAffected ? "false" : "true";
+      const rowNote = gateNote ?? (absent ? ABSENT_NODE_NOTE : undefined);
       const path = dep?.reachable ? (dep.path ?? null) : null;
 
       rows.push({
@@ -155,7 +169,7 @@ export const reachability: Collector = {
         ...(dep?.inferred ? { path_resolution: "inferred" } : {}),
         // per-hop marking (I3f): which edge of this chain is the weak one
         ...(dep?.resolutions ? { call_path_resolutions: dep.resolutions } : {}),
-        ...(gateNote !== undefined ? { gate_note: gateNote } : {}),
+        ...(rowNote !== undefined ? { gate_note: rowNote } : {}),
         aliases: adv.aliases,
       });
 
@@ -186,7 +200,7 @@ export const reachability: Collector = {
           vulnerability,
           products: [{ "@id": product }],
           status: "under_investigation",
-          ...(gateNote !== undefined ? { impact_statement: gateNote } : {}),
+          ...(rowNote !== undefined ? { impact_statement: rowNote } : {}),
         });
       }
 

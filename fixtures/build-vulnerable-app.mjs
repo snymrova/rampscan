@@ -13,12 +13,13 @@
 //   5. a route with no auth check in its call path (GET /health in
 //      src/server.js; GET /settings passes through requireAuth — the contrast)
 //
-// And one planted NON-fault, the M4 not-affected demo:
+// And one planted absence, the M4 unknown demo:
 //   6. a second known-vulnerable dependency (minimist 1.2.5 —
 //      GHSA-xvch-5gv4-984h, CRITICAL prototype pollution) declared in
-//      package.json + lockfile but never imported anywhere — the code graph
-//      must prove it unreachable and emit a signed not-affected OpenVEX
-//      instead of a violation
+//      package.json + lockfile but never imported anywhere — so the code graph
+//      has NO node for it. Until S1-1 the gate read that absence as a proof
+//      and signed a not-affected OpenVEX (GHSA-7jff-6v53-r56x); the gate must
+//      now report its reachability unknown and COUNT it
 //
 // The SAST edition of the same pair (the sast-reachability gate's demo):
 //   7. dangerous code (eval) in src/render.js, REACHABLE: required from
