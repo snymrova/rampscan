@@ -106,7 +106,9 @@ export function offenderPointer(row: Record<string, unknown>): OffenderPointer |
   if (
     callPath !== undefined &&
     Array.isArray(marks) &&
-    marks.every((m): m is "exact" | "inferred" => m === "exact" || m === "inferred") &&
+    marks.every(
+      (m): m is "exact" | "inferred" | "sbom" => m === "exact" || m === "inferred" || m === "sbom",
+    ) &&
     marks.length === callPath.split(" » ").length - 1
   ) {
     pointer.call_path_resolutions = marks;

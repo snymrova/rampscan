@@ -282,12 +282,12 @@ export function provenanceChain(input: ChainInput): ChainHop[] {
 export interface CallPathHop {
   node: string;
   /** the edge that ARRIVES at this node; absent on the root */
-  resolution?: "exact" | "inferred" | "unmarked";
+  resolution?: "exact" | "inferred" | "sbom" | "unmarked";
 }
 
 export function callPathHops(
   callPath: string,
-  resolutions?: Array<"exact" | "inferred">,
+  resolutions?: Array<"exact" | "inferred" | "sbom">,
 ): CallPathHop[] {
   const nodes = callPath.split(" » ");
   const usable = resolutions !== undefined && resolutions.length === nodes.length - 1;

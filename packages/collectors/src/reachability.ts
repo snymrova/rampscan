@@ -10,21 +10,25 @@ import {
   graphShape,
   openGraphDb,
   readGraphMeta,
+  sbomDependencyGraph,
 } from "@rampscan/graph";
-import type { DepReachability } from "@rampscan/graph";
+import type { DepReachability, SbomDependencyGraph } from "@rampscan/graph";
 import { OSV_RESULTS_ARTIFACT, OsvResults, advisoryRows } from "./osv-report.js";
 import { fileSha256, makeFinding, sha256 } from "./support.js";
+import { SBOM_ARTIFACT } from "./syft.js";
 
 // reachability — the M4 flagship join (plan §M4, SPEC §3 "Reachability/VEX"):
-// osv-results.json × graph.db → gated advisory rows. Reachable → violated
-// with the call path as the artifact; provably unreachable → not_affected,
-// emitted as OpenVEX with the justification. The gate only ever CLAIMS
-// not_affected when the graph proves the package is beyond every entry
-// point; no graph, or no detectable entry points, degrades to the honest M1
-// posture — every advisory counts, marked "unknown", never silently waved
-// through.
+// osv-results.json × graph.db (× sbom.cdx.json since S1-2) → gated advisory
+// rows. Reachable → violated with the call path as the artifact; provably
+// unreachable → not_affected, emitted as OpenVEX with the justification. The
+// gate only ever CLAIMS not_affected when the graph proves the package is
+// beyond every entry point; no graph, or no detectable entry points, degrades
+// to the honest M1 posture — every advisory counts, marked "unknown", never
+// silently waved through. The SBOM's dependsOn edges continue the walk
+// forward from any package it reached — they upgrade unknown to true, with
+// their hops marked `sbom`, and can never justify a negative.
 
-export const REACHABILITY_VERSION = "0.1.0";
+export const REACHABILITY_VERSION = "0.2.0";
 export const OPENVEX_ARTIFACT = "openvex.json";
 
 /**
@@ -34,7 +38,7 @@ export const OPENVEX_ARTIFACT = "openvex.json";
  * standing version of it for the recipe as a whole.
  */
 export const OVER_APPROXIMATION_STATEMENT =
-  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it.";
+  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it. The SBOM's declared dependsOn edges continue the walk forward from any package it reached, with those hops marked sbom; they prove presence only — the manifest graph is partial, so no absence of a chain is ever read as unreachable.";
 
 /**
  * Why an advisory against a package with no graph node is unknown rather than
@@ -42,7 +46,7 @@ export const OVER_APPROXIMATION_STATEMENT =
  * reader sees the gap the gate refused to paper over.
  */
 export const ABSENT_NODE_NOTE =
-  "the package has no node in the code graph — no first-party file imports it directly, so no walk ever reached or excluded it; its reachability is unknown and the advisory counts";
+  "the package has no node in the code graph — no first-party file imports it directly — and no SBOM dependsOn chain from a package the walk reached names it, so no walk ever reached or excluded it; its reachability is unknown and the advisory counts";
 
 interface OpenVexStatement {
   vulnerability: { name: string; aliases?: string[] };
@@ -64,11 +68,11 @@ export const reachability: Collector = {
     name: "reachability",
     toolVersion: "resolved-at-run",
     recipes: ["no-critical-reachable-advisories"],
-    inputs: [OSV_RESULTS_ARTIFACT, GRAPH_DB_ARTIFACT],
+    inputs: [OSV_RESULTS_ARTIFACT, GRAPH_DB_ARTIFACT, SBOM_ARTIFACT],
     outputs: [OPENVEX_ARTIFACT],
-    cacheScope: ["@inputs"], // pure join of osv-results × graph.db
+    cacheScope: ["@inputs"], // pure join of osv-results × graph.db × sbom
     // Declared scan scope (SPEC §12.6): walks no repo path — a pure join of
-    // two declared input artifacts, each produced over the committed tree.
+    // three declared input artifacts, each produced over the committed tree.
     scope: { population: "checkout", history: false, gitignored: "excluded" },
   },
 
@@ -91,6 +95,14 @@ export const reachability: Collector = {
     const report = OsvResults.parse(JSON.parse(await readFile(osvPath, "utf8")));
     const advisories = advisoryRows(report);
 
+    // the SBOM's dependsOn graph (S1-2): continues the walk forward from any
+    // package the code graph reached. Optional — without it the gate is the
+    // code walk alone, which changes no verdict downward: the SBOM can only
+    // ever upgrade unknown to true
+    const sbomPath = ctx.inputs.get(SBOM_ARTIFACT);
+    let sbom: SbomDependencyGraph | undefined;
+    if (sbomPath) sbom = sbomDependencyGraph(JSON.parse(await readFile(sbomPath, "utf8")));
+
     // the gate: package-level reachability from the snapshot graph
     const graphPath = ctx.inputs.get(GRAPH_DB_ARTIFACT);
     let deps: Map<string, DepReachability> | undefined;
@@ -104,6 +116,13 @@ export const reachability: Collector = {
       entrypoints: [],
       entrypoint_source: "unavailable",
     };
+    if (sbom) {
+      basis.sbom = {
+        component_count: sbom.component_count,
+        components_with_edges: sbom.components_with_edges,
+        edge_count: sbom.edge_count,
+      };
+    }
     if (graphPath) {
       const db = openGraphDb(graphPath);
       try {
@@ -127,7 +146,7 @@ export const reachability: Collector = {
           gateNote = `graph built but no entry points detected — set graph.entrypoints in ${GRAPH_CONFIG_FILE}; every advisory counts until then`;
           basis.degraded = gateNote;
         } else {
-          deps = dependencyReachability(db);
+          deps = dependencyReachability(db, sbom);
         }
       } finally {
         db.close();
@@ -150,7 +169,9 @@ export const reachability: Collector = {
       // no node was never walked at all — dependency nodes come only from
       // first-party import specifiers, so absence is the absence of evidence,
       // never evidence of absence (S1-1, GHSA-7jff-6v53-r56x): it is unknown,
-      // and it counts
+      // and it counts. Since S1-2 `deps` also holds every package an SBOM
+      // dependsOn chain leads to from a reached one — always `reachable`, so
+      // the SBOM shrinks the unknown set and never grows the negative one
       const absent = gated && dep === undefined;
       const notAffected = gated && dep !== undefined && !dep.reachable;
       const reachable = !gated || absent ? "unknown" : notAffected ? "false" : "true";

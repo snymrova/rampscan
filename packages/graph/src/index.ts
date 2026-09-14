@@ -5,6 +5,7 @@ export * from "./entrypoints.js";
 export * from "./config.js";
 export * from "./db.js";
 export * from "./query.js";
+export * from "./sbom.js";
 
 /** extractor version — participates in cache keys and bundle provenance */
 // 0.2.0: workspace-aware import resolution — monorepo package imports resolve

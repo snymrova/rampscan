@@ -49,16 +49,21 @@ export const OffenderPointer = z.object({
   call_path: z.string().optional(),
   /**
    * How each HOP of `call_path` was resolved — "exact" (the import/call was
-   * lexically resolved to a file the walk saw) or "inferred" (matched by
-   * name). One entry per hop, so this array is always one shorter than the
-   * path's node count (I3f).
+   * lexically resolved to a file the walk saw), "inferred" (matched by
+   * name), or "sbom" (S1-2: a `dependsOn` edge declared in a package
+   * manifest and read from the CycloneDX SBOM — the code graph never saw the
+   * hop at all). One entry per hop, so this array is always one shorter than
+   * the path's node count (I3f).
    *
    * A path is only as good as its weakest edge, and a single "inferred" hop
    * is the difference between "this call chain exists" and "a chain of these
-   * names exists". Rendering the path without the marking asks the reader to
-   * trust every hop equally, which is exactly what the graph cannot promise.
+   * names exists". An "sbom" hop is a third thing again: a manifest's word
+   * that one package declares another, which proves presence in the
+   * dependency tree and says nothing about a call. Rendering the path
+   * without the marking asks the reader to trust every hop equally, which is
+   * exactly what the graph cannot promise.
    */
-  call_path_resolutions: z.array(z.enum(["exact", "inferred"])).optional(),
+  call_path_resolutions: z.array(z.enum(["exact", "inferred", "sbom"])).optional(),
 });
 export type OffenderPointer = z.infer<typeof OffenderPointer>;
 
@@ -137,6 +142,23 @@ export const ClaimBasis = z.object({
       edge_count: z.number().int(),
       /** edges matched by name rather than lexically resolved */
       inferred_edge_count: z.number().int(),
+    })
+    .optional(),
+  /**
+   * The SBOM's declared dependency graph the walk continued through (S1-2),
+   * signed with the claim for the same reason the code graph's shape is: a
+   * reader of an sbom-marked hop is owed how partial the manifest graph was.
+   * `components_with_edges` against `component_count` is that measure — and
+   * the reason this graph proves presence only. Absent when no SBOM was
+   * available to the gate, in which case no hop can be marked `sbom`.
+   */
+  sbom: z
+    .object({
+      component_count: z.number().int(),
+      /** npm components carrying at least one outgoing dependsOn edge */
+      components_with_edges: z.number().int(),
+      /** npm → npm dependsOn edges the walk could continue through */
+      edge_count: z.number().int(),
     })
     .optional(),
   /**
