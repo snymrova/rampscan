@@ -7,6 +7,7 @@ import type { CollectContext, CollectOutput } from "@rampscan/core";
 import {
   DEFAULT_AUTH_PATTERNS,
   GRAPH_DB_ARTIFACT,
+  detectApplicationRoots,
   detectEntrypoints,
   extractGraph,
   graphToolVersion,
@@ -231,6 +232,9 @@ describe("reachability gate — the one not_affected the graph can earn", () => 
       entrypointSource: entry.source,
       entrypointsUnresolved: entry.unresolved,
       authPatterns: DEFAULT_AUTH_PATTERNS,
+      // the one root the tree declares is the one the walk enters (S1-3) —
+      // without this line the gate cannot know how wide it walked, and refuses
+      applicationRoots: await detectApplicationRoots(root, new Set(files), "worktree"),
     });
     const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
     await writeFile(osvPath, JSON.stringify(OSV_REPORT));
@@ -272,5 +276,20 @@ describe("reachability gate — the one not_affected the graph can earn", () => 
     expect(notAffected[0]!["justification"]).toBe("vulnerable_code_not_in_execute_path");
     expect((notAffected[0]!["products"] as Array<{ "@id": string }>)[0]!["@id"]).toBe("pkg:npm/minimist@1.2.5");
     expect(String(notAffected[0]!["impact_statement"])).toContain("src/index.js");
+    // the scope as structured fields, not only inside the prose (S1-3)
+    expect(notAffected[0]!["rampscan:scope"]).toEqual({
+      commit: "e".repeat(40),
+      entrypoints: ["src/index.js"],
+      entrypoint_source: "package.json",
+      application_roots: [{ dir: ".", name: "earned", walked: true }],
+    });
+  });
+
+  it("the basis signs the width of the walk: one root, entered", () => {
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.application_roots).toEqual([
+      { dir: ".", name: "earned", file_count: 2, reached_file_count: 1 },
+    ]);
+    expect(basis.degraded).toBeUndefined();
   });
 });

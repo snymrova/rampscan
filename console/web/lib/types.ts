@@ -39,6 +39,18 @@ export interface ClaimBasisRecord {
   entrypoint_source: string;
   entrypoints_unresolved?: string[];
   route_roots?: number;
+  /**
+   * The width of the walk (S1-3): every application root the tree declares,
+   * with how many of its files the walk reached. A root reached nowhere is an
+   * application the walk never entered, and the gate refuses not_affected for
+   * the run while one exists — `degraded` carries the refusal.
+   */
+  application_roots?: Array<{
+    dir: string;
+    name?: string;
+    file_count: number;
+    reached_file_count: number;
+  }>;
   graph?: {
     commit: string;
     extractor_version: string;

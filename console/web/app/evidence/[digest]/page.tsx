@@ -206,6 +206,31 @@ function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
               </dd>
             </>
           )}
+          {basis.application_roots && (
+            <>
+              <dt>applications entered</dt>
+              {/* the width of every negative claim above (S1-3): a root the
+                  walk never entered is named as such, because "not reachable
+                  from the entry points" is only a statement about the
+                  repository when the entry points cover the repository */}
+              <dd className="mono">
+                {basis.application_roots.map((r) => (
+                  <div key={r.dir} className={r.reached_file_count === 0 ? "assertion-fail" : undefined}>
+                    {r.dir}
+                    {r.name ? ` (${r.name})` : ""} — {r.reached_file_count} of {r.file_count} file
+                    {r.file_count === 1 ? "" : "s"} reached
+                    {r.reached_file_count === 0 ? " — never entered" : ""}
+                  </div>
+                ))}
+                {basis.application_roots.some((r) => r.reached_file_count === 0) && (
+                  <div className="faint">
+                    an application no entry point covers is outside every walk; no not-affected
+                    claim was signed for this run
+                  </div>
+                )}
+              </dd>
+            </>
+          )}
           {basis.graph && (
             <>
               <dt>the graph walked</dt>

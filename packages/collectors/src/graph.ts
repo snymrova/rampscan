@@ -4,6 +4,7 @@ import type { ClaimBasis, Finding } from "@rampscan/schema";
 import {
   DEFAULT_AUTH_PATTERNS,
   GRAPH_DB_ARTIFACT,
+  detectApplicationRoots,
   detectEntrypoints,
   extractGraph,
   graphShape,
@@ -70,6 +71,11 @@ export const graphCollector: Collector = {
     const config = await loadGraphConfig(ctx.workspace.root);
     const graph = await extractGraph(ctx.workspace.root, files, tree);
     const entry = await detectEntrypoints(ctx.workspace.root, new Set(files), config.entrypoints);
+    // what the entry points COULD have covered (S1-3): every package root the
+    // tree declares, recorded beside the roots the walk actually starts from,
+    // so the reachability gate can tell a repository-wide negative from one
+    // scoped to the applications the config happened to name
+    const applicationRoots = await detectApplicationRoots(ctx.workspace.root, new Set(files), tree);
     const authPatterns = config.authPatterns ?? DEFAULT_AUTH_PATTERNS;
 
     const dbPath = join(ctx.artifactDir, GRAPH_DB_ARTIFACT);
@@ -80,6 +86,7 @@ export const graphCollector: Collector = {
       entrypointSource: entry.source,
       entrypointsUnresolved: entry.unresolved,
       authPatterns,
+      applicationRoots,
     });
 
     const db = openGraphDb(dbPath);

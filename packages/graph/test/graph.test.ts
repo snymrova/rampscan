@@ -6,13 +6,16 @@ import {
   DEFAULT_AUTH_PATTERNS,
   GRAPH_DB_ARTIFACT,
   GRAPH_VERSION,
+  applicationRootCoverage,
   dependencyReachability,
+  detectApplicationRoots,
   detectEntrypoints,
   extractGraph,
   fileId,
   graphShape,
   graphToolVersion,
   loadGraphConfig,
+  nearestRoot,
   openGraphDb,
   packageOf,
   readGraphMeta,
@@ -452,7 +455,7 @@ describe("graph.db provenance", () => {
   });
 
   it("tool version pins the extractor and the parser", () => {
-    expect(graphToolVersion()).toMatch(/^0\.2\.0\+ts\d/);
+    expect(graphToolVersion()).toMatch(/^0\.3\.0\+ts\d/);
   });
 });
 
@@ -518,5 +521,113 @@ describe("workspace-aware import resolution (0.2.0)", () => {
 
   it("a package whose source is NOT in the repo still becomes a dependency node", () => {
     expect(wsGraph.nodes.some((n) => n.id === "dep:left-pad")).toBe(true);
+  });
+});
+
+describe("S1-3 — application roots, and how wide the walk was", () => {
+  // The same workspace as above, read for its width: four manifests with
+  // source of their own (the root, app, lib, web), one without (docs). The
+  // walk from packages/app enters app and lib and never sets foot in web or
+  // in the root's own script — so any negative it makes is scoped to half
+  // the tree, and the gate must be able to see that from graph.db alone.
+  let wsRoot: string;
+  let wsGraph: ExtractedGraph;
+
+  beforeAll(async () => {
+    wsRoot = await mkdtemp(join(tmpdir(), "rampscan-graph-roots-"));
+    const w = async (rel: string, content: string): Promise<void> => {
+      const abs = join(wsRoot, rel);
+      await mkdir(dirname(abs), { recursive: true });
+      await writeFile(abs, content);
+    };
+    await w("package.json", JSON.stringify({ name: "acme-root", private: true }));
+    await w(
+      "packages/app/package.json",
+      JSON.stringify({ name: "@acme/app", main: "src/main.js", dependencies: { "@acme/lib": "workspace:*" } }),
+    );
+    await w("packages/app/src/main.js", 'const { helper } = require("@acme/lib");\nhelper();\n');
+    await w(
+      "packages/lib/package.json",
+      JSON.stringify({ name: "@acme/lib", exports: { ".": { default: "./src/index.js" } } }),
+    );
+    await w("packages/lib/src/index.js", "function helper() {}\nmodule.exports = { helper };\n");
+    await w("packages/lib/src/dead.js", "function never() {}\nmodule.exports = { never };\n");
+    // a second application the tree declares and no entry point names — the
+    // self-scan's console/web, in miniature
+    await w("packages/web/package.json", JSON.stringify({ name: "@acme/web", private: true }));
+    await w("packages/web/src/page.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    // a manifest with no source of its own is not a root — nothing to miss
+    await w("docs/package.json", JSON.stringify({ name: "@acme/docs", private: true }));
+    await w("docs/README.md", "# docs\n");
+    // a top-level script the workspace root itself owns
+    await w("scripts/release.js", "console.log('release');\n");
+    wsGraph = await extractGraph(wsRoot);
+  });
+
+  it("nearestRoot assigns a file to the deepest manifest above it, and the tree root claims the rest", () => {
+    const dirs = [".", "packages/app", "packages/lib"];
+    expect(nearestRoot("packages/app/src/main.js", dirs)).toBe("packages/app");
+    expect(nearestRoot("packages/lib/src/dead.js", dirs)).toBe("packages/lib");
+    expect(nearestRoot("scripts/release.js", dirs)).toBe(".");
+    // a sibling whose name merely starts the same is not inside
+    expect(nearestRoot("packages/application/x.js", dirs)).toBe(".");
+    expect(nearestRoot("scripts/release.js", ["packages/app"])).toBeUndefined();
+  });
+
+  it("detects every manifest that owns source, by nearest manifest, and skips the ones that own none", async () => {
+    const roots = await detectApplicationRoots(wsRoot, new Set(wsGraph.files));
+    expect(roots).toEqual([
+      { dir: ".", name: "acme-root" },
+      { dir: "packages/app", name: "@acme/app" },
+      { dir: "packages/lib", name: "@acme/lib" },
+      { dir: "packages/web", name: "@acme/web" },
+    ]);
+  });
+
+  it("measures which roots the walk entered — and web is not one of them", async () => {
+    const dbPath = join(wsRoot, "roots-graph.db");
+    writeGraphDb(dbPath, wsGraph, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "test-commit",
+      entrypoints: ["packages/app/src/main.js"],
+      entrypointSource: "config",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: await detectApplicationRoots(wsRoot, new Set(wsGraph.files)),
+    });
+    const wsDb = openGraphDb(dbPath);
+    try {
+      expect(readGraphMeta(wsDb).applicationRoots).toHaveLength(4);
+      const coverage = applicationRootCoverage(wsDb)!;
+      expect(coverage).toEqual([
+        { dir: ".", name: "acme-root", file_count: 1, reached_file_count: 0 },
+        { dir: "packages/app", name: "@acme/app", file_count: 1, reached_file_count: 1 },
+        // lib is entered (index.js) even though dead.js is not — entered is the
+        // question, not exhausted: that is what the walk is for
+        { dir: "packages/lib", name: "@acme/lib", file_count: 2, reached_file_count: 1 },
+        { dir: "packages/web", name: "@acme/web", file_count: 1, reached_file_count: 0 },
+      ]);
+    } finally {
+      wsDb.close();
+    }
+  });
+
+  it("a graph written without its roots reports an unknown width, not a full one", () => {
+    const dbPath = join(wsRoot, "rootless-graph.db");
+    writeGraphDb(dbPath, wsGraph, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "test-commit",
+      entrypoints: ["packages/app/src/main.js"],
+      entrypointSource: "config",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+    });
+    const wsDb = openGraphDb(dbPath);
+    try {
+      expect(readGraphMeta(wsDb).applicationRoots).toBeUndefined();
+      expect(applicationRootCoverage(wsDb)).toBeUndefined();
+    } finally {
+      wsDb.close();
+    }
   });
 });

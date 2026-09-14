@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { readGraphMeta } from "./db.js";
+import { nearestRoot } from "./entrypoints.js";
 import { fileId, type EdgeKind, type Resolution } from "./extract.js";
 import type { SbomDependencyGraph } from "./sbom.js";
 
@@ -135,6 +136,54 @@ export function entryRoots(db: DatabaseSync): string[] {
     (r) => r.id,
   );
   return [...meta.entrypoints.map((rel) => fileId(rel)), ...routeIds];
+}
+
+/**
+ * One application root of the tree, and whether the advisory-gating walk
+ * ever entered it (S1-3). `file_count` is what the root owns by nearest
+ * manifest; `reached_file_count` is how many of those the walk from every
+ * entry point and declared route arrived at. Zero reached means the walk
+ * never set foot in this application, and a negative claim scoped to the
+ * others is not a claim about the repository.
+ */
+export interface ApplicationRootCoverage {
+  dir: string;
+  name?: string;
+  file_count: number;
+  reached_file_count: number;
+}
+
+/**
+ * Which application roots the advisory-gating walk entered — the width of
+ * every negative claim it makes. Undefined when the graph was written without
+ * its roots recorded: an unknown width is not a full width, and the caller
+ * must refuse the negative rather than assume it.
+ */
+export function applicationRootCoverage(db: DatabaseSync): ApplicationRootCoverage[] | undefined {
+  const meta = readGraphMeta(db);
+  if (meta.applicationRoots === undefined) return undefined;
+  const reach = reachableSet(db, entryRoots(db));
+  // a file node's name IS its repo-relative path; graphs from before the
+  // path column was filled for file nodes still have the name
+  const files = db.prepare("SELECT id, COALESCE(path, name) AS path FROM nodes WHERE kind = 'file'").all() as Array<{
+    id: string;
+    path: string;
+  }>;
+  const dirs = meta.applicationRoots.map((r) => r.dir);
+  const out = new Map<string, ApplicationRootCoverage>(
+    meta.applicationRoots.map((r) => [
+      r.dir,
+      { dir: r.dir, ...(r.name !== undefined ? { name: r.name } : {}), file_count: 0, reached_file_count: 0 },
+    ]),
+  );
+  for (const f of files) {
+    const dir = nearestRoot(f.path, dirs);
+    if (dir === undefined) continue;
+    const row = out.get(dir)!;
+    row.file_count += 1;
+    if (reach.has(f.id)) row.reached_file_count += 1;
+  }
+  return [...out.values()];
 }
 
 /**
