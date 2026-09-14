@@ -22,7 +22,7 @@ export interface OffenderPointer {
   check?: string;
   call_path?: string;
   /** how each HOP of call_path resolved (I3f) — always one shorter than its node count */
-  call_path_resolutions?: Array<"exact" | "inferred">;
+  call_path_resolutions?: Array<"exact" | "inferred" | "sbom">;
 }
 
 /**
@@ -45,6 +45,15 @@ export interface ClaimBasisRecord {
     node_count: number;
     edge_count: number;
     inferred_edge_count: number;
+  };
+  /**
+   * The SBOM's declared dependency graph the walk continued through (S1-2):
+   * how partial it was is the reason an sbom-marked hop proves presence only.
+   */
+  sbom?: {
+    component_count: number;
+    components_with_edges: number;
+    edge_count: number;
   };
   /**
    * The declared architecture rules this verdict was checked against (L1), as

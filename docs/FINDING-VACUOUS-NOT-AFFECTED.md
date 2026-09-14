@@ -127,10 +127,12 @@ components 173 | dependency entries 34
 next -> ['postcss@8.4.31', 'postcss@8.5.26']
 ```
 
-- **`postcss`** — the edge `next@15.5.23 → postcss@8.4.31` is in the SBOM, and `next` is a dependency node that *is* reachable from the declared entry point. `postcss` is provably **reachable** from data rampscan collected, wrote to disk, and signed a contradicting statement about in the same run.
+- **`postcss`** — the edge `next@15.5.23 → postcss@8.4.31` is in the SBOM, and `next` is a dependency node that ~~*is* reachable from the declared entry point~~ **is not reached from the declared entry point — see the correction below.** `postcss` is provably **reachable** from data rampscan collected, wrote to disk, and signed a contradicting statement about in the same run — *provably present below `next`*; whether `next` itself is in the execute path is exactly the §3.3 question.
 - **`sharp`** — no path from `next` in the SBOM's `dependsOn`. The SBOM graph is partial (34 of 173 components carry outgoing edges), so `sharp` is genuinely **unknown**: not provably reachable, and not provably unreachable either.
 
 Those two packages are the two halves of the correct, three-valued answer.
+
+> **Correction, 2026-09-14 (S1-2).** The sentence struck above was wrong on the graph this section cites. Measured on `rampscan-out/artifacts/graph/graph.db` (commit `306ca638910b`, extractor `0.2.0+ts5.9.3`, entry points `["packages/cli/src/main.ts"]` from config): `reachableSet(db, entryRoots(db)).has("dep:next")` is **`false`**. The only importer of `next` is `console/web/app/layout.tsx`, which no configured entry point covers — so `next` has a node and the walk never arrives at it, which is §3.3's hole, not §3.1's. Two consequences, both recorded rather than smoothed over: (1) S1-2's SBOM join changes **nothing** on this repository's own artifacts, because the manifest walk can only start from a package the code walk reached and `next` is not one; `postcss` flips when S1-4 brings the console's root into the walk. (2) Under the gate as it stands, an advisory against `next` itself would be signed `not_affected` — the plan's S1-3 and S1-4 exist for precisely this, and this measurement is their concrete case. The `next → postcss` edge is as real as §4.4 says; what it proves is presence below `next`, and the claim that `next` was reached was never checked against the graph. It has been now.
 
 ### 4.5 Nothing under `rampscan-out/` is published
 
@@ -193,4 +195,5 @@ Full remediation is `docs/PLAN-SOUNDNESS.md` phase S1 (#128–#132). Expected ou
 | 2026-09-13 | S0-3 failing test committed; this record written; advisory filed publicly, no embargo (S0-1) |
 | 2026-09-14 | S0 merged (`c35b390`, PR #144); advisory published as [GHSA-7jff-6v53-r56x](https://github.com/snymrova/rampscan/security/advisories/GHSA-7jff-6v53-r56x) |
 | 2026-09-14 | S1-1 (#128): the `dep === undefined` disjunct removed — a package with no graph node is `reachable: unknown`, counts, and is stated `under_investigation` in OpenVEX; S0-3 unwrapped from `it.fails` and passing. On the fixture the flagship recipe's offenders go from 2 to 3 (`GHSA-xvch-5gv4-984h`, minimist, joins them) |
-| — | Remaining S1 (#129–#132), and `openvex.json` regenerated rather than deleted (S0-2) |
+| 2026-09-14 | S1-2 (#129): the SBOM's `dependsOn` edges join the walk as a presence-prover — hops marked `sbom`, the join written so it can only add to the reachable set, an invariant test guarding the direction. On the fixture, `minimist` becomes `affected` through `lodash ⇒ minimist`. On this repository's own graph, nothing moves: §4.4's claim that `next` was reached was wrong (corrected in place) — `next` is a node the walk never arrives at because `console/web` is outside the configured entry point, so `postcss` waits on S1-4 |
+| — | Remaining S1 (#130–#132), and `openvex.json` regenerated rather than deleted (S0-2) |

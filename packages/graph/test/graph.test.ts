@@ -18,6 +18,7 @@ import {
   readGraphMeta,
   reachableSet,
   routeAuthCoverage,
+  sbomDependencyGraph,
   shortestPath,
   symId,
   writeGraphDb,
@@ -312,6 +313,103 @@ describe("per-hop edge resolution (I3f)", () => {
   it("dependency reachability carries them too", () => {
     const lodash = dependencyReachability(db).get("lodash")!;
     expect(lodash.resolutions).toHaveLength(lodash.path!.split(" » ").length - 1);
+  });
+});
+
+describe("S1-2 — the SBOM graph joins the walk, as a presence-prover only", () => {
+  // CycloneDX shaped like syft's output. lodash → minimist is the edge the
+  // code graph cannot see (minimist has no node in the mini-app: declared,
+  // never imported). sharp is a component nothing declares a path to, and
+  // the PyPI lodash is a name collision across ecosystems that must not join.
+  const SBOM = {
+    bomFormat: "CycloneDX",
+    specVersion: "1.7",
+    components: [
+      { "bom-ref": "pkg:npm/mini@1.0.0", type: "application", name: "mini", version: "1.0.0" },
+      { "bom-ref": "pkg:npm/lodash@4.17.15", type: "library", name: "lodash", version: "4.17.15" },
+      { "bom-ref": "pkg:npm/minimist@1.2.5", type: "library", name: "minimist", version: "1.2.5" },
+      { "bom-ref": "pkg:npm/sharp@0.33.0", type: "library", name: "sharp", version: "0.33.0" },
+      { "bom-ref": "pkg:pypi/lodash@0.1", type: "library", name: "lodash", version: "0.1" },
+    ],
+    dependencies: [
+      {
+        ref: "pkg:npm/mini@1.0.0",
+        dependsOn: ["pkg:npm/lodash@4.17.15", "pkg:npm/minimist@1.2.5", "pkg:npm/sharp@0.33.0"],
+      },
+      { ref: "pkg:npm/lodash@4.17.15", dependsOn: ["pkg:npm/minimist@1.2.5"] },
+      { ref: "pkg:npm/minimist@1.2.5", dependsOn: [] },
+      { ref: "pkg:pypi/lodash@0.1", dependsOn: ["pkg:npm/sharp@0.33.0"] },
+    ],
+  };
+
+  it("reads npm dependsOn edges by package name and measures how partial the graph is", () => {
+    const sbom = sbomDependencyGraph(SBOM);
+    expect(sbom.dependsOn.get("lodash")).toEqual(["minimist"]);
+    expect(sbom.dependsOn.get("mini")).toEqual(["lodash", "minimist", "sharp"]);
+    expect(sbom.dependsOn.has("minimist")).toBe(false);
+    expect(sbom.component_count).toBe(5);
+    // the PyPI component is not an npm package: its edge never joins
+    expect(sbom.components_with_edges).toBe(2);
+    expect(sbom.edge_count).toBe(4);
+  });
+
+  it("continues the walk through the manifest: minimist becomes reachable with an sbom-marked hop", () => {
+    const deps = dependencyReachability(db, sbomDependencyGraph(SBOM));
+    const minimist = deps.get("minimist");
+    expect(minimist?.reachable).toBe(true);
+    expect(minimist?.path).toBe("src/index.js » lodash/merge » minimist");
+    expect(minimist?.resolutions).toEqual(["exact", "sbom"]);
+    expect(minimist?.inferred).toBe(false);
+    // the code-walked package is untouched by the join
+    expect(deps.get("lodash")).toEqual(dependencyReachability(db).get("lodash"));
+  });
+
+  it("never manufactures a negative: no chain and no node is absent, not false", () => {
+    const deps = dependencyReachability(db, sbomDependencyGraph(SBOM));
+    // sharp is declared by the application root, which the code walk never
+    // reached (it has no node), so no chain from a reached package names it
+    expect(deps.get("sharp")).toBeUndefined();
+    // the root itself is a component, not a walked package
+    expect(deps.get("mini")).toBeUndefined();
+  });
+
+  it("only upgrades: every package false with the SBOM was already false without it", async () => {
+    // a mini-repo with the one shape the code walk can call unreachable — a
+    // package that HAS a node (src/orphan.js imports it) no root arrives at
+    const orphanRoot = await mkdtemp(join(tmpdir(), "rampscan-sbom-orphan-"));
+    await writeFile(join(orphanRoot, "index.js"), 'const merge = require("lodash/merge");\nmodule.exports = { merge };\n');
+    await writeFile(join(orphanRoot, "orphan.js"), 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    const g = await extractGraph(orphanRoot);
+    const p = join(orphanRoot, "graph.db");
+    writeGraphDb(p, g, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "o",
+      entrypoints: ["index.js"],
+      entrypointSource: "config",
+      entrypointsUnresolved: [],
+      authPatterns: [],
+    });
+    const odb = openGraphDb(p);
+    try {
+      const without = dependencyReachability(odb);
+      expect(without.get("minimist")?.reachable).toBe(false);
+
+      // an SBOM with no edge to minimist leaves the code walk's verdict alone
+      const bare = sbomDependencyGraph({ ...SBOM, dependencies: [] });
+      expect(dependencyReachability(odb, bare).get("minimist")).toEqual(without.get("minimist"));
+
+      // an SBOM whose chain names it upgrades the negative to a positive —
+      // the ONLY direction the join may move a verdict
+      const withChain = dependencyReachability(odb, sbomDependencyGraph(SBOM));
+      expect(withChain.get("minimist")?.reachable).toBe(true);
+      expect(withChain.get("minimist")?.resolutions).toEqual(["exact", "sbom"]);
+
+      const falseWith = [...withChain.values()].filter((d) => !d.reachable).map((d) => d.package);
+      const falseWithout = [...without.values()].filter((d) => !d.reachable).map((d) => d.package);
+      for (const pkg of falseWith) expect(falseWithout).toContain(pkg);
+    } finally {
+      odb.close();
+    }
   });
 });
 

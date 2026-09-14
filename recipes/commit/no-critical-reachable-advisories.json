@@ -6,9 +6,9 @@
   "collection": {
     "kind": "pipeline",
     "collector": "reachability",
-    "inputs": ["osv-results.json", "graph.db"]
+    "inputs": ["osv-results.json", "graph.db", "sbom.cdx.json"]
   },
-  "expected_output": "Gated advisory rows: advisory, severity, package, version, ecosystem, reachable (true|false|unknown), not_affected, path (the call path as the artifact); openvex.json with a not_affected statement per proven-unreachable advisory",
+  "expected_output": "Gated advisory rows: advisory, severity, package, version, ecosystem, reachable (true|false|unknown), not_affected, path (the call path as the artifact, each hop marked exact, inferred, or sbom); openvex.json with a not_affected statement per proven-unreachable advisory",
   "assertions": [
     {
       "field": "advisory",
@@ -24,7 +24,7 @@
   ],
   "cadence": "daily",
   "automatable": "full",
-  "notes": "M4 posture: reachability-gated. An advisory is not_affected only when the code graph PROVES the package is beyond every entry point and declared route — that claim is emitted as OpenVEX with justification vulnerable_code_not_in_execute_path. No graph, or no detectable entry points, degrades to the M1 posture: every advisory counts, marked unknown. Empty-set discipline — Skip: no SBOM to read and the collector skips with a stated reason; when it does run, every component the SBOM lists is matched against the whole pinned advisory database, so an empty advisory set is an exhaustively searched clean result. What that result does NOT say is how large the domain was — a repository with no dependencies also counts zero, which is why every assertion states its population.",
+  "notes": "M4 posture: reachability-gated. An advisory is not_affected only when the code graph PROVES the package is beyond every entry point and declared route — that claim is emitted as OpenVEX with justification vulnerable_code_not_in_execute_path. No graph, or no detectable entry points, degrades to the M1 posture: every advisory counts, marked unknown — as does a package with no graph node that no SBOM dependsOn chain from a reached package names. The SBOM chain proves presence only: it can turn unknown into reachable, and never into not_affected. Empty-set discipline — Skip: no SBOM to read and the collector skips with a stated reason; when it does run, every component the SBOM lists is matched against the whole pinned advisory database, so an empty advisory set is an exhaustively searched clean result. What that result does NOT say is how large the domain was — a repository with no dependencies also counts zero, which is why every assertion states its population.",
   "empty_means": "clean",
   "plain": {
     "checks": "Cross-references the repository's component inventory against published advisories, then walks the code to see whether the affected package can be reached at all from the places the program starts.",

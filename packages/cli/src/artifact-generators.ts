@@ -295,6 +295,8 @@ export function generateArtifact4(input: ArtifactGenerationInput): ArtifactGener
   // is asked about.
   let inferredHops = 0;
   let pathsWithInference = 0;
+  let sbomHops = 0;
+  let pathsWithSbom = 0;
   for (const measure of measures) {
     for (const pointer of measure.register?.pointers ?? []) {
       const hops = pointer.call_path_resolutions ?? [];
@@ -303,6 +305,11 @@ export function generateArtifact4(input: ArtifactGenerationInput): ArtifactGener
         inferredHops += inferred;
         pathsWithInference += 1;
       }
+      const sbom = hops.filter((h) => h === "sbom").length;
+      if (sbom > 0) {
+        sbomHops += sbom;
+        pathsWithSbom += 1;
+      }
     }
   }
   if (pathsWithInference > 0) {
@@ -310,6 +317,17 @@ export function generateArtifact4(input: ArtifactGenerationInput): ArtifactGener
       `${inferredHops} hop(s) across ${pathsWithInference} call path(s) were matched by NAME ` +
         `rather than resolved to a file the walk saw — those paths say a chain of these names ` +
         `exists, not that this call chain does`,
+    );
+  }
+  // the SBOM's hops (S1-2) are a third kind again: the code graph never saw
+  // them, a package manifest declared them. They prove a package is present
+  // below a reached one, which is why the advisory counts — and nothing more
+  if (pathsWithSbom > 0) {
+    limits.push(
+      `${sbomHops} hop(s) across ${pathsWithSbom} call path(s) were declared by a package ` +
+        `manifest (the SBOM's dependsOn edges) rather than parsed from a call site — those ` +
+        `paths say the package is present in the dependency tree below a reached one, not ` +
+        `that any call reaches it`,
     );
   }
 

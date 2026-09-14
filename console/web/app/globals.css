@@ -194,11 +194,13 @@ ol.chain { list-style: none; margin: 0; padding: 0; }
 .chain-label { font-weight: 600; }
 .chain-hop > div { margin-left: 74px; font-size: 12px; }
 
-/* ---- call paths (I3f): every hop marked exact or inferred ---- */
+/* ---- call paths (I3f): every hop marked exact, inferred, or sbom ---- */
 .callpath { margin-top: 4px; overflow-wrap: anywhere; }
 .hop-exact { color: var(--evidenced); }
 /* the weak link, drawn differently rather than footnoted */
 .hop-inferred { color: var(--unevidenced); font-weight: 700; }
+/* a hop the code graph never saw — declared by a package manifest (S1-2) */
+.hop-sbom { color: var(--accent); font-weight: 700; }
 .hop-unmarked { color: var(--text-faint); }
 
 /* ---- tooling health (J5): how each tool resolves, live and per run ---- */

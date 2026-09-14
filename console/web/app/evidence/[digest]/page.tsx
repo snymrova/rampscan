@@ -56,12 +56,27 @@ interface AssertionResult {
  * One call path with every hop marked (I3f). An inferred hop is where the
  * graph matched a NAME rather than resolving an import to a file it saw —
  * the chain still stands, but that link is the one to check first, so it is
- * drawn differently rather than described in a footnote.
+ * drawn differently rather than described in a footnote. An sbom hop (S1-2)
+ * is a third thing: the code graph never saw it at all — a package manifest
+ * declares the dependency, which proves the package is present in the tree
+ * below a reached one and says nothing about a call.
  */
-function CallPath({ path, marks }: { path: string; marks?: Array<"exact" | "inferred"> }) {
+function CallPath({ path, marks }: { path: string; marks?: Array<"exact" | "inferred" | "sbom"> }) {
   const hops = callPathHops(path, marks);
   const inferred = hops.filter((h) => h.resolution === "inferred").length;
+  const sbom = hops.filter((h) => h.resolution === "sbom").length;
   const unmarked = hops.some((h) => h.resolution === "unmarked");
+  const summary = unmarked
+    ? " · hops unmarked (pre-I3f evidence)"
+    : inferred === 0 && sbom === 0
+      ? ` · all ${hops.length - 1} hop(s) → exactly resolved`
+      : " · " +
+        [
+          inferred > 0 ? `${inferred} of ${hops.length - 1} hop(s) ⇢ inferred by name` : "",
+          sbom > 0 ? `${sbom} of ${hops.length - 1} hop(s) ⇒ declared by a package manifest (SBOM)` : "",
+        ]
+          .filter(Boolean)
+          .join(", ");
   return (
     <div className="callpath mono">
       {hops.map((h, i) => (
@@ -74,22 +89,24 @@ function CallPath({ path, marks }: { path: string; marks?: Array<"exact" | "infe
                   ? "inferred edge — matched by name, not resolved to a file the walk saw"
                   : h.resolution === "exact"
                     ? "exact edge — resolved to a file the walk saw"
-                    : "unmarked — this evidence predates per-hop marking"
+                    : h.resolution === "sbom"
+                      ? "sbom edge — a dependsOn declared in a package manifest; the code graph never saw this hop"
+                      : "unmarked — this evidence predates per-hop marking"
               }
             >
-              {h.resolution === "inferred" ? " ⇢ " : h.resolution === "exact" ? " → " : " » "}
+              {h.resolution === "inferred"
+                ? " ⇢ "
+                : h.resolution === "exact"
+                  ? " → "
+                  : h.resolution === "sbom"
+                    ? " ⇒ "
+                    : " » "}
             </span>
           )}
           {h.node}
         </span>
       ))}
-      <span className="faint">
-        {unmarked
-          ? " · hops unmarked (pre-I3f evidence)"
-          : inferred > 0
-            ? ` · ${inferred} of ${hops.length - 1} hop(s) ⇢ inferred by name`
-            : ` · all ${hops.length - 1} hop(s) → exactly resolved`}
-      </span>
+      <span className="faint">{summary}</span>
     </div>
   );
 }
@@ -196,6 +213,18 @@ function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
                 {basis.graph.node_count} nodes · {basis.graph.edge_count} edges (
                 {basis.graph.inferred_edge_count} inferred by name) · extractor{" "}
                 {basis.graph.extractor_version} · commit {basis.graph.commit.slice(0, 12)}
+              </dd>
+            </>
+          )}
+          {basis.sbom && (
+            <>
+              <dt>the SBOM continued through</dt>
+              {/* how partial the manifest graph was is the whole reason an
+                  sbom hop may prove presence and never absence (S1-2) */}
+              <dd className="mono faint">
+                {basis.sbom.components_with_edges} of {basis.sbom.component_count} components carry
+                dependsOn edges ({basis.sbom.edge_count} edges) — a chain here proves a package is
+                present below a reached one; no chain proves nothing
               </dd>
             </>
           )}

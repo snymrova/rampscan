@@ -1,6 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import { readGraphMeta } from "./db.js";
-import { fileId, type EdgeKind } from "./extract.js";
+import { fileId, type EdgeKind, type Resolution } from "./extract.js";
+import type { SbomDependencyGraph } from "./sbom.js";
 
 // Graph queries — plan §M4: `reaches(entrypoints, target)` answered by
 // recursive CTE. The CTE computes the reachable SET (the verdict); the
@@ -136,6 +137,15 @@ export function entryRoots(db: DatabaseSync): string[] {
   return [...meta.entrypoints.map((rel) => fileId(rel)), ...routeIds];
 }
 
+/**
+ * How one hop of a dependency path was sourced. `exact` and `inferred` are
+ * the code graph's own edge resolutions; `sbom` is a hop the code graph never
+ * saw — a `dependsOn` edge declared in a package manifest and read from the
+ * CycloneDX SBOM (S1-2). A reader is owed the difference: the first two are
+ * parsed call sites, the third is a manifest's word for it.
+ */
+export type HopResolution = Resolution | "sbom";
+
 export interface DepReachability {
   package: string;
   reachable: boolean;
@@ -144,11 +154,26 @@ export interface DepReachability {
   /** the path rests on at least one name-inferred edge */
   inferred?: boolean;
   /** per-hop resolution of `path`, one entry shorter than its node count (I3f) */
-  resolutions?: Array<"exact" | "inferred">;
+  resolutions?: HopResolution[];
 }
 
-/** package-level reachability for every dependency node in the graph */
-export function dependencyReachability(db: DatabaseSync): Map<string, DepReachability> {
+/**
+ * Package-level reachability for every dependency node in the graph — and,
+ * given the SBOM's dependency graph, for every package a `dependsOn` chain
+ * leads to from a package the code walk reached (S1-2).
+ *
+ * The SBOM may only ever ADD to the reachable set. A package the code walk
+ * reached stays reached; a package with a node the walk did not arrive at is
+ * upgraded to reachable when a chain from a reached package names it, and is
+ * otherwise left exactly as the code walk found it; a package with no node
+ * and no chain is absent from the result, never `reachable: false` — the SBOM
+ * graph is partial, so "no chain" is not a finding. This is the direction
+ * the fix for GHSA-7jff-6v53-r56x must never regress in.
+ */
+export function dependencyReachability(
+  db: DatabaseSync,
+  sbom?: SbomDependencyGraph,
+): Map<string, DepReachability> {
   const roots = entryRoots(db);
   const reach = reachableSet(db, roots);
   const depNodes = db
@@ -176,6 +201,42 @@ export function dependencyReachability(db: DatabaseSync): Map<string, DepReachab
       ...(path
         ? { path: labelPath(db, path.ids), inferred: path.inferred, resolutions: path.resolutions }
         : {}),
+    });
+  }
+  if (sbom === undefined) return out;
+
+  // continue forward through the manifest graph from every package the code
+  // walk arrived at — BFS, so the chain recorded for each package is the
+  // shortest one, and a package is claimed from the first chain that names it
+  const reachedByCode = [...out.values()].filter((d) => d.reachable).map((d) => d.package);
+  const via = new Map<string, string>(); // package → the package whose dependsOn named it
+  const seen = new Set(reachedByCode);
+  const queue = [...reachedByCode];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    for (const next of sbom.dependsOn.get(cur) ?? []) {
+      if (seen.has(next)) continue;
+      seen.add(next);
+      via.set(next, cur);
+      queue.push(next);
+    }
+  }
+  for (const pkg of via.keys()) {
+    // walk the chain back to the code-reached package it hangs from
+    const chain = [pkg];
+    let at = via.get(pkg)!;
+    while (via.has(at)) {
+      chain.unshift(at);
+      at = via.get(at)!;
+    }
+    const origin = out.get(at)!;
+    const originPath = origin.path ?? at;
+    out.set(pkg, {
+      package: pkg,
+      reachable: true,
+      path: [originPath, ...chain].join(" » "),
+      inferred: origin.inferred ?? false,
+      resolutions: [...(origin.resolutions ?? []), ...chain.map((): HopResolution => "sbom")],
     });
   }
   return out;
