@@ -221,7 +221,7 @@ describe("rampscan scan on the planted-fault fixture", () => {
   });
 
   it.skipIf(!installed("syft") || !installed("osv-scanner"))(
-    "M4 proves the difference: reachable lodash violates with a path, minimist becomes a not-affected VEX",
+    "M4 separates the answers: reachable lodash violates with a path, never-imported minimist counts as unknown",
     async () => {
       const row = result.recipes.find((r) => r.recipe_id === "no-critical-reachable-advisories")!;
       if (row.verdict === "unevidenced") {
@@ -236,19 +236,23 @@ describe("rampscan scan on the planted-fault fixture", () => {
       );
       expect(lodashFinding).toBeDefined();
       expect(lodashFinding!.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
-      // the unreachable dep: NO finding — it is not_affected, not violated
-      expect(
-        result.findings.some((f) => f.variable === "advisories" && f.summary.includes("minimist")),
-      ).toBe(false);
-      // the OpenVEX export lands in exports/ with the justification
+      // the never-imported dep has no graph node, so the walk never saw it:
+      // its reachability is unknown and it COUNTS (S1-1, GHSA-7jff-6v53-r56x)
+      const minimistFinding = result.findings.find(
+        (f) => f.variable === "advisories" && f.summary.includes("minimist"),
+      );
+      expect(minimistFinding).toBeDefined();
+      expect(minimistFinding!.summary).toContain("reachability unknown");
+      // the OpenVEX export lands in exports/ — and signs no not_affected the
+      // graph did not earn
       const vexPath = join(dirname(resultPath), "exports", "openvex.json");
       const vex = JSON.parse(await readFile(vexPath, "utf8")) as {
         statements: Array<Record<string, unknown>>;
       };
-      const notAffected = vex.statements.find((s) => s["status"] === "not_affected");
-      expect(notAffected).toBeDefined();
-      expect(notAffected!["justification"]).toBe("vulnerable_code_not_in_execute_path");
-      expect(JSON.stringify(notAffected!["products"])).toContain("minimist");
+      expect(vex.statements.some((s) => s["status"] === "not_affected")).toBe(false);
+      const investigating = vex.statements.filter((s) => s["status"] === "under_investigation");
+      expect(investigating.length).toBeGreaterThan(0);
+      expect(investigating.every((s) => JSON.stringify(s["products"]).includes("minimist"))).toBe(true);
     },
   );
 
