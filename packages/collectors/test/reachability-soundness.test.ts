@@ -1,10 +1,18 @@
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { CollectContext, CollectOutput } from "@rampscan/core";
-import { GRAPH_DB_ARTIFACT } from "@rampscan/graph";
+import {
+  DEFAULT_AUTH_PATTERNS,
+  GRAPH_DB_ARTIFACT,
+  detectApplicationRoots,
+  extractGraph,
+  graphToolVersion,
+  writeGraphDb,
+} from "@rampscan/graph";
+import type { ApplicationRoot } from "@rampscan/graph";
 import {
   graphCollector,
   reachability,
@@ -12,6 +20,7 @@ import {
   OPENVEX_ARTIFACT,
   OSV_RESULTS_ARTIFACT,
   SBOM_ARTIFACT,
+  UNRECORDED_ROOTS_NOTE,
 } from "../src/index.js";
 
 // S0-3 — the failing test, first (docs/PLAN-SOUNDNESS.md §5, phase S0).
@@ -218,5 +227,173 @@ describe("S0-3 — a package absent from the graph is not proof of unreachabilit
     expect(investigating).toHaveLength(1);
     expect(JSON.stringify(investigating[0]!["products"])).toContain("pkg:npm/sharp@0.33.0");
     expect(investigating[0]!["impact_statement"]).toBe(ABSENT_NODE_NOTE);
+  });
+});
+
+// S1-3 — a negative claim states its scope (docs/PLAN-SOUNDNESS.md §5, S1-3).
+//
+// The second hole the finding named (§3.3): `rampscan.config.json` declares
+// one entry point and the tree holds two applications, so console/web is
+// outside every walk and everything only it imports reads "not reachable from
+// the entry points" — true, and not a statement about the repository. Below,
+// the same shape in miniature: two packages, one named as an entry point, a
+// vulnerable package imported only under the other. With one root unwalked
+// the gate must refuse the negative and say why; with both roots walked, the
+// same miss is the earned not_affected — the mechanism is the width of the
+// walk, not a blanket refusal.
+describe("S1-3 — a negative claim is refused when the walk did not enter every application root", () => {
+  let root: string;
+  let files: string[];
+  let roots: ApplicationRoot[];
+
+  const TWO_APP_OSV = {
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: [
+          {
+            package: { name: "minimist", version: "1.2.5", ecosystem: "npm" },
+            vulnerabilities: [{ id: "GHSA-xvch-5gv4-984h", summary: "Prototype pollution in minimist", aliases: ["CVE-2021-44906"] }],
+            groups: [{ ids: ["GHSA-xvch-5gv4-984h", "CVE-2021-44906"], max_severity: "9.8" }],
+          },
+        ],
+      },
+    ],
+  };
+
+  async function gate(entrypoints: string[], applicationRoots?: ApplicationRoot[]): Promise<CollectOutput> {
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s13-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "d".repeat(40),
+      entrypoints,
+      entrypointSource: "config",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      ...(applicationRoots !== undefined ? { applicationRoots } : {}),
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(TWO_APP_OSV));
+    return reachability.collect({
+      workspace: { root, repo: "two-apps", commit: "d".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s1-3",
+    });
+  }
+
+  async function vexOf(out: CollectOutput): Promise<Array<Record<string, unknown>>> {
+    const vexPath = out.artifacts.find((a) => a.name === OPENVEX_ARTIFACT)!.path;
+    return (JSON.parse(await readFile(vexPath, "utf8")) as { statements: Array<Record<string, unknown>> }).statements;
+  }
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), "rampscan-s13-"));
+    const put = async (rel: string, content: string) => {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    };
+    await put("package.json", JSON.stringify({ name: "two-apps", private: true }));
+    await put("apps/cli/package.json", JSON.stringify({ name: "@two/cli", main: "src/main.js" }));
+    await put("apps/cli/src/main.js", "module.exports = { run() {} };\n");
+    await put("apps/web/package.json", JSON.stringify({ name: "@two/web", private: true, dependencies: { minimist: "1.2.5" } }));
+    await put("apps/web/src/page.js", "module.exports = { page() {} };\n");
+    // minimist has a node — a first-party file imports it — and only an orphan
+    // under apps/web does, so no walk from either entry point arrives at it
+    await put("apps/web/src/orphan.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    files = ["apps/cli/src/main.js", "apps/web/src/orphan.js", "apps/web/src/page.js"];
+    roots = await detectApplicationRoots(root, new Set(files), "worktree");
+  });
+
+  it("the tree declares two application roots; the workspace root owns no source and is not one", () => {
+    expect(roots).toEqual([
+      { dir: "apps/cli", name: "@two/cli" },
+      { dir: "apps/web", name: "@two/web" },
+    ]);
+  });
+
+  it("one entry point, two applications: not_affected is refused and the reason names the unwalked root", async () => {
+    const out = await gate(["apps/cli/src/main.js"], roots);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+
+    // the walk had a node and missed it — the shape that used to sign
+    // not_affected — and it is unknown, because the walk was half as wide as
+    // the tree
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["reachable"]).toBe("unknown");
+    expect(String(minimist["gate_note"])).toContain("apps/web (@two/web, 2 files)");
+    expect(String(minimist["gate_note"])).toContain("not_affected is refused for this run");
+
+    // the advisory counts: a CRITICAL finding, not a waived one
+    expect(out.findings.filter((f) => f.variable === "advisories")).toHaveLength(1);
+
+    // the signed basis carries the width and the refusal
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.application_roots).toEqual([
+      { dir: "apps/cli", name: "@two/cli", file_count: 1, reached_file_count: 1 },
+      { dir: "apps/web", name: "@two/web", file_count: 2, reached_file_count: 0 },
+    ]);
+    expect(basis.degraded).toBe(minimist["gate_note"]);
+
+    // the VEX document: no negative, and the scope as structured fields
+    const statements = await vexOf(out);
+    expect(statements.filter((s) => s["status"] === "not_affected")).toHaveLength(0);
+    const [stmt] = statements;
+    expect(stmt!["status"]).toBe("under_investigation");
+    expect(stmt!["impact_statement"]).toBe(minimist["gate_note"]);
+    expect(stmt!["rampscan:scope"]).toEqual({
+      commit: "d".repeat(40),
+      entrypoints: ["apps/cli/src/main.js"],
+      entrypoint_source: "config",
+      application_roots: [
+        { dir: "apps/cli", name: "@two/cli", walked: true },
+        { dir: "apps/web", name: "@two/web", walked: false },
+      ],
+    });
+  });
+
+  it("both applications named: the same miss is the earned not_affected, scoped to the whole tree", async () => {
+    const out = await gate(["apps/cli/src/main.js", "apps/web/src/page.js"], roots);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+    expect(minimist["not_affected"]).toBe(true);
+    expect(minimist["reachable"]).toBe("false");
+    expect(minimist["gate_note"]).toBeUndefined();
+    expect(out.findings.filter((f) => f.variable === "advisories")).toHaveLength(0);
+
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.degraded).toBeUndefined();
+    expect(basis.application_roots!.every((r) => r.reached_file_count > 0)).toBe(true);
+
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("not_affected");
+    expect(String(stmt!["impact_statement"])).toContain("entered every application root");
+    expect((stmt!["rampscan:scope"] as { application_roots: Array<{ walked: boolean }> }).application_roots.every((r) => r.walked)).toBe(true);
+  });
+
+  it("a graph that never recorded its roots has an unknown width, and an unknown width refuses too", async () => {
+    const out = await gate(["apps/cli/src/main.js", "apps/web/src/page.js"]);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["reachable"]).toBe("unknown");
+    expect(minimist["gate_note"]).toBe(UNRECORDED_ROOTS_NOTE);
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.application_roots).toBeUndefined();
+    expect(basis.degraded).toBe(UNRECORDED_ROOTS_NOTE);
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("under_investigation");
+    // the scope is still stated — entry points and commit — minus the roots it cannot know
+    expect(stmt!["rampscan:scope"]).toEqual({
+      commit: "d".repeat(40),
+      entrypoints: ["apps/cli/src/main.js", "apps/web/src/page.js"],
+      entrypoint_source: "config",
+    });
   });
 });

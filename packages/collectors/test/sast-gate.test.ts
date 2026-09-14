@@ -1,10 +1,17 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { CollectContext, CollectOutput } from "@rampscan/core";
-import { GRAPH_DB_ARTIFACT } from "@rampscan/graph";
+import {
+  DEFAULT_AUTH_PATTERNS,
+  GRAPH_DB_ARTIFACT,
+  detectApplicationRoots,
+  extractGraph,
+  graphToolVersion,
+  writeGraphDb,
+} from "@rampscan/graph";
 import {
   SEMGREP_RESULTS_ARTIFACT,
   graphCollector,
@@ -106,6 +113,14 @@ describe("sast-reachability gate — the flagship move, SAST edition", () => {
     expect(deadEval["call_path"]).toBeNull();
   });
 
+  it("the basis signs the width of the walk: the fixture's one root, entered (S1-3)", () => {
+    const basis = out.basis!["no-reachable-dangerous-code"]!;
+    expect(basis.application_roots).toHaveLength(1);
+    expect(basis.application_roots![0]!.dir).toBe(".");
+    expect(basis.application_roots![0]!.reached_file_count).toBeGreaterThan(0);
+    expect(basis.degraded).toBeUndefined();
+  });
+
   it("the gate's live rows yield fix pointers — the I2c extraction pinned to the real producer", async () => {
     const { offenderPointer } = await import("@rampscan/core");
     const rows = out.observations["no-reachable-dangerous-code"]!;
@@ -200,6 +215,75 @@ describe("sast-reachability gate — the flagship move, SAST edition", () => {
     const dir = await mkdtemp(join(tmpdir(), "rampscan-sast-noinput-"));
     const skipped = await sastGate.collect(ctx(dir, new Map()));
     expect(skipped.skipped?.reason).toContain("semgrep must run");
+  });
+});
+
+describe("sast-reachability gate — a negative claim states its scope (S1-3)", () => {
+  // The same shape the advisory gate refuses: two packages, one named as an
+  // entry point, a dangerous construct in a file only the other one owns. The
+  // walk misses the file — and the miss is unknown, not not_affected, because
+  // the walk was half as wide as the tree.
+  let out: CollectOutput;
+
+  beforeAll(async () => {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-sast-s13-"));
+    const put = async (rel: string, content: string) => {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    };
+    await put("package.json", JSON.stringify({ name: "two-apps", private: true }));
+    await put("apps/cli/package.json", JSON.stringify({ name: "@two/cli", main: "src/main.js" }));
+    await put("apps/cli/src/main.js", "module.exports = { run() {} };\n");
+    await put("apps/web/package.json", JSON.stringify({ name: "@two/web", private: true }));
+    await put("apps/web/src/page.js", "module.exports = { page() {} };\n");
+    await put("apps/web/src/orphan.js", "module.exports = { run: (s) => eval(s) };\n");
+    const files = ["apps/cli/src/main.js", "apps/web/src/orphan.js", "apps/web/src/page.js"];
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-sast-s13-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "d".repeat(40),
+      entrypoints: ["apps/cli/src/main.js"],
+      entrypointSource: "config",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: await detectApplicationRoots(root, new Set(files), "worktree"),
+    });
+    const semgrepPath = join(dir, SEMGREP_RESULTS_ARTIFACT);
+    await writeFile(
+      semgrepPath,
+      JSON.stringify({
+        ...SEMGREP_REPORT,
+        results: [{ ...SEMGREP_REPORT.results[1]!, path: "apps/web/src/orphan.js", start_line: 1, end_line: 1 }],
+      }),
+    );
+    out = await sastGate.collect({
+      workspace: { root, repo: "two-apps", commit: "d".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [SEMGREP_RESULTS_ARTIFACT, semgrepPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s1-3",
+    });
+  });
+
+  it("a hit the walk missed under an application no entry point covers is unknown, and the reason names the root", () => {
+    const [row] = out.observations["no-reachable-dangerous-code"]!;
+    expect(row!["reachable"]).toBe("unknown");
+    expect(row!["not_affected"]).toBe(false);
+    expect(String(row!["gate_note"])).toContain("did not reach the file");
+    expect(String(row!["gate_note"])).toContain("apps/web (@two/web, 2 files)");
+    expect(String(row!["gate_note"])).toContain("the hit counts");
+    // and it counts: an ERROR hit of unknown reachability is a finding
+    expect(out.findings.filter((f) => f.variable === "sast")).toHaveLength(1);
+    const basis = out.basis!["no-reachable-dangerous-code"]!;
+    expect(basis.degraded).toBe(row!["gate_note"]);
+    expect(basis.application_roots).toEqual([
+      { dir: "apps/cli", name: "@two/cli", file_count: 1, reached_file_count: 1 },
+      { dir: "apps/web", name: "@two/web", file_count: 2, reached_file_count: 0 },
+    ]);
   });
 });
 

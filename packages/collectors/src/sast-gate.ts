@@ -15,6 +15,7 @@ import {
   readGraphMeta,
   shortestPath,
 } from "@rampscan/graph";
+import { walkWidth } from "./scope.js";
 import { SEMGREP_RESULTS_ARTIFACT, SemgrepResults } from "./semgrep.js";
 import { fileSha256, makeFinding, sha256 } from "./support.js";
 
@@ -26,9 +27,11 @@ import { fileSha256, makeFinding, sha256 } from "./support.js";
 // advisory gate (over-approximate: every edge kind counts), because
 // not_affected is a claim and claims lean conservative. No graph, no entry
 // points, or a file the graph never saw → the honest posture: the hit
-// counts, marked "unknown", never silently waved through.
+// counts, marked "unknown", never silently waved through. And the negative
+// is only signed at the width of the whole tree (S1-3): while an application
+// root no entry point covers exists, not_affected is refused for the run.
 
-export const SAST_GATE_VERSION = "0.1.0";
+export const SAST_GATE_VERSION = "0.2.0";
 
 /**
  * The sentence a not-affected claim from this gate has to be read with (I3f) —
@@ -39,7 +42,7 @@ export const SAST_GATE_VERSION = "0.1.0";
  * against us rather than for us.
  */
 export const OVER_APPROXIMATION_STATEMENT =
-  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the file. Unknowns count against us: a file the graph never saw, a missing graph, or no detectable entry point all make the hit COUNT, never waive it.";
+  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the file. Unknowns count against us: a file the graph never saw, a missing graph, or no detectable entry point all make the hit COUNT, never waive it. A negative claim is as wide as the application roots the walk entered: where the tree declares a package root that no entry point covers, not_affected is refused for the whole run and the reason is recorded.";
 
 export const sastGate: Collector = {
   manifest: {
@@ -78,6 +81,9 @@ export const sastGate: Collector = {
       let reach: Set<string> | undefined;
       let hasNode: ((rel: string) => boolean) | undefined;
       let gateNote: string | undefined;
+      // the width of the walk (S1-3): set when it fell short of the tree, and
+      // then every would-be not_affected reads unknown with this reason
+      let refusal: string | undefined;
       // the basis (I3f): what this claim rests on, built alongside the gate
       // itself so it can never describe a walk other than the one that ran
       const basis: ClaimBasis = {
@@ -114,6 +120,11 @@ export const sastGate: Collector = {
           reach = reachableSet(db, roots);
           const nodeStmt = db.prepare("SELECT 1 AS hit FROM nodes WHERE id = ?");
           hasNode = (rel: string) => nodeStmt.get(fileId(rel)) !== undefined;
+          refusal = walkWidth(db, basis, {
+            subject: "the file",
+            counts: "the hit",
+            countsAll: "every hit",
+          }).refusal;
         }
       }
 
@@ -132,6 +143,11 @@ export const sastGate: Collector = {
           rowNote = `${hit.path} has no node in the code graph — the graph cannot prove it unreachable, so the hit counts`;
         } else if (reach.has(fileId(hit.path))) {
           reachable = "true";
+        } else if (refusal !== undefined) {
+          // the walk had the file and missed it, but was not as wide as the
+          // tree — "not from these entry points" is unknown for the repository
+          reachable = "unknown";
+          rowNote = refusal;
         } else {
           reachable = "false";
         }

@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import type { ApplicationRoot } from "./entrypoints.js";
 import type { ExtractedGraph } from "./extract.js";
 
 // graph.db — SPEC §3: "SQLite file per repo-snapshot, queried with recursive
@@ -21,6 +22,14 @@ export interface GraphMeta {
    */
   entrypointsUnresolved: string[];
   authPatterns: string[];
+  /**
+   * The application roots the tree declared when the graph was built (S1-3) —
+   * what the entry points could have covered, beside what they did. Absent on
+   * a graph written before the field existed, and absence is NOT an empty
+   * list: a reader that cannot tell which roots a walk covered must not claim
+   * the walk covered them all.
+   */
+  applicationRoots?: ApplicationRoot[];
 }
 
 export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphMeta): void {
@@ -86,6 +95,9 @@ export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphM
     insertMeta.run("entrypoint_source", meta.entrypointSource);
     insertMeta.run("entrypoints_unresolved", JSON.stringify(meta.entrypointsUnresolved));
     insertMeta.run("auth_patterns", JSON.stringify(meta.authPatterns));
+    if (meta.applicationRoots !== undefined) {
+      insertMeta.run("application_roots", JSON.stringify(meta.applicationRoots));
+    }
     insertMeta.run("file_count", String(graph.files.length));
     db.exec("COMMIT");
   } catch (error) {
@@ -106,6 +118,7 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
     value: string;
   }>;
   const map = new Map(rows.map((r) => [r.key, r.value]));
+  const roots = map.get("application_roots");
   return {
     extractorVersion: map.get("extractor_version") ?? "unknown",
     commit: map.get("commit") ?? "unknown",
@@ -113,5 +126,6 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
     entrypointSource: map.get("entrypoint_source") ?? "none",
     entrypointsUnresolved: JSON.parse(map.get("entrypoints_unresolved") ?? "[]") as string[],
     authPatterns: JSON.parse(map.get("auth_patterns") ?? "[]") as string[],
+    ...(roots !== undefined ? { applicationRoots: JSON.parse(roots) as ApplicationRoot[] } : {}),
   };
 }
