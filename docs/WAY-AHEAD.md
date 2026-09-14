@@ -27,7 +27,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | Phase | State | Notes |
 |---|---|---|
 | S0 record the finding | ✅ #144 | Advisory public, no embargo (S0-1). Supersede, never delete (S0-2). |
-| S1 reachability soundness | 🔄 4 of 5 | S1-1 done (#145). S1-2 done (#150). S1-3 done (#152). Barrel edge done (#153, extractor 0.4.0). S1-4 in PR #154 (extractor 0.5.0): detection over every root — manifests, `scripts`, Next.js, PocketBase — config still wins, what it left out is recorded and an unreached exclusion refuses the negative. **Next: S1-5 (#132)** — now a deletion of `graph.entrypoints` from `rampscan.config.json` plus the regeneration; measured in #154: detection reaches 184 files, 15 packages, every root. |
+| S1 reachability soundness | 🔄 5 of 5, PR #155 open | S1-1 (#145), S1-2 (#150), S1-3 (#152), barrel edge (#153), S1-4 (#154) merged. S1-5 in PR #155: config override deleted, self-scan at `c0d1c73` reads `11 evidenced · 3 violated` — `next` ×2 exact, `postcss` ×2 via `sbom`, `sharp` ×2 unknown. One earned `not_affected` (`vitest`, a September advisory) the exit gate's letter forbids — recorded as met in intent, missed in letter; PR offers the stricter alternative. **S1 closes on merge.** |
 | S2 the numbers gate | not started | #133–#136. README claims numbers no command prints. |
 | S3 the first stranger | not started | #137, #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
 | S4 the surface S1 leans on | not started | #139–#141. |
@@ -41,9 +41,9 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 
 ## 3. What is next, in order
 
-1. **Merge S1-4 (PR #154)** on green. The judgment call to review: an excluded entry point the walk never reached refuses the negative, like an unentered root. Reversible in `packages/collectors/src/scope.ts` (`excludedEntrypointsNote`) if the owner wants visibility without refusal.
-2. **S1-5 (#132).** Remove `graph.entrypoints` from `rampscan.config.json` (detection now finds all 57, including the CLI via the root `scripts` entry), re-run the self-scan, and let the board move — `postcss` reachable via `next`, `openvex.json` with zero `not_affected`, `12 evidenced · 2 violated` → `11 evidenced · 3 violated`. README leads with it. Keep the S1-2 invariant in `graph.test.ts`.
-3. **S1 exit gate**, then **#147** before S3-1, in whatever slot the owner picks (S2 is short; it fits before or after).
+1. **Merge S1-5 (PR #155)** on green — and decide the one open question in its body: does S1 close with one earned `not_affected` (`vitest`) in `openvex.json`, or must negatives also wait for S4-1's remaining extractor patterns? Merging as-is is the recommendation.
+2. **#147** — the ingest adapter's exit-0-as-pass. `SECURITY.md` class, must land before S3-1. S2 is short; it fits before or after.
+3. **S2** (#133–#136): the numbers gate. S1-5 found the exact drift it exists for — `docs/FRONTIER-PIPELINE.md`'s committed copy was from a run a month old.
 4. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
 5. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
 
@@ -108,3 +108,4 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
 - **2026-09-14 (S1-3)** — PR #151 opened, stacked on #150. Measuring the width of the walk on this repository found a third application the plan had not counted (the workspace root's own 28 files) and a second extractor hole: `export … from` produces no edge, so every package barrel stops the walk. Recorded under S4-1 and put first in §3. Next item: the barrel edge, then S1-4 (#131).
 - **2026-09-14 (barrel edge)** — #150 and #152 merged (S1-2, S1-3; #151 was auto-closed by the base branch's deletion and reopened as #152 with the same commit rebased — merge a stack bottom-up *without* `--delete-branch`, or retarget the upper PR first). The barrel edge landed in PR #153: nine lines in `extract.ts`, a planted-barrel test, extractor 0.4.0. Measured before opening the PR: 60 → 109 files reached, 12 → 12 dependency packages — recorded in the plan's S4-1 and the finding's §3.3 as a closed shape that moved no verdict on this tree. Next item: merge #153, then S1-4 (#131).
 - **2026-09-14 (S1-4)** — #153 merged (barrel edge). S1-4 in PR #154: detection over every application root, `scripts` command lines, Next.js and PocketBase conventions; config honoured for the walk, its exclusions recorded on graph.db, basis, VEX scope and console; an unreached exclusion refuses the negative (the one judgment call, flagged in the PR). Measured: config 1 → 109 files / 12 packages / 2 roots never entered; detection 57 → 184 files / 15 packages / every root entered. S1-5 is now a config deletion. Suite 1,150. Next item: merge #154, then S1-5 (#132).
+- **2026-09-14 (S1-5)** — #154 merged. S1-5 in PR #155: the override deleted, the board moved 12/2 → 11/3 exactly as the plan said and wider than it predicted (`next` CRITICAL ×2 reachable by one exact hop). One earned `not_affected` (`vitest`) that the exit gate's text forbids — flagged in the PR with the stricter alternative. FRONTIER-PIPELINE.md regenerated; its committed copy was a month stale. Next item: merge #155 → S1 closes; then #147, then S2.
