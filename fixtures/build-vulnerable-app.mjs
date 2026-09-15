@@ -404,6 +404,10 @@ write(
   "rampscan.config.json",
   JSON.stringify(
     {
+      // the account a cloud runner observes (plan T4): what `rampscan serve
+      // --repo` reads to classify a recipe and bind its parameters. Nobody's
+      // account — the smoke's runner is a stub whose bytes are canned
+      aws: { account_id: "111111111111", partition: "aws", regions: ["us-east-1"] },
       contract: {
         rules: [
           {
