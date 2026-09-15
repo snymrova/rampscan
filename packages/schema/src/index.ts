@@ -16,3 +16,4 @@ export * from "./canon.js";
 export * from "./contract.js";
 export * from "./documents.js";
 export * from "./offering.js";
+export * from "./transcript.js";
