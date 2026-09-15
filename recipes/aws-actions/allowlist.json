@@ -1,0 +1,783 @@
+{
+  "_type": "https://rampscan.dev/aws-action-allowlist/v1",
+  "reviewed": "2026-09-15",
+  "dataset": "2026.07.14.01",
+  "rule": "Every AWS CLI action a recipe may run under the runner is listed here by hand, with the IAM action(s) it needs and one line on why it does not mutate the account. Admission is a code-reviewed change to this file; nothing is admitted by verb pattern — `start`, `generate` and `validate` appear below because a reviewer read what each does, and `Describe*` appears entry by entry for the same reason. An action absent from both lists is unknown, and a recipe using one is manual until it is reviewed. `refused` names the actions the pinned recipes use that the runner will never run, with the reason. `runner` names the two calls the runner makes on its own behalf.",
+  "admitted": [
+    {
+      "cli": "accessanalyzer list-analyzers",
+      "iam": [
+        "access-analyzer:ListAnalyzers"
+      ],
+      "why": "lists the analyzers configured in the account; reads analyzer metadata and nothing else"
+    },
+    {
+      "cli": "accessanalyzer list-findings-v2",
+      "iam": [
+        "access-analyzer:ListFindingsV2"
+      ],
+      "why": "lists an analyzer's findings; the findings are Access Analyzer's own state and this call does not archive or resolve them"
+    },
+    {
+      "cli": "backup describe-backup-vault",
+      "iam": [
+        "backup:DescribeBackupVault"
+      ],
+      "why": "reads one vault's configuration, lock state included; changes no vault or recovery point"
+    },
+    {
+      "cli": "backup list-protected-resources",
+      "iam": [
+        "backup:ListProtectedResources"
+      ],
+      "why": "lists resources with at least one recovery point; a read over the backup index"
+    },
+    {
+      "cli": "backup list-restore-jobs",
+      "iam": [
+        "backup:ListRestoreJobs"
+      ],
+      "why": "lists restore jobs and their status; starts none"
+    },
+    {
+      "cli": "backup list-restore-testing-plans",
+      "iam": [
+        "backup:ListRestoreTestingPlans"
+      ],
+      "why": "lists restore testing plans; runs none"
+    },
+    {
+      "cli": "cloudtrail get-trail-status",
+      "iam": [
+        "cloudtrail:GetTrailStatus"
+      ],
+      "why": "reads a trail's logging and delivery state; starts or stops nothing"
+    },
+    {
+      "cli": "cloudtrail list-event-data-stores",
+      "iam": [
+        "cloudtrail:ListEventDataStores"
+      ],
+      "why": "lists CloudTrail Lake event data stores; creates none"
+    },
+    {
+      "cli": "cloudtrail lookup-events",
+      "iam": [
+        "cloudtrail:LookupEvents"
+      ],
+      "why": "reads the 90-day management event history; a query over recorded events"
+    },
+    {
+      "cli": "cloudtrail start-query",
+      "iam": [
+        "cloudtrail:StartQuery",
+        "cloudtrail:GetQueryResults"
+      ],
+      "why": "runs a SQL query over an event data store and returns rows; the store is not modified",
+      "review": "admitted by review, not by verb: `start` here begins a read-only query that CloudTrail Lake bills per byte scanned and that writes nothing unless a delivery S3 bucket is passed — the runner never passes `--delivery-s3-uri`"
+    },
+    {
+      "cli": "cloudtrail validate-logs",
+      "iam": [
+        "cloudtrail:DescribeTrails",
+        "cloudtrail:GetTrailStatus",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "why": "a client-side command: downloads digest and log files from the trail's bucket and verifies their signatures locally; nothing in the account changes",
+      "review": "admitted by review, not by verb: `validate` is a local computation over objects read from S3 with GetObject/ListBucket"
+    },
+    {
+      "cli": "cloudwatch describe-alarms",
+      "iam": [
+        "cloudwatch:DescribeAlarms"
+      ],
+      "why": "reads alarm definitions and state; sets none"
+    },
+    {
+      "cli": "cloudwatch get-metric-statistics",
+      "iam": [
+        "cloudwatch:GetMetricStatistics"
+      ],
+      "why": "reads metric data points; a query over stored metrics"
+    },
+    {
+      "cli": "cognito-identity describe-identity-pool",
+      "iam": [
+        "cognito-identity:DescribeIdentityPool"
+      ],
+      "why": "reads one identity pool's configuration"
+    },
+    {
+      "cli": "cognito-identity list-identity-pools",
+      "iam": [
+        "cognito-identity:ListIdentityPools"
+      ],
+      "why": "lists identity pools"
+    },
+    {
+      "cli": "cognito-idp get-user-pool-mfa-config",
+      "iam": [
+        "cognito-idp:GetUserPoolMfaConfig"
+      ],
+      "why": "reads a user pool's MFA configuration; sets none"
+    },
+    {
+      "cli": "cognito-idp list-user-pools",
+      "iam": [
+        "cognito-idp:ListUserPools"
+      ],
+      "why": "lists user pools"
+    },
+    {
+      "cli": "configservice describe-config-rules",
+      "iam": [
+        "config:DescribeConfigRules"
+      ],
+      "why": "reads Config rule definitions; evaluates none"
+    },
+    {
+      "cli": "configservice describe-configuration-recorder-status",
+      "iam": [
+        "config:DescribeConfigurationRecorderStatus"
+      ],
+      "why": "reads whether the recorder is recording; starts or stops nothing"
+    },
+    {
+      "cli": "configservice describe-remediation-configurations",
+      "iam": [
+        "config:DescribeRemediationConfigurations"
+      ],
+      "why": "reads which remediation is attached to a rule; attaches none and runs none"
+    },
+    {
+      "cli": "configservice describe-remediation-execution-status",
+      "iam": [
+        "config:DescribeRemediationExecutionStatus"
+      ],
+      "why": "reads the status of remediations already executed; executes none"
+    },
+    {
+      "cli": "configservice get-compliance-details-by-config-rule",
+      "iam": [
+        "config:GetComplianceDetailsByConfigRule"
+      ],
+      "why": "reads a rule's per-resource evaluation results; triggers no evaluation"
+    },
+    {
+      "cli": "configservice get-discovered-resource-counts",
+      "iam": [
+        "config:GetDiscoveredResourceCounts"
+      ],
+      "why": "reads counts of recorded resources by type"
+    },
+    {
+      "cli": "configservice get-resource-config-history",
+      "iam": [
+        "config:GetResourceConfigHistory"
+      ],
+      "why": "reads one resource's recorded configuration history"
+    },
+    {
+      "cli": "configservice select-aggregate-resource-config",
+      "iam": [
+        "config:SelectAggregateResourceConfig"
+      ],
+      "why": "runs a SQL SELECT over an aggregator's recorded configuration; the language has no write form"
+    },
+    {
+      "cli": "configservice select-resource-config",
+      "iam": [
+        "config:SelectResourceConfig"
+      ],
+      "why": "runs a SQL SELECT over the account's recorded configuration; the language has no write form"
+    },
+    {
+      "cli": "ec2 describe-client-vpn-connections",
+      "iam": [
+        "ec2:DescribeClientVpnConnections"
+      ],
+      "why": "describes active Client VPN connections; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-client-vpn-endpoints",
+      "iam": [
+        "ec2:DescribeClientVpnEndpoints"
+      ],
+      "why": "describes Client VPN endpoints; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-internet-gateways",
+      "iam": [
+        "ec2:DescribeInternetGateways"
+      ],
+      "why": "describes internet gateways and their attachments; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-nat-gateways",
+      "iam": [
+        "ec2:DescribeNatGateways"
+      ],
+      "why": "describes NAT gateways; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-network-acls",
+      "iam": [
+        "ec2:DescribeNetworkAcls"
+      ],
+      "why": "describes network ACLs and their rules; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-security-group-rules",
+      "iam": [
+        "ec2:DescribeSecurityGroupRules"
+      ],
+      "why": "describes security group rules; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-transit-gateway-attachments",
+      "iam": [
+        "ec2:DescribeTransitGatewayAttachments"
+      ],
+      "why": "describes transit gateway attachments; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-vpc-endpoint-connections",
+      "iam": [
+        "ec2:DescribeVpcEndpointConnections"
+      ],
+      "why": "describes connections to endpoint services; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-vpc-endpoints",
+      "iam": [
+        "ec2:DescribeVpcEndpoints"
+      ],
+      "why": "describes VPC endpoints and their policies; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-vpc-peering-connections",
+      "iam": [
+        "ec2:DescribeVpcPeeringConnections"
+      ],
+      "why": "describes VPC peering connections; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-vpcs",
+      "iam": [
+        "ec2:DescribeVpcs"
+      ],
+      "why": "describes VPCs; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ec2 describe-vpn-connections",
+      "iam": [
+        "ec2:DescribeVpnConnections"
+      ],
+      "why": "describes site-to-site VPN connections; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "elbv2 describe-listeners",
+      "iam": [
+        "elasticloadbalancing:DescribeListeners"
+      ],
+      "why": "reads listeners, their protocols and TLS policies"
+    },
+    {
+      "cli": "elbv2 describe-load-balancers",
+      "iam": [
+        "elasticloadbalancing:DescribeLoadBalancers"
+      ],
+      "why": "reads load balancers and their schemes"
+    },
+    {
+      "cli": "elbv2 describe-ssl-policies",
+      "iam": [
+        "elasticloadbalancing:DescribeSSLPolicies"
+      ],
+      "why": "reads the catalog of TLS security policies"
+    },
+    {
+      "cli": "events list-rules",
+      "iam": [
+        "events:ListRules"
+      ],
+      "why": "lists EventBridge rules; enables or disables none"
+    },
+    {
+      "cli": "guardduty describe-malware-scans",
+      "iam": [
+        "guardduty:DescribeMalwareScans"
+      ],
+      "why": "reads malware scan records; starts none"
+    },
+    {
+      "cli": "guardduty get-detector",
+      "iam": [
+        "guardduty:GetDetector"
+      ],
+      "why": "reads a detector's configuration and status"
+    },
+    {
+      "cli": "guardduty get-findings",
+      "iam": [
+        "guardduty:GetFindings"
+      ],
+      "why": "reads findings by id; archives or updates none"
+    },
+    {
+      "cli": "guardduty get-malware-protection-plan",
+      "iam": [
+        "guardduty:GetMalwareProtectionPlan"
+      ],
+      "why": "reads a malware protection plan"
+    },
+    {
+      "cli": "guardduty list-detectors",
+      "iam": [
+        "guardduty:ListDetectors"
+      ],
+      "why": "lists detector ids; the absence of any is itself the finding"
+    },
+    {
+      "cli": "guardduty list-findings",
+      "iam": [
+        "guardduty:ListFindings"
+      ],
+      "why": "lists finding ids matching a filter"
+    },
+    {
+      "cli": "guardduty list-malware-protection-plans",
+      "iam": [
+        "guardduty:ListMalwareProtectionPlans"
+      ],
+      "why": "lists malware protection plans"
+    },
+    {
+      "cli": "health describe-events",
+      "iam": [
+        "health:DescribeEvents"
+      ],
+      "why": "reads AWS Health events for the account"
+    },
+    {
+      "cli": "iam generate-credential-report",
+      "iam": [
+        "iam:GenerateCredentialReport"
+      ],
+      "why": "asks IAM to (re)build the account's credential report, a CSV IAM computes about itself; no principal, policy or credential changes",
+      "review": "admitted by review, not by verb: `generate` creates a report artifact inside IAM, at most every four hours, and is the only way get-credential-report has anything to return"
+    },
+    {
+      "cli": "iam get-account-authorization-details",
+      "iam": [
+        "iam:GetAccountAuthorizationDetails"
+      ],
+      "why": "reads every user, group, role and policy with their attachments; a snapshot, not a change"
+    },
+    {
+      "cli": "iam get-account-summary",
+      "iam": [
+        "iam:GetAccountSummary"
+      ],
+      "why": "reads account-level IAM counts and flags, root MFA included"
+    },
+    {
+      "cli": "iam get-credential-report",
+      "iam": [
+        "iam:GetCredentialReport"
+      ],
+      "why": "downloads the credential report generate-credential-report built"
+    },
+    {
+      "cli": "iam list-open-id-connect-providers",
+      "iam": [
+        "iam:ListOpenIDConnectProviders"
+      ],
+      "why": "lists OIDC identity providers"
+    },
+    {
+      "cli": "iam list-roles",
+      "iam": [
+        "iam:ListRoles"
+      ],
+      "why": "lists roles with their trust policies and session durations"
+    },
+    {
+      "cli": "iam list-saml-providers",
+      "iam": [
+        "iam:ListSAMLProviders"
+      ],
+      "why": "lists SAML identity providers"
+    },
+    {
+      "cli": "identitystore list-users",
+      "iam": [
+        "identitystore:ListUsers"
+      ],
+      "why": "lists users in an Identity Center identity store"
+    },
+    {
+      "cli": "inspector2 batch-get-account-status",
+      "iam": [
+        "inspector2:BatchGetAccountStatus"
+      ],
+      "why": "reads whether Inspector scanning is enabled per resource type"
+    },
+    {
+      "cli": "inspector2 list-coverage",
+      "iam": [
+        "inspector2:ListCoverage"
+      ],
+      "why": "lists which resources Inspector covers and why not"
+    },
+    {
+      "cli": "logs describe-log-groups",
+      "iam": [
+        "logs:DescribeLogGroups"
+      ],
+      "why": "reads log groups and their retention"
+    },
+    {
+      "cli": "logs describe-metric-filters",
+      "iam": [
+        "logs:DescribeMetricFilters"
+      ],
+      "why": "reads metric filters attached to log groups"
+    },
+    {
+      "cli": "logs describe-query-definitions",
+      "iam": [
+        "logs:DescribeQueryDefinitions"
+      ],
+      "why": "reads saved Logs Insights query definitions"
+    },
+    {
+      "cli": "logs get-query-results",
+      "iam": [
+        "logs:GetQueryResults"
+      ],
+      "why": "reads the rows a Logs Insights query returned"
+    },
+    {
+      "cli": "logs start-query",
+      "iam": [
+        "logs:StartQuery"
+      ],
+      "why": "runs a Logs Insights query over log groups and returns a query id; the log groups are not modified",
+      "review": "admitted by review, not by verb: `start` here begins a read-only query that is billed per byte scanned; nothing in the account changes"
+    },
+    {
+      "cli": "macie2 describe-buckets",
+      "iam": [
+        "macie2:DescribeBuckets"
+      ],
+      "why": "reads Macie's inventory of S3 buckets and their classification"
+    },
+    {
+      "cli": "macie2 get-automated-discovery-configuration",
+      "iam": [
+        "macie2:GetAutomatedDiscoveryConfiguration"
+      ],
+      "why": "reads whether automated sensitive-data discovery is on"
+    },
+    {
+      "cli": "network-firewall describe-firewall-policy",
+      "iam": [
+        "network-firewall:DescribeFirewallPolicy"
+      ],
+      "why": "reads a firewall policy and its default actions"
+    },
+    {
+      "cli": "organizations describe-organization",
+      "iam": [
+        "organizations:DescribeOrganization"
+      ],
+      "why": "reads the organization the account belongs to"
+    },
+    {
+      "cli": "organizations describe-policy",
+      "iam": [
+        "organizations:DescribePolicy"
+      ],
+      "why": "reads one SCP's content"
+    },
+    {
+      "cli": "organizations list-policies",
+      "iam": [
+        "organizations:ListPolicies"
+      ],
+      "why": "lists policies of a type"
+    },
+    {
+      "cli": "organizations list-roots",
+      "iam": [
+        "organizations:ListRoots"
+      ],
+      "why": "lists the organization's roots"
+    },
+    {
+      "cli": "organizations list-targets-for-policy",
+      "iam": [
+        "organizations:ListTargetsForPolicy"
+      ],
+      "why": "lists where a policy is attached; attaches none"
+    },
+    {
+      "cli": "rds describe-db-instances",
+      "iam": [
+        "rds:DescribeDBInstances"
+      ],
+      "why": "reads DB instances and their backup retention"
+    },
+    {
+      "cli": "resourcegroupstaggingapi get-resources",
+      "iam": [
+        "tag:GetResources"
+      ],
+      "why": "lists resources by tag; tags none"
+    },
+    {
+      "cli": "route53 get-dnssec",
+      "iam": [
+        "route53:GetDNSSEC"
+      ],
+      "why": "reads a hosted zone's DNSSEC status and key-signing keys"
+    },
+    {
+      "cli": "route53 list-hosted-zones",
+      "iam": [
+        "route53:ListHostedZones"
+      ],
+      "why": "lists hosted zones"
+    },
+    {
+      "cli": "route53domains get-domain-detail",
+      "iam": [
+        "route53domains:GetDomainDetail"
+      ],
+      "why": "reads a registered domain's details, DNSSEC keys included"
+    },
+    {
+      "cli": "route53resolver list-resolver-dnssec-configs",
+      "iam": [
+        "route53resolver:ListResolverDnssecConfigs"
+      ],
+      "why": "reads DNSSEC validation configuration per VPC"
+    },
+    {
+      "cli": "route53resolver list-resolver-endpoints",
+      "iam": [
+        "route53resolver:ListResolverEndpoints"
+      ],
+      "why": "lists Resolver endpoints"
+    },
+    {
+      "cli": "s3api get-bucket-lifecycle-configuration",
+      "iam": [
+        "s3:GetLifecycleConfiguration"
+      ],
+      "why": "reads a bucket's lifecycle rules"
+    },
+    {
+      "cli": "s3api list-objects-v2",
+      "iam": [
+        "s3:ListBucket"
+      ],
+      "why": "lists keys in a bucket; reads no object body"
+    },
+    {
+      "cli": "securityhub get-findings",
+      "iam": [
+        "securityhub:GetFindings"
+      ],
+      "why": "reads findings matching a filter; updates none"
+    },
+    {
+      "cli": "securityhub get-insight-results",
+      "iam": [
+        "securityhub:GetInsightResults"
+      ],
+      "why": "reads an insight's grouped results"
+    },
+    {
+      "cli": "securityhub get-insights",
+      "iam": [
+        "securityhub:GetInsights"
+      ],
+      "why": "reads insight definitions"
+    },
+    {
+      "cli": "shield describe-subscription",
+      "iam": [
+        "shield:DescribeSubscription"
+      ],
+      "why": "reads whether Shield Advanced is subscribed"
+    },
+    {
+      "cli": "shield list-attacks",
+      "iam": [
+        "shield:ListAttacks"
+      ],
+      "why": "lists detected DDoS attacks in a window"
+    },
+    {
+      "cli": "shield list-protections",
+      "iam": [
+        "shield:ListProtections"
+      ],
+      "why": "lists protected resources"
+    },
+    {
+      "cli": "sns get-subscription-attributes",
+      "iam": [
+        "sns:GetSubscriptionAttributes"
+      ],
+      "why": "reads one subscription's attributes"
+    },
+    {
+      "cli": "sns list-subscriptions-by-topic",
+      "iam": [
+        "sns:ListSubscriptionsByTopic"
+      ],
+      "why": "lists a topic's subscriptions"
+    },
+    {
+      "cli": "ssm describe-automation-executions",
+      "iam": [
+        "ssm:DescribeAutomationExecutions"
+      ],
+      "why": "reads automation execution history; starts none"
+    },
+    {
+      "cli": "ssm describe-instance-patch-states",
+      "iam": [
+        "ssm:DescribeInstancePatchStates"
+      ],
+      "why": "reads per-instance patch compliance"
+    },
+    {
+      "cli": "ssm describe-sessions",
+      "iam": [
+        "ssm:DescribeSessions"
+      ],
+      "why": "reads Session Manager session history; opens none"
+    },
+    {
+      "cli": "ssm get-document",
+      "iam": [
+        "ssm:GetDocument"
+      ],
+      "why": "reads an SSM document's content"
+    },
+    {
+      "cli": "ssm get-inventory",
+      "iam": [
+        "ssm:GetInventory"
+      ],
+      "why": "reads collected inventory"
+    },
+    {
+      "cli": "ssm list-associations",
+      "iam": [
+        "ssm:ListAssociations"
+      ],
+      "why": "lists State Manager associations; applies none"
+    },
+    {
+      "cli": "ssm list-command-invocations",
+      "iam": [
+        "ssm:ListCommandInvocations"
+      ],
+      "why": "reads the results of commands already run; runs none"
+    },
+    {
+      "cli": "ssm list-documents",
+      "iam": [
+        "ssm:ListDocuments"
+      ],
+      "why": "lists SSM documents"
+    },
+    {
+      "cli": "ssm list-inventory-entries",
+      "iam": [
+        "ssm:ListInventoryEntries"
+      ],
+      "why": "reads inventory entries for an instance"
+    },
+    {
+      "cli": "sso-admin describe-permission-set",
+      "iam": [
+        "sso:DescribePermissionSet"
+      ],
+      "why": "reads a permission set's name and session duration"
+    },
+    {
+      "cli": "sso-admin list-account-assignments",
+      "iam": [
+        "sso:ListAccountAssignments"
+      ],
+      "why": "lists which principals hold a permission set in an account"
+    },
+    {
+      "cli": "sso-admin list-instances",
+      "iam": [
+        "sso:ListInstances"
+      ],
+      "why": "lists Identity Center instances"
+    },
+    {
+      "cli": "sso-admin list-permission-sets",
+      "iam": [
+        "sso:ListPermissionSets"
+      ],
+      "why": "lists permission set ARNs"
+    },
+    {
+      "cli": "wafv2 get-web-acl",
+      "iam": [
+        "wafv2:GetWebACL"
+      ],
+      "why": "reads a web ACL's rules"
+    },
+    {
+      "cli": "wafv2 list-web-acls",
+      "iam": [
+        "wafv2:ListWebACLs"
+      ],
+      "why": "lists web ACLs in a scope"
+    }
+  ],
+  "refused": [
+    {
+      "cli": "ssm send-command",
+      "iam": [
+        "ssm:SendCommand"
+      ],
+      "why": "executes a document — with AWS-RunShellScript, an arbitrary shell command — on the targeted instances. The one recipe using it (`clock-synchronization-and-timestamps`) runs `chronyc` on production-tagged hosts. Refused outright; the recipe is manual."
+    },
+    {
+      "cli": "athena start-query-execution",
+      "iam": [
+        "athena:StartQueryExecution"
+      ],
+      "why": "runs a query whose results Athena writes to an S3 output location. It writes into the account, and the runner writes nothing. Refused; `audit-reduction-and-report-generation` is manual for this and its CloudTrail Lake alternative is what the runner may use."
+    }
+  ],
+  "runner": [
+    {
+      "cli": "sts get-caller-identity",
+      "iam": [
+        "sts:GetCallerIdentity"
+      ],
+      "why": "the runner's own: which principal, in which account, is making these calls — recorded in every transcript. Always permitted; it cannot be denied by policy."
+    },
+    {
+      "cli": "iam simulate-principal-policy",
+      "iam": [
+        "iam:SimulatePrincipalPolicy"
+      ],
+      "why": "the runner's own self-check (T3-3): simulates a probe set of mutating actions against its own role and refuses to run unless every one is denied. Evaluates policies; changes none."
+    }
+  ]
+}
