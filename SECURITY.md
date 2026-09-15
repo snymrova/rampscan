@@ -66,6 +66,33 @@ The one thing that does leave your machine is whatever your own scan tools do wh
 they fetch advisory databases, and that is the tool's behaviour under its own
 configuration, not rampscan's.
 
+### The optional cloud runner (planned, `docs/PLAN-CLOUD-RUNNER.md`)
+
+The sentence above stays true with the runner: **the appliance still sends
+nothing, holds no AWS credential, and makes no AWS call.** What changes is that
+a second program, `rampscan-runner`, which *you* deploy in *your own* AWS account
+under a role *you* create from a policy it prints, calls AWS **read** APIs there
+and hands the appliance a signed transcript plus the bytes the CLI printed
+(SPEC §14). The two programs have separate identities on purpose: the runner has
+an AWS role and no ledger key; the appliance has a ledger key and no AWS role.
+Neither alone can mint cloud evidence, and a test in the repository fails if any
+package other than the runner can reach AWS or the runner can sign a bundle.
+
+Be clear-eyed about what this widens. A runner with a standing read-only role is
+a new principal in your account, and reading IAM, CloudTrail and Config is
+sensitive. The mitigations are: the role's policy is generated from a reviewed
+allowlist of non-mutating actions and only for the recipes that will run; the
+runner refuses to start unless a probe set of mutating actions is *denied* to
+its own role, and records that check in every transcript; registering a runner
+is a two-person decision in the console; and a CloudShell one-shot mode exists
+for accounts that will not grant a standing role at all. The runner never
+reports a verdict — the appliance computes every one from the bytes — so a
+compromised runner can fail to collect but cannot declare a pass. A run that
+could not see the account is a visible failed run, never evidence.
+
+The runner is tested in CI against an AWS API emulator. That emulator is where
+the runner is exercised; it is never where a claim about your account is made.
+
 ## Handling of secrets found during a scan
 
 The `gitleaks` collector reads your full committed history and will find real
