@@ -48,6 +48,9 @@ importers:
         specifier: ^19.1.0
         version: 19.2.8(react@19.2.8)
     devDependencies:
+      '@rampscan/collectors':
+        specifier: workspace:*
+        version: link:../../packages/collectors
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
@@ -60,6 +63,9 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@types/node@26.2.0)(vite@7.3.6(@types/node@26.2.0)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/cli:
     dependencies:

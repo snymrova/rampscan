@@ -2,7 +2,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["packages/*/test/**/*.test.ts"],
+    // the console's floor (S4-3): its pure lib functions, run in the same
+    // suite so the numbers gate and the README's figure count them
+    include: ["packages/*/test/**/*.test.ts", "console/web/test/**/*.test.ts"],
     globalSetup: ["./scripts/vitest-global-setup.mjs"],
 
     // The suite arm of the numbers gate (plan S2-1): at the end of a whole
