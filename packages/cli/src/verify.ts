@@ -9,6 +9,7 @@ import {
   isScanRun,
   isScopingEvent,
   methodOfIngestedBundle,
+  isRunnerRegistration,
 } from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
@@ -183,6 +184,17 @@ export async function verify(options: {
       ...unresolved.map((d) => `  ✗ ${d.ksi_id} #${d.artifact} (${d.path}): ${d.reason}`),
       `repo     ${p.repo} @ ${p.commit.slice(0, 12)}`,
       `signed   ${p.timestamp}`,
+    );
+  } else if (isRunnerRegistration(entry.bundle)) {
+    // a runner registration (T3-2) verifies like a scoping — same envelope,
+    // same two identities — and names the key it admits, so a reader can
+    // match a transcript's keyid to the approval that made it acceptable
+    const p = entry.bundle.predicate;
+    lines.push(
+      `runner   ${options.digest.slice(0, 16)}…`,
+      `${p.action.padEnd(8)} ${p.runner_name} — keyid ${p.keyid.slice(0, 16)}…, on ${p.host}, expected in ${p.account} (${p.partition})`,
+      `repo     ${p.repo}`,
+      `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
     );
   } else {
     // an artifact-sufficiency judgment (Q3.3) verifies exactly like a

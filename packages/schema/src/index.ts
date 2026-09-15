@@ -18,3 +18,4 @@ export * from "./documents.js";
 export * from "./offering.js";
 export * from "./transcript.js";
 export * from "./aws-actions.js";
+export * from "./runner-registration.js";

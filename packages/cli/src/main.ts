@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,6 +45,7 @@ import { renderOwed, renderOwedKsi } from "./owed.js";
 import { DEFAULT_ALLOWLIST_PATH, loadAwsActionAllowlist } from "./aws-actions.js";
 import { DEFAULT_BINDINGS_PATH, loadAwsLiteralBindings } from "./aws-bindings.js";
 import { classifyAwsRecipes, loadAwsConfig, renderAwsRecipes, windowEnding } from "./aws-recipes.js";
+import { recordRunnerRegistration, runnerRegistry } from "./runner-registry.js";
 import { rebuild } from "./rebuild.js";
 import { deriveCatalogMethods, loadRecipes } from "./recipes.js";
 import { report } from "./report.js";
@@ -147,6 +149,11 @@ function usage(): never {
       "                    literal against the reviewed binding table, every placeholder against",
       "                    <path>/rampscan.config.json's `aws` block — and every manual recipe with",
       "                    every reason. Computed, never typed. Nothing executes",
+      "  runner register|revoke --name <slug> --public-key <pem-file> --host <where> --account <id>",
+      "                    --partition aws|aws-us-gov --proposed-by <id> --approved-by <id> --repo <name>",
+      "                    the fourth two-key write (plan T3-2): an approver's key turn over a",
+      "                    runner's public key. Only a registered key's transcripts are read",
+      "  runner list       what stands in the registry: name, keyid, host, expected account",
       "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
       "                    method floor, validation window, artifact count — every number read",
       "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
@@ -225,6 +232,13 @@ async function main(): Promise<void> {
       strict: { type: "boolean" },
       "by-controls": { type: "boolean" },
       aws: { type: "boolean" },
+      name: { type: "string" },
+      "public-key": { type: "string" },
+      host: { type: "string" },
+      account: { type: "string" },
+      partition: { type: "string" },
+      "proposed-by": { type: "string" },
+      "approved-by": { type: "string" },
       class: { type: "string" },
       "as-of": { type: "string" },
       since: { type: "string" },
@@ -901,6 +915,47 @@ async function main(): Promise<void> {
       if (values.json) console.log(JSON.stringify(conformanceResult, null, 2));
       else console.log(renderConformance(conformanceResult));
       if (!conformanceResult.conformant) process.exit(1);
+      return;
+    }
+    case "runner": {
+      // T3-2: the registry's two verbs and its listing. The console's decide
+      // route (T4-2) reaches recordRunnerRegistration the way attestations do
+      const verb = target;
+      if (verb === "list") {
+        const registry = await runnerRegistry(createLocalLedger(ledgerDir));
+        if (registry.size === 0) console.log("no runner is registered — nothing this appliance would read a transcript from");
+        for (const r of registry.values()) {
+          console.log(`${r.name}  keyid ${r.keyid.slice(0, 16)}…  on ${r.host}  expected in ${r.account} (${r.partition})  registered ${r.registeredAt} by ${r.approvedBy}`);
+        }
+        return;
+      }
+      if (verb !== "register" && verb !== "revoke") usage();
+      const need = (k: "name" | "public-key" | "host" | "account" | "partition" | "proposed-by" | "approved-by" | "repo"): string => {
+        const v = values[k];
+        if (v === undefined || v === "") {
+          console.error(`rampscan runner ${verb}: --${k} is required`);
+          process.exit(2);
+        }
+        return v;
+      };
+      const partition = need("partition");
+      if (partition !== "aws" && partition !== "aws-us-gov") usage();
+      const { digest, keyid } = await recordRunnerRegistration({
+        action: verb === "register" ? "registered" : "revoked",
+        runnerName: need("name"),
+        publicKeyPem: await readFile(need("public-key"), "utf8"),
+        host: need("host"),
+        account: need("account"),
+        partition,
+        repo: need("repo"),
+        proposedBy: need("proposed-by"),
+        approvedBy: need("approved-by"),
+        datasetVersion: datasetPin,
+        ledgerDir,
+        keysDir,
+        log: (line) => console.error(line),
+      });
+      console.log(`${verb === "register" ? "registered" : "revoked"} ${values.name} (keyid ${keyid.slice(0, 12)}…) — ledger ${digest}`);
       return;
     }
     case "recipes": {

@@ -3,6 +3,7 @@ import { IN_TOTO_STATEMENT_TYPE, EvidenceBundle, Subject } from "./bundle.js";
 import { RAMPSCAN_SCAN_RUN_TYPE, ScanRun } from "./scan-run.js";
 import { RAMPSCAN_ARTIFACT_JUDGMENT_TYPE, ArtifactJudgment } from "./artifact-judgment.js";
 import { RAMPSCAN_ATTESTATION_TYPE, Attestation } from "./attestation.js";
+import { RAMPSCAN_RUNNER_REGISTRATION_TYPE, RunnerRegistration } from "./runner-registration.js";
 import { RAMPSCAN_ARTIFACT_TYPE, Artifact } from "./artifact.js";
 import {
   RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE,
@@ -62,6 +63,7 @@ export const LedgerStatement = z.discriminatedUnion("predicateType", [
   Artifact,
   ArtifactDeclarations,
   ScanRun,
+  RunnerRegistration,
 ]);
 export type LedgerStatement = z.infer<typeof LedgerStatement>;
 
@@ -91,4 +93,8 @@ export function isArtifact(s: LedgerStatement): s is Artifact {
 
 export function isArtifactDeclarations(s: LedgerStatement): s is ArtifactDeclarations {
   return s.predicateType === RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE;
+}
+
+export function isRunnerRegistration(s: LedgerStatement): s is RunnerRegistration {
+  return s.predicateType === RAMPSCAN_RUNNER_REGISTRATION_TYPE;
 }

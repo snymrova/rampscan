@@ -10,3 +10,4 @@ export * from "./artifact-judgment.js";
 export * from "./artifact.js";
 export * from "./attestation.js";
 export * from "./assert-labeled.js";
+export * from "./runner-registration.js";
