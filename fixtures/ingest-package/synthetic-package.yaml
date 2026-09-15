@@ -1,0 +1,218 @@
+# The synthetic machine-readable package for the package adapter (SPEC §12.8,
+# plan S3-1): the assessed-package shape observed in docs/RESEARCH-PARAMIFY-PILOT.md
+# §2 (Package → Assessment → KSIs → Validations → Evidences → Artifacts),
+# written by us — shapes only, no content reuse. The KSI ids are the Phase One
+# numbered form on purpose, so ingesting it exercises the crosswalk
+# (recipes/crosswalks/ksi-phase-one-to-2026.07.14.01.json):
+#
+#   CNA-01  one Phase One KSI → one 2026 KSI; two evidences, one of them a
+#           script-produced export the package marks `automated: Yes`, the
+#           other a screenshot; a third evidence repeats the first's name, so
+#           the adapter's recipe-id suffixing is exercised
+#   PIY-06  one Phase One KSI → TWO 2026 KSIs (executive support and
+#           investments were split); one evidence, so two submissions
+#   SVC-07  a Phase One KSI with NO 2026 successor (patching left the KSI
+#           catalog for FRR-VDR); skipped and named, never a bundle
+#   IAM-01  assessed `Partial`, one evidence whose artifact is named without
+#           a reference and carries no date, so the timestamp falls back to
+#           the assessment's date
+#
+# Every signature field is empty, as in the assessed package this shape was
+# read from; nothing here is a verdict the appliance signs — see §12.8.
+Package:
+  CSPName: Synthetic CSP
+  CSO: Synthetic Offering
+  impact: Low
+  summaryOfCSO: A synthetic cloud service offering that exists only to exercise the package adapter.
+  Assessments:
+  - Assessment:
+      digitalSignature: ""
+      assessorOrg: Synthetic 3PAO
+      date: 6/30/26
+      leadAssessor: A. Assessor
+      recommendation: Authorize
+      remarks: Synthetic assessment remarks.
+      KSIs:
+      - KSI:
+          name: Cloud Native Architecture
+          shortName: CNA
+          Validations:
+          - validation:
+              shortName: CNA-01
+              description: Configure ALL information resources to limit inbound and outbound traffic
+              implementation: Synthetic implementation narrative.
+              implementationStatus: Implemented
+              digitalSignature: ""
+              assessmentStatus: "True"
+              assessmentSteps:
+              - assessmentStep:
+                  method: Test
+                  status: PASS
+                  result: Synthetic assessment step result.
+              assessedBy: A. Assessor
+              assessedOn: ""
+              Evidences:
+              - evidence:
+                  name: "Security Group Rules "
+                  description: Security group rule export
+                  instructions: "1. aws ec2 describe-security-groups --query 'SecurityGroups[*].GroupId' 2. aws ec2 describe-security-groups --group-ids <sg_id>"
+                  commands: ""
+                  automated: Yes
+                  scriptName: ""
+                  validationRules: []
+                  validatedBy: ""
+                  validateDate: ""
+                  remarks: ""
+                  Artifacts:
+                  - artifact:
+                      name: Untitled Artifact
+                      reference: https://example.invalid/synthetic-csp/evidence/security_groups.sh
+                      outputResults: ""
+                      effectiveDate: 2026-06-16T00:00:00.000Z
+                  - artifact:
+                      name: Security Groups
+                      reference: security_groups.json
+                      outputResults: ""
+                      effectiveDate: 2026-06-18T00:00:00.000Z
+              - evidence:
+                  name: Network ACL Console Screenshot
+                  description: Console screenshot of the network ACLs
+                  instructions: Open the VPC console and capture the network ACL page.
+                  commands: ""
+                  automated: No
+                  scriptName: ""
+                  validationRules: []
+                  validatedBy: ""
+                  validateDate: ""
+                  remarks: ""
+                  Artifacts:
+                  - artifact:
+                      name: Network ACLs
+                      reference: Network ACLs.png
+                      outputResults: ""
+                      effectiveDate: 2026-06-20T00:00:00.000Z
+              - evidence:
+                  name: Security Group Rules
+                  description: A second export under the same name, a week later
+                  instructions: "1. aws ec2 describe-security-groups --query 'SecurityGroups[*].GroupId'"
+                  commands: ""
+                  automated: Yes
+                  scriptName: ""
+                  validationRules: []
+                  validatedBy: ""
+                  validateDate: ""
+                  remarks: ""
+                  Artifacts:
+                  - artifact:
+                      name: Security Groups (second run)
+                      reference: security_groups_2.json
+                      outputResults: ""
+                      effectiveDate: 2026-06-25T00:00:00.000Z
+      - KSI:
+          name: Policy and Inventory
+          shortName: PIY
+          Validations:
+          - validation:
+              shortName: PIY-06
+              description: Have a dedicated staff and budget for security with executive support, commensurate with the size, complexity, scope, and risk of the service offering
+              implementation: Synthetic implementation narrative.
+              implementationStatus: Implemented
+              digitalSignature: ""
+              assessmentStatus: "True"
+              assessmentSteps:
+              - assessmentStep:
+                  method: Examine
+                  status: PASS
+                  result: Synthetic assessment step result.
+              assessedBy: A. Assessor
+              assessedOn: ""
+              Evidences:
+              - evidence:
+                  name: Security Budget Memo
+                  description: The approved security budget
+                  instructions: Export the approved budget memo.
+                  commands: ""
+                  automated: No
+                  scriptName: ""
+                  validationRules: []
+                  validatedBy: ""
+                  validateDate: ""
+                  remarks: ""
+                  Artifacts:
+                  - artifact:
+                      name: Security Budget Memo
+                      reference: security-budget-memo.pdf
+                      outputResults: ""
+                      effectiveDate: 2026-05-01T00:00:00.000Z
+      - KSI:
+          name: Service Configuration
+          shortName: SVC
+          Validations:
+          - validation:
+              shortName: SVC-07
+              description: Use a consistent, risk-informed approach for applying security patches
+              implementation: Synthetic implementation narrative.
+              implementationStatus: Implemented
+              digitalSignature: ""
+              assessmentStatus: "True"
+              assessmentSteps:
+              - assessmentStep:
+                  method: Examine
+                  status: PASS
+                  result: Synthetic assessment step result.
+              assessedBy: A. Assessor
+              assessedOn: ""
+              Evidences:
+              - evidence:
+                  name: Patch Policy
+                  description: The patching policy document
+                  instructions: Export the patching policy.
+                  commands: ""
+                  automated: No
+                  scriptName: ""
+                  validationRules: []
+                  validatedBy: ""
+                  validateDate: ""
+                  remarks: ""
+                  Artifacts:
+                  - artifact:
+                      name: Patch Policy
+                      reference: patch-policy.pdf
+                      outputResults: ""
+                      effectiveDate: 2026-04-10T00:00:00.000Z
+      - KSI:
+          name: Identity and Access Management
+          shortName: IAM
+          Validations:
+          - validation:
+              shortName: IAM-01
+              description: Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication
+              implementation: Synthetic implementation narrative.
+              implementationStatus: Implemented
+              digitalSignature: ""
+              assessmentStatus: Partial
+              assessmentSteps:
+              - assessmentStep:
+                  method: Examine
+                  status: PASS
+                  result: Synthetic assessment step result.
+              assessedBy: A. Assessor
+              assessedOn: ""
+              Evidences:
+              - evidence:
+                  name: IdP Authenticator Settings
+                  description: Authenticator policy as configured in the identity provider
+                  instructions: Capture the authenticator policy page.
+                  commands: ""
+                  automated: No
+                  scriptName: ""
+                  validationRules: []
+                  validatedBy: ""
+                  validateDate: ""
+                  remarks: ""
+                  Artifacts:
+                  - artifact:
+                      name: IdP Authenticators
+                      reference: ""
+                      outputResults: ""
+                      effectiveDate: ""

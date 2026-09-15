@@ -270,6 +270,14 @@ export const EvidencePredicate = z.object({
     .strictObject({
       signer_identity: z.string().min(1),
       ingest_digest: z.string().min(1),
+      /**
+       * The submission's own `automated` (S3-1), copied when it declared one
+       * so the method the register derives from this bundle carries the
+       * FRC-CSX-VVK numerator the submitter stated. Absent on every bundle
+       * minted before it and on every submission that did not declare it,
+       * and absent reads true — the value all of those were.
+       */
+      automated: z.boolean().optional(),
     })
     .optional(),
   ksi_ids: z.array(z.string()),

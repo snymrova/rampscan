@@ -87,6 +87,9 @@ importers:
       '@rampscan/signer':
         specifier: workspace:*
         version: link:../signer
+      yaml:
+        specifier: ^2.6.0
+        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3

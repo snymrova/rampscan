@@ -31,3 +31,17 @@ G6's specimen), and a failing IAM lifecycle check (KSI-IAM-AAM, exit 3 →
 by us, shapes-only — no code or fixture reuse from the observed repository
 (it carries no license). Static and committed: unlike vulnerable-app it
 needs no git history, because ingested evidence has no commit anchor.
+
+## ingest-package
+
+The synthetic machine-readable assessment package for the package adapter
+(SPEC §12.8, plan S3-1): `Package → Assessment → KSIs → Validations →
+Evidences → Artifacts`, the shape the only publicly assessed 20x package is
+published in (`docs/RESEARCH-PARAMIFY-PILOT.md` §2). Its KSI ids are the
+Phase One numbered form on purpose, so ingesting it goes through the reviewed
+crosswalk in `recipes/crosswalks/`. Four validations: one Phase One indicator
+→ one 2026 KSI (CNA-01, three evidences, one name repeated), one → two
+(PIY-06), one with no 2026 successor (SVC-07, skipped and named), and one
+assessed `Partial` whose artifact carries neither reference nor date
+(IAM-01). Written by us, shapes only — no content from the observed package,
+which carries no license. Static and committed.

@@ -355,13 +355,31 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     `class ${view.offeringClass} · dataset ${view.datasetVersion}` +
       (view.frontierOverlay !== "" ? ` · frontier overlay ${view.frontierOverlay}` : "") +
       (view.repo !== undefined ? dim(` · evidence: ${view.repo}`) : dim(" · no scan recorded")),
-    "",
-    dim("  KSI              methods    freshest         artifacts   worst gap"),
   );
 
-  for (const row of view.rows) {
+  // Methods outside the FRC-CSX-VVK numerator — attestations (Q4.2) and
+  // ingested assessment packages (S3-1) — are methods the row holds and the
+  // floor does not count. Shown as `+N` so a row reading `0/1` over a KSI
+  // with three human-read artifacts says so, and only when there is
+  // something to say: a register with none renders exactly as it did, column
+  // width included.
+  const methodsCells = view.rows.map((row) => {
     const floorPart = row.floor === null ? `${row.automated}/—` : `${row.automated}/${row.floor}`;
-    const methodsCol = `${floorPart}${row.floorMet === true ? " ok" : ""}`.padEnd(9);
+    const extra = row.methods - row.automated;
+    return `${floorPart}${row.floorMet === true ? " ok" : ""}${extra > 0 ? ` +${extra}` : ""}`;
+  });
+  const methodsWidth = Math.max(9, ...methodsCells.map((c) => c.length));
+  const nonAutomatedShown = view.rows.some((row) => row.methods > row.automated);
+  lines.push(
+    "",
+    dim(
+      `  ${"KSI".padEnd(16)} ${"methods".padEnd(methodsWidth)}  ${"freshest".padEnd(15)}  ` +
+        `${"artifacts".padEnd(10)}  worst gap`,
+    ),
+  );
+
+  view.rows.forEach((row, i) => {
+    const methodsCol = methodsCells[i]!.padEnd(methodsWidth);
     let freshestCol: string;
     if (row.freshest === undefined) {
       freshestCol = "—".padEnd(15);
@@ -407,6 +425,15 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     // it is not owed at this class, and it is not gone either (§13.7).
     const line = `  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}`;
     lines.push(row.optional ? dim(`${line}  optional at class ${view.offeringClass}`) : line);
+  });
+
+  if (nonAutomatedShown) {
+    lines.push(
+      dim(
+        "  +N beside a methods cell: non-automated methods the row holds (attestations, ingested " +
+          "assessment evidence) — outside the FRC-CSX-VVK numerator, judged by VDR-TFR-NMV's clock",
+      ),
+    );
   }
 
   const s = view.summary;

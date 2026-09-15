@@ -646,9 +646,23 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
     expect(row.freshestMet).toBe(true);
     const nmvText = renderKsiRegister(nmvView, false, now);
     // the label is the method's own window, and "ok" is the fold's verdict —
-    // against the 7-day window this same row would have read as lapsed
-    expect(nmvText).toMatch(/KSI-CNA-CIC\s+0\/1\s+20d \/ 3mo ok/);
+    // against the 7-day window this same row would have read as lapsed. The
+    // `+1` is the attestation itself (S3-1): a method the row holds outside
+    // the FRC-CSX-VVK numerator, shown beside the floor cell, and the legend
+    // line appears exactly because a row holds one
+    expect(nmvText).toMatch(/KSI-CNA-CIC\s+0\/1 \+1\s+20d \/ 3mo ok/);
     expect(nmvText).not.toMatch(/KSI-CNA-CIC.*7d/);
+    expect(nmvText).toMatch(/\+N beside a methods cell: non-automated methods/);
+  });
+
+  it("a register with no non-automated method renders without the +N cell or its legend", () => {
+    const text = renderKsiRegister(
+      buildKsiRegister({ catalog, offeringClass: "b", methods, methodRegisters: [], frontier }),
+      false,
+      now,
+    );
+    expect(text).not.toMatch(/\+\d/);
+    expect(text).not.toMatch(/\+N beside/);
   });
 
   it("the fold's verdict wins over the renderer's approximation — no row says ok beside its own G3", () => {
