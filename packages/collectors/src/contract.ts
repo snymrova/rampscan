@@ -88,7 +88,7 @@ async function loadContract(root: string): Promise<ParsedContract | undefined> {
   }
   const parsed = JSON.parse(raw) as Record<string, unknown>;
   if (parsed["contract"] === undefined) return undefined;
-  let contract;
+  let contract: ReturnType<typeof ContractConfig.parse>;
   try {
     contract = ContractConfig.parse(parsed["contract"]);
   } catch (cause) {

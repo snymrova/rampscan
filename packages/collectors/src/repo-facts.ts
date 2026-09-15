@@ -1,4 +1,5 @@
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
@@ -122,7 +123,7 @@ async function readCompositeActions(root: string): Promise<ParsedWorkflow[]> {
   const base = join(root, ".github", "actions");
   const files: string[] = [];
   const walk = async (relDir: string): Promise<void> => {
-    let entries;
+    let entries: Dirent[];
     try {
       entries = await readdir(join(root, relDir), { withFileTypes: true });
     } catch {

@@ -10,11 +10,14 @@
     "test": "vitest run",
     "smoke": "playwright test",
     "typecheck": "tsc --build",
+    "lint": "biome lint .",
+    "lint:changed": "biome lint --changed",
     "doctor": "node scripts/doctor.mjs",
     "fetch-pocketbase": "node scripts/fetch-pocketbase.mjs",
     "rampscan": "tsx packages/cli/src/main.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
     "tsx": "^4.19.0",

@@ -116,3 +116,35 @@ jobs:
         if: steps.rampscan.outputs.would-introduce != 'true' && steps.rampscan.outputs.would-violate == 'true'
         run: |
           echo "::notice::rampscan check: violations exist, and none of them is introduced by this tree"
+
+  # The lint gate (plan S4-2, #140): one tool, one config (biome.jsonc), one
+  # step. It reads the files THIS pull request changed against its base, so a
+  # touched file is brought up to the rule and no pull request pays for the
+  # ones nobody touched — the same choice as job 3 above, made for the same
+  # reason: a gate that fails on inherited debt teaches people to ignore it.
+  # Errors fail; warnings and infos are advisory.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # `--since` diffs against the base commit, which a shallow clone of
+          # the merge ref does not hold
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: lint the files this pull request changed
+        run: pnpm exec biome lint --changed --since="${{ github.event.pull_request.base.sha }}"

@@ -1,0 +1,45 @@
+// The lint gate (docs/PLAN-SOUNDNESS.md S4-2, #140). One tool, one config, one
+// CI step. `pnpm lint` reads the whole tree; the gate in check.yml reads the
+// files a pull request changed, against its base — so a touched file is
+// brought up to the rule, and no commit reformats the world.
+//
+// Errors fail the gate; warnings and infos are advisory and do not. The
+// formatter is configured but not run by the gate: forty thousand lines were
+// written without one, and a formatter that rewrites an 800-line file inside
+// a nine-line pull request buries the diff the reviewer came for.
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true, "defaultBranch": "main" },
+  "files": {
+    // fixtures are built by their own scripts; docs/context is the pinned
+    // dataset, consumed not authored; the PocketBase directory is a fetched
+    // binary and its hooks; prose is not code
+    "includes": ["**", "!fixtures", "!docs/context", "!console/pocketbase", "!**/*.md"]
+  },
+  "formatter": { "enabled": false, "lineWidth": 100, "indentStyle": "space" },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        // `arr[0]!` is the idiom `noUncheckedIndexedAccess` produces where the
+        // index is known to hold; the assertion is the code saying so
+        "noNonNullAssertion": "off",
+        "useTemplate": "off"
+      },
+      "complexity": {
+        // observation rows are `Record<string, unknown>` and are read as
+        // `row["package"]` on purpose: the key is data, not a property
+        "useLiteralKeys": "off"
+      },
+      "suspicious": {
+        // Biome has no types: `xs.forEach((x) => voidFn(x))` reads to it as a
+        // callback returning a value, and it is not
+        "useIterableCallbackReturn": "off",
+        // `(cache ??= load())` is the memo idiom in three places, each commented
+        "noAssignInExpressions": "warn"
+      }
+    }
+  },
+  "assist": { "enabled": false }
+}

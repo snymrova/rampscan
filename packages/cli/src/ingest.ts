@@ -286,7 +286,7 @@ export async function loadSubmissions(
         `per-entry script/exit code/timestamp); a single submission is ingested as a file`,
     );
   }
-  let manifest;
+  let manifest: ReturnType<typeof IngestManifestSchema.parse>;
   try {
     manifest = IngestManifestSchema.parse(JSON.parse(manifestRaw));
   } catch (cause) {

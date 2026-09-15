@@ -258,6 +258,6 @@ describe("the authored source, end to end (R1.4)", () => {
 
     const outcome = await runScan();
     expect(outcome.artifacts?.appended).toEqual([]);
-    expect(outcome.artifacts?.problems[0]!.reason).toContain("not in the pinned catalog");
+    expect(outcome.artifacts!.problems[0]!.reason).toContain("not in the pinned catalog");
   });
 });
