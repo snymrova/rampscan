@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { EvidenceClass } from "./bundle.js";
-import { Cadence } from "./recipe.js";
+import { EvidenceClass, OffenderPointer } from "./bundle.js";
+import type { Verdict } from "./bundle.js";
+import { Cadence, RecipeAssertion } from "./recipe.js";
 
 // The ingestion contract (SPEC §12.8, plan Q4.1): the shape under which a
 // CLIENT-RUN result becomes a ledger citizen. The no-SaaS / no-execution
@@ -24,15 +25,18 @@ export const IngestedArtifact = z.strictObject({
 export type IngestedArtifact = z.infer<typeof IngestedArtifact>;
 
 /**
- * One assertion outcome as the client's run recorded it. `population` is the
- * N0 discrimination ("0 of 412" vs "0 of 0"), carried when the upstream run
- * can state it — the tree adapter sets it to the result rows the script
- * emitted.
+ * One assertion outcome. On the native path it is what the client's run
+ * recorded and the signer stands behind; on the tree path it is what the
+ * appliance evaluated over the result rows (#147) — the same shape a pipeline
+ * recipe's assertion produces, offenders included. `population` is the N0
+ * discrimination ("0 of 412" vs "0 of 0"): the rows the script emitted.
  */
 export const IngestedAssertion = z.strictObject({
   description: z.string().min(1),
   passed: z.boolean(),
   detail: z.string().optional(),
+  offenders: z.array(OffenderPointer).optional(),
+  offender_count: z.number().int().optional(),
   population: z.number().int().optional(),
 });
 export type IngestedAssertion = z.infer<typeof IngestedAssertion>;
@@ -54,8 +58,13 @@ export const IngestSubmission = z.strictObject({
   cadence: Cadence,
   /** ≥1: a result with nothing to attest to is not evidence */
   artifacts: z.array(IngestedArtifact).min(1),
-  /** ≥1: verdict is computed from these — a run that observed nothing has nothing to submit */
-  assertions: z.array(IngestedAssertion).min(1),
+  /**
+   * The verdict is computed from these. Empty is permitted and means exactly
+   * what it says (#147): the artifacts were collected and nothing evaluated
+   * them — the submission is `unevidenced`, a signed record of what was
+   * handed over that a later judgment can point at, never a pass.
+   */
+  assertions: z.array(IngestedAssertion),
   /** the client RUN's clock, not the ingest's */
   timestamp: z.iso.datetime({ offset: true }),
   /** who ran it and stands behind it */
@@ -66,14 +75,16 @@ export const IngestSubmission = z.strictObject({
 export type IngestSubmission = z.infer<typeof IngestSubmission>;
 
 /**
- * Verdict is COMPUTED, never declared (SPEC §12.8): every assertion passed →
- * evidenced; any failed → violated. There is no `unevidenced` submission —
- * the schema refuses empty `assertions` structurally, so this total function
- * never has to invent an answer.
+ * Verdict is COMPUTED, never declared (SPEC §12.8): any assertion failed →
+ * violated; every assertion passed → evidenced; no assertion at all →
+ * unevidenced. The third arm is #147's: `evidenced` is earned only by an
+ * assertion that passed over the rows, so a submission carrying none can
+ * say the bytes were collected and nothing more. A total function with no
+ * vacuous branch — `[].every(...)` is true, and that is the one truth this
+ * function must not sign.
  */
-export function submissionVerdict(
-  submission: Pick<IngestSubmission, "assertions">,
-): "evidenced" | "violated" {
+export function submissionVerdict(submission: Pick<IngestSubmission, "assertions">): Verdict {
+  if (submission.assertions.length === 0) return "unevidenced";
   return submission.assertions.every((a) => a.passed) ? "evidenced" : "violated";
 }
 
@@ -84,17 +95,32 @@ export function submissionVerdict(
  * for the batch (with a per-entry evidence-class override, because one
  * orchestrator run can mix repeatable checks with captured state); per entry,
  * the script name, exit code, and timestamp come from the orchestrator's own
- * run log.
+ * run log, and the assertions — if any — are the client's claim about what
+ * the rows must say, which the appliance evaluates itself (#147).
  */
 export const IngestManifestEntry = z.strictObject({
   /** must name a directory in the tree whose basename is exactly this KSI */
   ksi: z.string().min(1),
   /** the script that produced this result — becomes the upstream recipe id */
   script: z.string().min(1),
-  /** the validation outcome, as the orchestrator recorded it: 0 = pass */
+  /**
+   * The run's exit code as the orchestrator recorded it. 0 means the script
+   * finished READING the account; non-zero means it could not — a failed run
+   * with nothing to attest to, which the adapter skips and names. Neither is
+   * a verdict: the scripts this convention was read from exit 0 over a
+   * non-compliant account (docs/RESEARCH-PARAMIFY-PILOT.md §8.1).
+   */
   exit_code: z.number().int(),
   timestamp: z.iso.datetime({ offset: true }),
   evidence_class: EvidenceClass.optional(),
+  /**
+   * Structured assertions over the result file's `results` rows, in the
+   * vocabulary aws-evidence.json's recipes use (`field`/`op`/`value`/`where`),
+   * evaluated by the appliance with the pipeline's own evaluator. Absent or
+   * empty, the entry is collected and `unevidenced`; only an assertion that
+   * passed over the rows makes it `evidenced`.
+   */
+  assertions: z.array(RecipeAssertion).optional(),
 });
 export type IngestManifestEntry = z.infer<typeof IngestManifestEntry>;
 

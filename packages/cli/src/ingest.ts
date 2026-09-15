@@ -2,11 +2,16 @@ import { createHash } from "node:crypto";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { z } from "zod";
-import { toIngestedBundle } from "@rampscan/core";
-import type { Digest } from "@rampscan/core";
+import { evaluateAssertions, toIngestedBundle } from "@rampscan/core";
+import type { Digest, ObservationRows } from "@rampscan/core";
 import { loadKsiCatalog } from "@rampscan/dataset";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
-import type { IngestManifest, IngestManifestEntry, IngestSubmission } from "@rampscan/schema";
+import type {
+  IngestManifest,
+  IngestManifestEntry,
+  IngestSubmission,
+  Verdict,
+} from "@rampscan/schema";
 import {
   IngestManifest as IngestManifestSchema,
   IngestSubmission as IngestSubmissionSchema,
@@ -40,8 +45,20 @@ const TreeResultFile = z.looseObject({
 
 export interface IngestRecord {
   methodId: string;
-  verdict: "evidenced" | "violated";
+  verdict: Verdict;
   digest: Digest;
+}
+
+/**
+ * A tree entry the adapter did not turn into a submission (#147): the run
+ * failed, so the account was never read and there is nothing to attest to —
+ * named the way a skipped collector is, and absent from the ledger.
+ */
+export interface SkippedEntry {
+  ksi: string;
+  script: string;
+  exit_code: number;
+  reason: string;
 }
 
 export interface IngestOutcome {
@@ -49,6 +66,13 @@ export interface IngestOutcome {
   appended: IngestRecord[];
   /** already in the ledger byte-for-byte — nothing re-signed */
   unchanged: IngestRecord[];
+  /** tree entries whose run failed — never a bundle under any verdict */
+  skipped: SkippedEntry[];
+}
+
+export interface LoadedSubmissions {
+  submissions: IngestSubmission[];
+  skipped: SkippedEntry[];
 }
 
 export interface IngestOptions {
@@ -84,16 +108,27 @@ async function findDirs(root: string, name: string): Promise<string[]> {
   return hits;
 }
 
+/** the failed-run reason, as the outcome and the log both spell it */
+function failedRunReason(entry: IngestManifestEntry): string {
+  return (
+    `exit ${entry.exit_code} is a failed run — the script could not read the account, ` +
+    `so there is nothing to attest to and nothing to violate; skipped, not signed`
+  );
+}
+
 /**
  * The tree adapter: one manifest entry → one native submission. The tree
  * carries the outputs (the per-KSI JSON results file, the CSV beside it);
  * the manifest carries the facts the tree does not — signer identity,
- * evidence class, cadence, and per entry the script, exit code, and
- * timestamp from the orchestrator's own run log. The exit code becomes the
- * single assertion (their orchestration's own convention: exit code IS the
- * validation outcome), with `population` set to the result rows the script
- * emitted so a pass over nothing stays distinguishable from a pass over 412
- * resources (N0).
+ * evidence class, cadence, and per entry the script, exit code, timestamp
+ * and assertions. The exit code is read for what the scripts mean by it
+ * (#147, docs/RESEARCH-PARAMIFY-PILOT.md §8.1): 0 is a script that finished
+ * reading, and the caller has already set aside anything else as a failed
+ * run. What the rows SAY is decided here — the entry's structured assertions
+ * evaluated by the appliance over `results`, with `population` the rows the
+ * script emitted so a pass over nothing stays distinguishable from a pass
+ * over 412 resources (N0). No assertions means no evaluation: the submission
+ * carries none, and the verdict it computes to is `unevidenced`.
  */
 async function entryToSubmission(
   treeDir: string,
@@ -144,6 +179,26 @@ async function entryToSubmission(
     // absent means absent, never an invented digest
   }
 
+  // the rows are the evaluator's domain. A row that is not an object has no
+  // fields to read, so an assertion over it would pass or fail on a shape
+  // accident; refused, like a results file with no `results` at all
+  const declared = entry.assertions ?? [];
+  const rows: ObservationRows = [];
+  if (declared.length > 0) {
+    parsed.data.results.forEach((row, i) => {
+      if (row === null || typeof row !== "object" || Array.isArray(row)) {
+        throw new Error(
+          `manifest entry ${entry.ksi}: ${basename(resultPath)} results[${i}] is not an object, ` +
+            `so the declared assertions have no fields to read`,
+        );
+      }
+      rows.push(row as Record<string, unknown>);
+    });
+  }
+  // `now` for max_age_days is the run's own clock: the assertion is about the
+  // account as the script saw it, not as of the day someone ingested the tree
+  const assertions = evaluateAssertions(declared, rows, new Date(entry.timestamp));
+
   return {
     _type: "https://rampscan.dev/ingest-submission/v1",
     recipe_id: entry.script,
@@ -151,14 +206,7 @@ async function entryToSubmission(
     evidence_class: entry.evidence_class ?? manifest.evidence_class,
     cadence: manifest.cadence,
     artifacts,
-    assertions: [
-      {
-        description: `${entry.script} validation (exit code)`,
-        passed: entry.exit_code === 0,
-        detail: `exit ${entry.exit_code}`,
-        population: parsed.data.results.length,
-      },
-    ],
+    assertions,
     timestamp: entry.timestamp,
     signer_identity: manifest.signer_identity,
     reproduce: `${entry.script} <profile> <region> <output_dir> <output_csv>`,
@@ -166,12 +214,12 @@ async function entryToSubmission(
 }
 
 /** parse the input into native submissions — the two shapes, one output */
-export async function loadSubmissions(path: string): Promise<IngestSubmission[]> {
+export async function loadSubmissions(path: string): Promise<LoadedSubmissions> {
   const info = await stat(path);
   if (info.isFile()) {
     const raw = JSON.parse(await readFile(path, "utf8")) as unknown;
     try {
-      return [IngestSubmissionSchema.parse(raw)];
+      return { submissions: [IngestSubmissionSchema.parse(raw)], skipped: [] };
     } catch (cause) {
       throw new Error(`${path} does not match the ingestion contract (SPEC §12.8)`, { cause });
     }
@@ -198,15 +246,29 @@ export async function loadSubmissions(path: string): Promise<IngestSubmission[]>
   }
 
   const submissions: IngestSubmission[] = [];
+  const skipped: SkippedEntry[] = [];
   for (const entry of manifest.entries) {
+    // a failed run is set aside BEFORE the tree is read for it: its results
+    // file may be partial or missing, and either way the account was not
+    // seen — nothing here is evidence, and nothing here is a violation
+    if (entry.exit_code !== 0) {
+      skipped.push({
+        ksi: entry.ksi,
+        script: entry.script,
+        exit_code: entry.exit_code,
+        reason: failedRunReason(entry),
+      });
+      continue;
+    }
     submissions.push(await entryToSubmission(path, entry, manifest));
   }
-  return submissions;
+  return { submissions, skipped };
 }
 
 export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
   const log = options.log ?? (() => {});
-  const submissions = await loadSubmissions(options.path);
+  const { submissions, skipped } = await loadSubmissions(options.path);
+  for (const s of skipped) log(`${s.script}#${s.ksi} → skipped: ${s.reason}`);
 
   // Refusal before append: unknown KSIs and in-batch duplicates are collected
   // and reported TOGETHER, and nothing is signed while any stand — a batch
@@ -267,8 +329,8 @@ export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
     log(`${record.methodId} → ${record.verdict} (${digest.slice(0, 12)}…)`);
   }
   log(
-    `ingest: ${appended.length} bundle(s) appended, ${unchanged.length} unchanged — ` +
-      `no AWS call was executed by this appliance`,
+    `ingest: ${appended.length} bundle(s) appended, ${unchanged.length} unchanged, ` +
+      `${skipped.length} skipped (failed runs) — no AWS call was executed by this appliance`,
   );
-  return { appended, unchanged };
+  return { appended, unchanged, skipped };
 }

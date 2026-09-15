@@ -27,25 +27,23 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | Phase | State | Notes |
 |---|---|---|
 | S0 record the finding | ✅ #144 | Advisory public, no embargo (S0-1). Supersede, never delete (S0-2). |
-| S1 reachability soundness | 🔄 5 of 5, PR #155 open | S1-1 (#145), S1-2 (#150), S1-3 (#152), barrel edge (#153), S1-4 (#154) merged. S1-5 in PR #155: config override deleted, self-scan at `c0d1c73` reads `11 evidenced · 3 violated` — `next` ×2 exact, `postcss` ×2 via `sbom`, `sharp` ×2 unknown. One earned `not_affected` (`vitest`, a September advisory) the exit gate's letter forbids — recorded as met in intent, missed in letter; PR offers the stricter alternative. **S1 closes on merge.** |
+| S1 reachability soundness | ✅ closed 2026-09-15 | S1-1 (#145), S1-2 (#150), S1-3 (#152), barrel edge (#153), S1-4 (#154), S1-5 (#155) merged. Self-scan at `c0d1c73` reads `11 evidenced · 3 violated` — `next` ×2 exact, `postcss` ×2 via `sbom`, `sharp` ×2 unknown. One earned `not_affected` (`vitest`, a September advisory) the exit gate's letter forbids — recorded in the plan as met in intent, missed in letter. |
 | S2 the numbers gate | not started | #133–#136. README claims numbers no command prints. |
-| S3 the first stranger | not started | #137, #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
+| S3 the first stranger | S3-0 done (#147), rest not started | S3-0 landed 2026-09-15 ahead of S2: the ingest adapter no longer reads exit 0 as a pass. #137, #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
 | S4 the surface S1 leans on | not started | #139–#141. |
 | T cloud runner | drafted | Starts at the S1 exit. Three owner decisions pending (T0-1..T0-3). |
 
 ### Open items outside any phase
 
-- **#147** — the ingest tree adapter treats a script's exit 0 as a pass; the Paramify scripts it was modelled on exit 0 on a non-compliant account. `SECURITY.md` class. **Must land before S3-1.** Proposed: its own numbered item, failing test first, `it.fails` until fixed (the S0-3 pattern).
 - **S3-1 needs a package-YAML adapter.** `paramify/fedramp-20x-pilot` ships no `Evidence/` tree output, only scripts and the assessed package. See `docs/RESEARCH-PARAMIFY-PILOT.md` §8.3.
 - #11 branch protection (owner-only), #13 retire the launch plan, #29 TypeScript 7, #30 Next 16, #142 fold cost (measured, not a problem), #143 register below the CLI (waits on S3).
 
 ## 3. What is next, in order
 
-1. **Merge S1-5 (PR #155)** on green — and decide the one open question in its body: does S1 close with one earned `not_affected` (`vitest`) in `openvex.json`, or must negatives also wait for S4-1's remaining extractor patterns? Merging as-is is the recommendation.
-2. **#147** — the ingest adapter's exit-0-as-pass. `SECURITY.md` class, must land before S3-1. S2 is short; it fits before or after.
-3. **S2** (#133–#136): the numbers gate. S1-5 found the exact drift it exists for — `docs/FRONTIER-PIPELINE.md`'s committed copy was from a run a month old.
-4. **S2**, then **S3** with #72 by 2026-10-09, then **S4**.
-5. **T0** decisions, then T1–T4, after S1 closes and without displacing S3.
+1. **S2** (#133–#136): the numbers gate. S1-5 found the exact drift it exists for — `docs/FRONTIER-PIPELINE.md`'s committed copy was from a run a month old.
+2. **S3** with #72 by 2026-10-09 — S3-0 (#147) is done; S3-1 still needs the package-YAML adapter (§2, open items). Then **S4**.
+3. **T0** decisions, then T1–T4, without displacing S3. T0-2 (what a collected-only run counts for) now has a concrete starting state: such a bundle is `unevidenced` in the ledger, and the judgment path is what would move it.
+4. **Owner call, not blocking:** whether #147 gets a published advisory like GHSA-7jff-6v53-r56x. Same class, but the path had only ever run on the fixture; S0-1's argument for filing (the advisory is an asset) applies, and so does the counter-argument that an advisory for a never-shipped path is noise.
 
 ## 4. The decisions already made — do not re-open
 
@@ -109,3 +107,4 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
 - **2026-09-14 (barrel edge)** — #150 and #152 merged (S1-2, S1-3; #151 was auto-closed by the base branch's deletion and reopened as #152 with the same commit rebased — merge a stack bottom-up *without* `--delete-branch`, or retarget the upper PR first). The barrel edge landed in PR #153: nine lines in `extract.ts`, a planted-barrel test, extractor 0.4.0. Measured before opening the PR: 60 → 109 files reached, 12 → 12 dependency packages — recorded in the plan's S4-1 and the finding's §3.3 as a closed shape that moved no verdict on this tree. Next item: merge #153, then S1-4 (#131).
 - **2026-09-14 (S1-4)** — #153 merged (barrel edge). S1-4 in PR #154: detection over every application root, `scripts` command lines, Next.js and PocketBase conventions; config honoured for the walk, its exclusions recorded on graph.db, basis, VEX scope and console; an unreached exclusion refuses the negative (the one judgment call, flagged in the PR). Measured: config 1 → 109 files / 12 packages / 2 roots never entered; detection 57 → 184 files / 15 packages / every root entered. S1-5 is now a config deletion. Suite 1,150. Next item: merge #154, then S1-5 (#132).
 - **2026-09-14 (S1-5)** — #154 merged. S1-5 in PR #155: the override deleted, the board moved 12/2 → 11/3 exactly as the plan said and wider than it predicted (`next` CRITICAL ×2 reachable by one exact hop). One earned `not_affected` (`vitest`) that the exit gate's text forbids — flagged in the PR with the stricter alternative. FRONTIER-PIPELINE.md regenerated; its committed copy was a month stale. Next item: merge #155 → S1 closes; then #147, then S2.
+- **2026-09-15 (S1 closed; S3-0 / #147)** — #155, #149, #148 merged; S1 closed at `286c566` with the `vitest` negative standing as recorded. #147 taken before S2 as S3-0: failing test first at `f4c27bd` (`expected 'evidenced' not to be 'evidenced'`), then the fix — manifest entries may declare structured assertions in `aws-evidence.json`'s vocabulary, evaluated by the appliance with the pipeline's own evaluator; no assertion signs `unevidenced`; a non-zero exit is a skipped failed run, never a bundle. SPEC §12.8 rewritten. Next item: S2-1 (#133).
