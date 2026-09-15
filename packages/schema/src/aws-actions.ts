@@ -129,3 +129,29 @@ export const AwsLiteralBindings = z.strictObject({
   entries: z.array(AwsLiteralBinding).min(1),
 });
 export type AwsLiteralBindings = z.infer<typeof AwsLiteralBindings>;
+
+// ---------------------------------------------------------------------------
+// Step labels (T2-5, SPEC §14.4a): the name an upstream assertion uses for a
+// step's document. Derived by rule — the step's `--config-rule-name(s)`,
+// else its CLI operation — with a reviewed override for the labels upstream
+// chose by hand (`identity-pool`, `public-zone-dnssec`).
+
+export const AWS_STEP_LABELS_TYPE = "https://rampscan.dev/aws-step-labels/v1" as const;
+
+export const AwsStepLabel = z.strictObject({
+  recipe: z.string().min(1),
+  /** 1-based index of the step in the recipe's published commands */
+  step: z.number().int().positive(),
+  label: z.string().regex(/^[A-Za-z0-9_-]+$/),
+  why: z.string().min(1),
+});
+export type AwsStepLabel = z.infer<typeof AwsStepLabel>;
+
+export const AwsStepLabels = z.strictObject({
+  _type: z.literal(AWS_STEP_LABELS_TYPE),
+  reviewed: z.string().min(1),
+  dataset: z.string().min(1),
+  rule: z.string().min(1),
+  entries: z.array(AwsStepLabel),
+});
+export type AwsStepLabels = z.infer<typeof AwsStepLabels>;

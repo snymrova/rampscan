@@ -10,6 +10,10 @@
     }
   },
   "dependencies": {
-    "@rampscan/schema": "workspace:*"
+    "@rampscan/schema": "workspace:*",
+    "jmespath": "0.16.0"
+  },
+  "devDependencies": {
+    "@types/jmespath": "0.15.2"
   }
 }

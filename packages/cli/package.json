@@ -19,7 +19,11 @@
     "@rampscan/scheduler": "workspace:*",
     "@rampscan/schema": "workspace:*",
     "@rampscan/signer": "workspace:*",
-    "zod": "^4.4.3",
-    "yaml": "^2.6.0"
+    "yaml": "^2.6.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/jmespath": "0.15.2",
+    "jmespath": "0.16.0"
   }
 }

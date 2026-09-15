@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { evaluateAssertions } from "@rampscan/core";
-import type { ObservationRows } from "@rampscan/core";
+import { evaluateAssertions, evaluateLabeledAssertions, labeledField } from "@rampscan/core";
+import type { LabeledDocuments, ObservationRows } from "@rampscan/core";
 import { INGEST_SUBMISSION_TYPE, canonicalJson } from "@rampscan/schema";
 import type {
   Cadence,
@@ -12,6 +12,7 @@ import type {
   TranscriptStep,
 } from "@rampscan/schema";
 import type { StepTransform } from "./aws-classify.js";
+import { derivedStepLabel } from "./aws-labels.js";
 
 // The appliance side of the runner contract (docs/PLAN-CLOUD-RUNNER.md T2-2,
 // T2-3; SPEC §14.2): a signed transcript and the bytes it names come in; a
@@ -49,6 +50,12 @@ export interface IntakeContext {
   assertions: readonly RecipeAssertion[];
   /** the transform the classifier attached to each step (T1-4), by step index; absent = none */
   transforms?: ReadonlyArray<StepTransform | undefined>;
+  /**
+   * The label each step's document carries for upstream's `<label>.<path>`
+   * assertions (T2-5), by step index — the reviewed row or the rule
+   * (`stepLabels`). Absent: the rule alone, from each step's argv.
+   */
+  labels?: readonly string[];
   /** the cycle the method runs on — the recipe's */
   cadence: Cadence;
   /** nonces already accepted into the ledger — a second transcript for one is a replay */
@@ -166,6 +173,32 @@ function csvLine(line: string): string[] {
   return out;
 }
 
+/**
+ * A step's whole document for the labeled vocabulary: the parsed JSON as
+ * printed (an object keeps its keys — `{"EvaluationResults": […]}` is read
+ * by that key), a CSV as its rows, nothing as null.
+ */
+function documentOf(bytes: Uint8Array, transform: StepTransform | undefined, shape: ReturnType<typeof outputShape>): unknown {
+  let text = new TextDecoder().decode(bytes).trim();
+  if (transform === "base64-decode") text = Buffer.from(text, "base64").toString("utf8").trim();
+  if (text.startsWith("[") || text.startsWith("{")) {
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  return shape.kind === "collection" ? shape.rows : null;
+}
+
+/** two steps under one label read as one document: objects shallow-merge, arrays concatenate, else the later */
+function mergeDocuments(a: unknown, b: unknown): unknown {
+  if (a === undefined) return b;
+  if (Array.isArray(a) && Array.isArray(b)) return [...a, ...b];
+  if (isRow(a) && isRow(b)) return { ...a, ...b };
+  return b;
+}
+
 function sha256Hex(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -253,6 +286,7 @@ export function intakeTranscript(
   const artifacts: IngestSubmission["artifacts"] = [];
   const collections: ObservationRows = [];
   const records: ObservationRows = [];
+  const documents: Record<string, unknown> = {};
   for (const [i, step] of transcript.steps.entries()) {
     const bytes = outputs.get(step.stdout_sha256);
     if (bytes === undefined) {
@@ -266,6 +300,8 @@ export function intakeTranscript(
     const shape = outputShape(bytes, transform);
     if (shape.kind === "collection") collections.push(...shape.rows);
     else if (shape.kind === "record") records.push(shape.row);
+    const label = ctx.labels?.[i] ?? derivedStepLabel(step.argv);
+    documents[label] = mergeDocuments(documents[label], documentOf(bytes, transform, shape));
   }
   // the population: every collection the run printed; a lone record only
   // when the run printed no collection at all (a recipe whose output IS one
@@ -273,8 +309,17 @@ export function intakeTranscript(
   // upstream's labeled JMESPath vocabulary is T2-5's, over the shapes above
   const rows = collections.length > 0 ? collections : records;
 
-  // the verdict is the rows', judged at the run's own clock — never the runner's word
-  const assertions = evaluateAssertions([...ctx.assertions], rows, new Date(transcript.finished_at));
+  // the verdict is the bytes', judged at the run's own clock — never the
+  // runner's word. Two vocabularies (SPEC §14.4a): a field that names a
+  // step's label is a JMESPath over that document; any other is a column
+  // of the rows. Results keep the recipe's order
+  const now = new Date(transcript.finished_at);
+  const labels = Object.keys(documents);
+  const assertions = ctx.assertions.map((a) =>
+    labeledField(a.field, labels) !== undefined
+      ? evaluateLabeledAssertions([a], documents as LabeledDocuments, now)[0]!
+      : evaluateAssertions([a], rows, now)[0]!,
+  );
 
   return {
     kind: "submission",
