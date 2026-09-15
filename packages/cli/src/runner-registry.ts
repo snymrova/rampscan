@@ -81,6 +81,11 @@ export interface RegisteredRunner {
   approvedBy: string;
 }
 
+/** the registry over a ledger directory — the console's read */
+export function runnerRegistryAt(ledgerDir: string): Promise<Map<string, RegisteredRunner>> {
+  return runnerRegistry(createLocalLedger(ledgerDir));
+}
+
 /** what stands: per runner name, the latest registration, dropped when the latest is a revocation */
 export async function runnerRegistry(ledger: LedgerStore): Promise<Map<string, RegisteredRunner>> {
   const latest = new Map<string, RunnerRegistration>();
@@ -111,20 +116,17 @@ function pae(payloadType: string, payload: Buffer): Buffer {
   return Buffer.concat([Buffer.from(`DSSEv1 ${payloadType.length} ${payloadType} ${payload.length} `), payload]);
 }
 
-export type TranscriptVerification =
-  | { ok: true; transcript: RunTranscript; runner: RegisteredRunner }
-  | { ok: false; reason: string };
+export type EnvelopeVerification = { ok: true; payload: unknown; runner: RegisteredRunner } | { ok: false; reason: string };
 
 /**
- * The first check on a runner's envelope: its payload type is a
- * transcript's (never a ledger statement's), its keyid names a runner that
- * stands in the registry, the signature verifies against that key, the
- * payload parses as the contract, and the transcript's own `runner.name`
- * is the registered one. Nothing about the run is judged here.
+ * A runner's envelope against the registry: the payload type is the one
+ * expected (a transcript's or a claim's — never a ledger statement's), the
+ * keyid names a runner that stands, the signature verifies against that
+ * key. The payload comes back parsed as JSON and judged by nobody yet.
  */
-export function verifyRunnerTranscript(envelope: SignedEnvelope, registry: ReadonlyMap<string, RegisteredRunner>): TranscriptVerification {
-  if (envelope.payloadType !== RUN_TRANSCRIPT_PAYLOAD_TYPE) {
-    return { ok: false, reason: `payload type ${envelope.payloadType} is not a run transcript's` };
+export function verifyRunnerEnvelope(envelope: SignedEnvelope, registry: ReadonlyMap<string, RegisteredRunner>, payloadType: string): EnvelopeVerification {
+  if (envelope.payloadType !== payloadType) {
+    return { ok: false, reason: `payload type ${envelope.payloadType} is not ${payloadType === RUN_TRANSCRIPT_PAYLOAD_TYPE ? "a run transcript's" : `a ${payloadType}`}` };
   }
   const byKeyid = new Map([...registry.values()].map((r) => [r.keyid, r]));
   const payload = Buffer.from(envelope.payload, "base64");
@@ -142,10 +144,29 @@ export function verifyRunnerTranscript(envelope: SignedEnvelope, registry: Reado
     const keyids = envelope.signatures.map((s) => s.keyid.slice(0, 12)).join(", ");
     return { ok: false, reason: `no signature verifies against a registered runner key (envelope keyids: ${keyids || "none"})` };
   }
-  const parsed = RunTranscript.safeParse(JSON.parse(payload.toString("utf8")));
-  if (!parsed.success) return { ok: false, reason: `the signed payload is not a run transcript: ${parsed.error.issues[0]?.message ?? "invalid"}` };
-  if (parsed.data.runner.name !== runner.name) {
-    return { ok: false, reason: `the transcript names runner ${parsed.data.runner.name}; the key belongs to ${runner.name}` };
+  try {
+    return { ok: true, payload: JSON.parse(payload.toString("utf8")) as unknown, runner };
+  } catch {
+    return { ok: false, reason: "the signed payload is not JSON" };
   }
-  return { ok: true, transcript: parsed.data, runner };
+}
+
+export type TranscriptVerification =
+  | { ok: true; transcript: RunTranscript; runner: RegisteredRunner }
+  | { ok: false; reason: string };
+
+/**
+ * The first check on a transcript: the envelope (above), the payload as
+ * the contract, and the transcript's own `runner.name` the registered one.
+ * Nothing about the run is judged here.
+ */
+export function verifyRunnerTranscript(envelope: SignedEnvelope, registry: ReadonlyMap<string, RegisteredRunner>): TranscriptVerification {
+  const v = verifyRunnerEnvelope(envelope, registry, RUN_TRANSCRIPT_PAYLOAD_TYPE);
+  if (!v.ok) return v;
+  const parsed = RunTranscript.safeParse(v.payload);
+  if (!parsed.success) return { ok: false, reason: `the signed payload is not a run transcript: ${parsed.error.issues[0]?.message ?? "invalid"}` };
+  if (parsed.data.runner.name !== v.runner.name) {
+    return { ok: false, reason: `the transcript names runner ${parsed.data.runner.name}; the key belongs to ${v.runner.name}` };
+  }
+  return { ok: true, transcript: parsed.data, runner: v.runner };
 }

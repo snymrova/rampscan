@@ -102,7 +102,9 @@ function usage(): never {
       "  board --as-of <iso>  the same projection at a past instant, refolded from the ledger",
       "  board --since previous|<iso>  what moved since a prior scan's board (I2d)",
       "  rebuild           rebuild projection stores from the ledger and PROVE projection ≡ ledger",
-      "  serve             start PocketBase + the Next.js console (the visual board)",
+      "  serve             start PocketBase + the Next.js console (the visual board);",
+      "                    --repo <path> names the repository cloud runs are requested for",
+      "                    (its rampscan.config.json aws block; default: this checkout)",
       "  daemon <path>     keep the target evidenced on cadence: incremental re-scans,",
       "                    near-expiry warnings, scheduled full-scan cache verification",
       "  report            generate docs/FRONTIER-PIPELINE.md from the last scan result",
@@ -1065,6 +1067,9 @@ async function main(): Promise<void> {
     case "serve": {
       await serve({
         repoRoot: REPO_ROOT,
+        // the repository cloud runs are requested for (T4): --repo names it,
+        // the same option ingest uses to say whose register evidence joins
+        ...(values.repo !== undefined ? { runsRepoRoot: values.repo } : {}),
         ledgerDir: resolve(ledgerDir),
         keysDir: resolve(keysDir),
         recipesDir: resolve(recipesDir),

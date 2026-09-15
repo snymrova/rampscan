@@ -6,7 +6,7 @@
 // and the projection truncates to zero mid-test — found the hard way).
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -120,6 +120,30 @@ if (unevidenced.length === 0) {
   process.exit(1);
 }
 
+// T4 (docs/PLAN-CLOUD-RUNNER.md): the runner smoke needs a registered key.
+// `rampscan-runner init` mints it the way a client would; the register is
+// the approver's key turn, run here as the CLI, over the fixture repo.
+execFileSync(tsx, ["packages/runner/src/main.ts", "init", "--keys", "e2e/.smoke/runner-keys"], { cwd: root, stdio: ["ignore", "ignore", "inherit"] });
+execFileSync(
+  tsx,
+  [
+    "packages/cli/src/main.ts",
+    "runner",
+    "register",
+    "--name", "smoke-sidecar",
+    "--public-key", "e2e/.smoke/runner-keys/runner.pub",
+    "--host", "the smoke's stub runner",
+    "--account", "111111111111",
+    "--partition", "aws",
+    "--repo", resolve(root, "fixtures/vulnerable-app"),
+    "--proposed-by", "viewer@rampscan.local (smoke)",
+    "--approved-by", "approver@rampscan.local (smoke)",
+    "--ledger", "e2e/.smoke/ledger",
+    "--keys", "e2e/.smoke/keys",
+  ],
+  { cwd: root, stdio: "inherit" },
+);
+
 const serve = spawn(
   tsx,
   [
@@ -129,6 +153,8 @@ const serve = spawn(
     "--keys", "e2e/.smoke/keys",
     "--out", "e2e/.smoke/out",
     "--pb-data", "e2e/.smoke/pb-data",
+    // the repository cloud runs are requested for (T4): the fixture's `aws` block
+    "--repo", "fixtures/vulnerable-app",
     "--pb-port", PB_PORT,
     "--web-port", WEB_PORT,
   ],

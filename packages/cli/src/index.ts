@@ -81,3 +81,10 @@ export type {
 export { report, generateFrontierReport } from "./report.js";
 export type { ReportOptions } from "./report.js";
 export { startPocketBase, bootstrapConsole, DEMO_USERS, DEMO_PASSWORD } from "./pocketbase.js";
+export { intakeRun, loadRunsDeps, mintOnceToken, mintRunRequest, nextRun, nextRunByToken, recipesForKsi, runsLifecycle, runsLifecycleAt } from "./runs.js";
+export type { IntakePost, IntakeReply, MintOutcome, NextOutcome, RunRow, RunState, RunsDeps } from "./runs.js";
+export { recordRunnerRegistration, runnerRegistry, runnerRegistryAt } from "./runner-registry.js";
+export type { RecordRunnerRegistrationOptions, RegisteredRunner } from "./runner-registry.js";
+export { DEFAULT_ALLOWLIST_PATH } from "./aws-actions.js";
+export { DEFAULT_BINDINGS_PATH } from "./aws-bindings.js";
+export { DEFAULT_LABELS_PATH } from "./aws-labels.js";

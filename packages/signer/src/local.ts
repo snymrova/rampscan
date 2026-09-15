@@ -93,6 +93,29 @@ export function createLocalSigner(
   };
 }
 
+/**
+ * A detached signature under the same key, for a document that is NOT a
+ * ledger statement — today the `once` token (SPEC §14.2b), which the
+ * appliance signs so a CloudShell paste can prove the console minted it.
+ * The payload type is part of what is signed (DSSE PAE), so a token can
+ * never be replayed as anything else.
+ */
+export function createLocalDetachedSigner(keyDir: string, options: { log?: (line: string) => void } = {}) {
+  const log = options.log ?? (() => {});
+  let keys: Promise<{ privateKey: KeyObject; publicKey: KeyObject }> | undefined;
+  const getKeys = () => (keys ??= loadOrCreateKeypair(keyDir, log));
+  return {
+    async sign(payloadType: string, payload: Buffer): Promise<{ keyid: string; sig: string }> {
+      const { privateKey, publicKey } = await getKeys();
+      return { keyid: keyId(publicKey), sig: cryptoSign("sha256", pae(payloadType, payload), privateKey).toString("base64") };
+    },
+    async verify(payloadType: string, payload: Buffer, sig: string): Promise<boolean> {
+      const { publicKey } = await getKeys();
+      return cryptoVerify("sha256", pae(payloadType, payload), publicKey, Buffer.from(sig, "base64"));
+    },
+  };
+}
+
 /** The statement inside an envelope — for showing what a signature covers. */
 export function statementFromEnvelope(envelope: SignedEnvelope): LedgerStatement {
   return LedgerStatement.parse(

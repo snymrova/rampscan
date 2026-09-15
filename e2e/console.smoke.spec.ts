@@ -3,7 +3,7 @@ import { createHash, createPublicKey, verify as cryptoVerify } from "node:crypto
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { PB_PORT } from "../playwright.config";
+import { PB_PORT, WEB_PORT } from "../playwright.config";
 
 // The first console smoke (plan I2e, ground rule 5): serve → login → board
 // renders rows from a real fixture scan → evidence detail shows assertions +
@@ -1356,3 +1356,72 @@ function untar(bytes: Buffer): Map<string, Buffer> {
   }
   return out;
 }
+
+// T4-5 (docs/PLAN-CLOUD-RUNNER.md): the button, the two routes, the Runs
+// page, against a STUB runner — the real rampscan-runner binary in poll
+// mode, with the aws binary replaced by the shim that replays a recorded
+// credential report. CI needs no AWS account; what is real is the console,
+// the signed request, the runner's key, the intake and the ledger.
+test("cloud runs: Collect evidence mints a request, a stub runner polls and posts, the intake judges and the Runs page shows accepted (T4)", async ({ page }) => {
+  test.setTimeout(180_000);
+  await signIn(page);
+  await page.goto("/");
+  await page.locator("select").nth(1).selectOption(FIXTURE_REPO);
+  const row = page.locator("tr.rowlink", { hasText: "KSI-IAM-APM" }).first();
+  await row.click();
+  const collect = page.getByTestId("collect-evidence");
+  await expect(collect).toBeVisible();
+  await expect(collect).toContainText("1 registered runner(s)");
+  // the credential report is runnable with the account alone; the analyzer recipe needs an ARN and says so
+  await expect(collect).toContainText("iam-credential-report");
+  await page.getByTestId("collect-iam-credential-report").click();
+  const requested = page.getByTestId("collect-requested");
+  await expect(requested).toBeVisible();
+  const nonce = (await requested.textContent())?.match(/nonce ([0-9a-f]{8})/)?.[1];
+  expect(nonce).toBeTruthy();
+
+  await page.goto("/runs");
+  const runRow = page.getByTestId(`cloud-run-${nonce}`);
+  await expect(runRow).toHaveAttribute("data-state", "requested");
+
+  // the stub runner: the real binary, poll mode, one request, the aws shim on PATH
+  const header = "user,arn,user_creation_time,password_enabled,password_last_used,password_last_changed,password_next_rotation,mfa_active,access_key_1_active,access_key_1_last_rotated,access_key_2_active,access_key_2_last_rotated";
+  const report = `${header}\nsmoke,arn:aws:iam::111111111111:user/smoke,2025-01-01T00:00:00+00:00,true,N/A,2026-08-01T00:00:00+00:00,N/A,false,false,N/A,false,N/A\n`;
+  // the self-check's probes are read from the runner's own list, so the shim answers every one denied
+  const spec = {
+    "sts get-caller-identity --output json": { stdout: JSON.stringify({ Account: "111111111111", Arn: "arn:aws:sts::111111111111:assumed-role/rampscan-runner/smoke" }) },
+    "iam simulate-principal-policy *": {
+      stdout: JSON.stringify({
+        EvaluationResults: readFileSync(resolve("packages/runner/src/selfcheck.ts"), "utf8")
+          .split("DENIAL_PROBES = [")[1]!
+          .split("]")[0]!
+          .match(/"[^"]+"/g)!
+          .map((q) => ({ EvalActionName: q.replace(/"/g, ""), EvalDecision: "implicitDeny" })),
+      }),
+    },
+    "iam generate-credential-report": { stdout: '{"State": "COMPLETE"}\n' },
+    "iam get-credential-report --query Content --output text": { stdout: `${Buffer.from(report).toString("base64")}\n` },
+  };
+  const binDir = resolve("e2e/.smoke/stub-bin");
+  const { mkdirSync, symlinkSync } = await import("node:fs");
+  mkdirSync(binDir, { recursive: true });
+  if (!existsSync(resolve(binDir, "aws"))) symlinkSync(resolve("packages/runner/test/aws-shim.mjs"), resolve(binDir, "aws"));
+  execFileSync(
+    resolve("node_modules/.bin/tsx"),
+    ["packages/runner/src/main.ts", "poll", "--console", `http://127.0.0.1:${WEB_PORT}`, "--keys", "e2e/.smoke/runner-keys", "--name", "smoke-sidecar", "--max", "1"],
+    { env: { ...process.env, AWS_SHIM_SPEC: JSON.stringify(spec), PATH: `${binDir}:${process.env["PATH"]}` }, stdio: ["ignore", "ignore", "inherit"] },
+  );
+
+  await page.reload();
+  await expect(runRow).toHaveAttribute("data-state", "accepted", { timeout: 20_000 });
+  await expect(runRow).toContainText("accepted from smoke-sidecar");
+  // the evidence the intake minted, under the runner's identity: the register's own detail page.
+  // Read the href and navigate — the section re-renders on its poll, and a click can land mid-render
+  const href = await runRow.locator("a[href^='/evidence/']").getAttribute("href");
+  expect(href).toMatch(/^\/evidence\/[0-9a-f]{64}$/);
+  await page.goto(href!);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("iam-credential-report", { timeout: 30_000 });
+  // the raw statement at the foot of the page carries the handoff: the runner's identity and its provenance block
+  await expect(page.locator("pre.raw")).toContainText("runner:smoke-sidecar");
+  await expect(page.locator("pre.raw")).toContainText('"caller_arn": "arn:aws:sts::111111111111:assumed-role/rampscan-runner/smoke"');
+});

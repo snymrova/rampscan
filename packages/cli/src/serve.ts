@@ -1,7 +1,7 @@
 import { watch } from "node:fs";
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import {
   DAEMON_EVENTS_COLLECTION,
@@ -36,6 +36,13 @@ import { DEMO_PASSWORD, DEMO_USERS, bootstrapConsole, startPocketBase } from "./
 
 export interface ServeOptions {
   repoRoot: string;
+  /**
+   * The repository a cloud run is requested FOR (T4): its rampscan.config.json
+   * `aws` block names the account, and its resolved path is the `repo` the
+   * run's statements carry — the register they join is the scan's of the same
+   * path. Defaults to the checkout `serve` runs in.
+   */
+  runsRepoRoot?: string;
   ledgerDir: string;
   keysDir: string;
   recipesDir: string;
@@ -212,6 +219,10 @@ export async function serve(options: ServeOptions): Promise<void> {
         RAMPSCAN_RECIPES_DIR: options.recipesDir,
         RAMPSCAN_DATASET_DIR: options.datasetDir,
         RAMPSCAN_DATASET_PIN: options.datasetPin,
+        // the served repository: its rampscan.config.json `aws` block is what
+        // a run is requested under (T4), and its path is the `repo` a run's
+        // statements carry, the way a scan's do
+        RAMPSCAN_REPO_ROOT: resolve(options.runsRepoRoot ?? options.repoRoot),
         // the artifacts an evidence package ships (I3e) live under the scan
         // output dir; without it the export says why they are absent
         RAMPSCAN_OUT_DIR: options.outDir,

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
+import { CollectEvidence } from "../components/CollectEvidence";
 import { RequireAuth } from "../components/guard";
 import { Term } from "../components/Term";
 import { formatAge } from "../lib/mvx";
@@ -289,6 +290,11 @@ function KsiRowView({
               </p>
             )}
 
+            {/* collect evidence (T4-1): the pinned AWS recipes for this KSI a
+                client-deployed runner could run; the click mints a signed
+                request, and the appliance judges what comes back */}
+            <CollectEvidence ksi={entry.ksi} />
+
             {/* the artifact checklist (Q3.3, G5): five rows always, quoting
                 the pinned rules' own texts. Computed rows name the fact they
                 rest on; judged rows show the signed two-key judgment or the
@@ -433,6 +439,7 @@ function ArtifactRowView({
               <>
                 {" "}·{" "}
                 <button
+                  type="button"
                   className="btn"
                   style={{ fontSize: 11.5, padding: "0 6px" }}
                   onClick={(e) => {
@@ -449,7 +456,8 @@ function ArtifactRowView({
       </tr>
       {proposing && (
         <tr>
-          <td colSpan={2} onClick={(e) => e.stopPropagation()}>
+          {/* the click stops the row's toggle; a key press never reached the row, so there is nothing to stop */}
+          <td colSpan={2} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <ProposeJudgmentForm
               repo={repo}
               ksi={ksi}
@@ -530,13 +538,14 @@ function ProposeJudgmentForm({
       />
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
         <button
+          type="button"
           className="btn primary"
           disabled={busy || justification.trim().length === 0}
           onClick={submit}
         >
           file proposal
         </button>
-        <button className="btn" onClick={done}>
+        <button type="button" className="btn" onClick={done}>
           cancel
         </button>
       </div>

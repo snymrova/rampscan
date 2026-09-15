@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IN_TOTO_STATEMENT_TYPE, Subject } from "./bundle.js";
 
 // The runner contract (docs/PLAN-CLOUD-RUNNER.md §2, SPEC §12.11): the two
 // documents that cross between the appliance and a client-deployed runner.
@@ -111,3 +112,68 @@ export const RunTranscript = z.strictObject({
   finished_at: z.iso.datetime({ offset: true }),
 });
 export type RunTranscript = z.infer<typeof RunTranscript>;
+
+// ---------------------------------------------------------------------------
+// The ledger's record of a run (T4-1, T4-3): the request as the click minted
+// it, and the states it passes through. Ledger first, projection follows —
+// the Runs page is folded from these, never written directly.
+
+export const RAMPSCAN_RUN_REQUEST_EVENT_TYPE = "https://rampscan.dev/run-request-event/v1" as const;
+export const RAMPSCAN_RUN_EVENT_TYPE = "https://rampscan.dev/run-event/v1" as const;
+
+/** the DSSE payload type of a `once` token — signed by the appliance's own key, never a ledger statement */
+export const RUN_TOKEN_PAYLOAD_TYPE = "application/vnd.rampscan.run-token+json" as const;
+
+export const RunRequestEventPredicate = z.strictObject({
+  /** the request exactly as the runner receives it — `request_digest` is sha256 over its canonical bytes */
+  request: RunRequest,
+  request_digest: z.string().regex(/^[0-9a-f]{64}$/),
+  /** the argv the appliance classified (T1-2), bound; what the runner executes and nothing else */
+  steps: z.array(z.array(z.string().min(1)).min(1)).min(1),
+  /** per step: the transform (T1-4) and the label (T2-5) intake applies */
+  transforms: z.array(z.enum(["base64-decode"]).nullable()),
+  labels: z.array(z.string().min(1)),
+  /** the recipe's cadence, for the submission */
+  cadence: z.string().min(1),
+  repo: z.string(),
+  dataset_version: z.string(),
+  timestamp: z.iso.datetime({ offset: true }),
+});
+export type RunRequestEventPredicate = z.infer<typeof RunRequestEventPredicate>;
+
+export const RunRequestEvent = z.object({
+  _type: z.literal(IN_TOTO_STATEMENT_TYPE),
+  subject: z.array(Subject).min(1),
+  predicateType: z.literal(RAMPSCAN_RUN_REQUEST_EVENT_TYPE),
+  predicate: RunRequestEventPredicate,
+});
+export type RunRequestEvent = z.infer<typeof RunRequestEvent>;
+
+/**
+ * One state change of one request, by nonce. `accepted` names the evidence
+ * bundle intake minted; `failed` carries the class; `refused` the reason.
+ * `expired` is written by the fold's reader, never appended: a request past
+ * its window with no other event reads as expired.
+ */
+export const RunEventPredicate = z.strictObject({
+  nonce: z.string().min(16),
+  state: z.enum(["claimed", "submitted", "accepted", "refused", "failed"]),
+  /** the runner that claimed or submitted, as the registry or the token named it */
+  runner: z.string().min(1).optional(),
+  reason: z.string().min(1).optional(),
+  class: z.enum(["denied", "not-enabled", "throttled", "incomplete", "error"]).optional(),
+  /** `accepted`: the evidence bundle's ledger digest */
+  evidence_digest: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+  repo: z.string(),
+  dataset_version: z.string(),
+  timestamp: z.iso.datetime({ offset: true }),
+});
+export type RunEventPredicate = z.infer<typeof RunEventPredicate>;
+
+export const RunEvent = z.object({
+  _type: z.literal(IN_TOTO_STATEMENT_TYPE),
+  subject: z.array(Subject).min(1),
+  predicateType: z.literal(RAMPSCAN_RUN_EVENT_TYPE),
+  predicate: RunEventPredicate,
+});
+export type RunEvent = z.infer<typeof RunEvent>;

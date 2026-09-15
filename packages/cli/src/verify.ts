@@ -10,6 +10,8 @@ import {
   isScopingEvent,
   methodOfIngestedBundle,
   isRunnerRegistration,
+  isRunEvent,
+  isRunRequestEvent,
 } from "@rampscan/schema";
 import { bundleDigest, createLocalLedger } from "@rampscan/ledger";
 import { createLocalSigner, statementFromEnvelope } from "@rampscan/signer";
@@ -195,6 +197,27 @@ export async function verify(options: {
       `${p.action.padEnd(8)} ${p.runner_name} — keyid ${p.keyid.slice(0, 16)}…, on ${p.host}, expected in ${p.account} (${p.partition})`,
       `repo     ${p.repo}`,
       `signed   ${p.timestamp} (proposed ${p.proposed_by}, approved ${p.approved_by})`,
+    );
+  } else if (isRunRequestEvent(entry.bundle)) {
+    // a run request (T4-1): what the click asked a runner to do, and the
+    // digest a transcript binds to
+    const p = entry.bundle.predicate;
+    lines.push(
+      `request  ${options.digest.slice(0, 16)}…`,
+      `run      ${p.request.recipe_id} for ${p.request.ksi} — nonce ${p.request.nonce.slice(0, 8)}…, ${p.steps.length} step(s), window ${p.request.issued_at} → ${p.request.expires_at}`,
+      `binds    request_digest ${p.request_digest.slice(0, 16)}… (requested by ${p.request.requester})`,
+      `repo     ${p.repo}`,
+      `signed   ${p.timestamp}`,
+    );
+  } else if (isRunEvent(entry.bundle)) {
+    // a run's state change (T4-3): claimed, submitted, accepted (naming the
+    // bundle), refused (the reason) or failed (the class)
+    const p = entry.bundle.predicate;
+    lines.push(
+      `run      ${options.digest.slice(0, 16)}…`,
+      `${p.state.padEnd(8)} nonce ${p.nonce.slice(0, 8)}…${p.runner ? ` by ${p.runner}` : ""}${p.class ? ` (${p.class})` : ""}${p.reason ? ` — ${p.reason}` : ""}${p.evidence_digest ? ` → evidence ${p.evidence_digest.slice(0, 12)}…` : ""}`,
+      `repo     ${p.repo}`,
+      `signed   ${p.timestamp}`,
     );
   } else {
     // an artifact-sufficiency judgment (Q3.3) verifies exactly like a

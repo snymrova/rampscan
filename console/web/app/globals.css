@@ -443,3 +443,15 @@ pre.raw {
   .termtip { display: none !important; }
   .term { border-bottom: none; }
 }
+
+/* a button that reads as a link: an in-page toggle is a button, not an anchor
+   (the a11y rule the lint gate holds the console to on touch) */
+button.linkish {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+}
+button.linkish:hover { text-decoration: underline; }
