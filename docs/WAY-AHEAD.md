@@ -28,7 +28,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 |---|---|---|
 | S0 record the finding | ✅ #144 | Advisory public, no embargo (S0-1). Supersede, never delete (S0-2). |
 | S1 reachability soundness | ✅ closed 2026-09-15 | S1-1 (#145), S1-2 (#150), S1-3 (#152), barrel edge (#153), S1-4 (#154), S1-5 (#155) merged. Self-scan at `c0d1c73` reads `11 evidenced · 3 violated` — `next` ×2 exact, `postcss` ×2 via `sbom`, `sharp` ×2 unknown. One earned `not_affected` (`vitest`, a September advisory) the exit gate's letter forbids — recorded in the plan as met in intent, missed in letter. |
-| S2 the numbers gate | not started | #133–#136. README claims numbers no command prints. |
+| S2 the numbers gate | ✅ closed 2026-09-15 | #133–#136 in one PR. `published-numbers.test.ts` (frontier + report arms) and `published-numbers-reporter.ts` (suite arm, at run end) gate the README; both shown red on the stale figures first. README regenerated (46 → 41, 33 → 28, `1,168 tests across 93 files`). ARCHITECTURE marked built/design per row; §7 says the human/machine signature line is one key with a recorded field. CONTRIBUTING rules 4 and 9 name their gates. |
 | S3 the first stranger | S3-0 done (#147), rest not started | S3-0 landed 2026-09-15 ahead of S2: the ingest adapter no longer reads exit 0 as a pass. #137, #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
 | S4 the surface S1 leans on | not started | #139–#141. |
 | T cloud runner | drafted | Starts at the S1 exit. Three owner decisions pending (T0-1..T0-3). |
@@ -40,10 +40,9 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 
 ## 3. What is next, in order
 
-1. **S2** (#133–#136): the numbers gate. S1-5 found the exact drift it exists for — `docs/FRONTIER-PIPELINE.md`'s committed copy was from a run a month old.
-2. **S3** with #72 by 2026-10-09 — S3-0 (#147) is done; S3-1 still needs the package-YAML adapter (§2, open items). Then **S4**.
-3. **T0** decisions, then T1–T4, without displacing S3. T0-2 (what a collected-only run counts for) now has a concrete starting state: such a bundle is `unevidenced` in the ledger, and the judgment path is what would move it.
-4. **Owner call, not blocking:** whether #147 gets a published advisory like GHSA-7jff-6v53-r56x. Same class, but the path had only ever run on the fixture; S0-1's argument for filing (the advisory is an asset) applies, and so does the counter-argument that an advisory for a never-shipped path is noise.
+1. **S3** with #72 by 2026-10-09 — S3-0 (#147) is done; S3-1 still needs the package-YAML adapter (§2, open items). Then **S4**.
+2. **T0** decisions, then T1–T4, without displacing S3. T0-2 (what a collected-only run counts for) now has a concrete starting state: such a bundle is `unevidenced` in the ledger, and the judgment path is what would move it.
+3. **Owner call, not blocking:** whether #147 gets a published advisory like GHSA-7jff-6v53-r56x. Same class, but the path had only ever run on the fixture; S0-1's argument for filing (the advisory is an asset) applies, and so does the counter-argument that an advisory for a never-shipped path is noise.
 
 ## 4. The decisions already made — do not re-open
 
@@ -71,7 +70,7 @@ pnpm test             # vitest; 1,138 at PR #151
 `pnpm typecheck` does not cover `console/web`; the console has its own `tsc --build`. Stale `tsbuildinfo` can fake a red typecheck in untouched files; `tsc --build --clean` first. Scan tools (syft, osv-scanner, grype, semgrep, gitleaks, checkov) live in `~/.local/bin`; without that `PATH` the tool recipes go silently unevidenced.
 
 **Ground rules that bite most often** (`CONTRIBUTING.md`, ten of them; `PLAN-SOUNDNESS.md` §0 adds four):
-- **Rule 4, computed never typed.** A number enters a published document only in the change that regenerates it. README currently violates this; S2 fixes it.
+- **Rule 4, computed never typed.** A number enters a published document only in the change that regenerates it. Since S2 the README's figures are gated: `published-numbers.test.ts` and the suite reporter fail the run on drift, and a rephrased gated sentence fails too — regenerate from the command, in the same change.
 - **Rule 7, no vacuous passes.** Absence of evidence is never evidence of absence. "0 of 0" is not a pass. This is the rule behind GHSA-7jff-6v53-r56x, #147, and the runner plan's ground rule 2.
 - **The console smoke reads the basis statement.** Keep "Unknowns count against us", "declared route" and `src/index.js` verbatim in `OVER_APPROXIMATION_STATEMENT` and the fixture.
 
@@ -89,7 +88,7 @@ pnpm test             # vitest; 1,138 at PR #151
 | Touching the register, board, or gap classes | `docs/SPEC.md` §12; `docs/RESEARCH-KSI-GAP-ENGINE.md`; `docs/PLAN-KSI-PIVOT.md` |
 | Touching the console | `console/web/PRODUCT.md`, `console/web/DESIGN.md` |
 | Resuming R | `docs/PLAN-ARTIFACT-PLANE.md` — but not before the S3 exit |
-| Architecture | `docs/ARCHITECTURE.md`, reading the "Runs as" table as design, not deployment, until S2-3 marks it |
+| Architecture | `docs/ARCHITECTURE.md` — §3's table has a *Today (built)* and an *Appliance (design)* column since S2-3; §7 marks each control the same way |
 
 ## 7. What a good session looks like
 
@@ -108,3 +107,4 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
 - **2026-09-14 (S1-4)** — #153 merged (barrel edge). S1-4 in PR #154: detection over every application root, `scripts` command lines, Next.js and PocketBase conventions; config honoured for the walk, its exclusions recorded on graph.db, basis, VEX scope and console; an unreached exclusion refuses the negative (the one judgment call, flagged in the PR). Measured: config 1 → 109 files / 12 packages / 2 roots never entered; detection 57 → 184 files / 15 packages / every root entered. S1-5 is now a config deletion. Suite 1,150. Next item: merge #154, then S1-5 (#132).
 - **2026-09-14 (S1-5)** — #154 merged. S1-5 in PR #155: the override deleted, the board moved 12/2 → 11/3 exactly as the plan said and wider than it predicted (`next` CRITICAL ×2 reachable by one exact hop). One earned `not_affected` (`vitest`) that the exit gate's text forbids — flagged in the PR with the stricter alternative. FRONTIER-PIPELINE.md regenerated; its committed copy was a month stale. Next item: merge #155 → S1 closes; then #147, then S2.
 - **2026-09-15 (S1 closed; S3-0 / #147)** — #155, #149, #148 merged; S1 closed at `286c566` with the `vitest` negative standing as recorded. #147 taken before S2 as S3-0: failing test first at `f4c27bd` (`expected 'evidenced' not to be 'evidenced'`), then the fix — manifest entries may declare structured assertions in `aws-evidence.json`'s vocabulary, evaluated by the appliance with the pipeline's own evaluator; no assertion signs `unevidenced`; a non-zero exit is a skipped failed run, never a bundle. SPEC §12.8 rewritten. Next item: S2-1 (#133).
+- **2026-09-15 (S2, #133–#136)** — #156 merged (S3-0). S2 in one PR: the numbers gate written first and run at `679744b` against the stale README (46 vs 41, 33 vs 28, named line by line), the suite arm as a reporter because the count exists only at the end of the run (`vitest list` measured at 62 s and rebuilds fixtures under running tests), shown red on `1,001 tests across 81 files` before the README moved. README regenerated from the command; ARCHITECTURE split built from design per row and per control; CONTRIBUTING rules 4 and 9 gained *Enforced by*. S2 closes on merge. Next item: S3-1 (#137) — the package-YAML adapter first.

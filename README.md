@@ -5,19 +5,19 @@
 
 The open-source **KSI gap engine** for FedRAMP 20x: an appliance deployed **inside the client's own boundary** that answers, per Key Security Indicator, what is owed, what is validated, and precisely which class of gap sits between them — with the commit plane as its first evidence source and [ramprules](https://ramprules.com) as its enrichment.
 
-One row per KSI, forty-six of them, always. Each carries automated methods against the class floor (`FRC-CSX-VVK`), evidence age against its owed window (MVX — Persistent Machine Verification and Validation: 7 days class b, 3 days class c), the five owed artifacts, and the worst gap class computed for that row. A KSI nothing validates is a `G1 coverage` row, never an absent one — the absence is the finding.
+One row per KSI, always — the 41 that class b obliges, and the 5 it makes optional printed dimmed beneath their own label rather than dropped. Each carries automated methods against the class floor (`FRC-CSX-VVK`), evidence age against its owed window (MVX — Persistent Machine Verification and Validation: 7 days class b, 3 days class c), the five owed artifacts, and the worst gap class computed for that row. A KSI nothing validates is a `G1 coverage` row, never an absent one — the absence is the finding.
 
 The evidence under those rows is signed and commit-anchored. `scan` produces it from a checkout; `ingest` accepts a client-run AWS result the appliance never executed; an attestation covers what neither can reach. Out of scope, deliberately: executing ramprules' AWS evidence recipes (the client runs those directly — they're copy-pasteable by design), and any SaaS control plane that would move code or evidence out of the client's boundary.
 
 ## Status
 
-**`v0.1.0-beta`.** Sixteen CLI commands, twenty recipes, a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,001 tests across 81 files — 996 pass on a fresh clone and 5 skip until `pnpm run fetch-pocketbase` supplies the binary they need, after which all 1,001 pass. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request.
+**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,168 tests across 93 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
 ## How much of FedRAMP this actually answers
 
-Ground rule: **every number here comes from a command.** These come from `rampscan frontier`, which probes nothing and writes nothing — it counts the rows it prints. This is the self-scan, so the tool is reporting on itself.
+Ground rule: **every number here comes from a command.** These come from `rampscan frontier`, which probes nothing and writes nothing — it counts the rows it prints. This is the self-scan, so the tool is reporting on itself. The block is pasted from the output, with rows elided at the `…`; the summary lines in it are compared with a fresh run of the command on every pull request, and the README fails CI when they differ.
 
 ```
 $ pnpm rampscan frontier
@@ -27,23 +27,27 @@ class b · dataset 2026.07.14.01 · frontier overlay 0.7.5 · evidence: .
 
   KSI              methods    freshest         artifacts   worst gap
   KSI-CED-RAT      0/1        —                0/5         G1 coverage
-  KSI-CMT-RVP      1/1 ok     30d / 7d         2/5         G3 freshness
-  KSI-CMT-VTD      4/1 ok     30d / 7d         2/5         G3 freshness
-  …                                                        (46 rows, always)
+  KSI-CMT-RVP      1/1 ok     32d / 7d         0/5         G3 freshness
+  KSI-CMT-VTD      4/1 ok     32d / 7d         0/5         G3 freshness
+  KSI-CNA-EIS      0/1        —                0/5         G1 coverage  optional at class b
+  …
 
-  floor met on 13 of 46 KSIs · at least one automated method on 13 · no method on 33
-  covering all 46 — a row that says "nothing evidences this from a pipeline" is a row
-  clocks: 0 of 46 KSIs hold every method inside its owed window — VDR-TFR-MVX (MUST)
+  floor met on 13 of 41 KSIs · at least one automated method on 13 · no method on 28
+  covering all 41 — a row that says "nothing evidences this from a pipeline" is a row
+  5 optional at class b, outside every meter above — KSI-CNA-EIS, KSI-MLA-ALA, KSI-SVC-PRR, KSI-SVC-RUD, KSI-SVC-VCM (0 evidenced anyway)
+  clocks: 0 of 41 KSIs hold every method inside its owed window — VDR-TFR-MVX (MUST)
   history: no floor at class b — FRC-CSX-MOT (SHOULD, unquantified)
-  artifacts: 0 of 46 KSIs hold all five owed artifacts — default_artifacts.KSI
-  evidence class: 0 of 46 KSIs hold point-in-time evidence, rejectable when standalone
+  artifacts: 0 of 41 KSIs hold all five owed artifacts — default_artifacts.KSI (2, 5 computed · 1, 3, 4 two-key judged)
+  evidence class: 0 of 41 KSIs hold point-in-time evidence, rejectable when standalone — FRR-PVA-AA-06 (pipeline mints assert process-generated)
 
   adjudication queue (G8): 68 unreviewed, sorted by leverage
+    AC-20 (01)   AC  lev 8  KSI-CNA-MAT KSI-IAM-ELP KSI-IAM-JIT KSI-MLA-LET KSI-MLA-OSM
+    …
 
   legacy view: --by-controls   (23 of 209 controls · 38 reachable at this pin)
 ```
 
-**13 of 46 KSIs meet the class-b method floor, and 33 have no pipeline method at all.** Read cold that looks like an unfinished tool, so read it the other way: the second number is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed all 46 from a checkout would be claiming it can see things that leave no trace in one. That is what `ingest` and the attestation clock exist for: a method the appliance did not execute can still be counted, once something signed says so.
+**13 of 41 KSIs meet the class-b method floor, and 28 have no pipeline method at all.** Read cold that looks like an unfinished tool, so read it the other way: the second number is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed all 41 from a checkout would be claiming it can see things that leave no trace in one. That is what `ingest` and the attestation clock exist for: a method the appliance did not execute can still be counted, once something signed says so.
 
 **Every zero above is a different gap, and the tool says which.** `0/1` methods is `G1 coverage`; a method past its window is `G3 freshness`; the clocks, history, artifact and evidence-class lines are `G3`, `G4`, `G5` and `G6` measured separately, each against the rule that owes it. `rampscan gaps` prints them as a register — every row a (KSI, gap class, rule ID, evidence digest) tuple. A single blended percentage would have hidden which one you can actually fix this week.
 
@@ -80,7 +84,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 720 passed | 3 skipped (723) — the 3 want PocketBase, see below
+pnpm test               # 1,168 tests across 93 files; the ones wanting a tool or PocketBase skip by name
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard
@@ -187,7 +191,7 @@ The action installs no tool binaries and pulls no images, because the dry run re
 - [`docs/COMPLIANCE-SCAN-HARNESS.md`](docs/COMPLIANCE-SCAN-HARNESS.md) — the founding brainstorm, including the decisions log (§11–§13).
 - [`docs/FRONTIER-PIPELINE.md`](docs/FRONTIER-PIPELINE.md) — generated by `rampscan report` from the last scan.
 - [`docs/context/`](docs/context/README.md) — snapshots of the ramprules dataset and the harnessarch brainstorms, for agent context. Read its README before trusting a number.
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — the ten ground rules, each named with the test that enforces it.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — the ten ground rules, and for each one that has a gate, the test that is the gate.
 - [`SECURITY.md`](SECURITY.md) — reporting path, and what rampscan does and does not send anywhere.
 
 ## Licence

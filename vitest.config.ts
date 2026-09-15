@@ -5,6 +5,12 @@ export default defineConfig({
     include: ["packages/*/test/**/*.test.ts"],
     globalSetup: ["./scripts/vitest-global-setup.mjs"],
 
+    // The suite arm of the numbers gate (plan S2-1): at the end of a whole
+    // run, the README's "N tests across M files" is compared with what this
+    // run collected, and the run goes red on drift. It lives in a reporter
+    // because the count is known nowhere else — see the file's own header.
+    reporters: ["default", "./packages/cli/src/published-numbers-reporter.ts"],
+
     // Vitest's defaults are 5s per test and 10s per hook, which are sized for
     // unit tests. Most of this suite is not one: the e2e files build fixture
     // repositories, walk a code graph, run a dry scan and fold a ledger, and
