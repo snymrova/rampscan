@@ -82,7 +82,18 @@ those tests failing-to-cheat has removed the property, whatever else it did.
 **4. Computed, never typed.** Any number that appears in a generated document, the
 README, a release note or a comment comes from a run, not from a keyboard. This is
 inherited from ramprules and it is the house rule most often broken by accident,
-usually by copying a figure that was true last month.
+usually by copying a figure that was true last month. *Enforced by:*
+`packages/cli/test/published-numbers.test.ts`, which runs `rampscan frontier` and
+compares the README's register block and floor sentence with what the command
+prints, reads the self-scan verdict line back from the document `rampscan report`
+generated, and fails on drift; and by the suite's own reporter
+(`packages/cli/src/published-numbers-reporter.ts`), which compares the README's
+test and file counts with what the run just collected and turns `pnpm test` red
+when they differ. The gate is deliberately narrow — those figures, in those
+sentence shapes, and nothing that would mean parsing prose — and a gated sentence
+that is rephrased fails rather than silently stops being read. A number that no
+command produces has no place in the README; a number a command produces enters
+it only in the change that ran the command.
 
 **5. Tool versions ride in every cache key and every bundle's provenance.** A
 result cached under a key that does not name the tool version is a result that will
@@ -107,7 +118,10 @@ repository does not ship opinions as evidence.
 **9. Coverage is computed, never typed.** Rule 4 pointed at the one number this
 project has an incentive to round up. `rampscan frontier` owns coverage. No
 coverage figure enters a document unless a command emitted it, and the ceiling —
-what the repository *cannot* answer — is published beside it.
+what the repository *cannot* answer — is published beside it. *Enforced by:*
+`packages/cli/test/frontier.test.ts`, which recounts every rollup figure from the
+rows beneath it, and rule 4's gate above, which holds the README's copy of those
+figures to the command's output.
 
 **10. An adjudication upstream has already written is read before it is
 re-written.** Where we agree with a published disposition, the record cites it and
