@@ -104,8 +104,8 @@ describe("T1-3 — the reviewed literal table is golden against the overlay (#16
     const t = await table();
     const rs = await recipes();
     const runnable = rs.filter((r) => classifyAwsRecipe(applyLiteralBindings(r, t).recipe, l).kind === "runnable");
-    // computed, never typed — and lower than T1-2's 30, because an example account id is now an unbound placeholder
-    expect(runnable).toHaveLength(19);
+    // computed, never typed — and lower than T1-2's 31, because an example account id is now an unbound placeholder (the credential report counts since T1-4)
+    expect(runnable).toHaveLength(20);
     expect(runnable.map((r) => r.id)).not.toContain("patch-and-vulnerability-remediation");
   });
 
@@ -135,9 +135,9 @@ describe("T1-3 — the reviewed literal table is golden against the overlay (#16
     const c = classifyAwsRecipe(patch, l, params);
     expect(c.kind).toBe("runnable");
     if (c.kind === "runnable") {
-      const inspector = c.steps.find((s) => s[1] === "inspector2")!;
-      expect(inspector).toEqual(["aws", "inspector2", "batch-get-account-status", "--account-ids", "111111111111"]);
-      expect(c.steps.flat().join(" ")).not.toContain("123456789012");
+      const inspector = c.steps.find((s) => s.argv[1] === "inspector2")!;
+      expect(inspector.argv).toEqual(["aws", "inspector2", "batch-get-account-status", "--account-ids", "111111111111"]);
+      expect(c.steps.flatMap((s) => s.argv).join(" ")).not.toContain("123456789012");
     }
   });
 

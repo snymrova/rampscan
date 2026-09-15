@@ -20,11 +20,38 @@ export type ManualReason =
   | { kind: "shell"; construct: "pipe" | "redirect" | "substitution" | "chain"; command: string }
   /** the segment does not start with `aws` (a transform after a pipe reports as `pipe`, not here) */
   | { kind: "not-aws"; command: string }
+  /**
+   * The command is a `kubectl` read (T1-4a): a second axis the runner does
+   * not have yet — cluster RBAC and an access entry, not an IAM policy —
+   * so it is manual until T3-3 prints the ClusterRole beside the policy.
+   * No pinned recipe issues one; the Paramify pilot's four scripts do.
+   */
+  | { kind: "kubectl"; command: string }
   /** the recipe publishes no commands at all */
   | { kind: "no-commands" };
 
+/**
+ * The transforms a published pipe may become (T1-4). Applied by the runner
+ * to captured stdout AFTER the raw bytes are digested and stored, so the
+ * artifact is what the CLI printed and the transform is reproducible from
+ * it. One exists in the pinned overlay: `iam get-credential-report` prints
+ * base64 and the CSV the assertions read is the decoded bytes.
+ */
+export type StepTransform = "base64-decode";
+
+/** what a published pipe tail may be, exactly — anything else is a shell construct */
+const TRANSFORM_TAILS: ReadonlyMap<string, StepTransform> = new Map([
+  ["base64 --decode", "base64-decode"],
+  ["base64 -d", "base64-decode"],
+]);
+
+export interface RecipeStep {
+  argv: string[];
+  transform?: StepTransform;
+}
+
 export type RecipeClass =
-  | { kind: "runnable"; steps: string[][] }
+  | { kind: "runnable"; steps: RecipeStep[] }
   | { kind: "manual"; reasons: ManualReason[] };
 
 const PLACEHOLDER = /<([A-Za-z][A-Za-z0-9_-]*)>/g;
@@ -115,6 +142,21 @@ export function splitCommand(command: string): Split {
   return { argv };
 }
 
+/** the offset of the first `|` outside quotes, or -1 */
+function pipeIndex(command: string): number {
+  let q: string | undefined;
+  for (let i = 0; i < command.length; i++) {
+    const c = command[i]!;
+    if (q !== undefined) {
+      if (c === "\\" && q === '"') i++;
+      else if (c === q) q = undefined;
+    } else if (c === "'" || c === '"') q = c;
+    else if (c === "\\") i++;
+    else if (c === "|") return i;
+  }
+  return -1;
+}
+
 /** every `<NAME>` in a command, in order, once each */
 export function placeholdersOf(command: string): string[] {
   const out: string[] = [];
@@ -139,10 +181,21 @@ export function classifyAwsRecipe(
   const commands = (recipe.collection as { commands?: unknown }).commands;
   if (!Array.isArray(commands) || commands.length === 0) return { kind: "manual", reasons: [{ kind: "no-commands" }] };
   const reasons: ManualReason[] = [];
-  const steps: string[][] = [];
+  const steps: RecipeStep[] = [];
   for (const raw of commands as unknown[]) {
     const command = String(raw);
-    const split = splitCommand(command);
+    let split = splitCommand(command);
+    let transform: StepTransform | undefined;
+    if (split.construct === "pipe") {
+      // a pipe whose tail is exactly a known transform is a step, not a
+      // shell; the head is re-split on its own so its own constructs still count
+      const at = pipeIndex(command);
+      const tail = TRANSFORM_TAILS.get(command.slice(at + 1).trim());
+      if (tail !== undefined) {
+        split = splitCommand(command.slice(0, at));
+        transform = tail;
+      }
+    }
     if (split.construct !== undefined) {
       reasons.push({ kind: "shell", construct: split.construct, command });
     }
@@ -150,7 +203,8 @@ export function classifyAwsRecipe(
     // so a piped `ssm send-command` is reported as refused AND as a pipe
     const action = awsActionOf(command.split("|")[0]!);
     if (action === undefined) {
-      if (split.construct === undefined) reasons.push({ kind: "not-aws", command });
+      if (/^\s*kubectl\s/.test(command)) reasons.push({ kind: "kubectl", command });
+      else if (split.construct === undefined) reasons.push({ kind: "not-aws", command });
     } else {
       const cls = classifyAwsAction(list, action);
       if (cls.kind === "refused") reasons.push({ kind: "refused-action", action, why: cls.entry.why });
@@ -161,7 +215,10 @@ export function classifyAwsRecipe(
         reasons.push({ kind: "unbound", name });
       }
     }
-    if (split.construct === undefined) steps.push(split.argv.map((w) => bind(w, params)));
+    if (split.construct === undefined) {
+      const argv = split.argv.map((w) => bind(w, params));
+      steps.push(transform === undefined ? { argv } : { argv, transform });
+    }
   }
   return reasons.length > 0 ? { kind: "manual", reasons } : { kind: "runnable", steps };
 }
@@ -179,6 +236,8 @@ export function describeReason(r: ManualReason): string {
       return `shell ${r.construct} in: ${r.command}`;
     case "not-aws":
       return `not an aws invocation: ${r.command}`;
+    case "kubectl":
+      return `kubectl is a second axis the runner does not have yet (T1-4a): ${r.command}`;
     case "no-commands":
       return "the recipe publishes no commands";
   }
