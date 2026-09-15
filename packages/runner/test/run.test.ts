@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { RunTranscript } from "@rampscan/schema";
 import type { RunRequest } from "@rampscan/schema";
 import { callerIdentity, classifyStderr, execStep, runRequest } from "../src/run.js";
+import { DENIAL_PROBES, policySourceArn, selfCheck } from "../src/selfcheck.js";
 
 // T3-1 (docs/PLAN-CLOUD-RUNNER.md, #176): the runner executes argv, never
 // a shell; captures stdout whole and digests it; classifies stderr and
@@ -131,7 +132,9 @@ describe("runRequest — the transcript, who it ran as, every step run", () => {
     await writeFile(inputPath, JSON.stringify({ request: REQUEST, request_digest: sha256("request"), steps: [["aws", "iam", "list-roles"]], runner: { name: "sidecar-1", region: "us-east-1" } }));
     const { execFile } = await import("node:child_process");
     const { promisify } = await import("node:util");
-    const spec = JSON.stringify({ "sts get-caller-identity --output json": { stdout: IDENTITY }, "iam list-roles": { stdout: '{"Roles": []}\n' } });
+    const simulate = `iam simulate-principal-policy --policy-source-arn arn:aws:iam::111111111111:role/rampscan-runner --action-names ${DENIAL_PROBES.join(" ")} --output json`;
+    const denied = JSON.stringify({ EvaluationResults: DENIAL_PROBES.map((a) => ({ EvalActionName: a, EvalDecision: "implicitDeny" })) });
+    const spec = JSON.stringify({ "sts get-caller-identity --output json": { stdout: IDENTITY }, [simulate]: { stdout: denied }, "iam list-roles": { stdout: '{"Roles": []}\n' } });
     const out = join(dir, "out");
     // the shim replaces the aws binary through PATH: a directory holding an `aws` symlink to it
     const { symlink, mkdir } = await import("node:fs/promises");
@@ -140,9 +143,52 @@ describe("runRequest — the transcript, who it ran as, every step run", () => {
     const { stderr } = await promisify(execFile)(process.execPath, ["--import", "tsx", resolve(HERE, "../src/main.ts"), "run", "--request", inputPath, "--out", out], {
       env: { ...process.env, AWS_SHIM_SPEC: spec, PATH: `${join(dir, "bin")}:${process.env["PATH"]}` },
     });
+    expect(stderr).toMatch(/self-check passed — 14 mutating probes denied/);
     expect(stderr).toMatch(/1 step\(s\) as arn:aws:sts::111111111111/);
     expect(stderr).toMatch(/nothing evaluated here/);
     const transcript = RunTranscript.parse(JSON.parse(await readFile(join(out, "transcript.json"), "utf8")));
+    expect(transcript.self_check).toEqual({ probes: [...DENIAL_PROBES], all_denied: true });
     expect(await readdir(join(out, "outputs"))).toEqual([transcript.steps[0]!.stdout_sha256]);
+
+    // T3-3: a role that may create a user is refused before anything runs — exit 3, no transcript
+    const allowed = JSON.stringify({ EvaluationResults: DENIAL_PROBES.map((a) => ({ EvalActionName: a, EvalDecision: a === "iam:CreateUser" ? "allowed" : "implicitDeny" })) });
+    const wide = JSON.stringify({ "sts get-caller-identity --output json": { stdout: IDENTITY }, [simulate]: { stdout: allowed } });
+    const refused = await promisify(execFile)(process.execPath, ["--import", "tsx", resolve(HERE, "../src/main.ts"), "run", "--request", inputPath, "--out", join(dir, "out-wide")], {
+      env: { ...process.env, AWS_SHIM_SPEC: wide, PATH: `${join(dir, "bin")}:${process.env["PATH"]}` },
+    }).then(() => ({ code: 0, stderr: "" }), (e: { code: number; stderr: string }) => e);
+    expect(refused.code).toBe(3);
+    expect(refused.stderr).toMatch(/refused to run .* the role may iam:CreateUser/);
+    await expect(readFile(join(dir, "out-wide", "transcript.json"))).rejects.toThrow();
+
+    // and when IAM cannot answer, the runner does not pretend it did
+    const broken = JSON.stringify({ "sts get-caller-identity --output json": { stdout: IDENTITY }, [simulate]: { stderr: "500 Internal Server Error", exit: 254 } });
+    const unchecked = await promisify(execFile)(process.execPath, ["--import", "tsx", resolve(HERE, "../src/main.ts"), "run", "--request", inputPath, "--out", join(dir, "out-broken")], {
+      env: { ...process.env, AWS_SHIM_SPEC: broken, PATH: `${join(dir, "bin")}:${process.env["PATH"]}` },
+    }).then(() => ({ code: 0, stderr: "" }), (e: { code: number; stderr: string }) => e);
+    expect(unchecked.code).toBe(3);
+    expect(unchecked.stderr).toMatch(/could not be shown read-only/);
+  });
+});
+
+describe("selfCheck — the role shown read-only, or not shown at all (T3-3)", () => {
+  it("evaluates policies for the role behind an assumed-role ARN, and for a user as itself", () => {
+    expect(policySourceArn("arn:aws:sts::111111111111:assumed-role/rampscan-runner/i-0abc")).toBe("arn:aws:iam::111111111111:role/rampscan-runner");
+    expect(policySourceArn("arn:aws-us-gov:sts::111111111111:assumed-role/r/s")).toBe("arn:aws-us-gov:iam::111111111111:role/r");
+    expect(policySourceArn("arn:aws:iam::111111111111:user/moto")).toBe("arn:aws:iam::111111111111:user/moto");
+  });
+
+  it("all_denied only when every probe is explicitly or implicitly denied; unknown decisions never count as denied", async () => {
+    const arn = "arn:aws:sts::111111111111:assumed-role/rampscan-runner/i-0abc";
+    const key = `iam simulate-principal-policy --policy-source-arn arn:aws:iam::111111111111:role/rampscan-runner --action-names ${DENIAL_PROBES.join(" ")} --output json`;
+    const results = (decide: (a: string) => string) => JSON.stringify({ EvaluationResults: DENIAL_PROBES.map((a) => ({ EvalActionName: a, EvalDecision: decide(a) })) });
+    const ok = await selfCheck(arn, DENIAL_PROBES, withShim({ [key]: { stdout: results(() => "explicitDeny") } }));
+    expect(ok.all_denied).toBe(true);
+    const wide = await selfCheck(arn, DENIAL_PROBES, withShim({ [key]: { stdout: results((a) => (a === "s3:PutObject" ? "allowed" : "implicitDeny")) } }));
+    expect(wide.all_denied).toBe(false);
+    expect(wide.decisions["s3:PutObject"]).toBe("allowed");
+    const partial = await selfCheck(arn, DENIAL_PROBES, withShim({ [key]: { stdout: JSON.stringify({ EvaluationResults: [{ EvalActionName: "iam:CreateUser", EvalDecision: "implicitDeny" }] }) } }));
+    expect(partial.all_denied).toBe(false);
+    const failed = await selfCheck(arn, DENIAL_PROBES, withShim({ [key]: { stderr: "An error occurred (AccessDenied)", exit: 254 } }));
+    expect(failed).toMatchObject({ all_denied: false, error: expect.stringMatching(/could not be shown read-only/) });
   });
 });

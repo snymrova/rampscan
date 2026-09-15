@@ -71,6 +71,7 @@ describe.skipIf(!ready)("T3-0 — the real aws binary, against Moto, through the
     // Moto answers the first generate with STATE=STARTED like AWS does; the report is ready on the next call
     await aws("iam", "generate-credential-report");
 
+    // no self-check: Moto cannot answer simulate-principal-policy (T3-0's finding); the intake below is told so
     const { transcript, outputs } = await runRequest(
       { request: REQUEST, request_digest: "0".repeat(64), steps: STEPS, runner: { name: "ci-emulator", region: "us-east-1" } },
       { env: ENV },
@@ -88,6 +89,8 @@ describe.skipIf(!ready)("T3-0 — the real aws binary, against Moto, through the
       partition: "aws" as const,
       cadence: "monthly" as const,
       transforms: [undefined, "base64-decode" as const],
+      // Moto answers simulate-principal-policy with a 500 (T3-0's finding); the sandbox is where the self-check runs for real
+      requireSelfCheck: false,
       acceptedNonces: new Set<string>(),
       receivedAt: new Date(Date.now() + 60_000).toISOString(),
     };

@@ -140,6 +140,9 @@ export async function runRequest(input: RunInput, opts: ExecOptions = {}): Promi
   const now = opts.now ?? (() => new Date());
   const started = now();
   const identity = await callerIdentity(opts);
+  if (input.self_check !== undefined && !input.self_check.all_denied) {
+    throw new Error("the self-check found a mutating probe allowed to this role; the runner refuses to run under it");
+  }
   const outputs = new Map<string, Uint8Array>();
   const steps: TranscriptStep[] = [];
   for (const argv of input.steps) {

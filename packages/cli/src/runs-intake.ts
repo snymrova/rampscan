@@ -58,6 +58,12 @@ export interface IntakeContext {
   labels?: readonly string[];
   /** the cycle the method runs on — the recipe's */
   cadence: Cadence;
+  /**
+   * Whether a transcript without a self-check is refused (T3-3). True unless
+   * the appliance is configured for an emulator that cannot answer
+   * simulate-principal-policy; a real account's runner always checks.
+   */
+  requireSelfCheck?: boolean;
   /** nonces already accepted into the ledger — a second transcript for one is a replay */
   acceptedNonces: ReadonlySet<string>;
   /** the appliance's clock at receipt; the run's own timestamps must fall inside the request window before it */
@@ -247,7 +253,11 @@ export function intakeTranscript(
   if (!transcript.runner.caller_arn.includes(`:${transcript.runner.account}:`)) {
     return refuse(`caller ARN ${transcript.runner.caller_arn} does not belong to account ${transcript.runner.account}`);
   }
-  // the role: shown read-only when the run happened, if the runner said
+  // the role: shown read-only when the run happened — required, unless the
+  // appliance is configured for an emulator that cannot answer the simulation
+  if (transcript.self_check === undefined && ctx.requireSelfCheck !== false) {
+    return refuse("the transcript carries no self-check: the role was not shown read-only when the run happened");
+  }
   if (transcript.self_check !== undefined && !transcript.self_check.all_denied) {
     return refuse("the runner's self-check found a mutating probe allowed to its role; a run under that role is refused");
   }
