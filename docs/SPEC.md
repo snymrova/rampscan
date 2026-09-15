@@ -695,3 +695,63 @@ The fix is the directory, not the resolution rule. Loosening resolution to skip 
 ### 13.9 Adoption mechanics
 
 The plan's phases live as GitHub milestones (`R0 — the object, locked` … `R5 — the reviewer surface`) with issues per numbered item, created at adoption 2026-09-13 (#92). The milestones are the plan of record; this section is the specification the R1–R5 issues implement.
+
+## 14. The runner contract — the T spec amendment (ADOPTED 2026-09-15)
+
+`docs/PLAN-CLOUD-RUNNER.md` is the plan; this section is what it changes in the contract. It amends §12.8 by adding a second way an `aws-ingested` submission comes to exist, and it amends nothing about what the appliance is: **the appliance still holds no AWS credential and makes no AWS call.** What §12.8 called "the client's to run" is now, optionally, run by a program the client deploys in their own account, on a request the appliance signs and a transcript the appliance reads. Two programs, two identities: the runner has an AWS role and no ledger key; the appliance has a ledger key and no AWS role. Neither alone can mint cloud evidence, and T3-5 makes that a test rather than a sentence.
+
+### 14.1 The two documents (`packages/schema/src/transcript.ts`)
+
+```
+RunRequest = {                       // minted by the appliance, signed into the ledger (T4-1)
+  _type:          "https://rampscan.dev/run-request/v1"
+  nonce:          string             // single-use; a second transcript for it is a replay
+  recipe_id:      string             // upstream's id, as pinned
+  recipe_digest:  sha256
+  ksi:            string
+  params:         { [name]: string } // the reviewed bindings (T1-3) — never an example literal
+  issued_at, expires_at: ISO 8601    // the window a transcript must fall inside
+  requester:      string             // the console identity that clicked
+}
+
+RunTranscript = {                    // signed by the runner's own key (T3-2); the DSSE payload
+  _type:          "https://rampscan.dev/run-transcript/v1"
+  request_digest: sha256             // of the canonical RunRequest it answers
+  nonce, recipe_id, ksi
+  runner:         { name, caller_arn, account, partition, region }
+                                     // what `sts get-caller-identity` returned, as the runner saw it
+  self_check?:    { probes: [action], all_denied: boolean }   // T3-3, carried in every run
+  steps:          [{ argv, exit_code, started_at, finished_at,
+                     stdout_sha256, stdout_bytes, stderr_class }]
+  started_at, finished_at
+}
+stderr_class = "none" | "access-denied" | "throttled" | "not-enabled" | "incomplete" | "other"
+```
+
+Strict at every level, like the ingestion contract this feeds. Three absences are the contract:
+
+- **No verdict field, anywhere.** The runner reports what it ran (`argv`, so the command run is the command published) and what came back (`stdout` by digest, the bytes riding beside the transcript). It does not evaluate assertions and has no field to put an evaluation in. A compromised or buggy runner can fail to collect; it cannot declare a pass.
+- **No stderr bytes.** The runner classifies stderr and discards it, because AWS error text carries ARNs, account ids and resource names into whatever log holds the transcript. The class is what intake needs (§14.2); the bytes are what an assessor does not.
+- **No account it did not observe.** `runner.account` and `caller_arn` are what STS returned during the run, not configuration. Intake compares them to the appliance's configured account and refuses a transcript from anywhere else.
+
+### 14.2 Intake, and the order of refusal (`packages/cli/src/runs-intake.ts`)
+
+`intakeTranscript(transcript, outputs, ctx)` returns exactly one of three things, and the Runs page shows all three:
+
+- `submission` — every check below passed, the bytes were evaluated, and the result is a native §12.8 `IngestSubmission` handed to the existing `ingest`. There is no second signing path and no second bundle shape. The predicate's `ingest` block gains a strict optional `runner { name, caller_arn, account, partition, region, request_digest }` (T0-1), so a manual submission and a runner's stay distinguishable to an assessor, and `signer_identity` names both parties: `runner:<name>` and the caller ARN.
+- `failed(class)` — the account was not seen. `denied`, `not-enabled`, `throttled`, `incomplete` (an async report not ready), or `error`. A visible failed run; **never a bundle under any verdict.** This is ground rule 7 (no vacuous passes) applied to a new input, and it is where the tree adapter's #147 lesson lives: a step that exited non-zero, or exited zero with anything but `stderr_class: "none"`, has printed nothing an assertion may be evaluated over. `count_eq 0` over the empty output of a denied call is zero rows, not zero offenders.
+- `refused(reason)` — the transcript does not answer a request this appliance made. Checked **before a single output byte is read**, in this order: the runner's signature; the nonce (unknown, or already accepted — a replay); the request digest (a run for a request the appliance never made, or for a different recipe or parameters); the caller account and partition against the configured ones; the run's timestamps against the request window and the receipt time.
+
+Only a `submission` reaches the evaluator, and the evaluator is the pipeline's own (`packages/core/src/assert.ts`), over the captured bytes, with `population` set — the same function that judges the tree adapter's rows. A recipe that carries no structured assertion yields a submission with `assertions: []`, which §12.8 already signs as `unevidenced`: a collected artifact that enters the two-key artifact-sufficiency judgment before it counts (T0-2). One click collects; one approver decision accepts; both are visible.
+
+### 14.3 What the signatures mean
+
+The appliance's signature on the minted bundle covers the **handoff**, as §12.8 says: this submission, at this digest, was accepted under the contract. The runner's signature on the transcript covers **the observation**: this role, in this account, ran these commands and received bytes of these digests. Neither vouches for the account being compliant — the verdict is computed by the appliance from the bytes, and the bytes are addressable by digest for anyone who wants to check the computation. `rampscan verify` on a runner-produced bundle names the runner, the caller ARN and the request digest beside the handoff digest.
+
+### 14.4 The emulator (T3-0)
+
+The runner is exercised in CI against an AWS API emulator behind `AWS_ENDPOINT_URL`. That is where the runner is *tested*. It is never where a claim about a client's account is made, and the plan's exit gates are worded *in a sandbox account* because a mock cannot prove that a role is read-only: the denial self-check (T3-3) and the gate runs happen against real IAM. A suite that cannot reach the emulator skips, named — a missing emulator is a skipped collector, not a green run.
+
+### 14.5 What T0-4 already holds the contract to
+
+`packages/cli/test/runs-intake.test.ts` commits, under `it.fails` until T2-2/T2-3, the five transcripts a naive reading would sign `evidenced` and this section forbids: an AccessDenied step; `count_eq 0` over a non-zero exit's empty output; a credential report still `STATE=STARTED`; a transcript from a different account; a replayed nonce. Each asserts no `evidenced` bundle and a class or refusal. They failed at `b2133f0` because no intake existed; when they pass, §14.2 is enforced by a test.
