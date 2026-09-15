@@ -99,7 +99,7 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
 
     const runnable = [...out.values()].filter((c) => c.kind === "runnable").length;
     // computed, never typed: this is the number T1-5 prints and the plan's §1 table is replaced by
-    expect(runnable).toBe(30);
+    expect(runnable).toBe(31);
 
     const clock = out.get("clock-synchronization-and-timestamps")!;
     expect(clock.kind).toBe("manual");
@@ -123,27 +123,34 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     }
   });
 
-  it("the one pipe in the overlay outside quotes is iam-credential-report's base64 — a pipe, until T1-4 makes it a step", async () => {
+  it("the one pipe in the overlay outside quotes is iam-credential-report's base64 — a step with a transform (T1-4), the raw bytes still the artifact", async () => {
     const l = await list();
     const rs = await recipes();
-    const piped = rs
+    const shell = rs
       .map((r) => [r.id, classifyAwsRecipe(r, l, bindAll(rs))] as const)
       .filter(([, c]) => c.kind === "manual" && c.reasons.some((x) => x.kind === "shell"));
-    expect(piped.map(([id, c]) => [id, c.kind === "manual" ? c.reasons.filter((x) => x.kind === "shell") : []])).toEqual([
-      [
-        "iam-credential-report",
-        [
-          {
-            kind: "shell",
-            construct: "pipe",
-            command: "aws iam get-credential-report --query Content --output text | base64 --decode",
-          },
-        ],
+    expect(shell).toEqual([]);
+    const report = classifyAwsRecipe(rs.find((x: AwsRecipe) => x.id === "iam-credential-report")!, l);
+    expect(report).toEqual({
+      kind: "runnable",
+      steps: [
+        { argv: ["aws", "iam", "generate-credential-report"] },
+        { argv: ["aws", "iam", "get-credential-report", "--query", "Content", "--output", "text"], transform: "base64-decode" },
       ],
-    ]);
+    });
+    // a pipe whose tail is not a known transform is still a shell construct
+    const other = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["aws iam list-roles | jq '.Roles[]'"] } }, l);
+    expect(other).toEqual({
+      kind: "manual",
+      reasons: [{ kind: "shell", construct: "pipe", command: "aws iam list-roles | jq '.Roles[]'" }],
+    });
+    // and the head keeps its own judgment: a refused action piped into a transform is refused
+    const refused = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["aws ssm send-command --x y | base64 -d"] } }, l);
+    expect(refused.kind).toBe("manual");
+    if (refused.kind === "manual") expect(refused.reasons.map((r) => r.kind)).toEqual(["refused-action"]);
   });
 
-  it("bound: what remains manual is the shape of the commands — a refused action or a pipe — and nothing is unknown", async () => {
+  it("bound: what remains manual is a refused action — nothing is unknown, no pipe is left", async () => {
     const l = await list();
     const rs = await recipes();
     const params = bindAll(rs);
@@ -154,9 +161,8 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     expect(summary).toEqual({
       "audit-reduction-and-report-generation": ["refused-action"],
       "clock-synchronization-and-timestamps": ["refused-action"],
-      "iam-credential-report": ["shell"],
     });
-    expect(rs.length - manual.length).toBe(46);
+    expect(rs.length - manual.length).toBe(47);
   });
 
   it("a runnable recipe's steps are argv with placeholders bound — the command run is the command published", async () => {
@@ -170,9 +176,9 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     });
     expect(c.kind).toBe("runnable");
     if (c.kind === "runnable") {
-      expect(c.steps[0]).toEqual(["aws", "sso-admin", "list-instances", "--query", "Instances[0].InstanceArn", "--output", "text"]);
-      expect(c.steps[1]).toEqual(["aws", "sso-admin", "list-permission-sets", "--instance-arn", "arn:aws:sso:::instance/ssoins-0000"]);
-      for (const step of c.steps) expect(step.join(" ")).not.toMatch(/<[A-Z_]+>/);
+      expect(c.steps[0]).toEqual({ argv: ["aws", "sso-admin", "list-instances", "--query", "Instances[0].InstanceArn", "--output", "text"] });
+      expect(c.steps[1]).toEqual({ argv: ["aws", "sso-admin", "list-permission-sets", "--instance-arn", "arn:aws:sso:::instance/ssoins-0000"] });
+      for (const step of c.steps) expect(step.argv.join(" ")).not.toMatch(/<[A-Z_]+>/);
     }
   });
 
@@ -183,7 +189,7 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     const c = classifyAwsRecipe(r, l);
     expect(c.kind).toBe("runnable");
     if (c.kind === "runnable") {
-      expect(c.steps[0]!.slice(0, 3)).toEqual(["aws", "configservice", "get-compliance-details-by-config-rule"]);
+      expect(c.steps[0]!.argv.slice(0, 3)).toEqual(["aws", "configservice", "get-compliance-details-by-config-rule"]);
     }
   });
 
@@ -195,5 +201,12 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     });
     const c = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["aws iam delete-user --user-name a"] } }, l);
     expect(c).toEqual({ kind: "manual", reasons: [{ kind: "unknown-action", action: "iam delete-user" }] });
+  });
+
+  it("a kubectl read is its own reason (T1-4a): a second axis the runner does not have yet", async () => {
+    const l = await list();
+    const c = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["kubectl get pods -A -o json"] } }, l);
+    expect(c).toEqual({ kind: "manual", reasons: [{ kind: "kubectl", command: "kubectl get pods -A -o json" }] });
+    if (c.kind === "manual") expect(describeReason(c.reasons[0]!)).toMatch(/T1-4a/);
   });
 });
