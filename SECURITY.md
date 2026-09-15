@@ -76,7 +76,10 @@ and hands the appliance a signed transcript plus the bytes the CLI printed
 (SPEC §14). The two programs have separate identities on purpose: the runner has
 an AWS role and no ledger key; the appliance has a ledger key and no AWS role.
 Neither alone can mint cloud evidence, and a test in the repository fails if any
-package other than the runner can reach AWS or the runner can sign a bundle.
+package other than the runner can reach AWS or the runner can sign a bundle
+(`packages/runner/test/boundary.test.ts`: no package but the runner spawns `aws`,
+reads an `AWS_*` variable, or declares an AWS SDK; the runner declares no runtime
+dependency and imports no rampscan package by value).
 
 Be clear-eyed about what this widens. A runner with a standing read-only role is
 a new principal in your account, and reading IAM, CloudTrail and Config is
