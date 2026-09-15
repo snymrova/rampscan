@@ -1,0 +1,239 @@
+{
+  "_type": "https://rampscan.dev/aws-literal-bindings/v1",
+  "reviewed": "2026-09-15",
+  "dataset": "2026.07.14.01",
+  "rule": "One row per example literal per recipe, read by hand from the pinned overlay. The literal is the exact text in the published command and must still occur there, or the row is stale and the test says so. It becomes `<param>` (or `becomes`, when fixed text surrounds it) before classification, so the classifier sees an unbound placeholder where a stranger's account id was. Reserved names (ACCOUNT_ID, PARTITION, REGION, WINDOW_START, WINDOW_END, EPOCH_START, EPOCH_END) are bound by the appliance at request time; every other name is the config's `aws.params` to supply. Left as published, on purpose: AWS-managed Config rule names, the AWS-managed `SSM-SessionManagerRunShell` document, Shield's `--region us-east-1` (its API endpoint, not an example), and the `guardduty`/`SecurityHub` name prefixes on two list calls (filters whose empty result is a `0 of 0` population the evaluator already distinguishes).",
+  "entries": [
+    {
+      "recipe": "patch-and-vulnerability-remediation",
+      "literal": "i-0123456789abcdef0",
+      "param": "INSTANCE_ID",
+      "why": "an example EC2 instance id; patch state is read for one of the account's own"
+    },
+    {
+      "recipe": "patch-and-vulnerability-remediation",
+      "literal": "123456789012",
+      "param": "ACCOUNT_ID",
+      "why": "the AWS documentation's example account id"
+    },
+    {
+      "recipe": "config-asset-inventory",
+      "literal": "i-0123456789abcdef0",
+      "param": "INSTANCE_ID",
+      "why": "an example EC2 instance id; inventory entries are read for one of the account's own"
+    },
+    {
+      "recipe": "config-least-functionality",
+      "literal": "i-0123456789abcdef0",
+      "param": "INSTANCE_ID",
+      "why": "an example EC2 instance id"
+    },
+    {
+      "recipe": "cloudtrail-config-change-history",
+      "literal": "2026-07-01T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example month; the request's window"
+    },
+    {
+      "recipe": "cloudtrail-config-change-history",
+      "literal": "2026-07-31T23:59:59Z",
+      "param": "WINDOW_END",
+      "why": "the example month; the request's window"
+    },
+    {
+      "recipe": "cloudtrail-config-change-history",
+      "literal": "sg-0123456789abcdef0",
+      "param": "SECURITY_GROUP_ID",
+      "why": "an example security group id whose configuration history is read"
+    },
+    {
+      "recipe": "backup-restore-testing",
+      "literal": "2026-04-01T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example quarter's start; restore jobs since the request's window start"
+    },
+    {
+      "recipe": "audit-log-retention-and-delivery-failure",
+      "literal": "my-cloudtrail-logs-bucket",
+      "param": "CLOUDTRAIL_BUCKET",
+      "why": "an example bucket name, twice: the lifecycle read and the size metric"
+    },
+    {
+      "recipe": "audit-log-retention-and-delivery-failure",
+      "literal": "2026-06-27T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example 30 days; the request's window"
+    },
+    {
+      "recipe": "audit-log-retention-and-delivery-failure",
+      "literal": "2026-07-27T00:00:00Z",
+      "param": "WINDOW_END",
+      "why": "the example 30 days; the request's window"
+    },
+    {
+      "recipe": "audit-log-retention-and-delivery-failure",
+      "literal": "my-trail",
+      "param": "TRAIL_NAME",
+      "why": "an example trail name"
+    },
+    {
+      "recipe": "boundary-access-points-and-default-deny",
+      "literal": "my-firewall-policy",
+      "param": "FIREWALL_POLICY_NAME",
+      "why": "an example Network Firewall policy name"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "Name=Region,Value=us-east-1",
+      "param": "REGION",
+      "why": "the WAF metric's Region dimension is the account's own region; Shield's `--region us-east-1` beside it is NOT an example — Shield's API lives there — and is left as published",
+      "becomes": "Name=Region,Value=<REGION>"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "2026-04-27T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example quarter for Shield attacks; the request's window"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "2026-06-27T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example 30 days for the two metrics; the request's window"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "2026-07-27T00:00:00Z",
+      "param": "WINDOW_END",
+      "why": "the example window end, three times; the request's window"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "my-web-acl",
+      "param": "WEB_ACL_NAME",
+      "why": "an example web ACL name, in get-web-acl and in the metric dimension"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "a1b2c3d4-5678-90ab-cdef-EXAMPLE11111",
+      "param": "WEB_ACL_ID",
+      "why": "the documentation's example web ACL id"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/1234567890abcdef",
+      "param": "LOAD_BALANCER_ARN",
+      "why": "an example ALB ARN with the documentation's example account id"
+    },
+    {
+      "recipe": "ddos-protection-and-rate-limiting",
+      "literal": "my-rate-limit-rule",
+      "param": "RATE_LIMIT_RULE_NAME",
+      "why": "an example rate-based rule name"
+    },
+    {
+      "recipe": "clock-synchronization-and-timestamps",
+      "literal": "11111111-2222-3333-4444-555555555555",
+      "param": "COMMAND_ID",
+      "why": "an example SSM command id; the recipe is manual regardless (ssm send-command is refused), bound so the table reads every literal the overlay carries"
+    },
+    {
+      "recipe": "clock-synchronization-and-timestamps",
+      "literal": "my-evidence-bucket",
+      "param": "EVIDENCE_BUCKET",
+      "why": "an example S3 bucket for command output; recipe manual regardless"
+    },
+    {
+      "recipe": "integrity-verification-and-immutability",
+      "literal": "arn:aws-us-gov:cloudtrail:us-gov-west-1:111122223333:trail/org-trail",
+      "param": "TRAIL_ARN",
+      "why": "an example GovCloud trail ARN with the documentation's example account id"
+    },
+    {
+      "recipe": "integrity-verification-and-immutability",
+      "literal": "2026-07-01T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example month; digest validation from the request's window start"
+    },
+    {
+      "recipe": "integrity-verification-and-immutability",
+      "literal": "evidence-vault",
+      "param": "BACKUP_VAULT_NAME",
+      "why": "an example Backup vault name"
+    },
+    {
+      "recipe": "audit-reduction-and-report-generation",
+      "literal": "/aws/cloudtrail/org-trail",
+      "param": "CLOUDTRAIL_LOG_GROUP",
+      "why": "an example CloudWatch Logs group the trail delivers to"
+    },
+    {
+      "recipe": "audit-reduction-and-report-generation",
+      "literal": "1751328000",
+      "param": "EPOCH_START",
+      "why": "the example month as epoch seconds; the request's window"
+    },
+    {
+      "recipe": "audit-reduction-and-report-generation",
+      "literal": "1753920000",
+      "param": "EPOCH_END",
+      "why": "the example month as epoch seconds; the request's window"
+    },
+    {
+      "recipe": "audit-reduction-and-report-generation",
+      "literal": "s3://audit-reports-bucket",
+      "param": "AUDIT_REPORTS_URI",
+      "why": "an example S3 URI, in the Lake delivery option and Athena's output location; the recipe is manual regardless (athena start-query-execution is refused) and the runner never passes --delivery-s3-uri"
+    },
+    {
+      "recipe": "guardduty-incident-after-action",
+      "literal": "1682899200",
+      "param": "EPOCH_START",
+      "why": "an example epoch in the updatedAt criterion; the request's window"
+    },
+    {
+      "recipe": "guardduty-pattern-review-past-incidents",
+      "literal": "1698796800",
+      "param": "EPOCH_START",
+      "why": "an example epoch in the updatedAt criterion; the request's window"
+    },
+    {
+      "recipe": "guardduty-pattern-review-past-incidents",
+      "literal": "2024-01-01T00:00:00Z",
+      "param": "WINDOW_START",
+      "why": "the example year; the request's window"
+    },
+    {
+      "recipe": "guardduty-pattern-review-past-incidents",
+      "literal": "2024-12-31T23:59:59Z",
+      "param": "WINDOW_END",
+      "why": "the example year; the request's window"
+    },
+    {
+      "recipe": "information-location-and-classification",
+      "literal": "org-aggregator",
+      "param": "CONFIG_AGGREGATOR",
+      "why": "an example Config aggregator name"
+    },
+    {
+      "recipe": "information-location-and-classification",
+      "literal": "--region us-gov-west-1",
+      "param": "REGION",
+      "why": "an example region on the tagging call; the account's own",
+      "becomes": "--region <REGION>"
+    },
+    {
+      "recipe": "information-location-and-classification",
+      "literal": "Key=DataClassification",
+      "param": "CLASSIFICATION_TAG_KEY",
+      "why": "the tag key the provider classifies data under; judgment — a convention, not an AWS name",
+      "becomes": "Key=<CLASSIFICATION_TAG_KEY>"
+    },
+    {
+      "recipe": "remote-access-authorization-and-monitoring",
+      "literal": "cvpn-endpoint-EXAMPLE",
+      "param": "CLIENT_VPN_ENDPOINT_ID",
+      "why": "the documentation's example Client VPN endpoint id"
+    }
+  ]
+}
