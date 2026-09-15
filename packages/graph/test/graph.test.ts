@@ -10,6 +10,7 @@ import {
   dependencyReachability,
   detectApplicationRoots,
   detectEntrypoints,
+  entryCandidates,
   excludedEntrypointCoverage,
   extractGraph,
   fileId,
@@ -17,6 +18,7 @@ import {
   graphToolVersion,
   loadGraphConfig,
   nearestRoot,
+  opaqueImportCoverage,
   openGraphDb,
   packageOf,
   readGraphMeta,
@@ -593,7 +595,7 @@ describe("graph.db provenance", () => {
   });
 
   it("tool version pins the extractor and the parser", () => {
-    expect(graphToolVersion()).toMatch(/^0\.5\.0\+ts\d/);
+    expect(graphToolVersion()).toMatch(/^0\.6\.0\+ts\d/);
   });
 });
 
@@ -836,6 +838,139 @@ describe("S1-3 — application roots, and how wide the walk was", () => {
       expect(applicationRootCoverage(wsDb)).toBeUndefined();
     } finally {
       wsDb.close();
+    }
+  });
+});
+
+describe("S4-1 — the specifiers the extractor cannot read, and conditional exports (0.6.0)", () => {
+  // Two extractor holes measured against the shape that signs not_affected.
+  // A `require(expr)` produced no edge and no record, so a plugin loaded by
+  // name was a file the walk never reached — and a package only that plugin
+  // required was "unreachable". The fix is a record, not a guess: the call is
+  // an opaque import, and a gate reading a walk that reached it refuses the
+  // negative. Separately, `entryCandidates` read five fixed keys of
+  // `exports`, so a package published for `node` and `browser` had no entry
+  // at all and its import dead-ended on a dependency node.
+  let root: string;
+  let graph: ExtractedGraph;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), "rampscan-graph-s41-"));
+    const w = async (rel: string, content: string): Promise<void> => {
+      const abs = join(root, rel);
+      await mkdir(dirname(abs), { recursive: true });
+      await writeFile(abs, content);
+    };
+    await w("package.json", JSON.stringify({ name: "s41-root", private: true }));
+    await w("apps/loader/package.json", JSON.stringify({ name: "@s41/loader", main: "src/main.js" }));
+    await w(
+      "apps/loader/src/main.js",
+      [
+        'const fixed = require("./plugins/fixed.js");',
+        'const byName = require("./plugins/" + process.env.PLUGIN);',
+        "async function lazy(name) {",
+        "  return import(`./plugins/${name}.js`);",
+        "}",
+        'const conditional = require("@s41/dual");',
+        "module.exports = { fixed, byName, lazy, conditional };",
+        "",
+      ].join("\n"),
+    );
+    await w("apps/loader/src/plugins/fixed.js", "module.exports = { fixed() {} };\n");
+    await w("apps/loader/src/plugins/parse.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    // an orphan with its own opaque call: never reached, so it opens no door
+    await w("apps/loader/src/orphan.js", 'module.exports = (p) => require(p);\n');
+    await w(
+      "packages/dual/package.json",
+      JSON.stringify({
+        name: "@s41/dual",
+        exports: {
+          ".": { node: { import: "./src/node.mjs", require: "./src/node.js" }, browser: "./src/browser.js" },
+          "./package.json": "./package.json",
+        },
+      }),
+    );
+    await w("packages/dual/src/node.js", "module.exports = { node() {} };\n");
+    await w("packages/dual/src/node.mjs", "export function node() {}\n");
+    await w("packages/dual/src/browser.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    graph = await extractGraph(root);
+  });
+
+  it("entryCandidates walks exports whole — every condition, subpath and fallback, in order", () => {
+    expect(entryCandidates({ exports: { ".": { node: { import: "./n.mjs", require: "./n.js" }, browser: "./b.js" } } })).toEqual([
+      "./n.mjs",
+      "./n.js",
+      "./b.js",
+    ]);
+    expect(entryCandidates({ exports: ["./esm.js", "./cjs.js"], main: "./cjs.js" })).toEqual(["./esm.js", "./cjs.js"]);
+    expect(entryCandidates({ exports: "./one.js", module: "./one.js", main: "./main.js" })).toEqual(["./one.js", "./main.js"]);
+    expect(entryCandidates({})).toEqual([]);
+  });
+
+  it("an opaque require and an opaque import() are recorded with file, line and form — and draw no edge", () => {
+    expect(graph.opaqueImports).toEqual([
+      { file: "apps/loader/src/main.js", line: 2, form: "require" },
+      { file: "apps/loader/src/main.js", line: 4, form: "import()" },
+      { file: "apps/loader/src/orphan.js", line: 1, form: "require" },
+    ]);
+    const fromMain = graph.edges.filter((e) => e.src === fileId("apps/loader/src/main.js") && e.kind === "imports");
+    // the literal require is an edge; nothing points at the plugin only a name can load
+    expect(fromMain.some((e) => e.dst === fileId("apps/loader/src/plugins/fixed.js"))).toBe(true);
+    expect(fromMain.some((e) => e.dst === fileId("apps/loader/src/plugins/parse.js"))).toBe(false);
+    expect(fromMain.some((e) => e.dst.startsWith("file:apps/loader/src/plugins/") && e.resolution === "inferred")).toBe(false);
+  });
+
+  it("a workspace package with conditional exports is imported through every condition target", () => {
+    const fromMain = graph.edges.filter((e) => e.src === fileId("apps/loader/src/main.js") && e.kind === "imports");
+    for (const f of ["node.mjs", "node.js", "browser.js"]) {
+      expect(fromMain.some((e) => e.dst === fileId(`packages/dual/src/${f}`) && e.resolution === "exact"), f).toBe(true);
+    }
+    expect(graph.nodes.some((n) => n.id === "dep:@s41/dual")).toBe(false);
+  });
+
+  it("graph.db round-trips the record, and coverage says which the walk reached", () => {
+    const dbPath = join(root, "s41.db");
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: GRAPH_VERSION,
+      commit: "test-commit",
+      entrypoints: ["apps/loader/src/main.js"],
+      entrypointSource: "test",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+    });
+    const db = openGraphDb(dbPath);
+    try {
+      expect(readGraphMeta(db).opaqueImports).toEqual(graph.opaqueImports);
+      expect(opaqueImportCoverage(db)).toEqual([
+        { file: "apps/loader/src/main.js", line: 2, form: "require", reached: true },
+        { file: "apps/loader/src/main.js", line: 4, form: "import()", reached: true },
+        { file: "apps/loader/src/orphan.js", line: 1, form: "require", reached: false },
+      ]);
+      // and the walk itself: through both builds of @s41/dual, never to the named plugin
+      const reach = reachableSet(db, [fileId("apps/loader/src/main.js")]);
+      expect(reach.has(fileId("packages/dual/src/browser.js"))).toBe(true);
+      expect(reach.has(fileId("apps/loader/src/plugins/parse.js"))).toBe(false);
+    } finally {
+      db.close();
+    }
+  });
+
+  it("a graph written without the record reads undefined, not empty", () => {
+    const dbPath = join(root, "s41-old.db");
+    writeGraphDb(dbPath, { ...graph, opaqueImports: undefined } as never, {
+      extractorVersion: "0.5.0+test",
+      commit: "test-commit",
+      entrypoints: ["apps/loader/src/main.js"],
+      entrypointSource: "test",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+    });
+    const db = openGraphDb(dbPath);
+    try {
+      expect(readGraphMeta(db).opaqueImports).toBeUndefined();
+      expect(opaqueImportCoverage(db)).toBeUndefined();
+    } finally {
+      db.close();
     }
   });
 });

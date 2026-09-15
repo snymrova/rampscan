@@ -18,7 +18,11 @@ export * from "./sbom.js";
 // stops the walk (the self-scan measured `core` 1 of 20 files reached)
 // 0.5.0: entry-point detection runs over every application root, reads
 // Next.js file conventions, and graph.db records what config excluded (S1-4)
-export const GRAPH_VERSION = "0.5.0";
+// 0.6.0: a `require(expr)` / `import(expr)` the extractor cannot read is
+// recorded as an opaque import, so a gate refuses a negative over a walk that
+// reached one; a workspace package's `exports` is walked whole, every
+// condition target an entry (S4-1)
+export const GRAPH_VERSION = "0.6.0";
 
 /** tool version string for manifests/bundles: extractor + the parser it rides on */
 export function graphToolVersion(): string {

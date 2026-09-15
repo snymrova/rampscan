@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import type { ApplicationRoot, DetectedEntrypoint } from "./entrypoints.js";
-import type { ExtractedGraph } from "./extract.js";
+import type { ExtractedGraph, OpaqueImport } from "./extract.js";
 
 // graph.db — SPEC §3: "SQLite file per repo-snapshot, queried with recursive
 // CTEs". The graph is a derived artifact, rebuildable from the commit; the
@@ -38,6 +38,14 @@ export interface GraphMeta {
    */
   entrypointsDetected?: DetectedEntrypoint[];
   entrypointsExcluded?: DetectedEntrypoint[];
+  /**
+   * Every load by a specifier the extractor could not read (S4-1), as the
+   * extractor found them — written from the graph, not supplied by the
+   * caller. Absent on a graph written before the field existed, and absence
+   * is NOT an empty list: a reader that cannot tell where the walk may have
+   * continued unseen must not claim it saw everything.
+   */
+  opaqueImports?: OpaqueImport[];
 }
 
 export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphMeta): void {
@@ -112,6 +120,9 @@ export function writeGraphDb(dbPath: string, graph: ExtractedGraph, meta: GraphM
     if (meta.entrypointsExcluded !== undefined) {
       insertMeta.run("entrypoints_excluded", JSON.stringify(meta.entrypointsExcluded));
     }
+    if (graph.opaqueImports !== undefined) {
+      insertMeta.run("opaque_imports", JSON.stringify(graph.opaqueImports));
+    }
     insertMeta.run("file_count", String(graph.files.length));
     db.exec("COMMIT");
   } catch (error) {
@@ -135,6 +146,7 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
   const roots = map.get("application_roots");
   const detected = map.get("entrypoints_detected");
   const excluded = map.get("entrypoints_excluded");
+  const opaque = map.get("opaque_imports");
   return {
     extractorVersion: map.get("extractor_version") ?? "unknown",
     commit: map.get("commit") ?? "unknown",
@@ -145,5 +157,6 @@ export function readGraphMeta(db: DatabaseSync): GraphMeta {
     ...(roots !== undefined ? { applicationRoots: JSON.parse(roots) as ApplicationRoot[] } : {}),
     ...(detected !== undefined ? { entrypointsDetected: JSON.parse(detected) as DetectedEntrypoint[] } : {}),
     ...(excluded !== undefined ? { entrypointsExcluded: JSON.parse(excluded) as DetectedEntrypoint[] } : {}),
+    ...(opaque !== undefined ? { opaqueImports: JSON.parse(opaque) as OpaqueImport[] } : {}),
   };
 }

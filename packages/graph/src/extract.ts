@@ -57,12 +57,31 @@ export interface RouteDecl {
   line: number;
 }
 
+/**
+ * A module load whose specifier the extractor cannot read (S4-1):
+ * `require(expr)` or `import(expr)` with anything but a string literal — a
+ * plugin loader, a locale table, a `require(path.join(…))`. No edge can be
+ * drawn, and the absence of an edge is not the absence of a load: from this
+ * call the program may continue into any module, so a walk that reaches the
+ * file has an unknown width past it. Recorded with the graph so a gate can
+ * refuse a negative claim over such a walk rather than sign one.
+ */
+export interface OpaqueImport {
+  /** repo-relative file holding the call */
+  file: string;
+  /** 1-based line of the call */
+  line: number;
+  form: "require" | "import()";
+}
+
 export interface ExtractedGraph {
   nodes: GraphNode[];
   edges: GraphEdge[];
   routes: RouteDecl[];
   /** repo-relative source files walked, sorted */
   files: string[];
+  /** every load by a specifier the extractor could not read, in file order (S4-1) */
+  opaqueImports: OpaqueImport[];
 }
 
 export const fileId = (rel: string): string => `file:${rel}`;
@@ -200,9 +219,9 @@ export async function workspacePackageMap(
   root: string,
   fileSet: ReadonlySet<string>,
   mode: TreeMode = "committed",
-): Promise<Map<string, string>> {
+): Promise<Map<string, string[]>> {
   const manifests = await listManifests(root, mode);
-  const map = new Map<string, string>();
+  const map = new Map<string, string[]>();
   for (const rel of manifests) {
     let parsed: {
       name?: unknown;
@@ -217,33 +236,42 @@ export async function workspacePackageMap(
     }
     if (typeof parsed.name !== "string") continue;
     const dir = posix.dirname(rel);
+    // every target the manifest names that resolves to a walked file, not the
+    // first (S4-1): a package built for `node` and `browser` is entered
+    // through both, because a walk that took one build's door would sign a
+    // negative scoped to that build. Over-approximate, the safe direction
+    const entries: string[] = [];
     for (const candidate of entryCandidates(parsed)) {
       const resolved = resolveRelative(posix.join(dir, "package.json"), candidate, fileSet);
-      if (resolved) {
-        map.set(parsed.name, resolved);
-        break;
-      }
+      if (resolved && !entries.includes(resolved)) entries.push(resolved);
     }
+    if (entries.length > 0) map.set(parsed.name, entries);
   }
   return map;
 }
 
-/** entry-point specifiers out of a package.json, most specific first */
-function entryCandidates(pkg: { exports?: unknown; module?: unknown; main?: unknown }): string[] {
+/**
+ * Entry-point specifiers out of a package.json, in declaration order. Every
+ * string leaf under `exports` counts — subpaths and conditions alike, nested
+ * objects and fallback arrays walked whole (S4-1): the Node resolution
+ * algorithm picks one leaf per condition set at run time, and which one is
+ * not the extractor's to guess. Before S4-1 five fixed keys were read and a
+ * conditional-only map (`node` / `browser`) yielded nothing at all.
+ */
+export function entryCandidates(pkg: { exports?: unknown; module?: unknown; main?: unknown }): string[] {
   const out: string[] = [];
   const fromExports = (value: unknown): void => {
     if (typeof value === "string") {
-      out.push(value);
+      if (!out.includes(value)) out.push(value);
+    } else if (Array.isArray(value)) {
+      for (const item of value) fromExports(item);
     } else if (value !== null && typeof value === "object") {
-      const record = value as Record<string, unknown>;
-      for (const key of ["default", "import", "require", "types", "."]) {
-        if (key in record) fromExports(record[key]);
-      }
+      for (const item of Object.values(value as Record<string, unknown>)) fromExports(item);
     }
   };
   fromExports(pkg.exports);
-  if (typeof pkg.module === "string") out.push(pkg.module);
-  if (typeof pkg.main === "string") out.push(pkg.main);
+  if (typeof pkg.module === "string" && !out.includes(pkg.module)) out.push(pkg.module);
+  if (typeof pkg.main === "string" && !out.includes(pkg.main)) out.push(pkg.main);
   return out;
 }
 
@@ -276,7 +304,8 @@ export function resolveRelative(
 
 type AliasTarget =
   | { kind: "dep"; pkg: string; member?: string }
-  | { kind: "file"; rel: string; member?: string }
+  /** `also`: the other entry files a workspace package's manifest names (S4-1) — imported alongside `rel` */
+  | { kind: "file"; rel: string; member?: string; also?: string[] }
   | { kind: "phantom"; id: string }; // unresolved relative import
 
 interface CallSite {
@@ -302,6 +331,7 @@ class GraphBuilder {
   nodes = new Map<string, GraphNode>();
   edges = new Map<string, GraphEdge>();
   routes = new Map<string, RouteDecl>();
+  opaqueImports: OpaqueImport[] = [];
 
   node(n: GraphNode): string {
     const existing = this.nodes.get(n.id);
@@ -482,6 +512,7 @@ export async function extractGraph(
     edges: [...b.edges.values()],
     routes: [...b.routes.values()],
     files: rels,
+    opaqueImports: b.opaqueImports,
   };
 }
 
@@ -491,7 +522,7 @@ function walkSourceFile(
   info: FileInfo,
   b: GraphBuilder,
   fileSet: ReadonlySet<string>,
-  workspace: ReadonlyMap<string, string> = new Map(),
+  workspace: ReadonlyMap<string, string[]> = new Map(),
 ): void {
   const lineOf = (node: ts.Node): number =>
     sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
@@ -512,8 +543,11 @@ function walkSourceFile(
     // on its entry file, so the walk crosses the package boundary instead of
     // dead-ending on a dependency node (a subpath import maps to the same
     // entry file — over-approximate, the safe direction for the gates)
-    const entry = workspace.get(pkg);
-    if (entry !== undefined) return { kind: "file", rel: entry };
+    const entries = workspace.get(pkg);
+    if (entries !== undefined) {
+      const [first, ...also] = entries as [string, ...string[]];
+      return { kind: "file", rel: first, ...(also.length > 0 ? { also } : {}) };
+    }
     return { kind: "dep", pkg, ...(member !== undefined ? { member } : {}) };
   };
 
@@ -530,6 +564,17 @@ function walkSourceFile(
       kind: "imports",
       resolution: target.kind === "phantom" ? "inferred" : "exact",
     });
+    // a workspace package with several entry files is entered through all of them
+    if (target.kind === "file" && target.also) {
+      for (const other of target.also) {
+        b.edge({ src: fileId(rel), dst: fileId(other), kind: "imports", resolution: "exact" });
+      }
+    }
+  };
+
+  // a load the extractor cannot follow (S4-1): recorded, never an edge
+  const opaque = (node: ts.Node, form: OpaqueImport["form"]): void => {
+    b.opaqueImports.push({ file: rel, line: lineOf(node), form });
   };
 
   const declareSymbol = (name: string, at: ts.Node, exported: boolean): string => {
@@ -549,15 +594,15 @@ function walkSourceFile(
   const isExported = (node: ts.HasModifiers): boolean =>
     ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
 
+  const isRequireCall = (node: ts.Node): boolean =>
+    ts.isCallExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === "require" &&
+    node.arguments.length === 1;
+
   const requireSpec = (node: ts.Node): string | undefined => {
-    if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === "require" &&
-      node.arguments.length === 1 &&
-      ts.isStringLiteralLike(node.arguments[0]!)
-    ) {
-      return (node.arguments[0] as ts.StringLiteralLike).text;
+    if (isRequireCall(node) && ts.isStringLiteralLike((node as ts.CallExpression).arguments[0]!)) {
+      return ((node as ts.CallExpression).arguments[0] as ts.StringLiteralLike).text;
     }
     return undefined;
   };
@@ -673,6 +718,10 @@ function walkSourceFile(
       const exported = isExported(node);
       for (const decl of node.declarationList.declarations) {
         const spec = decl.initializer ? requireSpec(decl.initializer) : undefined;
+        if (spec === undefined && decl.initializer && isRequireCall(decl.initializer)) {
+          opaque(decl.initializer, "require");
+          continue;
+        }
         if (spec !== undefined) {
           const root = importTarget(spec);
           importEdge(root);
@@ -718,9 +767,14 @@ function walkSourceFile(
         importEdge(importTarget(spec));
         return;
       }
+      if (isRequireCall(node)) {
+        opaque(node, "require");
+        return;
+      }
       if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
         const arg = node.arguments[0];
         if (arg && ts.isStringLiteralLike(arg)) importEdge(importTarget(arg.text));
+        else opaque(node, "import()");
         return;
       }
 

@@ -172,6 +172,25 @@ export const ClaimBasis = z.object({
       }),
     )
     .optional(),
+  /**
+   * Every load by a specifier the extractor could not read (S4-1) —
+   * `require(expr)`, `import(expr)` — with whether the walk reached the file
+   * holding it. A reached one is a place the program may continue into any
+   * module unseen, so the reachable set past it is unknown and the gate
+   * refuses `not_affected` for the run while one exists (`degraded` says
+   * so). Signed with the claim so a reader sees the hole rather than infers
+   * it; absent when the graph recorded none.
+   */
+  opaque_imports: z
+    .array(
+      z.object({
+        file: z.string(),
+        line: z.number().int(),
+        form: z.enum(["require", "import()"]),
+        reached: z.boolean(),
+      }),
+    )
+    .optional(),
   /** what the walk was over — the graph's own identity and shape */
   graph: z
     .object({
