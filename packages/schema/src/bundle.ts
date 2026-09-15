@@ -297,6 +297,22 @@ export const EvidencePredicate = z.object({
        * and absent reads true — the value all of those were.
        */
       automated: z.boolean().optional(),
+      /**
+       * The runner that produced the bytes (T0-1), copied from the
+       * submission when one did: name, the caller ARN STS returned, account,
+       * partition, region, and the digest of the request the run answered.
+       * Absent on every manual submission and every bundle before T.
+       */
+      runner: z
+        .strictObject({
+          name: z.string().min(1),
+          caller_arn: z.string().min(1),
+          account: z.string().min(1),
+          partition: z.string().min(1),
+          region: z.string().min(1),
+          request_digest: z.string().min(1),
+        })
+        .optional(),
     })
     .optional(),
   ksi_ids: z.array(z.string()),
