@@ -2,6 +2,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { initRunnerKeys, loadRunnerKeys, signTranscript } from "./keys.js";
+import { once, poll } from "./modes.js";
 import { callerIdentity, runRequest } from "./run.js";
 import type { RunInput } from "./run.js";
 import { DENIAL_PROBES, selfCheck } from "./selfcheck.js";
@@ -20,6 +21,10 @@ function usage(): never {
       "usage: rampscan-runner init --keys <dir>",
       "       rampscan-runner run --request <run-input.json> --out <dir> [--keys <dir>] [--region <r>] [--name <runner-name>]",
       "                           [--skip-self-check]   (emulators only: IAM's simulate-principal-policy is where the role is shown read-only)",
+      "       rampscan-runner poll --console <url> --keys <dir> --name <runner-name> [--region <r>] [--interval <s>] [--max <n>]",
+      "                           the sidecar: ask the console for the next request under the registered key, run it, post the transcript, repeat",
+      "       rampscan-runner once --request <token> [--region <r>]",
+      "                           the CloudShell one-shot: the token the console showed, an ephemeral key, one run",
     ].join("\n"),
   );
   process.exit(2);
@@ -43,12 +48,40 @@ async function main(): Promise<void> {
     process.stdout.write(keys.publicKeyPem);
     return;
   }
+  const regionOf = (fallback?: string) => opt("region") ?? fallback ?? process.env["AWS_REGION"] ?? process.env["AWS_DEFAULT_REGION"] ?? "us-east-1";
+  const log = (line: string) => console.error(`rampscan-runner: ${line}`);
+  if (args[0] === "poll") {
+    const consoleUrl = opt("console");
+    const keysDir = opt("keys");
+    const name = opt("name");
+    if (consoleUrl === undefined || keysDir === undefined || name === undefined) usage();
+    const keys = await loadRunnerKeys(keysDir);
+    log(`polling ${consoleUrl} as ${name} (keyid ${keys.keyid.slice(0, 12)}…), outbound only`);
+    const max = opt("max");
+    const { handled } = await poll({
+      console: consoleUrl.replace(/\/+$/, ""),
+      keys,
+      runner: { name, region: regionOf() },
+      intervalMs: Number(opt("interval") ?? "30") * 1000,
+      ...(max !== undefined ? { maxRequests: Number(max) } : {}),
+      skipSelfCheck: args.includes("--skip-self-check"),
+      log,
+    });
+    log(`${handled} request(s) handled`);
+    return;
+  }
+  if (args[0] === "once") {
+    const token = opt("request");
+    if (token === undefined) usage();
+    const reply = await once({ token, region: regionOf(), skipSelfCheck: args.includes("--skip-self-check"), log });
+    process.exit(reply.kind === "submission" ? 0 : reply.kind === "failed" ? 4 : 5);
+  }
   if (args[0] !== "run") usage();
   const requestPath = opt("request");
   const out = opt("out");
   if (requestPath === undefined || out === undefined) usage();
   const input = JSON.parse(await readFile(requestPath, "utf8")) as RunInput;
-  const region = opt("region") ?? input.runner?.region ?? process.env["AWS_REGION"] ?? process.env["AWS_DEFAULT_REGION"] ?? "us-east-1";
+  const region = regionOf(input.runner?.region);
   const name = opt("name") ?? input.runner?.name ?? "runner";
   // T3-3: the role is shown read-only before anything runs, and the result
   // rides in the transcript. Skipping is for emulators that cannot answer

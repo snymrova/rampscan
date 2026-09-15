@@ -14,6 +14,8 @@ import type { RunTranscript } from "@rampscan/schema";
 // runner imports no rampscan package by value (T3-5).
 
 export const RUN_TRANSCRIPT_PAYLOAD_TYPE = "application/vnd.rampscan.run-transcript+json";
+/** what `poll` signs to ask for work — a claim of key possession, never a transcript */
+export const RUN_CLAIM_PAYLOAD_TYPE = "application/vnd.rampscan.run-claim+json";
 
 const PRIVATE_KEY_FILE = "runner.key";
 const PUBLIC_KEY_FILE = "runner.pub";
@@ -89,16 +91,21 @@ export async function loadRunnerKeys(dir: string): Promise<RunnerKeys> {
   return { privateKey, publicKey, keyid: keyIdOf(publicKey), publicKeyPem: publicKey.export({ type: "spki", format: "pem" }).toString() };
 }
 
+/** a DSSE envelope over the canonical form of any document, under the payload type that says what it is */
+export function signPayload(value: unknown, payloadType: string, keys: RunnerKeys): TranscriptEnvelope {
+  const payload = Buffer.from(canonicalJson(value));
+  const sig = cryptoSign("sha256", pae(payloadType, payload), keys.privateKey);
+  return { payload: payload.toString("base64"), payloadType, signatures: [{ keyid: keys.keyid, sig: sig.toString("base64") }] };
+}
+
 /** the envelope the runner hands back: the canonical transcript, signed */
 export function signTranscript(transcript: RunTranscript, keys: RunnerKeys): TranscriptEnvelope {
-  const payload = Buffer.from(canonicalJson(transcript));
-  const sig = cryptoSign("sha256", pae(RUN_TRANSCRIPT_PAYLOAD_TYPE, payload), keys.privateKey);
-  return { payload: payload.toString("base64"), payloadType: RUN_TRANSCRIPT_PAYLOAD_TYPE, signatures: [{ keyid: keys.keyid, sig: sig.toString("base64") }] };
+  return signPayload(transcript, RUN_TRANSCRIPT_PAYLOAD_TYPE, keys);
 }
 
 /** the check the appliance makes, offered here so the runner can verify its own output before sending */
-export function verifyTranscriptEnvelope(envelope: TranscriptEnvelope, publicKeyPem: string): boolean {
-  if (envelope.payloadType !== RUN_TRANSCRIPT_PAYLOAD_TYPE) return false;
+export function verifyTranscriptEnvelope(envelope: TranscriptEnvelope, publicKeyPem: string, payloadType: string = RUN_TRANSCRIPT_PAYLOAD_TYPE): boolean {
+  if (envelope.payloadType !== payloadType) return false;
   const publicKey = createPublicKey(publicKeyPem);
   const keyid = keyIdOf(publicKey);
   const signed = pae(envelope.payloadType, Buffer.from(envelope.payload, "base64"));
