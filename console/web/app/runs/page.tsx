@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
+import { CloudRuns } from "../../components/CloudRuns";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
 import { producedByRun, toolHealth } from "../../lib/provenance";
@@ -118,6 +119,10 @@ function Runs() {
           </>
         )}
       </p>
+
+      {/* cloud runs (T4-3): the runner lifecycle, folded from the ledger on each read */}
+      <CloudRuns />
+
 
       {repos.length > 1 && (
         <div className="filters">

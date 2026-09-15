@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
+import { CollectEvidence } from "../components/CollectEvidence";
 import { RequireAuth } from "../components/guard";
 import { Term } from "../components/Term";
 import { formatAge } from "../lib/mvx";
@@ -288,6 +289,11 @@ function KsiRowView({
                 {register.history_met === true ? " · met" : " · not yet met"}
               </p>
             )}
+
+            {/* collect evidence (T4-1): the pinned AWS recipes for this KSI a
+                client-deployed runner could run; the click mints a signed
+                request, and the appliance judges what comes back */}
+            <CollectEvidence ksi={entry.ksi} />
 
             {/* the artifact checklist (Q3.3, G5): five rows always, quoting
                 the pinned rules' own texts. Computed rows name the fact they

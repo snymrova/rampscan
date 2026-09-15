@@ -11,7 +11,7 @@ The evidence under those rows is signed and commit-anchored. `scan` produces it 
 
 ## Status
 
-**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,284 tests across 110 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
+**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,292 tests across 112 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
@@ -84,7 +84,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 1,284 tests across 110 files; the ones wanting a tool or PocketBase skip by name
+pnpm test               # 1,292 tests across 112 files; the ones wanting a tool or PocketBase skip by name
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard

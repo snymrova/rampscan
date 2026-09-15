@@ -4,6 +4,7 @@ import { RAMPSCAN_SCAN_RUN_TYPE, ScanRun } from "./scan-run.js";
 import { RAMPSCAN_ARTIFACT_JUDGMENT_TYPE, ArtifactJudgment } from "./artifact-judgment.js";
 import { RAMPSCAN_ATTESTATION_TYPE, Attestation } from "./attestation.js";
 import { RAMPSCAN_RUNNER_REGISTRATION_TYPE, RunnerRegistration } from "./runner-registration.js";
+import { RAMPSCAN_RUN_EVENT_TYPE, RAMPSCAN_RUN_REQUEST_EVENT_TYPE, RunEvent, RunRequestEvent } from "./transcript.js";
 import { RAMPSCAN_ARTIFACT_TYPE, Artifact } from "./artifact.js";
 import {
   RAMPSCAN_ARTIFACT_DECLARATIONS_TYPE,
@@ -64,6 +65,8 @@ export const LedgerStatement = z.discriminatedUnion("predicateType", [
   ArtifactDeclarations,
   ScanRun,
   RunnerRegistration,
+  RunRequestEvent,
+  RunEvent,
 ]);
 export type LedgerStatement = z.infer<typeof LedgerStatement>;
 
@@ -97,4 +100,12 @@ export function isArtifactDeclarations(s: LedgerStatement): s is ArtifactDeclara
 
 export function isRunnerRegistration(s: LedgerStatement): s is RunnerRegistration {
   return s.predicateType === RAMPSCAN_RUNNER_REGISTRATION_TYPE;
+}
+
+export function isRunRequestEvent(s: LedgerStatement): s is RunRequestEvent {
+  return s.predicateType === RAMPSCAN_RUN_REQUEST_EVENT_TYPE;
+}
+
+export function isRunEvent(s: LedgerStatement): s is RunEvent {
+  return s.predicateType === RAMPSCAN_RUN_EVENT_TYPE;
 }
