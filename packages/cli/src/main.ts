@@ -14,6 +14,7 @@ import {
 import { createLocalLedger } from "@rampscan/ledger";
 import { createProjector } from "@rampscan/projector";
 import type { CertClass } from "@rampscan/core";
+import { Cadence } from "@rampscan/schema";
 import { windowMsFor } from "@rampscan/scheduler";
 import { renderBoard, renderBoardDiff } from "./board.js";
 import { computeBoardAsOf } from "./board-asof.js";
@@ -86,7 +87,9 @@ function usage(): never {
       "                    no artifact kept. Exits 1 on a would-be violation (pre-commit / CI gate)",
       "  verify <digest>   verify one ledger bundle offline (content + signature)",
       "  ingest <path>     append CLIENT-RUN signed results as ledger citizens (SPEC §12.8):",
-      "                    a submission file, or an Evidence/ tree with ingest-manifest.json.",
+      "                    a submission file, an Evidence/ tree with ingest-manifest.json, or a",
+      "                    machine-readable assessment package (.yaml; needs --cadence, and",
+      "                    --crosswalk when its KSI ids are an earlier catalog's).",
       "                    Requires --repo; validates against the pinned catalog; refuses the",
       "                    whole batch before signing anything. Never executes an AWS call",
       "  board             show the projection: registers, live evidence, graveyard (--json for the fold)",
@@ -153,6 +156,9 @@ function usage(): never {
       "  --adjudications <dir>  frontier: per-control disposition dir (default: recipes/adjudications)",
       "  --repo <name>     ingest: the offering/repo whose register the evidence joins (required —",
       "                    the row key is never guessed)",
+      "  --crosswalk <file>  ingest (package): the reviewed KSI crosswalk placing an earlier",
+      "                    catalog's ids at this pin (recipes/crosswalks/)",
+      "  --cadence <c>     ingest (package): the declared refresh cycle — a package carries none",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b).",
       "                    owed, frontier, gaps and exports: also accept a and d — reporting",
@@ -206,6 +212,8 @@ async function main(): Promise<void> {
       rules: { type: "string" },
       adjudications: { type: "string" },
       repo: { type: "string" },
+      crosswalk: { type: "string" },
+      cadence: { type: "string" },
       strict: { type: "boolean" },
       "by-controls": { type: "boolean" },
       class: { type: "string" },
@@ -335,6 +343,10 @@ async function main(): Promise<void> {
         console.error("ingest requires --repo <name> — the register's row key is never guessed");
         process.exit(2);
       }
+      if (values.cadence !== undefined && !Cadence.options.includes(values.cadence as Cadence)) {
+        console.error(`--cadence must be one of ${Cadence.options.join("|")}, not ${values.cadence}`);
+        process.exit(2);
+      }
       await ingest({
         path: target,
         repo: values.repo,
@@ -343,6 +355,8 @@ async function main(): Promise<void> {
         datasetPin,
         ledgerDir,
         keysDir,
+        crosswalk: values.crosswalk,
+        cadence: values.cadence as Cadence | undefined,
         log: (line) => console.log(line),
       });
       return;

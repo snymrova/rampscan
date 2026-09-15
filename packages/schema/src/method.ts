@@ -104,10 +104,11 @@ export const AttestationProvenance = z.strictObject({
 export type AttestationProvenance = z.infer<typeof AttestationProvenance>;
 
 /**
- * `automated` is the FRC-CSX-VVK numerator. It is fixed per source today
- * (pipeline, aws-ingested → true; attestation → false) but STORED, not
- * derived at read time: the numerator of a legal floor is asserted where an
- * assessor can see it, and a future source may not be uniform.
+ * `automated` is the FRC-CSX-VVK numerator. It is fixed per source for
+ * pipeline (true) and attestation (false), and for aws-ingested it is the
+ * submission's own declaration (S3-1: true unless declared otherwise) — but
+ * STORED in every case, not derived at read time: the numerator of a legal
+ * floor is asserted where an assessor can see it.
  */
 const methodBase = {
   /** deterministic: `${source}:${source_ref}#${ksi}` — see `methodId` */
@@ -202,11 +203,15 @@ export function methodsOfRecipe(recipe: PipelineRecipe, scope: MethodScope): Pip
  * The aws-ingested derivation (SPEC §12.8, Q4.1): an ingested bundle's
  * contract yields its method — a pure function of the SIGNED bundle, so the
  * aws-ingested register is recoverable from the ledger alone, exactly as
- * §12.2 promised. `automated: true` and `clock: "machine"` are fixed per
- * source (the client ran an automated recipe; a human statement takes the
- * attestation path, Q4.2), and `standing: "full"` is fixed the same way
- * today — a submission-declared standing is a future contract field, not a
- * default this function invents.
+ * §12.2 promised. `automated` is the submission's own declaration, carried in
+ * the bundle's `ingest` block (S3-1) and true where none was made — the value
+ * every submission before it had, a client-run recipe with the assertions it
+ * evaluated; the package adapter declares false, because a person's reading
+ * of a captured artifact is not a machine validation, and the FRC-CSX-VVK
+ * numerator does not move for it. `clock` follows `automated`, as it does
+ * for every source: a non-automated method sits on VDR-TFR-NMV's clock.
+ * `standing: "full"` is fixed per source today — a submission-declared
+ * standing is a future contract field, not a default this function invents.
  *
  * Two refusals, both the contract-rule class: a bundle without the `ingest`
  * block is not an ingested bundle (deriving a method from it would fabricate
@@ -217,7 +222,9 @@ export function methodsOfRecipe(recipe: PipelineRecipe, scope: MethodScope): Pip
 export function methodOfIngestedBundle(predicate: {
   recipe_id: string;
   ksi_ids: string[];
-  ingest?: { signer_identity: string; ingest_digest: string } | undefined;
+  ingest?:
+    | { signer_identity: string; ingest_digest: string; automated?: boolean | undefined }
+    | undefined;
 }): AwsIngestedMethod {
   if (predicate.ingest === undefined) {
     throw new Error(
@@ -232,12 +239,13 @@ export function methodOfIngestedBundle(predicate: {
         `the ingestion contract mints exactly one per submission (SPEC §12.8)`,
     );
   }
+  const automated = predicate.ingest.automated ?? true;
   return {
     id: methodId("aws-ingested", predicate.recipe_id, ksi),
     ksi,
     source: "aws-ingested" as const,
-    automated: true,
-    clock: "machine" as const,
+    automated,
+    clock: automated ? ("machine" as const) : ("non-machine" as const),
     standing: "full" as const,
     provenance: {
       recipe_id: predicate.recipe_id,

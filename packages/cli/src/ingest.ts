@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir, stat } from "node:fs/promises";
-import { basename, join, relative } from "node:path";
+import { basename, extname, join, relative } from "node:path";
 import { z } from "zod";
 import { evaluateAssertions, toIngestedBundle } from "@rampscan/core";
 import type { Digest, ObservationRows } from "@rampscan/core";
@@ -19,16 +19,22 @@ import {
   submissionVerdict,
 } from "@rampscan/schema";
 import { createLocalSigner } from "@rampscan/signer";
+import { loadPackage } from "./ingest-package.js";
+import type { PackageIngestOptions } from "./ingest-package.js";
 
 // `rampscan ingest <path>` (SPEC §12.8, plan Q4.1): client-run signed results
-// become ledger citizens. Two input shapes, one contract:
+// become ledger citizens. Three input shapes, one contract:
 //
-//   a FILE       one native IngestSubmission document
+//   a JSON FILE  one native IngestSubmission document
 //   a DIRECTORY  an Evidence/<family>/<KSI-ID>/ tree plus the client-authored
 //                ingest-manifest.json — the adapter that meets clients where
-//                they already are (docs/RESEARCH-PARAMIFY-PILOT.md §3). The
-//                adapter's OUTPUT is native submissions, so the digest
-//                discipline is identical on both paths.
+//                they already are (docs/RESEARCH-PARAMIFY-PILOT.md §3)
+//   a YAML FILE  a machine-readable assessment package (S3-1, §8.3 of the
+//                same note) — `ingest-package.ts`, with a reviewed crosswalk
+//                when its KSI ids are an earlier catalog's
+//
+// Every adapter's OUTPUT is native submissions, so the digest discipline is
+// identical on every path.
 //
 // Validate-then-append: every submission is checked against the contract and
 // the pinned catalog BEFORE anything is signed — one bad submission refuses
@@ -50,14 +56,17 @@ export interface IngestRecord {
 }
 
 /**
- * A tree entry the adapter did not turn into a submission (#147): the run
- * failed, so the account was never read and there is nothing to attest to —
- * named the way a skipped collector is, and absent from the ledger.
+ * An entry an adapter did not turn into a submission, named the way a
+ * skipped collector is and absent from the ledger: on the tree path a failed
+ * run (#147 — the account was never read, so there is nothing to attest to;
+ * `exit_code` carries what the orchestrator recorded), on the package path an
+ * evidence whose indicator has no successor at the pin (S3-1 — no KSI row to
+ * join, so no bundle under any verdict).
  */
 export interface SkippedEntry {
   ksi: string;
   script: string;
-  exit_code: number;
+  exit_code?: number;
   reason: string;
 }
 
@@ -73,6 +82,10 @@ export interface IngestOutcome {
 export interface LoadedSubmissions {
   submissions: IngestSubmission[];
   skipped: SkippedEntry[];
+  /** what the input said about itself, for the log; the package path fills it */
+  notes?: string[];
+  /** what to add to a catalog refusal — the package path names `--crosswalk` */
+  refusalHint?: string;
 }
 
 export interface IngestOptions {
@@ -86,6 +99,10 @@ export interface IngestOptions {
   datasetPin: string;
   ledgerDir: string;
   keysDir: string;
+  /** package path only: the reviewed KSI crosswalk, when the package's ids are an earlier catalog's */
+  crosswalk?: string | undefined;
+  /** package path only: the declared refresh cycle — the package carries none */
+  cadence?: PackageIngestOptions["cadence"];
   log?: (line: string) => void;
 }
 
@@ -213,9 +230,42 @@ async function entryToSubmission(
   };
 }
 
-/** parse the input into native submissions — the two shapes, one output */
-export async function loadSubmissions(path: string): Promise<LoadedSubmissions> {
+/** parse the input into native submissions — the three shapes, one output */
+export async function loadSubmissions(
+  path: string,
+  packageOptions?: PackageIngestOptions,
+): Promise<LoadedSubmissions> {
   const info = await stat(path);
+  if (info.isFile() && /^\.ya?ml$/i.test(extname(path))) {
+    if (packageOptions === undefined) {
+      throw new Error(
+        `${path} is a package, and the package adapter needs its options (crosswalk, cadence, pin)`,
+      );
+    }
+    const { submissions, retired, summary } = await loadPackage(path, packageOptions);
+    const statuses = Object.entries(summary.assessmentStatus)
+      .map(([k, v]) => `${v} ${k}`)
+      .join(", ");
+    return {
+      submissions,
+      skipped: retired,
+      notes: [
+        `package: ${summary.cso || basename(path)} assessed by ${summary.assessor || "(unnamed)"} — ` +
+          `${summary.validations} validations (${statuses}), ${summary.evidences} evidences ` +
+          `(${summary.markedAutomated} marked automated by the package), ${summary.artifacts} artifacts named by reference`,
+        `package: no assertion is read from it — every bundle is unevidenced, point-in-time, and not an ` +
+          `automated method; the assessor's reading is the package's, not a verdict this appliance signs`,
+        ...summary.merged.map((m) => `package: ${m}`),
+      ],
+      ...(packageOptions.crosswalk === undefined
+        ? {
+            refusalHint:
+              "the package names its KSIs in ids this pin does not carry — an earlier catalog's package is " +
+              "placed by a reviewed crosswalk: --crosswalk recipes/crosswalks/<from>-to-<pin>.json (SPEC §12.8)",
+          }
+        : {}),
+    };
+  }
   if (info.isFile()) {
     const raw = JSON.parse(await readFile(path, "utf8")) as unknown;
     try {
@@ -267,7 +317,12 @@ export async function loadSubmissions(path: string): Promise<LoadedSubmissions> 
 
 export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
   const log = options.log ?? (() => {});
-  const { submissions, skipped } = await loadSubmissions(options.path);
+  const { submissions, skipped, notes, refusalHint } = await loadSubmissions(options.path, {
+    crosswalk: options.crosswalk,
+    cadence: options.cadence,
+    datasetPin: options.datasetPin,
+  });
+  for (const line of notes ?? []) log(line);
   for (const s of skipped) log(`${s.script}#${s.ksi} → skipped: ${s.reason}`);
 
   // Refusal before append: unknown KSIs and in-batch duplicates are collected
@@ -298,7 +353,8 @@ export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
   }
   if (problems.length > 0) {
     throw new Error(
-      `ingestion refused — nothing appended:\n${problems.map((p) => `  ${p}`).join("\n")}`,
+      `ingestion refused — nothing appended:\n${problems.map((p) => `  ${p}`).join("\n")}` +
+        (refusalHint !== undefined ? `\n  ${refusalHint}` : ""),
     );
   }
 
@@ -330,7 +386,7 @@ export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
   }
   log(
     `ingest: ${appended.length} bundle(s) appended, ${unchanged.length} unchanged, ` +
-      `${skipped.length} skipped (failed runs) — no AWS call was executed by this appliance`,
+      `${skipped.length} skipped — no AWS call was executed by this appliance`,
   );
   return { appended, unchanged, skipped };
 }

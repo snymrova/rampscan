@@ -4,6 +4,7 @@ import {
   IN_TOTO_STATEMENT_TYPE,
   RAMPSCAN_PREDICATE_TYPE,
   canonicalJson,
+  isDigested,
   methodId,
   submissionVerdict,
 } from "@rampscan/schema";
@@ -30,8 +31,11 @@ export function ingestDigest(submission: IngestSubmission): string {
  * The mint. Everything the predicate says is computed from the submission or
  * the context — never typed here:
  *
- * - subjects are the submitted artifact digests (≥1 by contract, so the
- *   statement's `subject` floor holds without a special case);
+ * - subjects are the submitted artifact digests (≥1 digested by contract, so
+ *   the statement's `subject` floor holds without a special case); an
+ *   artifact the submission only NAMES (S3-1) is no subject — it stays in
+ *   the submission the handoff digest addresses, and the bundle attests to
+ *   nothing it has no bytes for;
  * - `anchor_paths: []` and `commit: ""` — ingested evidence has no commit
  *   anchor, so it dies superseded or goes stale (G3) but never by anchor
  *   drift: the honest death model for evidence about a cloud account rather
@@ -51,7 +55,7 @@ export function toIngestedBundle(
   const digest = ingestDigest(submission);
   return {
     _type: IN_TOTO_STATEMENT_TYPE,
-    subject: submission.artifacts.map((a) => ({
+    subject: submission.artifacts.filter(isDigested).map((a) => ({
       name: a.name,
       digest: { sha256: a.sha256 },
     })),
@@ -63,6 +67,9 @@ export function toIngestedBundle(
       ingest: {
         signer_identity: submission.signer_identity,
         ingest_digest: digest,
+        // copied only when declared: an undeclared submission mints the same
+        // bytes it always did, and the method reads absent as true (S3-1)
+        ...(submission.automated !== undefined ? { automated: submission.automated } : {}),
       },
       ksi_ids: [submission.ksi],
       // the crosswalk rides the KSI in the pinned dataset (§12.2) — an

@@ -18,11 +18,31 @@ export const INGEST_MANIFEST_TYPE =
   "https://rampscan.dev/ingest-manifest/v1" as const;
 
 /** a client output file, by digest — becomes a subject of the minted bundle */
-export const IngestedArtifact = z.strictObject({
+export const DigestedArtifact = z.strictObject({
   name: z.string().min(1),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
 });
+export type DigestedArtifact = z.infer<typeof DigestedArtifact>;
+
+/**
+ * An artifact the submission NAMES but does not hand over (S3-1): an assessed
+ * package lists its evidence files by reference — a file name, a URL — and
+ * ships none of the bytes. Carried as what it is, a pointer, and never given
+ * a digest the appliance did not compute over bytes it held. Not a subject of
+ * the minted bundle: subjects are content addresses.
+ */
+export const ReferencedArtifact = z.strictObject({
+  name: z.string().min(1),
+  reference: z.string().min(1).optional(),
+});
+export type ReferencedArtifact = z.infer<typeof ReferencedArtifact>;
+
+export const IngestedArtifact = z.union([DigestedArtifact, ReferencedArtifact]);
 export type IngestedArtifact = z.infer<typeof IngestedArtifact>;
+
+export function isDigested(artifact: IngestedArtifact): artifact is DigestedArtifact {
+  return "sha256" in artifact;
+}
 
 /**
  * One assertion outcome. On the native path it is what the client's run
@@ -56,8 +76,17 @@ export const IngestSubmission = z.strictObject({
   evidence_class: EvidenceClass,
   /** the cycle the client runs this on — artifact 2's record */
   cadence: Cadence,
-  /** ≥1: a result with nothing to attest to is not evidence */
-  artifacts: z.array(IngestedArtifact).min(1),
+  /**
+   * ≥1 DIGESTED: a result with nothing to attest to is not evidence, and what
+   * is attested to is bytes the appliance held — referenced artifacts may
+   * ride beside a digested one, never instead of it.
+   */
+  artifacts: z
+    .array(IngestedArtifact)
+    .min(1)
+    .refine((artifacts) => artifacts.some(isDigested), {
+      message: "at least one artifact must carry a sha256 — a submission of pointers alone has nothing to attest to",
+    }),
   /**
    * The verdict is computed from these. Empty is permitted and means exactly
    * what it says (#147): the artifacts were collected and nothing evaluated
@@ -69,6 +98,16 @@ export const IngestSubmission = z.strictObject({
   timestamp: z.iso.datetime({ offset: true }),
   /** who ran it and stands behind it */
   signer_identity: z.string().min(1),
+  /**
+   * Whether a MACHINE validated this result — the FRC-CSX-VVK numerator, as
+   * the method derived from the minted bundle will carry it. Absent means
+   * true, which is what every submission before S3-1 was: a client-run
+   * recipe with the assertions it evaluated. The package adapter declares
+   * false, because an assessed package carries a person's reading and no
+   * machine assertion — whatever produced the artifact, nothing validated it
+   * by machine, and the numerator of a legal floor does not move for it.
+   */
+  automated: z.boolean().optional(),
   tool_versions: z.record(z.string(), z.string()).optional(),
   reproduce: z.string().optional(),
 });
@@ -132,3 +171,39 @@ export const IngestManifest = z.strictObject({
   entries: z.array(IngestManifestEntry).min(1),
 });
 export type IngestManifest = z.infer<typeof IngestManifest>;
+
+/**
+ * A KSI crosswalk (S3-1): the reviewed mapping the package adapter applies
+ * when a package names its KSIs in an earlier catalog's ids. Not a rename
+ * table — between the Phase One numbering and the 2026 rules, family
+ * acronyms, numbering and scope all moved (docs/RESEARCH-PARAMIFY-PILOT.md
+ * §4), one indicator can land on two successors or on none, and nothing
+ * upstream publishes the mapping. So it is a reviewed artifact with a basis
+ * per row, strict like every contract, and pinned to the catalog version it
+ * resolves into: a crosswalk into another pin is refused, not reinterpreted.
+ */
+export const KSI_CROSSWALK_TYPE = "https://rampscan.dev/ksi-crosswalk/v1" as const;
+
+export const KsiCrosswalkEntry = z.strictObject({
+  /** the id as the package spells it (`CNA-01`) */
+  from: z.string().min(1),
+  /** every pinned-catalog KSI the indicator lands on; empty = retired from the KSI catalog */
+  to: z.array(z.string().min(1)),
+  /** the reviewer's reason — and, for a retired indicator, where the subject went */
+  basis: z.string().min(1),
+});
+export type KsiCrosswalkEntry = z.infer<typeof KsiCrosswalkEntry>;
+
+export const KsiCrosswalk = z.strictObject({
+  _type: z.literal(KSI_CROSSWALK_TYPE),
+  from: z.strictObject({
+    catalog: z.string().min(1),
+    observed_in: z.string().min(1).optional(),
+  }),
+  /** the dataset pin the `to` ids resolve in — must equal the ingest's pin */
+  to: z.string().min(1),
+  reviewed: z.string().min(1),
+  rule: z.string().min(1).optional(),
+  entries: z.array(KsiCrosswalkEntry).min(1),
+});
+export type KsiCrosswalk = z.infer<typeof KsiCrosswalk>;
