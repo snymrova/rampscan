@@ -41,6 +41,9 @@ import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
 import { renderOwed, renderOwedKsi } from "./owed.js";
+import { DEFAULT_ALLOWLIST_PATH, loadAwsActionAllowlist } from "./aws-actions.js";
+import { DEFAULT_BINDINGS_PATH, loadAwsLiteralBindings } from "./aws-bindings.js";
+import { classifyAwsRecipes, loadAwsConfig, renderAwsRecipes, windowEnding } from "./aws-recipes.js";
 import { rebuild } from "./rebuild.js";
 import { deriveCatalogMethods, loadRecipes } from "./recipes.js";
 import { report } from "./report.js";
@@ -139,6 +142,11 @@ function usage(): never {
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
+      "  recipes --aws [path]  which pinned AWS recipes a client runner could run (plan T1-5):",
+      "                    every command's action against the reviewed allowlist, every example",
+      "                    literal against the reviewed binding table, every placeholder against",
+      "                    <path>/rampscan.config.json's `aws` block — and every manual recipe with",
+      "                    every reason. Computed, never typed. Nothing executes",
       "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
       "                    method floor, validation window, artifact count — every number read",
       "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
@@ -216,6 +224,7 @@ async function main(): Promise<void> {
       cadence: { type: "string" },
       strict: { type: "boolean" },
       "by-controls": { type: "boolean" },
+      aws: { type: "boolean" },
       class: { type: "string" },
       "as-of": { type: "string" },
       since: { type: "string" },
@@ -892,6 +901,23 @@ async function main(): Promise<void> {
       if (values.json) console.log(JSON.stringify(conformanceResult, null, 2));
       else console.log(renderConformance(conformanceResult));
       if (!conformanceResult.conformant) process.exit(1);
+      return;
+    }
+    case "recipes": {
+      // T1-5: the classification of the pinned overlay, printed from the
+      // function the runner will be handed argv by (ground rule 4). `--aws`
+      // is the only mode today; the pipeline recipes have `tools` and `model`.
+      if (!values.aws) usage();
+      const dataset = await loadLocalDataset(datasetDir, datasetPin);
+      const report = classifyAwsRecipes(
+        dataset.recipes(),
+        await loadAwsActionAllowlist(join(REPO_ROOT, DEFAULT_ALLOWLIST_PATH)),
+        await loadAwsLiteralBindings(join(REPO_ROOT, DEFAULT_BINDINGS_PATH)),
+        await loadAwsConfig(target ?? "."),
+        windowEnding(new Date(), 30),
+        datasetPin,
+      );
+      console.log(values.json ? JSON.stringify(report, null, 2) : renderAwsRecipes(report));
       return;
     }
     case "owed": {
