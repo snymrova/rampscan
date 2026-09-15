@@ -1415,8 +1415,11 @@ test("cloud runs: Collect evidence mints a request, a stub runner polls and post
   await page.reload();
   await expect(runRow).toHaveAttribute("data-state", "accepted", { timeout: 20_000 });
   await expect(runRow).toContainText("accepted from smoke-sidecar");
-  // the evidence the intake minted, under the runner's identity: the register's own detail page
-  await runRow.locator("a[href^='/evidence/']").click();
+  // the evidence the intake minted, under the runner's identity: the register's own detail page.
+  // Read the href and navigate — the section re-renders on its poll, and a click can land mid-render
+  const href = await runRow.locator("a[href^='/evidence/']").getAttribute("href");
+  expect(href).toMatch(/^\/evidence\/[0-9a-f]{64}$/);
+  await page.goto(href!);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("iam-credential-report", { timeout: 30_000 });
   // the raw statement at the foot of the page carries the handoff: the runner's identity and its provenance block
   await expect(page.locator("pre.raw")).toContainText("runner:smoke-sidecar");
