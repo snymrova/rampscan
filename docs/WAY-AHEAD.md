@@ -18,7 +18,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | Suite | 1,138 tests across 91 files, 0 expected failures (at PR #151; 1,127 at PR #150; 1,121 at `c0a4d0a`). `pnpm typecheck` clean. CI: `check`, `test`, `console-smoke`. |
 | Plan of record | **`docs/PLAN-SOUNDNESS.md`, phases S0–S4.** Adopted 2026-09-13 (#123). Milestones S0–S4 on GitHub. |
 | Paused | R2–R5 (`docs/PLAN-ARTIFACT-PLANE.md`, #102–#115). They resume at the S3 exit. Do not work them. |
-| Drafted, not adopted | `docs/PLAN-CLOUD-RUNNER.md`, phases T0–T5 (PR #146). Builds after S1 closes. |
+| Adopted 2026-09-15 | `docs/PLAN-CLOUD-RUNNER.md`, phases T0–T5 (PR #146; milestones T0–T5, #165–#187). Building now; #72 still takes precedence. |
 
 **Why the roadmap was reordered.** On 2026-09-13 the reachability gate was found to sign `not_affected` OpenVEX statements for any advisory in a package the code did not import directly, because "no node in the graph" was treated as proof of unreachability. That is the `SECURITY.md` class (a check that reports `evidenced` without the evidence). It is recorded in `docs/FINDING-VACUOUS-NOT-AFFECTED.md` and published as **GHSA-7jff-6v53-r56x**. Feature work stopped until soundness is restored and one stranger has looked.
 
@@ -31,7 +31,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | S2 the numbers gate | ✅ closed 2026-09-15 | #133–#136 in one PR. `published-numbers.test.ts` (frontier + report arms) and `published-numbers-reporter.ts` (suite arm, at run end) gate the README; both shown red on the stale figures first. README regenerated (46 → 41, 33 → 28, `1,168 tests across 93 files`). ARCHITECTURE marked built/design per row; §7 says the human/machine signature line is one key with a recorded field. CONTRIBUTING rules 4 and 9 name their gates. |
 | S3 the first stranger | S3-0 (#147) and S3-1 (#137) done; S3-2 next | S3-0 landed 2026-09-15 ahead of S2: the ingest adapter no longer reads exit 0 as a pass. S3-1 landed 2026-09-15: the package adapter, the Phase One → 2026 crosswalk, and `docs/RESEARCH-PARAMIFY-REGISTER.md` — the first gap register over a real authorized package (116 human-read methods on 38 KSIs, 0 automated, 3 obliged KSIs unreached, 8 of 51 validations retired to FRR). #138, #105, and **#72 due 2026-10-09**. Exit gate is a reply from someone outside the project. |
 | S4 the surface S1 leans on | **closed 2026-09-15** | S4-1 landed 2026-09-15 (extractor 0.6.0): an opaque `require(expr)` / `import(expr)` is recorded and refuses the negative when reached; `exports` walked whole. S4-2 landed 2026-09-15: Biome, `biome.jsonc`, a changed-files job in `check.yml`; 59 console findings inherited and named on touch. S4-3 landed 2026-09-15: `console/web/test`, fifteen tests over `lib/emptystate.ts` and `lib/types.ts` in the root suite. |
-| T cloud runner | drafted | Starts at the S1 exit. Three owner decisions pending (T0-1..T0-3). |
+| T cloud runner | **adopted 2026-09-15** | T0-1..T0-3 decided (runner provenance block on `aws-ingested`; collected-then-judgment; sidecar + CloudShell). T2-1 landed early under S3-0. Open: T0-4 (#165) first, then T1 (#167–#171), T2 remainder (#172–#174), T3 with the CI emulator (#175–#180), T4 (#181–#185); T5 optional. |
 
 ### Open items outside any phase
 
@@ -41,7 +41,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 ## 3. What is next, in order
 
 1. **S3** sends, with #72 by 2026-10-09 — S4 closed 2026-09-15 by the owner's call to finish the software first. S3-2 (#138) is researched and drafted in `docs/RESEARCH-S3-2-OUTREACH.md` (channels, a second public package, the sequence, the three drafts); its §4 corrections landed 2026-09-15 (the "only package" claim, the Filevine register §3b), so the sends wait only on the owner for addresses and the go; then S3-3 (#72) and S3-4 (#105).
-3. **T0** decisions, then T1–T4, without displacing S3. T0-2 (what a collected-only run counts for) now has a concrete starting state: such a bundle is `unevidenced` in the ledger, and the judgment path is what would move it.
+3. **T** — adopted 2026-09-15, the owner having taken T0-1..T0-3 as recommended. Order: T0-4 (#165, the five failing vacuous-pass cases) → T1 (the allowlist and classifier, pure functions) → T2 remainder → T3 (runner, with the Moto emulator in CI) → T4 (the button). Each item its own PR, failing test first. Without displacing S3.
 4. **Owner call, not blocking:** whether #147 gets a published advisory like GHSA-7jff-6v53-r56x. Same class, but the path had only ever run on the fixture; S0-1's argument for filing (the advisory is an asset) applies, and so does the counter-argument that an advisory for a never-shipped path is noise.
 
 ## 4. The decisions already made — do not re-open
@@ -114,3 +114,4 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
 - **2026-09-15 (S4-2)** — The lint gate landed: Biome pinned, `biome.jsonc` with four departures explained inline, `lint` job in `check.yml` over `--changed --since=<base>`. Nine `packages/` findings fixed; the console's 59 stay inherited and are named on touch. Next item: S4-3 (#141).
 - **2026-09-15 (S4-3)** — The console floor landed: `console/web/test/{emptystate,types}.test.ts`, fifteen tests, in the root suite; `classifySkip`'s "pinned by test" claim is now true, against the collectors' own `absentReason`. **S4 closes.** Next item: the S3-2 §4 corrections, then the sends.
 - **2026-09-15 (S3-2 corrections)** — The register now carries both public packages (§3b) and the "only" claim is corrected where it stood; `docs/RESEARCH-S3-2-OUTREACH.md` committed. Next item: the S3-2 sends, on the owner's go; #72 by 2026-10-09.
+- **2026-09-15 (T adopted)** — The cloud-runner plan re-read against `main` at `285aabe`: S3-0 had already landed T2-1 and the tree half of T2-3, so T2 shrinks to the failure classes and the transcript adapter; T3-0 added (Moto server mode behind `AWS_ENDPOINT_URL`, CI only, never a gate). The owner took T0-1..T0-3 as recommended; #146 merged, milestones T0–T5 and #165–#187 opened. Next item: T0-4 (#165).
