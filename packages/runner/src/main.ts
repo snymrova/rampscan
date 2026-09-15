@@ -2,8 +2,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { initRunnerKeys, loadRunnerKeys, signTranscript } from "./keys.js";
-import { runRequest } from "./run.js";
+import { callerIdentity, runRequest } from "./run.js";
 import type { RunInput } from "./run.js";
+import { DENIAL_PROBES, selfCheck } from "./selfcheck.js";
 
 // `rampscan-runner init --keys <dir>` (T3-2): generate the runner's own
 // P-256 key once and print the public half for an operator to propose in
@@ -18,6 +19,7 @@ function usage(): never {
     [
       "usage: rampscan-runner init --keys <dir>",
       "       rampscan-runner run --request <run-input.json> --out <dir> [--keys <dir>] [--region <r>] [--name <runner-name>]",
+      "                           [--skip-self-check]   (emulators only: IAM's simulate-principal-policy is where the role is shown read-only)",
     ].join("\n"),
   );
   process.exit(2);
@@ -48,7 +50,27 @@ async function main(): Promise<void> {
   const input = JSON.parse(await readFile(requestPath, "utf8")) as RunInput;
   const region = opt("region") ?? input.runner?.region ?? process.env["AWS_REGION"] ?? process.env["AWS_DEFAULT_REGION"] ?? "us-east-1";
   const name = opt("name") ?? input.runner?.name ?? "runner";
-  const result = await runRequest({ ...input, runner: { name, region } });
+  // T3-3: the role is shown read-only before anything runs, and the result
+  // rides in the transcript. Skipping is for emulators that cannot answer
+  // the simulation, and it is said out loud
+  let self_check: RunInput["self_check"];
+  if (args.includes("--skip-self-check")) {
+    console.error("rampscan-runner: self-check SKIPPED — this transcript will not show the role read-only, and the appliance refuses it unless configured for an emulator");
+  } else {
+    const identity = await callerIdentity();
+    const check = await selfCheck(identity.arn, DENIAL_PROBES);
+    if (check.error !== undefined || !check.all_denied) {
+      const allowed = Object.entries(check.decisions).filter(([, d]) => d === "allowed").map(([a]) => a);
+      console.error(
+        `rampscan-runner: refused to run as ${identity.arn} — ` +
+          (check.error ?? `the role may ${allowed.join(", ")}; a runner role must be denied every probe`),
+      );
+      process.exit(3);
+    }
+    self_check = { probes: check.probes, all_denied: true };
+    console.error(`rampscan-runner: self-check passed — ${check.probes.length} mutating probes denied to ${identity.arn}`);
+  }
+  const result = await runRequest({ ...input, runner: { name, region }, ...(self_check !== undefined ? { self_check } : {}) });
   await mkdir(join(out, "outputs"), { recursive: true });
   await writeFile(join(out, "transcript.json"), `${JSON.stringify(result.transcript, null, 2)}\n`);
   const keysDir = opt("keys");

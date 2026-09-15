@@ -46,6 +46,7 @@ import { DEFAULT_ALLOWLIST_PATH, loadAwsActionAllowlist } from "./aws-actions.js
 import { DEFAULT_BINDINGS_PATH, loadAwsLiteralBindings } from "./aws-bindings.js";
 import { classifyAwsRecipes, loadAwsConfig, renderAwsRecipes, windowEnding } from "./aws-recipes.js";
 import { recordRunnerRegistration, runnerRegistry } from "./runner-registry.js";
+import { runnerPolicy } from "./runner-policy.js";
 import { rebuild } from "./rebuild.js";
 import { deriveCatalogMethods, loadRecipes } from "./recipes.js";
 import { report } from "./report.js";
@@ -154,6 +155,9 @@ function usage(): never {
       "                    the fourth two-key write (plan T3-2): an approver's key turn over a",
       "                    runner's public key. Only a registered key's transcripts are read",
       "  runner list       what stands in the registry: name, keyid, host, expected account",
+      "  runner policy [path]  the IAM policy for the runner's role (plan T3-3): the allowlist's actions",
+      "                    for exactly the recipes runnable under <path>/rampscan.config.json's aws block,",
+      "                    plus the runner's own two calls. Generated, never typed; Resource \"*\"",
       "  owed [ksi-id]     the owed side (SPEC §12): what any (KSI, class) pair owes — statement,",
       "                    method floor, validation window, artifact count — every number read",
       "                    from the pinned JSON. Accepts --class a|b|c|d (reporting is a what-if;",
@@ -921,6 +925,27 @@ async function main(): Promise<void> {
       // T3-2: the registry's two verbs and its listing. The console's decide
       // route (T4-2) reaches recordRunnerRegistration the way attestations do
       const verb = target;
+      if (verb === "policy") {
+        const root = positionals[2] ?? ".";
+        const list = await loadAwsActionAllowlist(join(REPO_ROOT, DEFAULT_ALLOWLIST_PATH));
+        const dataset = await loadLocalDataset(datasetDir, datasetPin);
+        const report = classifyAwsRecipes(
+          dataset.recipes(),
+          list,
+          await loadAwsLiteralBindings(join(REPO_ROOT, DEFAULT_BINDINGS_PATH)),
+          await loadAwsConfig(root),
+          windowEnding(new Date(), 30),
+          datasetPin,
+        );
+        const { policy, recipes } = runnerPolicy(report, list);
+        console.error(
+          `rampscan runner policy: ${policy.Statement[1]!.Action.length} read actions for ${recipes.length} runnable recipe(s)` +
+            (report.config === undefined ? " (no aws block — placeholders unbound; bind them and the set grows)" : ` under account ${report.config.account_id}`) +
+            `, plus ${policy.Statement[0]!.Action.length} of the runner's own`,
+        );
+        console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
       if (verb === "list") {
         const registry = await runnerRegistry(createLocalLedger(ledgerDir));
         if (registry.size === 0) console.log("no runner is registered — nothing this appliance would read a transcript from");

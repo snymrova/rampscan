@@ -156,6 +156,7 @@ describe("T2-5 — every pinned assertion is row-wise or names a step the recipe
       recipe_id: recipe.id,
       ksi: request.ksi,
       runner: { name: "sidecar-1", caller_arn: "arn:aws:sts::111111111111:assumed-role/r/i", account: "111111111111", partition: "aws", region: "us-east-1" },
+      self_check: { probes: ["iam:CreateUser"], all_denied: true },
       steps: rules.map((rule, i) => ({
         argv: ["aws", "configservice", "get-compliance-details-by-config-rule", "--config-rule-name", rule, "--compliance-types", "NON_COMPLIANT"],
         exit_code: 0,
