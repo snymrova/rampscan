@@ -49,7 +49,7 @@ This is the pivot's inversion (`PLAN-KSI-PIVOT.md` §1), observed in the wild in
 
 The 23 scripts in `evidence/` are a live specimen of exactly what the Q4 ingestion contract anticipates — "ramprules' AWS recipes remain the client's to run; their signed results become ledger citizens." Observed conventions:
 
-1. **Uniform invocation contract:** `script.sh <profile> <region> <output_dir> <output_csv>`. Each script emits a per-component JSON (`{"results": […]}`) into `output_dir` plus CSV rows appended to `output_csv`. Exit code is the validation outcome.
+1. **Uniform invocation contract:** `script.sh <profile> <region> <output_dir> <output_csv>`. Each script emits a per-component JSON (`{"results": […]}`) into `output_dir` plus CSV rows appended to `output_csv`. ~~Exit code is the validation outcome.~~ **Corrected 2026-09-14 (§8.1): the exit code is the *collection* outcome.** A script exits 0 whenever it finished reading the account, including when what it read is non-compliant.
 2. **Directory convention** (from `generate_directories.sh` + `run_evidence_validations.sh`): `Evidence/<family>/<KSI-ID>/<KSI-ID>.{sh,json,csv}`, orchestrated per family or per KSI ID.
 3. **Failure logging:** the orchestrator writes per-KSI failure records (KSI ID, timestamp, exit code, captured output) as txt, JSON, and CSV under `logs/`. This maps directly onto G13 — a validation flip is already a structured, timestamped record in their world; ours additionally makes it a vulnerability-shaped ledger event (`VDR-CSO-FAV`).
 4. **Coverage spread:** WAF/DoS, encryption status (S3/RDS/EBS/LB/SSL), IAM (users/roles/policies/Identity Center), EKS (inventory, least-privilege, segmentation), GuardDuty, AWS Config (monitoring + conformance packs, including the FedRAMP Low operational-best-practices pack), KMS rotation, drift (`detect_new_aws_resource.sh`), and two training scripts (the acts-on-people edge — evidence that even they reach for scripts where the true source is HR records).
@@ -94,6 +94,50 @@ Three observations, each citable when the README's positioning sentence is rewri
 
 ---
 
+## 8. Re-read on 2026-09-14, for the cloud runner (`docs/PLAN-CLOUD-RUNNER.md`)
+
+Re-cloned at `51de49c` (2026-06-04, "Add FedRAMP 2026 Consolidated Rules OSCAL profiles and catalogs"). Still 122 files, still no LICENSE. Nothing upstream changed since §1; what changed is the question being asked of it. The first read looked for shapes. This one looked at what the scripts actually do when run, because the runner plan proposes running recipes of this kind on a click.
+
+### 8.1 Correction: the exit code is not a verdict, and our tree adapter treats it as one
+
+§3.1 said "exit code is the validation outcome". It is not. Reading all 23 scripts:
+
+- **Non-zero exit means the script could not read the account** — a usage error, a failed `list-*`/`describe-*` call, or (EKS) no cluster processed. Every script has exactly one class of `exit 1`, and it is that.
+- **Zero exit means it finished reading.** `s3_encryption_status.sh` exits 0 at 0% encrypted buckets. `guard_duty.sh` prints "No GuardDuty detectors configured" and exits 0. `waf_DoS_rules.sh` exits 0 on "No Web ACLs found". The orchestrator's `FAILED (exit code N)` log records collection failures, not findings.
+- **The assessed package holds no machine assertion at all.** In `8_29_25_…yaml` every one of the 140 evidence blocks has `scriptName: ""`, `validationRules: []`, `validatedBy: ""`. The verdict is `assessmentSteps[].status: PASS` (51 of 51) with a prose `result`, method `Examine` (34) or `Test` (17), and `assessmentStatus: "True"` (49) or `Partial` (2). §5.2's substring-matching critique was aimed at `schema.yaml`; the shipped package is weaker than that — the field is empty and a person read the artifacts.
+
+`packages/cli/src/ingest.ts:157` does `passed: entry.exit_code === 0`, and SPEC §12.8 says the same ("exit code → the single assertion"). So a client who runs these scripts over an account with no GuardDuty and no encrypted bucket, scaffolds the tree exactly as `run_evidence_validations.sh` does, and hands it to `rampscan ingest`, receives a signed **`evidenced`** bundle per KSI. That is the `SECURITY.md` class — a check that reports `evidenced` without the evidence being there — introduced by trusting a convention this note misread. Filed as #147; the fix belongs before S3-1, which is the first time a real tree of this shape will be ingested.
+
+The correct reading, which is also what `PLAN-CLOUD-RUNNER.md` §2 already says for recipes without structured assertions: **exit 0 proves collection**; the bytes then need either a structured assertion evaluated by the appliance, or a two-key sufficiency judgment, before anything is `evidenced`. Exit non-zero is a failed run, never a `violated` — the account was not seen.
+
+### 8.2 The scripts through the runner's allowlist
+
+Every AWS action across the 23 scripts is `describe-*`, `get-*`, or `list-*` **except** `aws eks update-kubeconfig` (writes `~/.kube/config` on the runner host, not the account) and one `aws sso login` (interactive). So the whole set is admissible under T1-1's allowlist as-is, with those two handled as runner-local setup rather than as recipe steps. Compared with the pinned ramprules overlay (49 recipes, one of which runs a shell on production hosts), this set is the safer of the two and the one written by people who actually ran it on a 7-day clock.
+
+Two things the runner plan did not account for and now must:
+
+1. **Kubernetes is a second axis.** Four scripts (`eks_*`, `kubectl_security.sh`) run `kubectl get/describe` inside the cluster. That needs cluster RBAC, an `aws-auth`/access-entry mapping for the runner's role, and a read-only `ClusterRole` — none of which an IAM policy generated from an action allowlist provides. T1 needs a `kubectl` allowlist (`get`, `describe` on named resource kinds) and T3-3 a cluster-side least-privilege check, or these four are `manual` in the first release.
+2. **Parameters are fewer and simpler.** Their scripts take `<profile> <region>` and discover everything else. The 23 example literals in the ramprules overlay are avoidable by following this shape: enumerate, then describe each, rather than describing a named resource.
+
+### 8.3 What to include in the app, and what not to
+
+| Include | How | Phase |
+|---|---|---|
+| The `Evidence/<family>/<KSI>/` tree as an ingest input | Already done (`rampscan ingest <dir>`), **but** its verdict rule is wrong per §8.1 and must change before it meets a real tree | before S3-1 |
+| The assessed package YAML as an ingest input | **Not done, and S3-1 needs it.** The repository contains no `Evidence/` tree output, only scripts and the package. Ingesting "a package that has already passed" means a `machine-readable-package` adapter: one `IngestSubmission` per (KSI × evidence), `assessmentStatus` as the assertion, `assessedBy` as `signer_identity`, `evidence_class: point-in-time` (they are screenshots and exports), artifacts by `reference` | S3-1 |
+| Their 23 scripts' *shapes* as the reference for runner-executed recipes | Enumerate-then-describe; `{"results": […]}` + CSV; exit code = collected. Written by us, not copied | T1, T3 |
+| `CR26/FedRAMP_CR26_catalog.json` as a third leg of the catalog cross-check | Unchanged from §4 | S2 / R |
+| `security-inbox/` | A Gmail→Slack automation for FRR-FSI (security inbox deadlines). It is process evidence, not a scan; a candidate `attestation` statement template, nothing more | none |
+
+Not to include: any byte of a script or fixture (no license); their exit-code convention as a verdict (§8.1); their `validationRules` model as an assertion language (§5.2, and the shipped package does not use it either).
+
+### 8.4 Positioning, restated with the 8/29 numbers
+
+The assessed package is **51 KSIs, 140 evidence blocks, 394 artifacts (86 JSON, 45 `.sh`, 47 screenshots/PNG), 0 machine assertions, 51 empty per-KSI signatures and 1 package-level bare SHA.** Coalfire's methodology (completeness, accuracy, timeliness, exceptions) was applied by reading. That is what an authorized 20x package looked like in Phase One, and it is the baseline S3-2's question is asked against: rampscan's register would have 51 rows of `G5`-shaped artifacts each waiting on a sufficiency judgment, and zero automated methods until someone runs the scripts under a contract that judges the bytes.
+
+---
+
 ## Session log
 
+- **2026-09-14** — Re-read at `51de49c` for `PLAN-CLOUD-RUNNER.md`. §3.1 corrected: exit 0 is collection, not compliance (`s3_encryption_status.sh`, `guard_duty.sh`, `waf_DoS_rules.sh` all exit 0 on a non-compliant or empty account). That convention is what `ingest.ts:157` and SPEC §12.8 encode, so the tree adapter signs `evidenced` for a violating account of this shape — filed as #147 under the `SECURITY.md` class, fix owed before S3-1. Also found: S3-1 needs a package-YAML adapter, not the tree adapter, because the repository ships no tree output; and four scripts need `kubectl`, an axis the runner plan lacked. §8 added; nothing earlier rewritten except the strikethrough in §3.1.
 - **2026-09-11** — Repository examined (shallow clone at `main`); note drafted and filed as reference for Q0 (schema comparator), Q1 (dual-source loader), Q4 (ingestion contract shape), and the §7.5 positioning rewrite.
