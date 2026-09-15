@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import { readGraphMeta } from "./db.js";
 import { nearestRoot, type DetectedEntrypoint } from "./entrypoints.js";
-import { fileId, type EdgeKind, type Resolution } from "./extract.js";
+import { fileId, type EdgeKind, type OpaqueImport, type Resolution } from "./extract.js";
 import type { SbomDependencyGraph } from "./sbom.js";
 
 // Graph queries — plan §M4: `reaches(entrypoints, target)` answered by
@@ -208,6 +208,29 @@ export function excludedEntrypointCoverage(db: DatabaseSync): ExcludedEntrypoint
   if (meta.entrypointsExcluded.length === 0) return [];
   const reach = reachableSet(db, entryRoots(db));
   return meta.entrypointsExcluded.map((e) => ({ ...e, reached: reach.has(fileId(e.file)) }));
+}
+
+/** a load by an unreadable specifier (S4-1), and whether the walk reached the file holding it */
+export interface OpaqueImportCoverage extends OpaqueImport {
+  reached: boolean;
+}
+
+/**
+ * Where the walk may have continued unseen (S4-1): every `require(expr)` /
+ * `import(expr)` the extractor recorded, each with whether the walk from
+ * every entry point and declared route reached the file holding it. One it
+ * reached is a door the program can open onto any module, so the reachable
+ * set past that file is unknown and a negative over the walk is refused.
+ * One it never reached is a door in a room the program never enters, and
+ * refuses nothing. Undefined when the graph carries no record: an extractor
+ * that did not look for these cannot say there were none.
+ */
+export function opaqueImportCoverage(db: DatabaseSync): OpaqueImportCoverage[] | undefined {
+  const meta = readGraphMeta(db);
+  if (meta.opaqueImports === undefined) return undefined;
+  if (meta.opaqueImports.length === 0) return [];
+  const reach = reachableSet(db, entryRoots(db));
+  return meta.opaqueImports.map((o) => ({ ...o, reached: reach.has(fileId(o.file)) }));
 }
 
 /**

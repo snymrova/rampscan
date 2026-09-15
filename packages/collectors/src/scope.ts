@@ -1,7 +1,12 @@
 import type { DatabaseSync } from "node:sqlite";
 import type { ClaimBasis } from "@rampscan/schema";
-import { applicationRootCoverage, excludedEntrypointCoverage, readGraphMeta } from "@rampscan/graph";
-import type { ApplicationRootCoverage, ExcludedEntrypointCoverage } from "@rampscan/graph";
+import {
+  applicationRootCoverage,
+  excludedEntrypointCoverage,
+  opaqueImportCoverage,
+  readGraphMeta,
+} from "@rampscan/graph";
+import type { ApplicationRootCoverage, ExcludedEntrypointCoverage, OpaqueImportCoverage } from "@rampscan/graph";
 
 // The width of a walk (S1-3) — shared by every gate that makes a negative
 // claim over graph.db. "Not reachable from the entry points" is only a
@@ -73,6 +78,36 @@ export function unrecordedRootsNote(counts = "every advisory"): string {
 export const UNRECORDED_ROOTS_NOTE = unrecordedRootsNote();
 
 /**
+ * Why not_affected was refused for a run whose walk reached a file that loads
+ * by a specifier the extractor cannot read (S4-1). From that call the program
+ * may continue into any module, so "the walk did not arrive" says nothing
+ * about where the program goes.
+ */
+export function opaqueImportsNote(
+  reached: readonly OpaqueImportCoverage[],
+  subject = "the package",
+  counts = "the advisory",
+): string {
+  const named = reached.map((o) => `${o.file}:${o.line} (${o.form})`).join(", ");
+  return (
+    `the walk from the declared entry points did not reach ${subject}, but it reached ` +
+    `${reached.length === 1 ? "a file that loads" : `${reached.length} files that load`} by a specifier the extractor cannot read — ${named} — ` +
+    `so the program may continue from there into any module unseen; not_affected is refused for this run and ${counts} counts`
+  );
+}
+
+/** the refusal when the graph predates the record of opaque specifiers */
+export function unrecordedOpaqueImportsNote(counts = "every advisory"): string {
+  return (
+    "graph.db records no opaque specifiers (built by an extractor before 0.6.0), so where the walk may have continued unseen is unknown; " +
+    `not_affected is refused for this run and ${counts} the walk did not reach counts`
+  );
+}
+
+/** the advisory gate's spelling of the unrecorded-opaque-specifiers refusal */
+export const UNRECORDED_OPAQUE_IMPORTS_NOTE = unrecordedOpaqueImportsNote();
+
+/**
  * The scope of a claim as structured fields (S1-3): the same facts the
  * signed basis holds, in the shape an OpenVEX statement carries them under
  * `rampscan:scope` — a prefixed key, because the OpenVEX statement vocabulary
@@ -84,6 +119,7 @@ export interface ClaimScope {
   entrypoint_source: string;
   application_roots?: Array<{ dir: string; name?: string; walked: boolean }>;
   entrypoints_excluded?: Array<{ file: string; via: string; root: string; reached: boolean }>;
+  opaque_imports?: Array<{ file: string; line: number; form: "require" | "import()"; reached: boolean }>;
 }
 
 export interface WalkWidth {
@@ -136,6 +172,19 @@ export function walkWidth(
     scope.entrypoints_excluded = excluded;
     const unreached = excluded.filter((e) => !e.reached);
     if (unreached.length > 0) refusal ??= excludedEntrypointsNote(unreached, wording.subject, wording.counts);
+  }
+  // the third half of the width (S4-1): the loads the walk could not follow.
+  // Recorded whenever the graph knows and holds any; a refusal only where the
+  // walk reached the file holding one — an opaque call in a file the program
+  // never enters opens no door
+  const opaque = opaqueImportCoverage(db);
+  if (opaque === undefined) {
+    refusal ??= unrecordedOpaqueImportsNote(wording.countsAll);
+  } else if (opaque.length > 0) {
+    basis.opaque_imports = opaque;
+    scope.opaque_imports = opaque;
+    const reached = opaque.filter((o) => o.reached);
+    if (reached.length > 0) refusal ??= opaqueImportsNote(reached, wording.subject, wording.counts);
   }
   if (refusal !== undefined) basis.degraded = refusal;
   return refusal !== undefined ? { scope, refusal } : { scope };

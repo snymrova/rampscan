@@ -22,6 +22,7 @@ import {
   OSV_RESULTS_ARTIFACT,
   SBOM_ARTIFACT,
   UNRECORDED_EXCLUSIONS_NOTE,
+  UNRECORDED_OPAQUE_IMPORTS_NOTE,
   UNRECORDED_ROOTS_NOTE,
 } from "../src/index.js";
 
@@ -548,5 +549,216 @@ describe("S1-4 — an entry point config left out is named, and a negative is re
     const basis = out.basis!["no-critical-reachable-advisories"]!;
     expect(basis.entrypoints_excluded).toBeUndefined();
     expect(basis.degraded).toBe(UNRECORDED_EXCLUSIONS_NOTE);
+  });
+});
+
+// S4-1 — the specifiers the extractor cannot read (docs/PLAN-SOUNDNESS.md §5,
+// S4-1). `require(expr)` and `import(expr)` with anything but a string
+// literal produce no edge and, before this, no record: the walk stopped at
+// the call as if nothing were loaded there, and a package required only by
+// what that call loads had a node the walk never arrived at — the one shape
+// that signs `not_affected`. A plugin loader is the ordinary case, not an
+// exotic one. The sound reading is the S1-3 one: a file the walk reached that
+// loads by a specifier the extractor cannot read may continue anywhere, so
+// the width of the walk is unknown past that file, and the negative is
+// refused for the run with the call named. An opaque specifier in a file the
+// walk never reached loads nothing, and refuses nothing.
+//
+// The third case is a workspace package whose `exports` are conditional only
+// (`node` / `browser`, no `main`): `entryCandidates` read five fixed keys and
+// found none, so the package's import dead-ended on a dependency node. Today
+// S1-3 catches that tree — the package's root is never entered — so the
+// verdict is `unknown` by the width refusal rather than a false negative;
+// the test asserts the walk crosses into every condition target, because a
+// negative earned with the root entered through `node.js` alone would be
+// scoped to one build of the package.
+describe("S4-1 — an opaque specifier is a recorded hole in the walk, and conditional exports are entries", () => {
+  const OSV = {
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: [
+          {
+            package: { name: "minimist", version: "1.2.5", ecosystem: "npm" },
+            vulnerabilities: [{ id: "GHSA-xvch-5gv4-984h", summary: "Prototype pollution in minimist", aliases: ["CVE-2021-44906"] }],
+            groups: [{ ids: ["GHSA-xvch-5gv4-984h", "CVE-2021-44906"], max_severity: "9.8" }],
+          },
+        ],
+      },
+    ],
+  };
+
+  async function tree(spec: Record<string, string>): Promise<{ root: string; files: string[]; roots: ApplicationRoot[] }> {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-s41-"));
+    for (const [rel, content] of Object.entries(spec)) {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    }
+    const files = Object.keys(spec).filter((f) => f.endsWith(".js")).sort();
+    const roots = await detectApplicationRoots(root, new Set(files), "worktree");
+    return { root, files, roots };
+  }
+
+  async function gate(t: { root: string; files: string[]; roots: ApplicationRoot[] }, config?: string[]): Promise<CollectOutput> {
+    const graph = await extractGraph(t.root, t.files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s41-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(t.root, new Set(t.files), config, t.roots);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "f".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: t.roots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(OSV));
+    return reachability.collect({
+      workspace: { root: t.root, repo: "loader-app", commit: "f".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s4-1",
+    });
+  }
+
+  async function vexOf(out: CollectOutput): Promise<Array<Record<string, unknown>>> {
+    const vexPath = out.artifacts.find((a) => a.name === OPENVEX_ARTIFACT)!.path;
+    return (JSON.parse(await readFile(vexPath, "utf8")) as { statements: Array<Record<string, unknown>> }).statements;
+  }
+
+  const PLUGIN = 'const parse = require("minimist");\nmodule.exports = { parse };\n';
+
+  it("a reached `require(expr)` refuses the negative and names the call", async () => {
+    const t = await tree({
+      "package.json": JSON.stringify({ name: "loader-app", main: "src/main.js" }),
+      "src/main.js": 'const name = process.env.PLUGIN;\nconst plugin = require("./plugins/" + name);\nmodule.exports = { plugin };\n',
+      "src/plugins/parse.js": PLUGIN,
+    });
+    const out = await gate(t);
+    const rows = out.observations["no-critical-reachable-advisories"]!;
+    const minimist = rows.find((r) => r["package"] === "minimist")!;
+    // the walk had a node for minimist and never arrived — and it must not
+    // read that as a proof, because main.js loads something it cannot name
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["reachable"]).toBe("unknown");
+    expect(String(minimist["gate_note"])).toContain("src/main.js:2 (require)");
+    expect(String(minimist["gate_note"])).toContain("not_affected is refused for this run");
+    expect(out.findings.filter((f) => f.variable === "advisories")).toHaveLength(1);
+
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.opaque_imports).toEqual([{ file: "src/main.js", line: 2, form: "require", reached: true }]);
+    expect(basis.degraded).toBe(minimist["gate_note"]);
+
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("under_investigation");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["opaque_imports"]).toEqual([
+      { file: "src/main.js", line: 2, form: "require", reached: true },
+    ]);
+  });
+
+  it("a reached `import(expr)` refuses the same way, under its own form", async () => {
+    const t = await tree({
+      "package.json": JSON.stringify({ name: "loader-app", main: "src/main.js" }),
+      "src/main.js": "export async function load(name) {\n  return import(`./plugins/${name}.js`);\n}\n",
+      "src/plugins/parse.js": PLUGIN,
+    });
+    const out = await gate(t);
+    const minimist = out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "minimist")!;
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["reachable"]).toBe("unknown");
+    expect(String(minimist["gate_note"])).toContain("src/main.js:2 (import())");
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.opaque_imports).toEqual([{ file: "src/main.js", line: 2, form: "import()", reached: true }]);
+  });
+
+  it("an opaque specifier in a file the walk never reached loads nothing: recorded, and the negative is earned", async () => {
+    const t = await tree({
+      "package.json": JSON.stringify({ name: "loader-app", main: "src/main.js" }),
+      "src/main.js": "module.exports = { run() {} };\n",
+      // neither orphan is reached: one holds the opaque call, the other the package
+      "src/orphan-loader.js": 'module.exports = (name) => require("./plugins/" + name);\n',
+      "src/plugins/parse.js": PLUGIN,
+    });
+    const out = await gate(t);
+    const minimist = out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "minimist")!;
+    expect(minimist["not_affected"]).toBe(true);
+    expect(minimist["reachable"]).toBe("false");
+    expect(minimist["gate_note"]).toBeUndefined();
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.opaque_imports).toEqual([{ file: "src/orphan-loader.js", line: 1, form: "require", reached: false }]);
+    expect(basis.degraded).toBeUndefined();
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("not_affected");
+  });
+
+  it("a graph written before opaque specifiers were recorded has an unknown width past every file, and refuses", async () => {
+    const t = await tree({
+      "package.json": JSON.stringify({ name: "loader-app", main: "src/main.js" }),
+      "src/main.js": "module.exports = { run() {} };\n",
+      "src/plugins/parse.js": PLUGIN,
+    });
+    const graph = await extractGraph(t.root, t.files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s41-old-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(t.root, new Set(t.files), undefined, t.roots);
+    writeGraphDb(dbPath, { ...graph, opaqueImports: undefined } as never, {
+      extractorVersion: "0.5.0+test",
+      commit: "f".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: t.roots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(OSV));
+    const out = await reachability.collect({
+      workspace: { root: t.root, repo: "loader-app", commit: "f".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s4-1-old",
+    });
+    const minimist = out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "minimist")!;
+    expect(minimist["not_affected"]).toBe(false);
+    expect(minimist["gate_note"]).toBe(UNRECORDED_OPAQUE_IMPORTS_NOTE);
+    expect(out.basis!["no-critical-reachable-advisories"]!.opaque_imports).toBeUndefined();
+  });
+
+  it("a workspace package with conditional-only exports is entered through every condition target", async () => {
+    const t = await tree({
+      "package.json": JSON.stringify({ name: "mono", private: true }),
+      "apps/cli/package.json": JSON.stringify({ name: "@mono/cli", main: "src/main.js" }),
+      "apps/cli/src/main.js": 'const lib = require("@mono/lib");\nmodule.exports = { lib };\n',
+      "packages/lib/package.json": JSON.stringify({
+        name: "@mono/lib",
+        exports: { ".": { node: "./src/node.js", browser: "./src/browser.js" } },
+      }),
+      "packages/lib/src/node.js": "module.exports = { node() {} };\n",
+      "packages/lib/src/browser.js": PLUGIN,
+    });
+    const out = await gate(t, ["apps/cli/src/main.js"]);
+    const minimist = out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "minimist")!;
+    // the import of @mono/lib lands on both build targets, so the browser
+    // build's dependency is on the walk — reachable, with the path through it
+    expect(minimist["reachable"]).toBe("true");
+    expect(String(minimist["path"])).toContain("packages/lib/src/browser.js");
+    const basis = out.basis!["no-critical-reachable-advisories"]!;
+    expect(basis.application_roots).toEqual([
+      { dir: "apps/cli", name: "@mono/cli", file_count: 1, reached_file_count: 1 },
+      { dir: "packages/lib", name: "@mono/lib", file_count: 2, reached_file_count: 2 },
+    ]);
+    expect(basis.degraded).toBeUndefined();
   });
 });

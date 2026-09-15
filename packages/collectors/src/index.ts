@@ -29,6 +29,7 @@ export { graphCollector } from "./graph.js";
 export { reachability, ABSENT_NODE_NOTE, OPENVEX_ARTIFACT, REACHABILITY_VERSION, purlOf } from "./reachability.js";
 export {
   UNRECORDED_EXCLUSIONS_NOTE,
+  UNRECORDED_OPAQUE_IMPORTS_NOTE,
   UNRECORDED_ROOTS_NOTE,
   excludedEntrypointsNote,
   scopeRefusalNote,
