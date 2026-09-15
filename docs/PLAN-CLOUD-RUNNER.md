@@ -1,10 +1,10 @@
 # rampscan — plan of action: one-click cloud evidence through a client runner (Phases T0–T5)
 
 **Status:** **draft**, not yet adopted. Deliverable: *an operator clicks "Collect evidence" on a KSI row, a runner deployed in their own AWS account runs the published ramprules recipe under a read-only role, and the board moves — while the appliance itself still holds no AWS credential and makes no AWS call.* Nothing here is decided until it is merged and milestones T0–T5 exist on GitHub, the same bar the soundness plan cleared.
-**Date:** 2026-09-14
+**Date:** 2026-09-14; re-read against `main` 2026-09-15 (session log).
 **Phase letter:** **T**. A–N, P, Q, R and S are taken (O is skipped because it reads as zero). T follows S and reads as *trigger*.
-**Sequencing against the plan of record:** the owner decided on 2026-09-14 to **plan now and build after S1 closes**. T starts at the S1 exit. It does not displace S3, whose RFC-0033 comment (#72) is due **2026-10-09**. R2–R5 stay paused as `docs/PLAN-SOUNDNESS.md` §8 says.
-**Reads against:** `main` at `c0a4d0a`; `docs/SPEC.md` §12.8 (the ingestion contract), §12.9 and §12.10; `SECURITY.md`; `console/web/PRODUCT.md`; `packages/cli/src/ingest.ts`; `packages/schema/src/{ingest,method,bundle}.ts`; the pinned upstream overlay `docs/context/ramprules/derived/aws-evidence.json` (dataset `2026.07.14.01`); `docs/RESEARCH-PARAMIFY-PILOT.md` §3.
+**Sequencing against the plan of record:** the owner decided on 2026-09-14 to **plan now and build after S1 closes**. S1 closed 2026-09-15 (`286c566`), and S2 and S4 closed the same day, so the precondition is met and T may start. It does not displace S3, whose RFC-0033 comment (#72) is due **2026-10-09**. R2–R5 stay paused as `docs/PLAN-SOUNDNESS.md` §8 says.
+**Reads against:** `main` at `285aabe` (first drafted against `c0a4d0a`); `docs/SPEC.md` §12.8 (the ingestion contract), §12.9 and §12.10; `SECURITY.md`; `console/web/PRODUCT.md`; `packages/cli/src/ingest.ts`; `packages/core/src/assert.ts`; `packages/schema/src/{ingest,method,bundle}.ts`; the pinned upstream overlay `docs/context/ramprules/derived/aws-evidence.json` (dataset `2026.07.14.01`); `docs/RESEARCH-PARAMIFY-PILOT.md` §3 and §8.
 
 **Thesis in one line:** the ingestion contract already makes client-run AWS results count, but nobody runs recipes by hand on a 7-day clock. The missing piece is not execution inside the appliance. It is a runner that belongs to the client and can be triggered from the console, so the separation that makes rampscan trustworthy survives the convenience.
 
@@ -24,7 +24,9 @@ The ten in `CONTRIBUTING.md` and the four in `PLAN-SOUNDNESS.md` §0 stay active
 
 ## 1. What exists, and what is missing
 
-**Exists (Q4.1, SPEC §12.8):** `rampscan ingest` turns a client-produced `IngestSubmission` into a signed bundle with `source: aws-ingested`. It validates everything before appending anything. It has no commit anchor, so ingested evidence dies superseded or stale, never by anchor drift. `rampscan verify` checks it offline. It has only ever been exercised on a synthetic fixture.
+**Exists (Q4.1, SPEC §12.8):** `rampscan ingest` turns a client-produced `IngestSubmission` into a signed bundle with `source: aws-ingested`. It validates everything before appending anything. It has no commit anchor, so ingested evidence dies superseded or stale, never by anchor drift. `rampscan verify` checks it offline. First drafted, it had only ever been exercised on a synthetic fixture; since S3-1 it has read two real Phase One packages (`docs/RESEARCH-PARAMIFY-REGISTER.md`).
+
+**Exists since S3-0 (#147, 2026-09-15) — T2's centre, landed early.** The appliance evaluates a submission's structured assertions itself with the pipeline's own evaluator (`packages/core/src/assert.ts`: `eq`, `exists`, `not_exists`, `in`, `lte`, `gte`, `max_age_days`, `count_eq`, `count_lte`, `where` filters, `population` always set, `max_age_days` judged against the run's own timestamp). A non-zero exit is a failed run — skipped and named, never a bundle. No assertion is `unevidenced`, never `evidenced`; `submissionVerdict` has no vacuous arm. The tree adapter takes exactly the rule T2-3 asked for. What T2 still owes is the failure *classes* beyond the exit code (T2-2) and the transcript adapter (T2-3's first half).
 
 **Exists upstream, pinned:** `aws-evidence.json` holds **49 recipes over 36 KSIs**. 38 are `cli` and 11 are `config-rule`, rated 12 `full`, 36 `partial` and 1 `narrative`. **22 carry structured assertions** (`field`/`op`/`value`/`where`, ops `eq`, `count_eq`, `exists`, `not_exists`, `lte`, `max_age_days`). The other 27 carry only prose (`expected_output`, `notes`).
 
@@ -46,8 +48,9 @@ The five non-read actions are the reason ground rule 4 exists:
 - A way to trigger a run.
 - A runner.
 - Parameter binding for account-specific literals.
-- An appliance-side assertion evaluator.
-- A failure model.
+- ~~An appliance-side assertion evaluator.~~ Landed under S3-0.
+- A failure model beyond the exit code.
+- An emulator so the runner is exercised in CI (T3-0).
 - A console surface for any of it.
 
 ---
@@ -101,7 +104,9 @@ first
 
 T1 and T2 are pure functions over pinned data and synthetic outputs, so they need no AWS account and can be tested exhaustively. T3 is the first phase that touches a real account, and T4 is the first that touches the console. The dangerous judgments (what is read-only, what counts as passed) are therefore settled and tested before anything can execute.
 
-Estimates, in focused-work days: T0 0.5 · T1 1 · T2 1.5 · T3 2 · T4 1.5 · T5 1. **Total ≈ 7.5 days.** T5 is optional for the first release.
+**Where an emulator fits, and where it does not.** T3 runs the real `aws` binary. Its happy path and its failure classes can run in CI against an AWS API emulator (T3-0) so every pull request exercises the runner end to end without an account. Two things stay on a real sandbox account and are never claimed from a mock: the denial self-check (T3-3, real IAM policy semantics) and the phase exit gates, which the plan words as *in a sandbox account* on purpose. A green emulator run is evidence that the runner works; it is not evidence that the role is read-only.
+
+Estimates, in focused-work days: T0 0.5 · T1 1 · T2 0.5 (was 1.5; T2-1 and the tree half of T2-3 landed under S3-0) · T3 2.5 (T3-0 added) · T4 1.5 · T5 1. **Total ≈ 7 days.** T5 is optional for the first release.
 
 ### Phase T0 — decisions and the failing tests first (0.5 day)
 
@@ -133,24 +138,25 @@ Estimates, in focused-work days: T0 0.5 · T1 1 · T2 1.5 · T3 2 · T4 1.5 · T
 
 **Exit gate:** classification is golden-tested over all 49 pinned recipes. `ssm send-command` and `athena start-query-execution` are `manual` with the reason stated. The runnable count in this document is replaced by the command's output.
 
-### Phase T2 — the appliance judges the bytes (1.5 days)
+### Phase T2 — the appliance judges the bytes (0.5 day remaining)
 
-- [ ] **T2-1. Assertion evaluator** over the six upstream ops, with `where` filters, on CSV and JSON outputs. `max_age_days` is judged against the **transcript's** timestamp, not the ingest clock. Output is `IngestedAssertion[]` with `population` always set, so "0 of 0" and "0 of 412" stay distinguishable.
-- [ ] **T2-2. Failure classification.** A transcript maps to exactly one of `ok`, `denied`, `not-enabled`, `throttled`, `incomplete` (async report not ready) or `error`. Only `ok` proceeds to evaluation. T0-4's cases are unwrapped here.
-- [ ] **T2-3. Transcript → `IngestSubmission` → existing `ingest`.** There is no second signing path and no second bundle shape. Recipes without assertions go to the sufficiency-judgment queue instead (T0-2). **The tree adapter takes the same rule** (#147): `ingest.ts:157` currently treats a script's exit 0 as a pass, and the scripts that convention was read from exit 0 on a non-compliant account. Exit 0 proves collection; the entry then needs an assertion or a judgment. That fix is owed before S3-1 and may land ahead of T if S3 arrives first — it shares this evaluator either way.
-- [ ] **T2-4. Outputs are written by us.** Synthetic AWS outputs cover each op, including a planted non-MFA user, a 120-day-old key and an empty but valid list. No fixture is copied from upstream or from Paramify's unlicensed repository.
+- [x] **T2-1. Assertion evaluator** over the six upstream ops, with `where` filters, on CSV and JSON outputs. `max_age_days` is judged against the **transcript's** timestamp, not the ingest clock. Output is `IngestedAssertion[]` with `population` always set, so "0 of 0" and "0 of 412" stay distinguishable. *Landed under S3-0 (#147, `packages/core/src/assert.ts`, wired in `ingest.ts` with `new Date(entry.timestamp)` as the clock). JSON rows only so far; CSV rows arrive with the transcript adapter (T2-3), since the credential report is the one CSV recipe and the runner captures it whole.*
+- [ ] **T2-2. Failure classification.** A transcript maps to exactly one of `ok`, `denied`, `not-enabled`, `throttled`, `incomplete` (async report not ready) or `error`. Only `ok` proceeds to evaluation. T0-4's cases are unwrapped here. *Today the adapter knows one class, exit ≠ 0; the runner's classified stderr (T3-1) is what makes the others decidable.*
+- [ ] **T2-3. Transcript → `IngestSubmission` → existing `ingest`.** There is no second signing path and no second bundle shape. Recipes without assertions go to the sufficiency-judgment queue instead (T0-2). ~~**The tree adapter takes the same rule** (#147): `ingest.ts:157` currently treats a script's exit 0 as a pass~~ — *done under S3-0: exit 0 is collection, the entry's declared assertions are evaluated by the appliance, none is `unevidenced`, non-zero is a failed run.* What remains is the transcript half: the runner's signed transcript is the input, and its `assertions` are **never** read from the transcript — on the native path a submitter's assertions are its own claim, and the runner is not permitted one (ground rule 3).
+- [ ] **T2-4. Outputs are written by us.** Synthetic AWS outputs cover each op, including a planted non-MFA user, a 120-day-old key and an empty but valid list. No fixture is copied from upstream or from Paramify's unlicensed repository. *S3-0's fixture covers `eq` over JSON rows with a planted NONCOMPLIANT principal; the rest is owed, and doubles as the emulator's seed (T3-0).*
 
 **Exit gate:** every T0-4 case passes. A planted violation yields `violated` with the offending row named. An `ok` empty population is reported as such, never silently as a pass.
 
-### Phase T3 — the runner (2 days)
+### Phase T3 — the runner (2.5 days)
 
+- [ ] **T3-0. The emulator, for CI only.** An AWS API emulator the runner is pointed at through `AWS_ENDPOINT_URL`, so the real `aws` binary runs end to end on every pull request with no account. Choose **Moto in server mode** (`moto[server]`, one container in a compose file and a CI service) over LocalStack: Moto mocks the services the pinned recipes read (IAM credential reports, CloudTrail, Config, GuardDuty, KMS, S3, EC2) and has opt-in IAM enforcement (`INITIAL_NO_AUTH_ACTION_COUNT`), which is what T2-2's `denied` class needs; LocalStack's enforcement is a paid feature, so its free tier can only give the happy path. The seed is T2-4's synthetic fixtures loaded through the same CLI: a planted non-MFA user, a 120-day-old key, an account with no GuardDuty detector. The suite is tagged and **skips, named, when the endpoint is absent** — a missing emulator is a skipped collector, not a green run. Recorded in `SECURITY.md` beside ground rule 1: the emulator is where the runner is tested, never where a claim about a client's account is made. *Verify before adopting:* whether Moto answers `iam simulate-principal-policy` and `iam generate-credential-report` → `get-credential-report` with the `STATE=STARTED` first response T0-4 needs; if not, those two stay stubbed at the transcript level.
 - [ ] **T3-1. `packages/runner`.** Node, **no runtime dependencies**, and no import of `@rampscan/ledger`, `signer`, `projector` or `cli`. It executes the `aws` CLI with argv arrays (never `sh -c`), so the command run is the published command. It captures stdout bytes, exit code, a classified stderr (never raw, which can carry account detail into logs), timestamps, region and `sts get-caller-identity`.
 - [ ] **T3-2. The runner key and registration.** `rampscan-runner init` generates a P-256 key and prints its public key. An operator proposes the runner in the console, and an approver's key turn records it as a signed ledger event (the fourth two-key write). Revocation is a signed `revoked` that supersedes it.
 - [ ] **T3-3. `rampscan runner policy`** generates the IAM policy from the allowlist, and only for recipes classified runnable under the current parameters. At start-up the runner checks with `iam simulate-principal-policy` that a probe set of mutating actions is **denied**, and refuses to run if any is allowed. The result goes into every transcript.
 - [ ] **T3-4. Modes:** `poll` (sidecar) and `once --request <token>` (CloudShell).
 - [ ] **T3-5. The boundary test.** A test fails if any package other than `packages/runner` can spawn `aws`, declares an `@aws-sdk/*` dependency, or reads `AWS_*` environment variables. It also fails if `packages/runner` imports a rampscan package that can sign a bundle. Ground rule 1 gets an *Enforced by* line on the day it is written.
 
-**Exit gate:** in a **sandbox** AWS account, `once` runs `iam-credential-report` end to end, the self-check denial probe passes, and the transcript verifies. The runner is shown to fail closed under a role with `iam:CreateUser` allowed.
+**Exit gate:** in a **sandbox** AWS account, `once` runs `iam-credential-report` end to end, the self-check denial probe passes, and the transcript verifies. The runner is shown to fail closed under a role with `iam:CreateUser` allowed. The same `once` run, and a `denied` run, pass in CI against the emulator (T3-0); the emulator result is reported as what it is and is not the gate.
 
 ### Phase T4 — the button (1.5 days)
 
@@ -206,5 +212,6 @@ This document decides nothing until it is merged and milestones T0–T5 exist on
 
 ## Session log
 
+- **2026-09-15** — Re-read against `main` at `285aabe`, with S1, S2 and S4 closed and the build precondition met. S3-0 (#147) landed T2-1 and the tree half of T2-3 ahead of this plan: the appliance evaluates declared assertions with `packages/core/src/assert.ts`, exit ≠ 0 is a failed run, no assertion is `unevidenced`. T2 marked accordingly (0.5 day left: failure classes and the transcript adapter). Added T3-0, an AWS API emulator (Moto server mode) for CI, with the boundary stated: it tests the runner, it never stands in for the sandbox account at a gate or for the denial self-check. Total ≈ 7 days. Still not adopted; T0-1 to T0-3 remain the owner's.
 - **2026-09-14 (later)** — Re-read the Paramify pilot against this plan (`RESEARCH-PARAMIFY-PILOT.md` §8). Its 23 scripts are admissible under T1-1 as-is, all `describe/get/list`; four need `kubectl`, added as T1-4a. Their exit-code convention turned out to mean *collected*, not *compliant*, which is what the existing tree adapter assumes — #147, noted at T2-3.
 - **2026-09-14** — Drafted after the owner chose, over two alternatives, a one-click trigger through a client-deployed runner rather than guided copy-and-upload or execution inside the appliance, and chose to plan now and build after S1. Numbers in §1 come from reading the pinned `aws-evidence.json` overlay (49 recipes, 36 KSIs, 22 with structured assertions, 38 `cli` / 11 `config-rule`) and from a first-pass classifier that is deliberately naive; T1-5 replaces its counts with a command. Found while reading: `clock-synchronization-and-timestamps` uses `ssm send-command AWS-RunShellScript` against production-tagged instances, which is why read-only is an allowlist of reviewed actions and not a verb pattern. Not yet adopted.
