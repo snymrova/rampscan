@@ -750,7 +750,7 @@ The appliance's signature on the minted bundle covers the **handoff**, as §12.8
 
 ### 14.4 The emulator (T3-0)
 
-The runner is exercised in CI against an AWS API emulator behind `AWS_ENDPOINT_URL`. That is where the runner is *tested*. It is never where a claim about a client's account is made, and the plan's exit gates are worded *in a sandbox account* because a mock cannot prove that a role is read-only: the denial self-check (T3-3) and the gate runs happen against real IAM. A suite that cannot reach the emulator skips, named — a missing emulator is a skipped collector, not a green run.
+The runner is exercised in CI against an AWS API emulator behind `AWS_ENDPOINT_URL` (`compose.emulator.yaml`, Moto in server mode; the `emulator` job in `test.yml`). That is where the runner is *tested*. It is never where a claim about a client's account is made, and the plan's exit gates are worded *in a sandbox account* because a mock cannot prove that a role is read-only: the denial self-check (T3-3) and the gate runs happen against real IAM. A suite that cannot reach the emulator skips, named — a missing emulator is a skipped collector, not a green run.
 
 ### 14.4a The two assertion vocabularies (T2-5)
 

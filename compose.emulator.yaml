@@ -1,0 +1,22 @@
+# The AWS API emulator the runner is exercised against in CI (docs/PLAN-CLOUD-RUNNER.md
+# T3-0, SPEC §14.4). Moto in server mode: every call the runner makes goes to
+# http://localhost:5000 through AWS_ENDPOINT_URL, no account involved.
+#
+#   docker compose -f compose.emulator.yaml up -d
+#   AWS_ENDPOINT_URL=http://localhost:5000 AWS_ACCESS_KEY_ID=testing \
+#   AWS_SECRET_ACCESS_KEY=testing AWS_DEFAULT_REGION=us-east-1 \
+#   pnpm exec vitest run packages/runner/test/emulator.test.ts
+#
+# This is where the runner is TESTED. It is never where a claim about a client's
+# account is made: the plan's exit gates run in a sandbox account, and the
+# denial self-check (T3-3) needs real IAM — Moto answers
+# `iam simulate-principal-policy` with a 500. Verified 2026-09-16 against
+# 5.1.19: the credential report round-trips (STATE=STARTED first, then the CSV,
+# booleans spelled `true`/`false`); Config's get-compliance-details-by-config-rule
+# is a 500, so the Config-rule recipes are not emulable and the sandbox is
+# their first real run.
+services:
+  moto:
+    image: motoserver/moto:5.1.19
+    ports:
+      - "5000:5000"

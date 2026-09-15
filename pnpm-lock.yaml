@@ -103,6 +103,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@rampscan/runner':
+        specifier: workspace:*
+        version: link:../runner
       '@types/jmespath':
         specifier: 0.15.2
         version: 0.15.2
