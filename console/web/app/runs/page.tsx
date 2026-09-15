@@ -313,7 +313,7 @@ function RunRow({
             <span className="faint"> · 0 skipped</span>
           )}
         </td>
-        <td className="mono" onClick={(e) => e.stopPropagation()}>
+        <td className="mono" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           {/* the run record itself — signed, addressable, verifiable offline */}
           <Link href={`/evidence/${run.digest}`}>{run.digest.slice(0, 12)}</Link>
         </td>
@@ -450,15 +450,9 @@ function CollectorRow({
               <>
                 {" "}
                 ·{" "}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowArgv((v) => !v);
-                  }}
-                >
+                <button type="button" className="linkish" onClick={() => setShowArgv((v) => !v)}>
                   {c.invocations.length} invocation{c.invocations.length === 1 ? "" : "s"}
-                </a>
+                </button>
                 {/* the cache's honesty clause: a hit spawned nothing this run,
                     so the argv below belongs to the run that produced it */}
                 {c.cache.state === "hit" && <> (recorded by the run that produced this result)</>}
@@ -470,7 +464,9 @@ function CollectorRow({
           </div>
           {showArgv &&
             c.invocations.map((inv, i) => (
-              <div key={i} className="run-argv mono">
+              // two invocations of one collector can be byte-identical (a retried command), so the
+              // position is part of the identity; the argv beside it keeps the key honest
+              <div key={`${argvLine(inv)}#${String(i)}`} className="run-argv mono">
                 {argvLine(inv)}
                 <span className="faint">
                   {" "}

@@ -9,14 +9,23 @@ import {
   RAMPSCAN_RUN_REQUEST_EVENT_TYPE,
   RUN_REQUEST_TYPE,
   RUN_TOKEN_PAYLOAD_TYPE,
-  RunTranscript,
   canonicalJson,
   isRunEvent,
   isRunRequestEvent,
   methodId,
   submissionVerdict,
 } from "@rampscan/schema";
-import type { AwsActionAllowlist, AwsConfig, AwsLiteralBindings, AwsStepLabels, RecipeAssertion, RunEvent, RunRequest, RunRequestEvent } from "@rampscan/schema";
+import type {
+  AwsActionAllowlist,
+  AwsConfig,
+  AwsLiteralBindings,
+  AwsStepLabels,
+  RecipeAssertion,
+  RunEvent,
+  RunRequest,
+  RunRequestEvent,
+  RunTranscript,
+} from "@rampscan/schema";
 import { createLocalDetachedSigner, createLocalSigner } from "@rampscan/signer";
 import { applyLiteralBindings, bindAwsParams } from "./aws-bindings.js";
 import type { RequestWindow } from "./aws-bindings.js";

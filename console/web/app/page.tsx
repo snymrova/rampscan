@@ -439,6 +439,7 @@ function ArtifactRowView({
               <>
                 {" "}·{" "}
                 <button
+                  type="button"
                   className="btn"
                   style={{ fontSize: 11.5, padding: "0 6px" }}
                   onClick={(e) => {
@@ -455,7 +456,8 @@ function ArtifactRowView({
       </tr>
       {proposing && (
         <tr>
-          <td colSpan={2} onClick={(e) => e.stopPropagation()}>
+          {/* the click stops the row's toggle; a key press never reached the row, so there is nothing to stop */}
+          <td colSpan={2} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <ProposeJudgmentForm
               repo={repo}
               ksi={ksi}
@@ -536,13 +538,14 @@ function ProposeJudgmentForm({
       />
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
         <button
+          type="button"
           className="btn primary"
           disabled={busy || justification.trim().length === 0}
           onClick={submit}
         >
           file proposal
         </button>
-        <button className="btn" onClick={done}>
+        <button type="button" className="btn" onClick={done}>
           cancel
         </button>
       </div>
