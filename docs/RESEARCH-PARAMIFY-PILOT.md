@@ -110,6 +110,8 @@ Re-cloned at `51de49c` (2026-06-04, "Add FedRAMP 2026 Consolidated Rules OSCAL p
 
 The correct reading, which is also what `PLAN-CLOUD-RUNNER.md` §2 already says for recipes without structured assertions: **exit 0 proves collection**; the bytes then need either a structured assertion evaluated by the appliance, or a two-key sufficiency judgment, before anything is `evidenced`. Exit non-zero is a failed run, never a `violated` — the account was not seen.
 
+**Fixed 2026-09-15.** The manifest entry gained optional `assertions` in `aws-evidence.json`'s own vocabulary, evaluated by the appliance with the pipeline's evaluator (`packages/core/src/assert.ts`) over the result file's rows — the one evaluator the cloud runner will share. An exit-0 entry with no assertion is signed `unevidenced`, a collected artifact and not a pass; a non-zero exit is skipped and named, never a bundle. The regression test (`packages/cli/test/ingest-soundness.test.ts`) failed at `f4c27bd` with `expected 'evidenced' not to be 'evidenced'` before the fix. SPEC §12.8 rewritten to say what the exit code means.
+
 ### 8.2 The scripts through the runner's allowlist
 
 Every AWS action across the 23 scripts is `describe-*`, `get-*`, or `list-*` **except** `aws eks update-kubeconfig` (writes `~/.kube/config` on the runner host, not the account) and one `aws sso login` (interactive). So the whole set is admissible under T1-1's allowlist as-is, with those two handled as runner-local setup rather than as recipe steps. Compared with the pinned ramprules overlay (49 recipes, one of which runs a shell on production hosts), this set is the safer of the two and the one written by people who actually ran it on a 7-day clock.
@@ -139,5 +141,6 @@ The assessed package is **51 KSIs, 140 evidence blocks, 394 artifacts (86 JSON, 
 
 ## Session log
 
+- **2026-09-15** — #147 fixed (see §8.1). The adapter no longer reads an exit code as a verdict; the fixture manifest now carries one `status eq` assertion per entry, and `KSI-IAM-AAM` reads `violated` because the appliance found its NONCOMPLIANT row, not because a script said 3.
 - **2026-09-14** — Re-read at `51de49c` for `PLAN-CLOUD-RUNNER.md`. §3.1 corrected: exit 0 is collection, not compliance (`s3_encryption_status.sh`, `guard_duty.sh`, `waf_DoS_rules.sh` all exit 0 on a non-compliant or empty account). That convention is what `ingest.ts:157` and SPEC §12.8 encode, so the tree adapter signs `evidenced` for a violating account of this shape — filed as #147 under the `SECURITY.md` class, fix owed before S3-1. Also found: S3-1 needs a package-YAML adapter, not the tree adapter, because the repository ships no tree output; and four scripts need `kubectl`, an axis the runner plan lacked. §8 added; nothing earlier rewritten except the strikethrough in §3.1.
 - **2026-09-11** — Repository examined (shallow clone at `main`); note drafted and filed as reference for Q0 (schema comparator), Q1 (dual-source loader), Q4 (ingestion contract shape), and the §7.5 positioning rewrite.

@@ -21,7 +21,14 @@ const submission = {
   evidence_class: "process-generated",
   cadence: "daily",
   artifacts: [{ name: "Evidence/cna/KSI-CNA-RVP/KSI-CNA-RVP.json", sha256: "a".repeat(64) }],
-  assertions: [{ description: "KSI-CNA-RVP.sh validation (exit code)", passed: true, detail: "exit 0" }],
+  assertions: [
+    {
+      description: "Every distribution is protected.",
+      passed: true,
+      detail: "2 row(s) satisfy status eq",
+      population: 2,
+    },
+  ],
   timestamp: "2026-09-10T14:00:00Z",
   signer_identity: "compliance-ops@synthetic-csp.example",
 } satisfies IngestSubmission;
@@ -35,9 +42,27 @@ describe("IngestSubmission", () => {
     expect(() => IngestSubmission.parse({ ...submission, evidenceClass: "process-generated" })).toThrow();
   });
 
-  it("refuses empty artifacts and empty assertions structurally", () => {
+  it("refuses empty artifacts structurally; empty assertions parse and mean unevidenced (#147)", () => {
     expect(() => IngestSubmission.parse({ ...submission, artifacts: [] })).toThrow();
-    expect(() => IngestSubmission.parse({ ...submission, assertions: [] })).toThrow();
+    const collected = IngestSubmission.parse({ ...submission, assertions: [] });
+    expect(submissionVerdict(collected)).toBe("unevidenced");
+  });
+
+  it("carries the evaluator's offenders on an assertion the appliance evaluated", () => {
+    const parsed = IngestSubmission.parse({
+      ...submission,
+      assertions: [
+        {
+          description: "Every principal is compliant.",
+          passed: false,
+          detail: "1 of 2 row(s) fail status eq",
+          offenders: [{ check: "arn:aws:iam::000000000000:user/legacy" }],
+          offender_count: 1,
+          population: 2,
+        },
+      ],
+    });
+    expect(parsed.assertions[0]!.offender_count).toBe(1);
   });
 
   it("refuses a digest that is not a sha256 hex and a timestamp that is not ISO 8601", () => {
@@ -50,8 +75,10 @@ describe("IngestSubmission", () => {
     expect(() => IngestSubmission.parse({ ...submission, timestamp: "yesterday" })).toThrow();
   });
 
-  it("computes the verdict from assertion outcomes — never declared", () => {
+  it("computes the verdict from assertion outcomes — never declared, never vacuous", () => {
     expect(submissionVerdict(submission)).toBe("evidenced");
+    // [].every() is true; the one truth this function must not sign
+    expect(submissionVerdict({ assertions: [] })).toBe("unevidenced");
     expect(
       submissionVerdict({
         assertions: [
@@ -70,7 +97,15 @@ describe("IngestManifest", () => {
     evidence_class: "process-generated",
     cadence: "daily",
     entries: [
-      { ksi: "KSI-CNA-RVP", script: "KSI-CNA-RVP.sh", exit_code: 0, timestamp: "2026-09-10T14:00:00Z" },
+      {
+        ksi: "KSI-CNA-RVP",
+        script: "KSI-CNA-RVP.sh",
+        exit_code: 0,
+        timestamp: "2026-09-10T14:00:00Z",
+        assertions: [
+          { field: "status", op: "eq", value: "PROTECTED", description: "Every distribution is protected." },
+        ],
+      },
       {
         ksi: "KSI-SVC-SIN",
         script: "KSI-SVC-SIN.sh",
@@ -81,10 +116,26 @@ describe("IngestManifest", () => {
     ],
   } satisfies IngestManifest;
 
-  it("parses, with the per-entry evidence-class override", () => {
+  it("parses, with the per-entry evidence-class override and optional assertions", () => {
     const parsed = IngestManifest.parse(manifest);
     expect(parsed.entries[1]!.evidence_class).toBe("point-in-time");
     expect(parsed.entries[0]!.evidence_class).toBeUndefined();
+    expect(parsed.entries[0]!.assertions).toHaveLength(1);
+    expect(parsed.entries[1]!.assertions).toBeUndefined();
+  });
+
+  it("refuses an assertion op the evaluator does not have", () => {
+    expect(() =>
+      IngestManifest.parse({
+        ...manifest,
+        entries: [
+          {
+            ...manifest.entries[0]!,
+            assertions: [{ field: "status", op: "matches", value: ".*", description: "x" }],
+          },
+        ],
+      }),
+    ).toThrow();
   });
 
   it("refuses an empty batch and an unknown entry field", () => {

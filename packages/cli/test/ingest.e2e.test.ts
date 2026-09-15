@@ -46,6 +46,7 @@ describe("rampscan ingest — the evidence tree adapter", () => {
       "aws-ingested:KSI-SVC-SIN.sh#KSI-SVC-SIN evidenced",
     ]);
     expect(outcome.unchanged).toEqual([]);
+    expect(outcome.skipped).toEqual([]);
 
     // every appended bundle is a regular evidence citizen: signed (verify
     // passes offline), evidence-class asserted, method a pure function of
@@ -64,9 +65,22 @@ describe("rampscan ingest — the evidence tree adapter", () => {
       expect(methodOfIngestedBundle(bundle.predicate).id).toBe(record.methodId);
       classes.set(bundle.predicate.ksi_ids[0]!, bundle.predicate.evidence_class);
       // N0 rides through the adapter: the assertion's population is the
-      // result rows the script emitted
+      // result rows the script emitted — and the assertion is the APPLIANCE's
+      // evaluation of the manifest's clause over those rows (#147), not the
+      // script's exit code
       expect(bundle.predicate.assertions[0]!.population).toBeGreaterThan(0);
+      expect(bundle.predicate.assertions[0]!.detail).not.toMatch(/^exit \d/);
     }
+    // the violated one names its offender: the NONCOMPLIANT principal, 1 of 2
+    const aam = await ledger.get(
+      outcome.appended.find((r) => r.methodId.endsWith("#KSI-IAM-AAM"))!.digest,
+    );
+    if (aam === undefined || !isEvidenceBundle(aam.bundle)) throw new Error("no bundle");
+    expect(aam.bundle.predicate.assertions[0]).toMatchObject({
+      passed: false,
+      population: 2,
+      offender_count: 1,
+    });
     // the manifest's uniform class, and the per-entry override, both signed
     expect(classes.get("KSI-CNA-RVP")).toBe("process-generated");
     expect(classes.get("KSI-SVC-SIN")).toBe("point-in-time");
@@ -85,7 +99,9 @@ describe("rampscan ingest — the evidence tree adapter", () => {
     const { ledgerDir, keysDir } = await work();
     // the adapter's output IS the native contract — derive one from the
     // fixture tree and ingest it through the file path
-    const [submission] = await loadSubmissions(TREE);
+    const {
+      submissions: [submission],
+    } = await loadSubmissions(TREE);
     const dir = await mkdtemp(join(tmpdir(), "rampscan-q41-file-"));
     const file = join(dir, "submission.json");
     await writeFile(file, JSON.stringify(submission, null, 2));

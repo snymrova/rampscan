@@ -8,20 +8,44 @@
       "ksi": "KSI-CNA-RVP",
       "script": "KSI-CNA-RVP.sh",
       "exit_code": 0,
-      "timestamp": "2026-09-10T14:00:00Z"
+      "timestamp": "2026-09-10T14:00:00Z",
+      "assertions": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "PROTECTED",
+          "description": "Every internet-facing distribution the script inventoried sits behind a WAF web ACL with Shield Advanced."
+        }
+      ]
     },
     {
       "ksi": "KSI-SVC-SIN",
       "script": "KSI-SVC-SIN.sh",
       "exit_code": 0,
       "timestamp": "2026-09-10T14:01:30Z",
-      "evidence_class": "point-in-time"
+      "evidence_class": "point-in-time",
+      "assertions": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "ENCRYPTED",
+          "description": "Every storage resource the script inventoried is encrypted at rest with a KMS key."
+        }
+      ]
     },
     {
       "ksi": "KSI-IAM-AAM",
       "script": "KSI-IAM-AAM.sh",
-      "exit_code": 3,
-      "timestamp": "2026-09-10T14:03:00Z"
+      "exit_code": 0,
+      "timestamp": "2026-09-10T14:03:00Z",
+      "assertions": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "COMPLIANT",
+          "description": "Every IAM principal the script inventoried is managed by automation with its access key inside the rotation window."
+        }
+      ]
     }
   ]
 }

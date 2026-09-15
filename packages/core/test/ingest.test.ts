@@ -65,7 +65,7 @@ describe("toIngestedBundle", () => {
   it("computes violated from any failing assertion", () => {
     const failing: IngestSubmission = {
       ...submission,
-      assertions: [{ description: "x", passed: false, detail: "exit 3" }],
+      assertions: [{ description: "x", passed: false, detail: "1 of 2 row(s) fail status eq" }],
     };
     expect(toIngestedBundle(failing, ctx).predicate.verdict).toBe("violated");
   });
