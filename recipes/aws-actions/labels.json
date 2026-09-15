@@ -1,0 +1,38 @@
+{
+  "_type": "https://rampscan.dev/aws-step-labels/v1",
+  "reviewed": "2026-09-16",
+  "dataset": "2026.07.14.01",
+  "rule": "An upstream assertion's `field` is `<label>.<JMESPath>` (SPEC §14.4a). By rule the label is the step's `--config-rule-name` (or the first of `--config-rule-names`), else its CLI operation; steps sharing a label merge their documents (objects shallow-merged, arrays concatenated), which is how `describe-config-rules`, `get-compliance-details-by-config-rule` and `describe-remediation-configurations` for one rule read as one document. The rows below are the labels upstream chose by hand instead, read from the assertions and matched to the step by what the path reads. A label an assertion names that neither the rule nor a row supplies is a test failure, not a silent pass.",
+  "entries": [
+    {
+      "recipe": "guardduty-incident-after-action",
+      "step": 5,
+      "label": "after-action-reports",
+      "why": "`after-action-reports.Contents exists` reads the s3api list-objects-v2 over the after-action-reports/ prefix"
+    },
+    {
+      "recipe": "securityhub-incident-review-procedures",
+      "step": 1,
+      "label": "resolved-high-findings",
+      "why": "`resolved-high-findings.Findings exists` reads the securityhub get-findings filtered to RESOLVED and HIGH"
+    },
+    {
+      "recipe": "route53-dnssec-signing",
+      "step": 2,
+      "label": "public-zone-dnssec",
+      "why": "`public-zone-dnssec.Status.ServeSignature` and `.KeySigningKeys[]` read route53 get-dnssec for the public zone"
+    },
+    {
+      "recipe": "cognito-external-user-authentication",
+      "step": 2,
+      "label": "user-pool-mfa",
+      "why": "`user-pool-mfa.MfaConfiguration eq ON` reads cognito-idp get-user-pool-mfa-config"
+    },
+    {
+      "recipe": "cognito-external-user-authentication",
+      "step": 4,
+      "label": "identity-pool",
+      "why": "`identity-pool.AllowUnauthenticatedIdentities eq false` reads cognito-identity describe-identity-pool"
+    }
+  ]
+}

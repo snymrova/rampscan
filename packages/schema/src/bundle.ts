@@ -48,6 +48,16 @@ export const OffenderPointer = z.object({
   /** entry point » … » sink, as the graph labeled it */
   call_path: z.string().optional(),
   /**
+   * A cloud resource the failing element names (T2-5): the id or ARN, its
+   * type, its region — under AWS's own keys where the output carries them
+   * (a Config evaluation's qualifier, a finding's resource). Absent on
+   * every pipeline pointer; a cloud element that names no resource yields
+   * no pointer and is counted only.
+   */
+  resource_id: z.string().optional(),
+  resource_type: z.string().optional(),
+  region: z.string().optional(),
+  /**
    * How each HOP of `call_path` was resolved — "exact" (the import/call was
    * lexically resolved to a file the walk saw), "inferred" (matched by
    * name), or "sbom" (S1-2: a `dependsOn` edge declared in a package

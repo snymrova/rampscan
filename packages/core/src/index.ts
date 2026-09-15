@@ -9,3 +9,4 @@ export * from "./scoping.js";
 export * from "./artifact-judgment.js";
 export * from "./artifact.js";
 export * from "./attestation.js";
+export * from "./assert-labeled.js";

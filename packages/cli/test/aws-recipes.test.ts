@@ -39,7 +39,7 @@ describe("T1-5 — rampscan recipes --aws prints the classification, computed (#
     expect(report.config).toBeUndefined();
     expect(report.window).toEqual({ start: "2026-08-16T12:00:00.000Z", end: "2026-09-15T12:00:00.000Z" });
     const text = renderAwsRecipes(report);
-    expect(text).toContain("runnable  20 of 49 recipes, 17 KSIs — 13 carry upstream assertions");
+    expect(text).toContain("runnable  20 of 49 recipes, 17 KSIs — 13 carry upstream assertions and are judged by machine");
     expect(text).toContain("no `aws` block");
     expect(text).toContain("  clock-synchronization-and-timestamps  KSI-MLA-OSM");
     expect(text).toMatch(/refused action ssm send-command: executes a document/);
