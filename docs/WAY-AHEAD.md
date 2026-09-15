@@ -35,7 +35,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 
 ### Open items outside any phase
 
-- **The history meter reads the earliest instant.** Surfaced by S3-1: one 2025 snapshot satisfies class c's 6-month `FRC-CSX-MOT` floor on 38 rows. A single stale capture is not persistent validation; the fold's G4 arm should want more than one instant, or cadence adherence. Filed as an issue at S3-1's merge.
+- **The history meter reads the earliest instant.** Surfaced by S3-1: one 2025 snapshot satisfies class c's 6-month `FRC-CSX-MOT` floor on 38 rows. A single stale capture is not persistent validation; the fold's G4 arm should want more than one instant, or cadence adherence. Filed as #159.
 - #11 branch protection (owner-only), #13 retire the launch plan, #29 TypeScript 7, #30 Next 16, #142 fold cost (measured, not a problem), #143 register below the CLI (waits on S3).
 
 ## 3. What is next, in order
