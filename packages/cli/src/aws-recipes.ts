@@ -62,7 +62,7 @@ export interface AwsRecipesReport {
   runnable: number;
   /** KSIs at least one runnable recipe reaches */
   runnable_ksis: number;
-  /** runnable AND carrying assertions: what can be judged without a person */
+  /** runnable AND carrying upstream assertions — judgeable by machine once their vocabulary is read (T2-5) */
   runnable_with_assertions: number;
 }
 
@@ -114,8 +114,8 @@ export function renderAwsRecipes(report: AwsRecipesReport): string {
   lines.push("");
   const total = report.recipes.length;
   lines.push(
-    `runnable  ${report.runnable} of ${total} recipes, ${report.runnable_ksis} KSIs — ${report.runnable_with_assertions} carry assertions and can be judged by machine; ` +
-      `${report.runnable - report.runnable_with_assertions} are collected, then judged (T0-2)`,
+    `runnable  ${report.runnable} of ${total} recipes, ${report.runnable_ksis} KSIs — ${report.runnable_with_assertions} carry upstream assertions (judged by machine once T2-5 reads their vocabulary); ` +
+      `${report.runnable - report.runnable_with_assertions} carry none and are collected, then judged (T0-2)`,
   );
   lines.push(`manual    ${total - report.runnable}`);
   if (report.owed_params.length > 0) {

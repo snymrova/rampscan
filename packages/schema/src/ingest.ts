@@ -61,6 +61,23 @@ export const IngestedAssertion = z.strictObject({
 });
 export type IngestedAssertion = z.infer<typeof IngestedAssertion>;
 
+/**
+ * The runner provenance block (T0-1, SPEC §14.2): present exactly on a
+ * submission the appliance built from a runner's transcript, so a manual
+ * submission and a runner's stay distinguishable to an assessor. What STS
+ * returned during the run, not configuration; and the digest of the request
+ * the run answered. Carried into the bundle's `ingest` block unchanged.
+ */
+export const RunnerProvenance = z.strictObject({
+  name: z.string().min(1),
+  caller_arn: z.string().min(1),
+  account: z.string().regex(/^\d{12}$/),
+  partition: z.enum(["aws", "aws-us-gov"]),
+  region: z.string().min(1),
+  request_digest: z.string().regex(/^[0-9a-f]{64}$/),
+});
+export type RunnerProvenance = z.infer<typeof RunnerProvenance>;
+
 export const IngestSubmission = z.strictObject({
   _type: z.literal(INGEST_SUBMISSION_TYPE),
   /** upstream's recipe id — their names, not ours */
@@ -110,6 +127,8 @@ export const IngestSubmission = z.strictObject({
   automated: z.boolean().optional(),
   tool_versions: z.record(z.string(), z.string()).optional(),
   reproduce: z.string().optional(),
+  /** present exactly when a client-deployed runner produced the bytes (T2-3) */
+  runner: RunnerProvenance.optional(),
 });
 export type IngestSubmission = z.infer<typeof IngestSubmission>;
 

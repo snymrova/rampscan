@@ -70,6 +70,8 @@ export function toIngestedBundle(
         // copied only when declared: an undeclared submission mints the same
         // bytes it always did, and the method reads absent as true (S3-1)
         ...(submission.automated !== undefined ? { automated: submission.automated } : {}),
+        // the runner's provenance, when a runner produced the bytes (T2-3)
+        ...(submission.runner !== undefined ? { runner: submission.runner } : {}),
       },
       ksi_ids: [submission.ksi],
       // the crosswalk rides the KSI in the pinned dataset (§12.2) — an
