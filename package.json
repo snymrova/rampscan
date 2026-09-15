@@ -11,7 +11,7 @@
     "smoke": "playwright test",
     "typecheck": "tsc --build",
     "lint": "biome lint .",
-    "lint:changed": "biome lint --changed",
+    "lint:changed": "biome lint --changed --no-errors-on-unmatched",
     "doctor": "node scripts/doctor.mjs",
     "fetch-pocketbase": "node scripts/fetch-pocketbase.mjs",
     "rampscan": "tsx packages/cli/src/main.ts"

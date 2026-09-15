@@ -146,5 +146,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # `--no-errors-on-unmatched`: a pull request that changes only prose or
+      # data touches nothing the linter reads, and Biome exits 1 on an empty
+      # file list. The first docs-only pull request after the gate (#163) went
+      # red on exactly that. An empty list is a pass, not a failure.
       - name: lint the files this pull request changed
-        run: pnpm exec biome lint --changed --since="${{ github.event.pull_request.base.sha }}"
+        run: pnpm exec biome lint --changed --no-errors-on-unmatched --since="${{ github.event.pull_request.base.sha }}"

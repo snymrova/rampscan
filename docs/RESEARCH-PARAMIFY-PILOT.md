@@ -80,7 +80,7 @@ Three observations, each citable when the README's positioning sentence is rewri
 
 ## 6. Secondary reference material
 
-- **Q5 / exports:** the package YAML is the only publicly assessed 20x machine-readable package we know of — a second conformance target alongside FedRAMP/schemas JSON, with a viewer ecosystem already keyed to it (`html-dashboard/`).
+- **Q5 / exports:** the package YAML is one of two publicly assessed 20x machine-readable packages we know of — *corrected 2026-09-15: `Filevine/fedramp20x-low-submission` carries the same shape, from the same exporter and 3PAO; `RESEARCH-PARAMIFY-REGISTER.md` §3b* — a second conformance target alongside FedRAMP/schemas JSON, with a viewer ecosystem already keyed to it (`html-dashboard/`).
 - **Deferred G11 / trust center:** their dashboard is a static single file over the package YAML — proof that a trust-center-shaped surface can be an *export artifact* rather than a serving product, which is how plan §7.2 hoped to defer it. `fedramp_20x_trust_center.md` shows what a Phase One trust-center page actually contained (POCs, package links, conmon cadence, AI-use statement) — the checklist for whenever G11 is un-deferred.
 - **Assessor workflow:** the Coalfire remarks in the 8/29 package describe their methodology as completeness / accuracy / timeliness / exceptions, with per-evidence `validatedBy`/`validateDate` — corroboration for routing artifact-sufficiency judgments through signed two-key events (Q3) rather than checkboxes.
 
