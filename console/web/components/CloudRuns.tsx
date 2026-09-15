@@ -36,7 +36,7 @@ export function CloudRuns() {
 
   return (
     <section data-testid="cloud-runs">
-      <h2>Cloud runs</h2>
+      <h2>Runner requests</h2>
       <p className="subtitle">
         requests a runner in the client's account was asked to collect — every state from the signed ledger statements, a failed run a row with its class,
         never an absence. The appliance judges the bytes; the runner reports none of the verdicts here.
