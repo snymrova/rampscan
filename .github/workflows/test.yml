@@ -92,3 +92,51 @@ jobs:
           set -euo pipefail
           pnpm rampscan exports --ledger "$RUNNER_TEMP/absent-ledger" --out "$RUNNER_TEMP/conformance"
           pnpm rampscan conformance --out "$RUNNER_TEMP/conformance"
+
+  # T3-0 (docs/PLAN-CLOUD-RUNNER.md, SPEC §14.4): the real `aws` binary against
+  # an AWS API emulator, through the runner and into the appliance's intake.
+  # Its own job, because the `test` job above promises to pull no images, and
+  # because this is the one job that needs a service and a binary. The suite
+  # it runs SKIPS, named, without AWS_ENDPOINT_URL — so in `pnpm test` above it
+  # counts as skipped, never as green — and runs for real only here.
+  #
+  # Where the runner is tested, never where a claim about an account is made:
+  # the plan's exit gates run in a sandbox account, and the denial self-check
+  # needs real IAM (Moto answers simulate-principal-policy with a 500).
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      moto:
+        image: motoserver/moto:5.1.19
+        ports:
+          - 5000:5000
+    env:
+      AWS_ENDPOINT_URL: http://localhost:5000
+      AWS_ACCESS_KEY_ID: testing
+      AWS_SECRET_ACCESS_KEY: testing
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # the runner's ubuntu image ships the AWS CLI v2; the emulator suite skips
+      # itself if that ever stops being true, and this step makes the skip a failure here
+      - name: the binary and the emulator are both present
+        run: |
+          set -euo pipefail
+          aws --version
+          aws sts get-caller-identity
+
+      - name: the runner against Moto, into the intake
+        run: pnpm exec vitest run packages/cli/test/emulator.e2e.test.ts --reporter=default
