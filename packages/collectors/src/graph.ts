@@ -94,8 +94,8 @@ export const graphCollector: Collector = {
     });
 
     const db = openGraphDb(dbPath);
-    let rows;
-    let shape;
+    let rows: ReturnType<typeof routeAuthCoverage>;
+    let shape: ReturnType<typeof graphShape>;
     try {
       rows = routeAuthCoverage(db, authPatterns);
       shape = graphShape(db);

@@ -205,7 +205,7 @@ export async function loadPackage(
     );
   }
   const bytes = await readFile(path);
-  let parsed;
+  let parsed: ReturnType<typeof MachineReadablePackage.parse>;
   try {
     parsed = MachineReadablePackage.parse(parseYaml(bytes.toString("utf8")));
   } catch (cause) {

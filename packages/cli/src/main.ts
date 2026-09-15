@@ -876,7 +876,7 @@ async function main(): Promise<void> {
       // document whose schema cannot be resolved is an exit, not a skip.
       const conformanceTarget =
         target ?? join(values.out ?? "./rampscan-out", "exports", "fedramp");
-      let conformanceResult;
+      let conformanceResult: Awaited<ReturnType<typeof checkConformance>>;
       try {
         conformanceResult = await checkConformance({
           schemaRoot: REPO_ROOT,

@@ -20,6 +20,7 @@ people's repositories, and none of them merges into this one.
 pnpm install          # Node 22, pnpm
 pnpm test             # the whole suite — unit and e2e
 pnpm typecheck        # tsc --build, root and console
+pnpm lint             # biome, the whole tree; `pnpm lint:changed` reads what you touched
 pnpm run doctor           # how each scan tool resolves on this machine
 ```
 
@@ -33,9 +34,15 @@ that path is a feature, and tests cover it.
 The CLI runs from the clone: `pnpm rampscan <command>`. No package is published and
 none declares a `bin`, by decision.
 
-Before opening a pull request, run `pnpm test` and `pnpm typecheck`. CI runs both,
-and a change that breaks either will be caught there; running them locally just
-makes it cheaper.
+Before opening a pull request, run `pnpm test`, `pnpm typecheck` and
+`pnpm lint:changed`. CI runs all three, and a change that breaks any will be
+caught there; running them locally just makes it cheaper. The lint gate
+(`biome.jsonc`, one config) reads only the files a pull request changed against
+its base: a touched file is brought up to the rule, and nobody pays for a file
+they did not touch. Errors fail it; warnings and infos are advisory. The
+console's inherited findings — `type="button"`, key handlers beside click
+handlers, array-index keys — are named the day their file is next edited, which
+is the day they get fixed.
 
 ### Scanning this repository with a secret scanner
 
