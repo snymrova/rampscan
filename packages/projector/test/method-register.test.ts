@@ -460,6 +460,25 @@ describe("G4 history (Q3.1)", () => {
     expect(row.historyMet).toBe(true);
   });
 
+  // #159 — the meter measured reach-back alone, and reach-back is satisfied
+  // by one old bundle. FRC-CSX-MOT wants "status from persistent validation
+  // over at least the past N months", and `Persistently` (FRD-PER) says the
+  // status of a persistent activity "will always be known": history is the
+  // sequence of instants on the owed clock, not the age of the oldest one.
+  it.fails(
+    "one stale capture is not six months of persistent validation (#159): the status lapsed",
+    () => {
+      // a single bundle, seven months before the fold, on a 7-day machine window
+      const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: OLD })], 1, 6, {
+        machineWindow: { num: 7, unit: "days" },
+      });
+      const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+      expect(row.historySince).toBe(OLD); // the reach-back is still a fact
+      expect(row.historyMet).toBe(false); // but the status was known for seven days of the six months
+      expect(row.gap).toBe("G3"); // stale evidence outranks G4; the history verdict stands beside it
+    },
+  );
+
   it("the worst gap outranks G4: below the method floor stays G2, no methods stays G1", () => {
     const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 3, 6);
     expect(projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!.gap).toBe("G2");
