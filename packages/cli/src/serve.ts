@@ -108,6 +108,11 @@ export async function serve(options: ServeOptions): Promise<void> {
     verifyCommand: `pnpm rampscan verify <digest> --ledger ${options.ledgerDir} --keys ${options.keysDir}`,
   };
 
+  // One ledger for the life of the server (#142): the adapter verifies each
+  // object once and reads only the index tail after that, so a re-projection
+  // on append costs the appended statements, not the whole ledger again.
+  const ledger = createLocalLedger(options.ledgerDir);
+
   let projecting = false;
   let dirty = false;
   async function project(reason: string): Promise<void> {
@@ -119,7 +124,6 @@ export async function serve(options: ServeOptions): Promise<void> {
     try {
       do {
         dirty = false;
-        const ledger = createLocalLedger(options.ledgerDir);
         const entries = await ledger.list();
         const projection = await projector.fold(ledger);
         await writeProjectionPocketBase(projection, entries, pb.admin, settings);

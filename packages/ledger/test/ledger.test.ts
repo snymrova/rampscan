@@ -117,6 +117,89 @@ describe("local ledger", () => {
     await expect(ledger.get(digest)).rejects.toThrow(/integrity violation/);
   });
 
+  // #142 — list() reads each object once per process. The ledger is
+  // append-only, so a verified object stays true for the life of the process;
+  // what can change is the index's TAIL, and only by growing. The watermark
+  // is the byte count consumed, and a shorter index is a rewrite.
+  describe("list() reads the index past its watermark and each object once (#142)", () => {
+    it("sees an append made by another instance — the tail past the watermark", async () => {
+      const dir = await tempLedgerDir();
+      const reader = createLocalLedger(dir);
+      const writer = createLocalLedger(dir);
+      await writer.append(makeBundle({ hash: "a".repeat(64) }));
+      expect(await reader.list()).toHaveLength(1);
+      const d2 = await writer.append(makeBundle({ hash: "b".repeat(64) }));
+      const after = await reader.list();
+      expect(after.map((e) => e.digest)).toContain(d2);
+      expect(after).toHaveLength(2);
+    });
+
+    it("the same instance sees its own append, and the earlier entry is the same object", async () => {
+      const ledger = createLocalLedger(await tempLedgerDir());
+      const d1 = await ledger.append(makeBundle({ hash: "a".repeat(64) }));
+      const [first] = await ledger.list();
+      await ledger.append(makeBundle({ hash: "b".repeat(64) }));
+      const again = await ledger.list();
+      expect(again).toHaveLength(2);
+      expect(again.find((e) => e.digest === d1)).toBe(first); // verified once, served again
+    });
+
+    it("an object tampered before the first read is caught by list(), not only get()", async () => {
+      const dir = await tempLedgerDir();
+      const ledger = createLocalLedger(dir);
+      const digest = await ledger.append(makeBundle());
+      const objectPath = join(dir, "objects", `${digest}.json`);
+      const { chmod } = await import("node:fs/promises");
+      await chmod(objectPath, 0o644);
+      await writeFile(objectPath, JSON.stringify(makeBundle({ verdict: "violated" })));
+      await expect(ledger.list()).rejects.toThrow(/integrity violation/);
+    });
+
+    it("an index that shrank is refused as a rewrite, never served as a shorter history", async () => {
+      const dir = await tempLedgerDir();
+      const ledger = createLocalLedger(dir);
+      await ledger.append(makeBundle({ hash: "a".repeat(64) }));
+      await ledger.append(makeBundle({ hash: "b".repeat(64) }));
+      expect(await ledger.list()).toHaveLength(2);
+      const indexPath = join(dir, "index.jsonl");
+      const [firstLine] = (await readFile(indexPath, "utf8")).split("\n");
+      await writeFile(indexPath, firstLine + "\n");
+      await expect(ledger.list()).rejects.toThrow(/integrity violation.*index/);
+    });
+
+    it("a trailing line still being written is held until its newline arrives", async () => {
+      const dir = await tempLedgerDir();
+      const ledger = createLocalLedger(dir);
+      const d1 = await ledger.append(makeBundle({ hash: "a".repeat(64) }));
+      expect(await ledger.list()).toHaveLength(1);
+      // a second append, torn: the object is on disk, the index row has no newline yet
+      const writer = createLocalLedger(dir);
+      const d2 = await writer.append(makeBundle({ hash: "b".repeat(64) }));
+      const indexPath = join(dir, "index.jsonl");
+      const full = await readFile(indexPath, "utf8");
+      const lines = full.split("\n").filter((l) => l.length > 0);
+      const torn = lines[1]!.slice(0, 40);
+      await writeFile(indexPath, lines[0] + "\n" + torn);
+      expect((await ledger.list()).map((e) => e.digest)).toEqual([d1]);
+      // the rest of the line lands; the row is now whole and served
+      const { appendFile } = await import("node:fs/promises");
+      await appendFile(indexPath, lines[1]!.slice(40) + "\n");
+      expect((await ledger.list()).map((e) => e.digest)).toEqual([d1, d2]);
+    });
+
+    it("get() still reads and re-hashes from disk every time — the verifying read", async () => {
+      const dir = await tempLedgerDir();
+      const ledger = createLocalLedger(dir);
+      const digest = await ledger.append(makeBundle());
+      expect(await ledger.list()).toHaveLength(1); // loaded and cached for list()
+      const objectPath = join(dir, "objects", `${digest}.json`);
+      const { chmod } = await import("node:fs/promises");
+      await chmod(objectPath, 0o644);
+      await writeFile(objectPath, JSON.stringify(makeBundle({ verdict: "violated" })));
+      await expect(ledger.get(digest)).rejects.toThrow(/integrity violation/);
+    });
+  });
+
   it("list() filters by recipe, repo, verdict, and since", async () => {
     const ledger = createLocalLedger(await tempLedgerDir());
     await ledger.append(makeBundle({ recipe: "r-one", timestamp: "2026-08-01T00:00:00.000Z" }));
