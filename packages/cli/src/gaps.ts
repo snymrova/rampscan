@@ -196,14 +196,21 @@ export function buildGapRegister(input: GapRegisterInput): GapRegisterView {
     g4.unmeasured = "no scan recorded — a ledger that holds nothing has zero months of history on every KSI";
   } else {
     for (const row of folded) {
-      if (row.historyMet !== false) continue;
-      g4.rows.push({
-        subject: row.ksi,
-        detail:
-          row.historySince === undefined
-            ? `no validation history at all — ${history.months}mo owed`
-            : `history since ${row.historySince} — ${history.months}mo owed`,
-      });
+      // #159: three ways short of the floor, each named — never reached
+      // back, reached back but the known status lapsed, or reached back on
+      // a clock the class owes no window for (persistence unjudged, not met)
+      if (row.historyMet === true) continue;
+      let detail: string;
+      if (row.historySince === undefined) {
+        detail = `no validation history at all — ${history.months}mo owed`;
+      } else if (row.historyLapseAt !== undefined) {
+        detail = `history since ${row.historySince}, status lapsed ${row.historyLapseAt} — ${history.months}mo of persistent validation owed`;
+      } else if (row.historyMet === null) {
+        detail = `history since ${row.historySince}, persistence not judged — no owed window at class ${offeringClass} to judge it by`;
+      } else {
+        detail = `history since ${row.historySince} — ${history.months}mo owed`;
+      }
+      g4.rows.push({ subject: row.ksi, detail });
     }
   }
   sections.push(g4);

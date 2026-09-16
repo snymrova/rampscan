@@ -272,6 +272,7 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       text("history_since"),
       json("history_floor_months"),
       json("history_met"),
+      text("history_lapse_at"), // #159
       // Q3.3: the five owed artifacts and how many are present (G5)
       json("artifacts"),
       { name: "artifacts_present", type: "number", required: false },
@@ -689,6 +690,7 @@ export async function writeProjectionPocketBase(
       history_since: row.historySince ?? "",
       history_floor_months: row.historyFloorMonths,
       history_met: row.historyMet,
+      history_lapse_at: row.historyLapseAt ?? "",
       artifacts: row.artifacts,
       artifacts_present: row.artifactsPresent,
       point_in_time_methods: row.pointInTimeMethods,
@@ -851,6 +853,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     };
     if (r.fresh_as_of) row.freshAsOf = r.fresh_as_of;
     if (r.history_since) row.historySince = r.history_since;
+    if (r.history_lapse_at) row.historyLapseAt = r.history_lapse_at;
     if (r.gap) row.gap = r.gap;
     return row;
   });

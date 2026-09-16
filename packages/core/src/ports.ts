@@ -538,11 +538,25 @@ export interface MethodRegisterRow {
    */
   historyFloorMonths: number | null;
   /**
-   * historySince reaches back at least historyFloorMonths calendar months
-   * from projectedAt; null exactly when historyFloorMonths is null. The meter
-   * starts honest: a young ledger shows false until the months have passed.
+   * The FRC-CSX-MOT judgment (#159): historySince reaches back at least
+   * historyFloorMonths calendar months from projectedAt AND, from the instant
+   * standing when that span opens, the status never lapsed — every next
+   * instant across the KSI's chains landed before the previous one's owed
+   * window closed, projectedAt included as the tail. One old capture is
+   * reach-back, not history. The meter starts honest: a young ledger shows
+   * false until the months have passed.
+   *
+   * null when historyFloorMonths is null — or when the span reaches back but
+   * holds an instant whose clock owes no window (class d's machine clock),
+   * so persistence cannot be judged and is not claimed.
    */
   historyMet: boolean | null;
+  /**
+   * When historyMet is false by lapse: the instant the last known status
+   * expired unrefreshed — one owed window after the instant that set it.
+   * Absent when history never reached back at all, and when it held.
+   */
+  historyLapseAt?: string; // ISO 8601
   /**
    * How many of this KSI's methods sit outside their owed window at
    * projectedAt — cells whose `freshMet` is false (Q3.2). Missing evidence

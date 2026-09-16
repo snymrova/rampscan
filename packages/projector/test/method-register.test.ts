@@ -431,33 +431,105 @@ describe("G4 history (Q3.1)", () => {
     expect(row.gap).toBe("G4"); // method floor met, history floor not
   });
 
-  it("history reaching past the floor meets it — dead bundles included, they ARE the history", () => {
-    const projection = foldWith(
-      [
-        evidenceEntry({ recipe: "covered", timestamp: OLD }), // superseded below
-        evidenceEntry({ recipe: "covered", timestamp: T1 }),
-      ],
-      1,
-      6,
+  // the 7-day machine window every history test below judges against
+  const W7: ClockWindow = { num: 7, unit: "days" };
+  // one instant every 7 days from OLD (day 0) to day 217 — the fold at T2 is
+  // day 219, inside the last tick's window, so the status never lapsed
+  const weekly = (recipe: string, ksiIds?: string[]) =>
+    Array.from({ length: 32 }, (_, i) =>
+      evidenceEntry({
+        recipe,
+        timestamp: new Date(Date.parse(OLD) + i * 7 * 86_400_000).toISOString(),
+        ...(ksiIds !== undefined ? { ksiIds } : {}),
+      }),
     );
+
+  it("history reaching past the floor, refreshed on the clock, meets it — dead bundles included, they ARE the history", () => {
+    const projection = foldWith(weekly("covered"), 1, 6, { machineWindow: W7 });
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
     expect(row.historySince).toBe(OLD);
     expect(row.historyMet).toBe(true);
-    expect(row.gap).toBe("G5"); // no G4 — the unjudged artifacts remain (Q3.3)
+    expect(row.historyLapseAt).toBeUndefined();
+    expect(row.gap).toBe("G3"); // not G4 — `two-ksis` never ran, and its stale cell outranks
   });
 
-  it("history spans the KSI's methods: any method's chain extends it", () => {
-    const projection = foldWith(
-      [
-        evidenceEntry({ recipe: "two-ksis", timestamp: OLD, ksiIds: twoKsis.ksi_ids }),
-        evidenceEntry({ recipe: "covered", timestamp: T1 }),
-      ],
-      1,
-      6,
-    );
+  it("history spans the KSI's methods: any method's chain extends it, and together they keep the status known", () => {
+    // `two-ksis` carried the status for the first half, `covered` for the second
+    const first = weekly("two-ksis", twoKsis.ksi_ids).slice(0, 16);
+    const second = weekly("covered").slice(15);
+    const projection = foldWith([...first, ...second], 1, 6, { machineWindow: W7 });
     const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
     expect(row.historySince).toBe(OLD);
     expect(row.historyMet).toBe(true);
+  });
+
+  // #159 — the meter measured reach-back alone, and reach-back is satisfied
+  // by one old bundle. FRC-CSX-MOT wants "status from persistent validation
+  // over at least the past N months", and `Persistently` (FRD-PER) says the
+  // status of a persistent activity "will always be known": history is the
+  // sequence of instants on the owed clock, not the age of the oldest one.
+  it("one stale capture is not six months of persistent validation (#159): the status lapsed", () => {
+    // a single bundle, seven months before the fold, on a 7-day machine window
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: OLD })], 1, 6, {
+      machineWindow: W7,
+    });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(OLD); // the reach-back is still a fact
+    expect(row.historyMet).toBe(false); // but the status was known for seven days of the six months
+    expect(row.historyLapseAt).toBe("2026-01-08T00:00:00.000Z"); // OLD + 7 days
+    expect(row.gap).toBe("G3"); // stale evidence outranks G4; the history verdict stands beside it
+  });
+
+  it("a lapse in the middle of the span is a lapse: the first expiry that went unrefreshed is named", () => {
+    // both of the KSI's recipes run weekly, both skip tick 10
+    const entries = [...weekly("covered"), ...weekly("two-ksis", twoKsis.ksi_ids)].filter(
+      (e) => e.bundle.predicate.timestamp !== new Date(Date.parse(OLD) + 70 * 86_400_000).toISOString(),
+    );
+    const projection = foldWith(entries, 1, 6, { machineWindow: W7 });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historyMet).toBe(false);
+    // tick 9 at OLD + 63d expired at OLD + 70d; tick 11 landed at OLD + 77d
+    expect(row.historyLapseAt).toBe(new Date(Date.parse(OLD) + 70 * 86_400_000).toISOString());
+    expect(row.gap).toBe("G4"); // fresh at the fold, floor met — history is the worst gap
+  });
+
+  it("the tail counts: history that stopped before the fold instant lapsed, however long it ran", () => {
+    const entries = weekly("covered").slice(0, 28); // last tick OLD + 189d, fold at OLD + 219d
+    const projection = foldWith(entries, 1, 6, { machineWindow: W7 });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historyMet).toBe(false);
+    expect(row.historyLapseAt).toBe(new Date(Date.parse(OLD) + 196 * 86_400_000).toISOString());
+  });
+
+  it("instants before the span are not walked: a lapse older than the floor does not count against it", () => {
+    // a lone capture a year before, then the clean weekly run — the status
+    // standing when the six-month span opens is the weekly run's
+    const entries = [
+      evidenceEntry({ recipe: "covered", timestamp: "2025-01-01T00:00:00.000Z" }),
+      ...weekly("covered"),
+    ];
+    const projection = foldWith(entries, 1, 6, { machineWindow: W7 });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe("2025-01-01T00:00:00.000Z");
+    expect(row.historyMet).toBe(true);
+  });
+
+  it("no owed window on the clock (class d's machine clock): reach-back holds, persistence is unjudged — null, never met", () => {
+    const projection = foldWith(weekly("covered"), 1, 6, { machineWindow: null });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historySince).toBe(OLD);
+    expect(row.historyMet).toBeNull();
+    expect(row.historyLapseAt).toBeUndefined();
+    expect(row.gap).toBe("G5"); // not G4: unjudged is not unmet
+  });
+
+  it("no owed window, and history that never reached back at all: false, not null", () => {
+    const projection = foldWith([evidenceEntry({ recipe: "covered", timestamp: T1 })], 1, 6, {
+      machineWindow: null,
+    });
+    const row = projection.methodRegisters.find((r) => r.ksi === "KSI-SCR-MIT")!;
+    expect(row.historyMet).toBe(false);
+    expect(row.gap).toBe("G4");
   });
 
   it("the worst gap outranks G4: below the method floor stays G2, no methods stays G1", () => {
@@ -482,7 +554,7 @@ describe("G4 history (Q3.1)", () => {
     expect(row.historyMet).toBeNull();
   });
 
-  it("survives the sqlite round trip, history fields and nulls included", async () => {
+  it("survives the sqlite round trip, history fields, the lapse instant and nulls included", async () => {
     const projection = foldWith(
       [
         evidenceEntry({ recipe: "covered", timestamp: OLD }),
@@ -490,7 +562,9 @@ describe("G4 history (Q3.1)", () => {
       ],
       1,
       6,
+      { machineWindow: W7 },
     );
+    expect(projection.methodRegisters.some((r) => r.historyLapseAt !== undefined)).toBe(true);
     const dir = await mkdtemp(join(tmpdir(), "rampscan-g4-"));
     const dbPath = join(dir, "projection.db");
     await writeProjectionSqlite(projection, dbPath);
