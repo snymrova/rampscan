@@ -277,8 +277,13 @@ export interface MethodRegisterRecord {
   history_since: string;
   /** the FRC-CSX-MOT floor in months; null when the class owes no number */
   history_floor_months: number | null;
-  /** null exactly when history_floor_months is null */
+  /**
+   * null when history_floor_months is null — or when the span reaches back
+   * but persistence could not be judged (#159: an instant with no owed window)
+   */
   history_met: boolean | null;
+  /** when the known status expired unrefreshed (#159); "" when it never did, or never reached back */
+  history_lapse_at: string;
   /** the five owed artifacts, ascending (Q3.3) */
   artifacts: ArtifactCellRecord[];
   /** how many of the five are present */

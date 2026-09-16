@@ -199,7 +199,7 @@ The spec amendment (`SPEC.md` §12 or a section replacing §11's open questions)
 
 In leverage order:
 
-1. **G4 history:** compute persistent-validation history per KSI from the ledger (the data exists; nothing counts it) against the 6/18-month floors. The meter starts honest: a young ledger shows a young number.
+1. **G4 history:** compute persistent-validation history per KSI from the ledger (the data exists; nothing counts it) against the 6/18-month floors. The meter starts honest: a young ledger shows a young number. *Corrected 2026-09-16 (#159): the meter as first built measured reach-back alone, which one stale capture satisfies; it now walks the instants on the owed clock.*
 2. **G3 freshness** re-keyed: the clock view's row becomes (KSI, method), window read from the owed side per class.
 3. **G5 artifacts:** the five artifacts modeled per KSI. Presence is mechanical (artifact 5 is the method's evidence itself; artifact 2 is the cadence record the scheduler already keeps); sufficiency of 1, 3, and 4 is judgment — routed through the existing two-key pattern, a signed ledger event, never a checkbox. Artifact 4 (accuracy of the measurement system) is where the #23 class of defect formally lives from now on.
 4. **G6 evidence-class labeling:** every bundle asserts `process-generated` vs `point-in-time` at ingestion. Everything rampscan produces today is process-generated; the assertion exists so Q4's ingested evidence can be classified — and rejected as standalone evidence when point-in-time.

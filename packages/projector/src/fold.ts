@@ -220,6 +220,19 @@ export function windowThreshold(iso: string, window: ClockWindow): string {
   return monthsBefore(iso, window.num);
 }
 
+/**
+ * The instant one owed window after `iso` (#159): the status a validation
+ * at `iso` established stays known until then. The mirror of
+ * `windowThreshold`, same arithmetic in the other direction — `monthsBefore`
+ * with a negative count clamps the day the same way (Jan 31 + 1mo → Feb 28).
+ */
+export function windowExpiry(iso: string, window: ClockWindow): string {
+  if (window.unit === "days") {
+    return new Date(Date.parse(iso) + window.num * 86_400_000).toISOString();
+  }
+  return monthsBefore(iso, -window.num);
+}
+
 export function foldEntries(
   entries: LedgerEntry[],
   projectedAt: string,
@@ -774,18 +787,58 @@ export function foldEntries(
         const processMethods = cells.filter(
           (c) => c.evidenceClass === "process-generated",
         ).length;
-        // G4 history (Q3.1): where this KSI's validation history begins —
-        // the earliest bundle across its methods' chains, dead bundles
+        // G4 history (Q3.1, #159): this KSI's validation history is the
+        // sequence of instants across its methods' chains, dead bundles
         // included, because the superseded record IS the history the
-        // FRC-CSX-MOT meter counts. The data was always in the ledger;
-        // this is the counting.
-        let historySince: string | undefined;
+        // FRC-CSX-MOT meter counts. Each instant carries its cell's owed
+        // window — how long the status it established stays known.
+        const instants: Array<{ t: string; window: ClockWindow | null }> = [];
         for (const cell of cells) {
           if (cell.recipeId === undefined) continue;
-          const first = groups.get(`${repo} ${cell.recipeId}`)?.[0];
-          const t = first?.bundle.predicate.timestamp;
-          if (t !== undefined && (historySince === undefined || t < historySince)) {
-            historySince = t;
+          for (const entry of groups.get(`${repo} ${cell.recipeId}`) ?? []) {
+            instants.push({ t: entry.bundle.predicate.timestamp, window: cell.window });
+          }
+        }
+        instants.sort((a, b) => a.t.localeCompare(b.t));
+        const historySince = instants[0]?.t;
+        // The meter (#159). Reach-back alone — the oldest instant at or before
+        // the threshold — was the whole judgment once, and one stale capture
+        // satisfied it. FRC-CSX-MOT wants "status from persistent validation
+        // over at least the past N months", and `Persistently` (FRD-PER) says
+        // the status "will always be known": so from the instant standing when
+        // the owed span opens, every next instant must land before the last
+        // one's window closed, the fold instant included as the tail — the
+        // I1d cadence-gap rule, walked over the KSI's chains together, because
+        // a method that died and was replaced still kept the status known.
+        //
+        // An instant whose clock owes no window (class d's machine clock —
+        // VDR-TFR-MVX has no d entry) cannot say how long its status stayed
+        // known, and the meter does not borrow a window to say it for it:
+        // reach-back with such an instant in the span is `null`, unjudged,
+        // never a met floor. A lapse found on a judged instant is `false`
+        // regardless.
+        let historyMet: boolean | null = null;
+        let historyLapseAt: string | undefined;
+        if (historyThreshold !== null) {
+          const start = instants.findLastIndex((i) => i.t <= historyThreshold);
+          if (start === -1) {
+            historyMet = false;
+          } else {
+            let unjudged = false;
+            for (let i = start; i < instants.length; i++) {
+              const { t, window } = instants[i]!;
+              if (window === null) {
+                unjudged = true;
+                continue;
+              }
+              const expiry = windowExpiry(t, window);
+              const next = instants[i + 1]?.t ?? projectedAt;
+              if (next > expiry) {
+                historyLapseAt = expiry;
+                break;
+              }
+            }
+            historyMet = historyLapseAt !== undefined ? false : unjudged ? null : true;
           }
         }
         // G5 artifacts (Q3.3, R1.1): the five owed artifacts per KSI,
@@ -932,15 +985,13 @@ export function foldEntries(
           floorMet: floor === null ? null : automatedMethods >= floor,
           staleMethods,
           historyFloorMonths: historyFloor,
-          historyMet:
-            historyThreshold === null
-              ? null
-              : historySince !== undefined && historySince <= historyThreshold,
+          historyMet,
           artifacts,
           artifactsPresent,
           pointInTimeMethods,
         };
         if (historySince !== undefined) row.historySince = historySince;
+        if (historyLapseAt !== undefined) row.historyLapseAt = historyLapseAt;
         const freshAsOf = cells
           .map((c) => c.freshAsOf)
           .filter((t): t is string => t !== undefined)

@@ -286,7 +286,13 @@ function KsiRowView({
                   ? `since ${new Date(register.history_since).toLocaleDateString()}`
                   : "none in the ledger"}{" "}
                 — floor ≥{register.history_floor_months}mo (FRC-CSX-MOT)
-                {register.history_met === true ? " · met" : " · not yet met"}
+                {register.history_met === true
+                  ? " · met"
+                  : register.history_lapse_at
+                    ? ` · status lapsed ${new Date(register.history_lapse_at).toLocaleDateString()}`
+                    : register.history_met === null
+                      ? " · persistence not judged (no owed window)"
+                      : " · not yet met"}
               </p>
             )}
 

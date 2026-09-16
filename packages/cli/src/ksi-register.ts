@@ -49,8 +49,14 @@ export interface KsiRegisterRowView {
   freshestMet?: boolean | null;
   /** where this KSI's ledger history begins (Q3.1); absent when it holds nothing */
   historySince?: string; // ISO 8601
-  /** the FRC-CSX-MOT judgment; null exactly when the class owes no months */
+  /**
+   * The FRC-CSX-MOT judgment (#159): reach-back AND no lapse of known status
+   * across the span. Null when the class owes no months — or when the fold
+   * could not judge persistence (an instant with no owed window, class d).
+   */
   historyMet: boolean | null;
+  /** when the known status expired unrefreshed (#159); absent unless historyMet is false by lapse */
+  historyLapseAt?: string; // ISO 8601
   /**
    * Methods whose owed clock is unmet (Q3.2) — stale OR missing evidence,
    * each judged against its own family's window (machine → VDR-TFR-MVX,
@@ -213,7 +219,7 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       // the honest number for a ledger that holds nothing: zero months,
       // which meets no floor — never null, because the class still owes.
       historyMet:
-        folded?.historyMet ?? (history.months === null ? null : false),
+        folded !== undefined ? folded.historyMet : history.months === null ? null : false,
       // Same honesty for the clocks (Q3.2): without a fold, every method's
       // evidence is missing, so every method whose family has an owed window
       // is unmet. Derived methods are all machine today (source: pipeline) —
@@ -246,6 +252,7 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       }
     }
     if (folded?.historySince !== undefined) row.historySince = folded.historySince;
+    if (folded?.historyLapseAt !== undefined) row.historyLapseAt = folded.historyLapseAt;
     if (total === 0) row.worstGap = "G1";
     else if (floor !== null && automated < floor) row.worstGap = "G2";
     else if (row.staleMethods > 0) row.worstGap = "G3";
