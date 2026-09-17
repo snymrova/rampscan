@@ -87,4 +87,4 @@ export { recordRunnerRegistration, runnerRegistry, runnerRegistryAt } from "./ru
 export type { RecordRunnerRegistrationOptions, RegisteredRunner } from "./runner-registry.js";
 export { DEFAULT_ALLOWLIST_PATH } from "./aws-actions.js";
 export { DEFAULT_BINDINGS_PATH } from "./aws-bindings.js";
-export { DEFAULT_LABELS_PATH } from "./aws-labels.js";
+export { derivedStepLabel } from "./aws-labels.js";

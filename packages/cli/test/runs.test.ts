@@ -10,7 +10,6 @@ import type { Transport } from "@rampscan/runner";
 import { AwsConfig, isEvidenceBundle } from "@rampscan/schema";
 import { DEFAULT_ALLOWLIST_PATH, loadAwsActionAllowlist } from "../src/aws-actions.js";
 import { DEFAULT_BINDINGS_PATH, loadAwsLiteralBindings } from "../src/aws-bindings.js";
-import { DEFAULT_LABELS_PATH, loadAwsStepLabels } from "../src/aws-labels.js";
 import { recordRunnerRegistration } from "../src/runner-registry.js";
 import { intakeRun, mintOnceToken, mintRunRequest, nextRun, nextRunByToken, runsLifecycle } from "../src/runs.js";
 import type { RunsDeps } from "../src/runs.js";
@@ -39,6 +38,9 @@ function shim(extra: Record<string, { stdout?: string; stderr?: string; exit?: n
     [SIMULATE]: { stdout: DENIED },
     "iam list-roles --query Roles[].{Role:RoleName,MaxSessionDuration:MaxSessionDuration}": { stdout: ROLES },
     "iam generate-credential-report": { stdout: '{"State": "COMPLETE"}\n' },
+    // overlay 4.3.0 reads the report's own GeneratedTime as its second step and
+    // asserts it is under a day old, so the shim answers with the clock it runs at
+    "iam get-credential-report --query GeneratedTime --output text": { stdout: `${new Date().toISOString()}\n` },
     "iam get-credential-report --query Content --output text": { stdout: `${Buffer.from(REPORT).toString("base64")}\n` },
     ...extra,
   };
@@ -56,7 +58,6 @@ async function appliance(overrides: Partial<RunsDeps> = {}) {
     aws: AwsConfig.parse({ account_id: "111111111111", partition: "aws", regions: ["us-east-1"] }),
     list: await loadAwsActionAllowlist(join(REPO_ROOT, DEFAULT_ALLOWLIST_PATH)),
     table: await loadAwsLiteralBindings(join(REPO_ROOT, DEFAULT_BINDINGS_PATH)),
-    labels: await loadAwsStepLabels(join(REPO_ROOT, DEFAULT_LABELS_PATH)),
     recipes: ds.recipes(),
     ...overrides,
   };
@@ -102,7 +103,11 @@ describe("the click, the poll, the intake, the lifecycle (T4-1..T4-3)", () => {
     const minted = await mintRunRequest(deps, { recipeId: "iam-credential-report", ksi: "KSI-IAM-APM", requester: "operator@example.test", window });
     expect(minted.kind).toBe("requested");
     if (minted.kind !== "requested") return;
-    expect(minted.steps).toEqual([["aws", "iam", "generate-credential-report"], ["aws", "iam", "get-credential-report", "--query", "Content", "--output", "text"]]);
+    expect(minted.steps).toEqual([
+      ["aws", "iam", "generate-credential-report"],
+      ["aws", "iam", "get-credential-report", "--query", "GeneratedTime", "--output", "text"],
+      ["aws", "iam", "get-credential-report", "--query", "Content", "--output", "text"],
+    ]);
     const request = await verify({ digest: minted.digest, ledgerDir: deps.ledgerDir, keysDir: deps.keysDir });
     expect(request.ok).toBe(true);
     expect(request.lines.join("\n")).toMatch(/run {6}iam-credential-report for KSI-IAM-APM/);
@@ -118,10 +123,18 @@ describe("the click, the poll, the intake, the lifecycle (T4-1..T4-3)", () => {
     expect(evidence).toBeDefined();
     expect(isEvidenceBundle(evidence!.bundle)).toBe(true);
     if (!isEvidenceBundle(evidence!.bundle)) return;
-    // upstream spells the assertion TRUE and the report prints false — the where-clause matches nothing, so
-    // upstream's assertions pass vacuously over the planted principal (the finding, still upstream's to fix);
-    // what the bundle proves here is the path: three assertions evaluated by the appliance, the runner named
-    expect(evidence!.bundle.predicate.assertions).toHaveLength(3);
+    // upstream spells the where-clause `password_enabled eq TRUE` and the report AWS prints spells it `true`,
+    // so the planted principal falls outside the narrowed population: the three per-row assertions read
+    // `0 of 1 in scope` rather than passing over a row they never looked at. The finding is upstream's to fix
+    // (T2-5's sandbox note) and the population is what makes it visible instead of silent. The fourth
+    // assertion, the report's own GeneratedTime, is judged and holds — the bundle proves the whole path
+    expect(evidence!.bundle.predicate.assertions).toHaveLength(4);
+    expect(evidence!.bundle.predicate.assertions.map((a) => a.passed)).toEqual([true, true, true, true]);
+    expect(evidence!.bundle.predicate.assertions.slice(1).map((a) => a.detail)).toEqual([
+      'credential-report: 0 of 1 at [] in scope, all holding mfa_active eq "TRUE"',
+      "credential-report: 0 of 1 at [] in scope, all holding access_key_1_last_rotated max_age_days 90",
+      "credential-report: 0 of 1 at [] in scope, all holding access_key_2_last_rotated max_age_days 90",
+    ]);
     expect(evidence!.bundle.predicate.ingest?.runner).toMatchObject({ name: "sidecar-1", account: "111111111111", caller_arn: "arn:aws:sts::111111111111:assumed-role/rampscan-runner/i-0abc" });
     expect(evidence!.bundle.predicate.ingest?.signer_identity).toBe("runner:sidecar-1 (arn:aws:sts::111111111111:assumed-role/rampscan-runner/i-0abc)");
     expect(evidence!.bundle.predicate.method_id).toBe("aws-ingested:iam-credential-report#KSI-IAM-APM");
@@ -153,7 +166,7 @@ describe("the click, the poll, the intake, the lifecycle (T4-1..T4-3)", () => {
   it("a denied call is a failed run: a visible row of class denied, and no bundle", async () => {
     const { deps, runnerKeys, transport, window, ledger } = await appliance();
     await mintRunRequest(deps, { recipeId: "iam-credential-report", ksi: "KSI-IAM-ELP", requester: "operator@example.test", window });
-    const denied = { "iam get-credential-report --query Content --output text": { stderr: "An error occurred (AccessDenied) when calling the GetCredentialReport operation", exit: 254 } };
+    const denied = { "iam get-credential-report --query GeneratedTime --output text": { stderr: "An error occurred (AccessDenied) when calling the GetCredentialReport operation", exit: 254 } };
     await poll({ console: "http://console.test", keys: runnerKeys, runner: { name: "sidecar-1", region: "us-east-1" }, transport, maxRequests: 2, ...shim(denied) });
     const rows = await runsLifecycle(ledger());
     expect(rows[0]).toMatchObject({ state: "failed", class: "denied", runner: "sidecar-1" });

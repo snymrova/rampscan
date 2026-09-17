@@ -1,7 +1,7 @@
 {
   "_type": "https://rampscan.dev/aws-action-allowlist/v1",
-  "reviewed": "2026-09-15",
-  "dataset": "2026.07.14.01",
+  "reviewed": "2026-09-18",
+  "dataset": "2026.09.13.02",
   "rule": "Every AWS CLI action a recipe may run under the runner is listed here by hand, with the IAM action(s) it needs and one line on why it does not mutate the account. Admission is a code-reviewed change to this file; nothing is admitted by verb pattern — `start`, `generate` and `validate` appear below because a reviewer read what each does, and `Describe*` appears entry by entry for the same reason. An action absent from both lists is unknown, and a recipe using one is manual until it is reviewed. `refused` names the actions the pinned recipes use that the runner will never run, with the reason. `runner` names the two calls the runner makes on its own behalf.",
   "admitted": [
     {
@@ -12,11 +12,46 @@
       "why": "lists the analyzers configured in the account; reads analyzer metadata and nothing else"
     },
     {
+      "cli": "accessanalyzer list-findings",
+      "iam": [
+        "access-analyzer:ListFindings"
+      ],
+      "why": "lists an external-access analyzer's findings under a filter; the findings are Access Analyzer's own state and this call does not archive or resolve them"
+    },
+    {
       "cli": "accessanalyzer list-findings-v2",
       "iam": [
         "access-analyzer:ListFindingsV2"
       ],
       "why": "lists an analyzer's findings; the findings are Access Analyzer's own state and this call does not archive or resolve them"
+    },
+    {
+      "cli": "artifact get-report",
+      "iam": [
+        "artifact:GetReport"
+      ],
+      "why": "downloads one AWS Artifact report under the term token get-term-for-report returned; the report is AWS's own document and nothing in this account changes"
+    },
+    {
+      "cli": "artifact get-report-metadata",
+      "iam": [
+        "artifact:GetReportMetadata"
+      ],
+      "why": "reads one report's metadata — series, version, period covered, upload date"
+    },
+    {
+      "cli": "artifact get-term-for-report",
+      "iam": [
+        "artifact:GetTermForReport"
+      ],
+      "why": "reads the agreement text a report is offered under and the token that quotes it back; accepts nothing by itself"
+    },
+    {
+      "cli": "artifact list-reports",
+      "iam": [
+        "artifact:ListReports"
+      ],
+      "why": "lists the AWS Artifact reports available to the account"
     },
     {
       "cli": "backup describe-backup-vault",
@@ -45,6 +80,13 @@
         "backup:ListRestoreTestingPlans"
       ],
       "why": "lists restore testing plans; runs none"
+    },
+    {
+      "cli": "cloudtrail describe-trails",
+      "iam": [
+        "cloudtrail:DescribeTrails"
+      ],
+      "why": "reads every trail's settings, including which event selectors and fields it records; creates and changes none"
     },
     {
       "cli": "cloudtrail get-trail-status",
@@ -130,6 +172,20 @@
       "why": "lists user pools"
     },
     {
+      "cli": "configservice describe-compliance-by-config-rule",
+      "iam": [
+        "config:DescribeComplianceByConfigRule"
+      ],
+      "why": "reads each rule's compliance summary; triggers no evaluation"
+    },
+    {
+      "cli": "configservice describe-config-rule-evaluation-status",
+      "iam": [
+        "config:DescribeConfigRuleEvaluationStatus"
+      ],
+      "why": "reads when a rule last evaluated and whether that evaluation errored — the freshness of the verdict, not a new one"
+    },
+    {
       "cli": "configservice describe-config-rules",
       "iam": [
         "config:DescribeConfigRules"
@@ -142,6 +198,13 @@
         "config:DescribeConfigurationRecorderStatus"
       ],
       "why": "reads whether the recorder is recording; starts or stops nothing"
+    },
+    {
+      "cli": "configservice describe-configuration-recorders",
+      "iam": [
+        "config:DescribeConfigurationRecorders"
+      ],
+      "why": "reads which resource types the recorder is configured to record; records nothing and starts nothing"
     },
     {
       "cli": "configservice describe-remediation-configurations",
@@ -228,6 +291,13 @@
       "why": "describes network ACLs and their rules; EC2 Describe* calls read the control plane and change nothing"
     },
     {
+      "cli": "ec2 describe-regions",
+      "iam": [
+        "ec2:DescribeRegions"
+      ],
+      "why": "lists the regions the account is enabled in; a catalogue read with no account state behind it"
+    },
+    {
       "cli": "ec2 describe-security-group-rules",
       "iam": [
         "ec2:DescribeSecurityGroupRules"
@@ -275,6 +345,13 @@
         "ec2:DescribeVpnConnections"
       ],
       "why": "describes site-to-site VPN connections; EC2 Describe* calls read the control plane and change nothing"
+    },
+    {
+      "cli": "ecr get-registry-scanning-configuration",
+      "iam": [
+        "ecr:GetRegistryScanningConfiguration"
+      ],
+      "why": "reads the registry's scanning rules — basic or enhanced, and on which repository filters; scans nothing"
     },
     {
       "cli": "elbv2 describe-listeners",
@@ -369,11 +446,26 @@
       "review": "admitted by review, not by verb: `generate` creates a report artifact inside IAM, at most every four hours, and is the only way get-credential-report has anything to return"
     },
     {
+      "cli": "iam generate-service-last-accessed-details",
+      "iam": [
+        "iam:GenerateServiceLastAccessedDetails"
+      ],
+      "why": "asks IAM to compute which services and actions a principal last used, from its own access records; no principal, policy or credential changes",
+      "review": "admitted by review, not by verb: `generate` starts a job inside IAM that produces a report about IAM's own recorded access, and is the only way get-service-last-accessed-details has anything to return — the same shape as generate-credential-report"
+    },
+    {
       "cli": "iam get-account-authorization-details",
       "iam": [
         "iam:GetAccountAuthorizationDetails"
       ],
       "why": "reads every user, group, role and policy with their attachments; a snapshot, not a change"
+    },
+    {
+      "cli": "iam get-account-password-policy",
+      "iam": [
+        "iam:GetAccountPasswordPolicy"
+      ],
+      "why": "reads the account's IAM password policy; sets none"
     },
     {
       "cli": "iam get-account-summary",
@@ -388,6 +480,20 @@
         "iam:GetCredentialReport"
       ],
       "why": "downloads the credential report generate-credential-report built"
+    },
+    {
+      "cli": "iam get-group",
+      "iam": [
+        "iam:GetGroup"
+      ],
+      "why": "reads one group and its members; changes no membership"
+    },
+    {
+      "cli": "iam get-service-last-accessed-details",
+      "iam": [
+        "iam:GetServiceLastAccessedDetails"
+      ],
+      "why": "downloads the report generate-service-last-accessed-details built for a job id"
     },
     {
       "cli": "iam list-open-id-connect-providers",
@@ -411,6 +517,13 @@
       "why": "lists SAML identity providers"
     },
     {
+      "cli": "iam list-virtual-mfa-devices",
+      "iam": [
+        "iam:ListVirtualMFADevices"
+      ],
+      "why": "lists virtual MFA devices and which principal each is assigned to; enables and deactivates none"
+    },
+    {
       "cli": "identitystore list-users",
       "iam": [
         "identitystore:ListUsers"
@@ -425,11 +538,25 @@
       "why": "reads whether Inspector scanning is enabled per resource type"
     },
     {
+      "cli": "inspector2 get-sbom-export",
+      "iam": [
+        "inspector2:GetSbomExport"
+      ],
+      "why": "reads one SBOM export job's status and destination; exports nothing itself"
+    },
+    {
       "cli": "inspector2 list-coverage",
       "iam": [
         "inspector2:ListCoverage"
       ],
       "why": "lists which resources Inspector covers and why not"
+    },
+    {
+      "cli": "inspector2 list-coverage-statistics",
+      "iam": [
+        "inspector2:ListCoverageStatistics"
+      ],
+      "why": "reads counts of covered and uncovered resources grouped by scan status; scans nothing"
     },
     {
       "cli": "logs describe-log-groups",
@@ -501,6 +628,13 @@
         "organizations:DescribePolicy"
       ],
       "why": "reads one SCP's content"
+    },
+    {
+      "cli": "organizations list-accounts",
+      "iam": [
+        "organizations:ListAccounts"
+      ],
+      "why": "lists the organization's member accounts and their ids; creates, closes and moves none"
     },
     {
       "cli": "organizations list-policies",
@@ -585,6 +719,20 @@
         "s3:ListBucket"
       ],
       "why": "lists keys in a bucket; reads no object body"
+    },
+    {
+      "cli": "s3control get-public-access-block",
+      "iam": [
+        "s3:GetAccountPublicAccessBlock"
+      ],
+      "why": "reads the account-level S3 public access block; sets none"
+    },
+    {
+      "cli": "securityhub get-enabled-standards",
+      "iam": [
+        "securityhub:GetEnabledStandards"
+      ],
+      "why": "reads which security standards the account has enabled; enables and disables none"
     },
     {
       "cli": "securityhub get-findings",
@@ -750,18 +898,25 @@
   ],
   "refused": [
     {
-      "cli": "ssm send-command",
-      "iam": [
-        "ssm:SendCommand"
-      ],
-      "why": "executes a document — with AWS-RunShellScript, an arbitrary shell command — on the targeted instances. The one recipe using it (`clock-synchronization-and-timestamps`) runs `chronyc` on production-tagged hosts. Refused outright; the recipe is manual."
-    },
-    {
       "cli": "athena start-query-execution",
       "iam": [
         "athena:StartQueryExecution"
       ],
       "why": "runs a query whose results Athena writes to an S3 output location. It writes into the account, and the runner writes nothing. Refused; `audit-reduction-and-report-generation` is manual for this and its CloudTrail Lake alternative is what the runner may use."
+    },
+    {
+      "cli": "inspector2 create-sbom-export",
+      "iam": [
+        "inspector2:CreateSbomExport"
+      ],
+      "why": "writes a CycloneDX SBOM into an S3 bucket under a KMS key — `--s3-destination bucketName=…,keyPrefix=…`. It is an export job that puts objects into the account, and the runner puts nothing anywhere. Refused; `acquisition-scanning-and-sbom-inventory` is manual for it, and the SBOM belongs in the pipeline plane's evidence where the commit anchors it."
+    },
+    {
+      "cli": "ssm send-command",
+      "iam": [
+        "ssm:SendCommand"
+      ],
+      "why": "executes a document — with AWS-RunShellScript, an arbitrary shell command — on the targeted instances. The one recipe using it (`clock-synchronization-and-timestamps`) runs `chronyc` on production-tagged hosts. Refused outright; the recipe is manual."
     }
   ],
   "runner": [

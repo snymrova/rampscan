@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { NextResponse } from "next/server";
-import { DEFAULT_ALLOWLIST_PATH, DEFAULT_BINDINGS_PATH, DEFAULT_LABELS_PATH, loadRunsDeps } from "@rampscan/cli";
+import { DEFAULT_ALLOWLIST_PATH, DEFAULT_BINDINGS_PATH, loadRunsDeps } from "@rampscan/cli";
 import type { RunsDeps } from "@rampscan/cli";
 
 // Shared by the runs routes (docs/PLAN-CLOUD-RUNNER.md T4-2): the
@@ -17,7 +17,7 @@ export function env(name: string): string {
   return value;
 }
 
-/** the repository root the allowlist, bindings and labels live under — this checkout, where `rampscan serve` runs */
+/** the repository root the allowlist and bindings live under — this checkout, where `rampscan serve` runs */
 const REPO_ROOT = resolve(process.cwd(), "../..");
 
 export async function deps(): Promise<RunsDeps | NextResponse> {
@@ -29,7 +29,6 @@ export async function deps(): Promise<RunsDeps | NextResponse> {
     datasetPin: env("RAMPSCAN_DATASET_PIN"),
     allowlistPath: resolve(REPO_ROOT, DEFAULT_ALLOWLIST_PATH),
     bindingsPath: resolve(REPO_ROOT, DEFAULT_BINDINGS_PATH),
-    labelsPath: resolve(REPO_ROOT, DEFAULT_LABELS_PATH),
     // an emulator's runner cannot show its role read-only (SPEC §14.4); only a serve told so accepts that
     ...(process.env["RAMPSCAN_RUNNER_EMULATOR"] === "1" ? { requireSelfCheck: false } : {}),
   });

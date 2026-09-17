@@ -1,12 +1,19 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slice": "crosswalk",
+  "contract_version": "1.0.0",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "covers": "The DATA in this response (derived slices and authored overlays). The site code is not licensed by it.",
+    "attribution": "ramprules.com"
+  },
   "data": {
     "info": {
       "title": "FedRAMP Consolidated Rules for 2026",
-      "version": "2026.07.14.01",
-      "lastUpdated": "2026-07-14"
+      "version": "2026.09.13.02",
+      "lastUpdated": "2026-09-13"
     },
     "families": [
       "AC",
@@ -476,8 +483,7 @@
         "terms": [
           "Information Resource",
           "Machine-Based (Information Resources)",
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [
           {
@@ -1897,8 +1903,7 @@
         "statement": "Executive support for achieving the provider's security goals is persistently reviewed and demonstrated.",
         "hasVariesByClass": false,
         "terms": [
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [],
         "countsByFamily": {}
@@ -1911,8 +1916,7 @@
         "statement": "The effectiveness of the provider's investments in achieving security goals is persistently reviewed.",
         "hasVariesByClass": false,
         "terms": [
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [
           {
@@ -2063,7 +2067,6 @@
         "hasVariesByClass": false,
         "terms": [
           "Persistently",
-          "Provider",
           "Vulnerability"
         ],
         "controls": [
@@ -2231,8 +2234,7 @@
         "statement": "The desired Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO) are defined and persistently reviewed for alignment with the provider's business needs and capabilities.",
         "hasVariesByClass": false,
         "terms": [
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [
           {
@@ -2696,7 +2698,6 @@
         "statement": null,
         "hasVariesByClass": true,
         "terms": [
-          "Agency",
           "Federal Customer Data",
           "Promptly"
         ],
@@ -5381,13 +5382,11 @@
       "Information Resource": "Has the meaning from 44 USC § 3502 (6): \"information and related resources, such as personnel, equipment, funds, and information technology.\" This includes any aspect of the cloud service offering, both technical and managerial, including everything that makes up the business of the offering from non-machine-based information resources like organizational policies, procedures, employees, etc. to machine-based information resources like hardware, software, cloud services, code, etc.",
       "Machine-Based (Information Resources)": "Any information technology information resource—including systems, processes, software, hardware, services, cloud-native capabilities, and any other such capability, component, or resource—that relies primarily on mechanical or electronic devices (i.e. computers) for operation.",
       "Validation": "Confirmation through objective evidence that implemented security capabilities and related certification data are suitable for their intended FedRAMP Certification use and support the expected security outcomes for a cloud service offering.",
-      "Provider": "The cloud service provider responsible for a cloud service offering in the context of FedRAMP Certification.",
       "Vulnerability": "Has the meaning given to \"security vulnerability\" in 6 USC § 650 (25), which is \"any attribute of hardware, software, process, or procedure that could enable or facilitate the defeat of [...] management, operational, and technical controls used to protect against an unauthorized effort to adversely affect the confidentiality, integrity, and availability of an information system or its information.\" This includes gaps in Rev5 Controls and 20x Key Security Indicators, software vulnerabilities, misconfigurations, exposures, weak credentials, insecure services, and all other such potential weaknesses in protection (intentional or unintentional).",
       "Drift": "Changes to information resources that cause deviations from the intended and assessed state; common forms of drift include changes to configurations, deployed software, privileges, running processes, and availability.",
       "Regularly": "Performing the activity on a consistent, predictable, and repeated basis, at set intervals, automatically if possible, following a documented plan. These intervals may vary as appropriate between different activities.",
       "Federal Customer Data": "All electronic information, content, and materials that an agency or its authorized users upload, store, or otherwise supply to a cloud service for processing or storage. This does NOT include account information, service metadata, analytics, telemetry, or other similar metadata generated by the cloud service provider.",
       "Likely": "A reasonable degree of probability based on context.",
-      "Agency": "Has the meaning given in 44 U.S. Code § 3502 (1), which is \"any executive department, military department, Government corporation, Government controlled corporation, or other establishment in the executive branch of the Government (including the Executive Office of the President), or any independent regulatory agency, but does not include—(A) the Government Accountability Office; (B) Federal Election Commission; (C) the governments of the District of Columbia and of the territories and possessions of the United States, and their various subdivisions; or (D) Government-owned contractor-operated facilities, including laboratories engaged in national defense research and production activities.\"",
       "Promptly": "Without unnecessary delay."
     }
   }

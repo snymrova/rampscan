@@ -1,6 +1,6 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slice": "class-overview",
   "contract_version": "1.0.0",
   "license": {
@@ -12,13 +12,13 @@
   "data": {
     "info": {
       "title": "FedRAMP Consolidated Rules for 2026",
-      "version": "2026.07.14.01",
-      "lastUpdated": "2026-07-14"
+      "version": "2026.09.13.02",
+      "lastUpdated": "2026-09-13"
     },
     "themeCount": 10,
     "indicatorCount": 46,
     "ksiControlCount": 209,
-    "authoredMethodCount": 64,
+    "authoredMethodCount": 70,
     "quotaUnit": {
       "primary": "indicator",
       "basis": "The rules never say whether “each Key Security Indicator” means one of the 10 themes or one of the 46 indicators. FedRAMP’s own schema names the 46 “ksi_indicator” and the 10 “ksi_theme”, so the indicator is the reading published here — with the theme reading shown beside it, because the two are 4.6× apart and no automation number means anything without its unit.",
@@ -78,7 +78,7 @@
             "themeId": "KSI-IAM",
             "themeKey": "IAM",
             "themeName": "Identity and Access Management",
-            "authoredMethods": 18,
+            "authoredMethods": 21,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -94,7 +94,7 @@
             "themeId": "KSI-MLA",
             "themeKey": "MLA",
             "themeName": "Monitoring, Logging, and Auditing",
-            "authoredMethods": 9,
+            "authoredMethods": 11,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -118,7 +118,7 @@
             "themeId": "KSI-SCR",
             "themeKey": "SCR",
             "themeName": "Supply Chain Risk",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -126,7 +126,7 @@
             "themeId": "KSI-SVC",
             "themeKey": "SVC",
             "themeName": "Service Configuration",
-            "authoredMethods": 17,
+            "authoredMethods": 18,
             "fullyAutomated": 0,
             "meetsQuota": null
           }
@@ -241,7 +241,7 @@
             "indicatorId": "KSI-IAM-APM",
             "themeKey": "IAM",
             "name": "Adopting Passwordless Methods",
-            "authoredMethods": 5,
+            "authoredMethods": 7,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -249,7 +249,7 @@
             "indicatorId": "KSI-IAM-ELP",
             "themeKey": "IAM",
             "name": "Ensuring Least Privilege",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -305,7 +305,7 @@
             "indicatorId": "KSI-MLA-EVC",
             "themeKey": "MLA",
             "name": "Evaluating Configurations",
-            "authoredMethods": 2,
+            "authoredMethods": 3,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -321,7 +321,7 @@
             "indicatorId": "KSI-MLA-OSM",
             "themeKey": "MLA",
             "name": "Operating SIEM Capability",
-            "authoredMethods": 4,
+            "authoredMethods": 5,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -409,7 +409,7 @@
             "indicatorId": "KSI-SCR-MIT",
             "themeKey": "SCR",
             "name": "Mitigating Supply Chain Risk",
-            "authoredMethods": 8,
+            "authoredMethods": 9,
             "fullyAutomated": 0,
             "meetsQuota": null
           },
@@ -457,7 +457,7 @@
             "indicatorId": "KSI-SVC-VRI",
             "themeKey": "SVC",
             "name": "Validating Resource Integrity",
-            "authoredMethods": 3,
+            "authoredMethods": 4,
             "fullyAutomated": 0,
             "meetsQuota": null
           }
@@ -480,7 +480,7 @@
           "statement": "Providers seeking 20x Class B Certification SHOULD implement automated methods to persistently verify and validate the accuracy and completeness of Key Security Indicators with at least 1 automated method for each Key Security Indicator.",
           "minPerKsi": 1,
           "minTotalByTheme": 10,
-          "minTotalByIndicator": 46
+          "minTotalByIndicator": 41
         },
         "metrics": {
           "requirementId": "FRC-CSX-MOT",
@@ -517,7 +517,7 @@
             "themeId": "KSI-IAM",
             "themeKey": "IAM",
             "themeName": "Identity and Access Management",
-            "authoredMethods": 18,
+            "authoredMethods": 21,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -533,7 +533,7 @@
             "themeId": "KSI-MLA",
             "themeKey": "MLA",
             "themeName": "Monitoring, Logging, and Auditing",
-            "authoredMethods": 9,
+            "authoredMethods": 11,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -557,7 +557,7 @@
             "themeId": "KSI-SCR",
             "themeKey": "SCR",
             "themeName": "Supply Chain Risk",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -565,7 +565,7 @@
             "themeId": "KSI-SVC",
             "themeKey": "SVC",
             "themeName": "Service Configuration",
-            "authoredMethods": 17,
+            "authoredMethods": 18,
             "fullyAutomated": 0,
             "meetsQuota": true
           }
@@ -619,14 +619,6 @@
             "authoredMethods": 1,
             "fullyAutomated": 0,
             "meetsQuota": true
-          },
-          {
-            "indicatorId": "KSI-CNA-EIS",
-            "themeKey": "CNA",
-            "name": "Enforcing Intended State",
-            "authoredMethods": 0,
-            "fullyAutomated": 0,
-            "meetsQuota": false
           },
           {
             "indicatorId": "KSI-CNA-IBP",
@@ -688,7 +680,7 @@
             "indicatorId": "KSI-IAM-APM",
             "themeKey": "IAM",
             "name": "Adopting Passwordless Methods",
-            "authoredMethods": 5,
+            "authoredMethods": 7,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -696,7 +688,7 @@
             "indicatorId": "KSI-IAM-ELP",
             "themeKey": "IAM",
             "name": "Ensuring Least Privilege",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -749,18 +741,10 @@
             "meetsQuota": true
           },
           {
-            "indicatorId": "KSI-MLA-ALA",
-            "themeKey": "MLA",
-            "name": "Authorizing Log Access",
-            "authoredMethods": 0,
-            "fullyAutomated": 0,
-            "meetsQuota": false
-          },
-          {
             "indicatorId": "KSI-MLA-EVC",
             "themeKey": "MLA",
             "name": "Evaluating Configurations",
-            "authoredMethods": 2,
+            "authoredMethods": 3,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -776,7 +760,7 @@
             "indicatorId": "KSI-MLA-OSM",
             "themeKey": "MLA",
             "name": "Operating SIEM Capability",
-            "authoredMethods": 4,
+            "authoredMethods": 5,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -864,7 +848,7 @@
             "indicatorId": "KSI-SCR-MIT",
             "themeKey": "SCR",
             "name": "Mitigating Supply Chain Risk",
-            "authoredMethods": 8,
+            "authoredMethods": 9,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -901,22 +885,6 @@
             "meetsQuota": true
           },
           {
-            "indicatorId": "KSI-SVC-PRR",
-            "themeKey": "SVC",
-            "name": "Preventing Residual Risk",
-            "authoredMethods": 0,
-            "fullyAutomated": 0,
-            "meetsQuota": false
-          },
-          {
-            "indicatorId": "KSI-SVC-RUD",
-            "themeKey": "SVC",
-            "name": "Removing Unwanted Data",
-            "authoredMethods": 0,
-            "fullyAutomated": 0,
-            "meetsQuota": false
-          },
-          {
             "indicatorId": "KSI-SVC-SIN",
             "themeKey": "SVC",
             "name": "Securing Information",
@@ -925,23 +893,15 @@
             "meetsQuota": true
           },
           {
-            "indicatorId": "KSI-SVC-VCM",
-            "themeKey": "SVC",
-            "name": "Validating Communications",
-            "authoredMethods": 2,
-            "fullyAutomated": 0,
-            "meetsQuota": true
-          },
-          {
             "indicatorId": "KSI-SVC-VRI",
             "themeKey": "SVC",
             "name": "Validating Resource Integrity",
-            "authoredMethods": 3,
+            "authoredMethods": 4,
             "fullyAutomated": 0,
             "meetsQuota": true
           }
         ],
-        "indicatorsMeetingQuota": 37
+        "indicatorsMeetingQuota": 36
       },
       {
         "class": "c",
@@ -996,7 +956,7 @@
             "themeId": "KSI-IAM",
             "themeKey": "IAM",
             "themeName": "Identity and Access Management",
-            "authoredMethods": 18,
+            "authoredMethods": 21,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1012,7 +972,7 @@
             "themeId": "KSI-MLA",
             "themeKey": "MLA",
             "themeName": "Monitoring, Logging, and Auditing",
-            "authoredMethods": 9,
+            "authoredMethods": 11,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1036,7 +996,7 @@
             "themeId": "KSI-SCR",
             "themeKey": "SCR",
             "themeName": "Supply Chain Risk",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1044,7 +1004,7 @@
             "themeId": "KSI-SVC",
             "themeKey": "SVC",
             "themeName": "Service Configuration",
-            "authoredMethods": 17,
+            "authoredMethods": 18,
             "fullyAutomated": 0,
             "meetsQuota": true
           }
@@ -1167,7 +1127,7 @@
             "indicatorId": "KSI-IAM-APM",
             "themeKey": "IAM",
             "name": "Adopting Passwordless Methods",
-            "authoredMethods": 5,
+            "authoredMethods": 7,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1175,7 +1135,7 @@
             "indicatorId": "KSI-IAM-ELP",
             "themeKey": "IAM",
             "name": "Ensuring Least Privilege",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1239,7 +1199,7 @@
             "indicatorId": "KSI-MLA-EVC",
             "themeKey": "MLA",
             "name": "Evaluating Configurations",
-            "authoredMethods": 2,
+            "authoredMethods": 3,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1255,7 +1215,7 @@
             "indicatorId": "KSI-MLA-OSM",
             "themeKey": "MLA",
             "name": "Operating SIEM Capability",
-            "authoredMethods": 4,
+            "authoredMethods": 5,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1343,7 +1303,7 @@
             "indicatorId": "KSI-SCR-MIT",
             "themeKey": "SCR",
             "name": "Mitigating Supply Chain Risk",
-            "authoredMethods": 8,
+            "authoredMethods": 9,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1415,7 +1375,7 @@
             "indicatorId": "KSI-SVC-VRI",
             "themeKey": "SVC",
             "name": "Validating Resource Integrity",
-            "authoredMethods": 3,
+            "authoredMethods": 4,
             "fullyAutomated": 0,
             "meetsQuota": true
           }
@@ -1475,7 +1435,7 @@
             "themeId": "KSI-IAM",
             "themeKey": "IAM",
             "themeName": "Identity and Access Management",
-            "authoredMethods": 18,
+            "authoredMethods": 21,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1491,7 +1451,7 @@
             "themeId": "KSI-MLA",
             "themeKey": "MLA",
             "themeName": "Monitoring, Logging, and Auditing",
-            "authoredMethods": 9,
+            "authoredMethods": 11,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1515,7 +1475,7 @@
             "themeId": "KSI-SCR",
             "themeKey": "SCR",
             "themeName": "Supply Chain Risk",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1523,7 +1483,7 @@
             "themeId": "KSI-SVC",
             "themeKey": "SVC",
             "themeName": "Service Configuration",
-            "authoredMethods": 17,
+            "authoredMethods": 18,
             "fullyAutomated": 0,
             "meetsQuota": true
           }
@@ -1638,7 +1598,7 @@
             "indicatorId": "KSI-IAM-APM",
             "themeKey": "IAM",
             "name": "Adopting Passwordless Methods",
-            "authoredMethods": 5,
+            "authoredMethods": 7,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1646,7 +1606,7 @@
             "indicatorId": "KSI-IAM-ELP",
             "themeKey": "IAM",
             "name": "Ensuring Least Privilege",
-            "authoredMethods": 11,
+            "authoredMethods": 12,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1702,7 +1662,7 @@
             "indicatorId": "KSI-MLA-EVC",
             "themeKey": "MLA",
             "name": "Evaluating Configurations",
-            "authoredMethods": 2,
+            "authoredMethods": 3,
             "fullyAutomated": 0,
             "meetsQuota": false
           },
@@ -1718,7 +1678,7 @@
             "indicatorId": "KSI-MLA-OSM",
             "themeKey": "MLA",
             "name": "Operating SIEM Capability",
-            "authoredMethods": 4,
+            "authoredMethods": 5,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1806,7 +1766,7 @@
             "indicatorId": "KSI-SCR-MIT",
             "themeKey": "SCR",
             "name": "Mitigating Supply Chain Risk",
-            "authoredMethods": 8,
+            "authoredMethods": 9,
             "fullyAutomated": 0,
             "meetsQuota": true
           },
@@ -1854,12 +1814,12 @@
             "indicatorId": "KSI-SVC-VRI",
             "themeKey": "SVC",
             "name": "Validating Resource Integrity",
-            "authoredMethods": 3,
+            "authoredMethods": 4,
             "fullyAutomated": 0,
-            "meetsQuota": false
+            "meetsQuota": true
           }
         ],
-        "indicatorsMeetingQuota": 9
+        "indicatorsMeetingQuota": 10
       }
     ]
   }

@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. It bears on this control in a specific way: the usual route to evidencing assessor independence is an engagement recorded in a third-party audit-management platform, and adopting one puts the assessment record and the assessor relationship inside a supplier's system. Refusing the control leaves that untouched, which is the cheaper of the two honest answers.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

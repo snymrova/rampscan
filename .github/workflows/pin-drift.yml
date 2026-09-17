@@ -1,0 +1,94 @@
+# Pin drift (P1). Upstream publishes on its own schedule; this repository pins
+# a version and hard-fails on a mismatch only once the newer file is IN the
+# tree. Between an upstream release and the re-pin that reads it, every loader
+# is happy and the suite is green — so the gap is a person remembering to look,
+# and this job is that person.
+#
+# Three deliberate choices, the same shape as `check.yml`:
+#
+#   1. IT OPENS AN ISSUE, IT NEVER EDITS A PIN. Taking a new dataset version is
+#      a reviewed change: the catalog loader parses prose upstream rewords, both
+#      legs of the dual-source contract have to move together, and the reviewed
+#      artifacts keyed to the old pin — the AWS action allowlist, the literal
+#      table, the Phase One crosswalk, every adjudication record — are re-read
+#      rather than re-stamped. A bot that bumped `DEFAULT_DATASET_PIN` would be
+#      the side effect ground rule 2 exists to forbid, dressed as automation.
+#   2. THE COMPARISON IS NOT IN THIS FILE. `pinDrift` is a tested function in
+#      `@rampscan/dataset`, so the answer this job reports is the answer a test
+#      asserts, and a reader can reach it without a workflow run.
+#   3. IT FAILS THE JOB ON DRIFT. A scheduled job that only writes a summary is
+#      a job nobody reads. `behind` and `ahead` both exit non-zero, and `ahead`
+#      is not folded into clean: a pin newer than upstream publishes means this
+#      tree cites a file a reader cannot fetch.
+name: pin-drift
+
+on:
+  schedule:
+    # Mondays, 07:00 UTC. Upstream's releases are not on a cadence, so this is
+    # a floor on how stale the knowledge gets, not a guess at their calendar.
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - id: drift
+        name: compare the pin against what FedRAMP/rules publishes
+        env:
+          # the raw file on upstream's default branch — the same bytes
+          # docs/context/fedramp-rules/ vendors, fetched rather than trusted
+          RULES_URL: https://raw.githubusercontent.com/FedRAMP/rules/main/fedramp-consolidated-rules.json
+        run: |
+          set -uo pipefail
+          curl -sSfL --retry 3 "$RULES_URL" -o /tmp/upstream-rules.json
+          # the script exits 1 on drift and writes `kind` to $GITHUB_OUTPUT; the
+          # non-zero exit is the signal, so it must not end the step here
+          set +e
+          pnpm exec tsx scripts/pin-drift.ts /tmp/upstream-rules.json | tee /tmp/drift-message.txt
+          set -e
+          cat /tmp/drift-message.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: open or update the drift issue
+        if: steps.drift.outputs.kind != 'current'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # one issue, reopened and rewritten — a new issue per week would bury
+          # the discussion of the re-pin under notifications about it
+          title="dataset pin is behind FedRAMP/rules"
+          body="$(cat /tmp/drift-message.txt)
+
+          Detected by the scheduled pin-drift check: $RUN_URL
+
+          The re-pin is the reviewed change described in \`packages/dataset/src/pins.ts\` and in \`docs/context/fedramp-rules/README.md\`. Do not bump \`DEFAULT_DATASET_PIN\` alone."
+          existing=$(gh issue list --repo "$REPO" --state all --search "$title in:title" \
+            --json number,title --jq "[.[] | select(.title == \"$title\")][0].number // empty")
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "$REPO" --body "$body"
+            gh issue reopen "$existing" --repo "$REPO" 2>/dev/null || true
+          else
+            gh issue create --repo "$REPO" --title "$title" --body "$body"
+          fi
+
+      - name: fail on drift
+        if: steps.drift.outputs.kind != 'current'
+        run: |
+          cat /tmp/drift-message.txt
+          exit 1

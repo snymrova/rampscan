@@ -23,8 +23,26 @@
  * START of every triage or authoring batch rather than a one-off correction.
  * Re-pinning at the end is re-pinning after the batch has already reasoned
  * against a stale file.
+ *
+ * The 2026-09-18 re-pin is the case that proves the cost. FedRAMP moved the
+ * register 2026.07.14.01 → 2026.09.13.02 and changed nothing this repository
+ * owes — every KSI, statement, control mapping, floor and window is
+ * byte-identical. But a month of overlay authoring rode along with it
+ * (automation-frontier 0.7.5 → 0.13.0, aws-evidence 1.6.1 → 4.3.0, the pipeline
+ * plane 0.5.1 → 0.9.3), and because both legs of the dual-source contract share
+ * ONE `dataset_version`, the register bump could not be taken without them. It
+ * was a contract migration: `collection.commands` became `{name, run}[]`,
+ * recipes 49 → 57, the frontier 112 → 106 with nine adjudications retired, one
+ * reviewed artifact deleted outright and another cut from 38 rows to 10.
+ *
+ * So the size of a re-pin is set by how far the OVERLAYS have moved since the
+ * last one, not by what FedRAMP published — and a quiet `dataset_version` is no
+ * evidence that the overlays were quiet. `.github/workflows/pin-drift.yml`
+ * watches the register weekly and can only ever report the cheap half; the
+ * expensive half is visible only by reading the overlay diff, and it is worth
+ * reading BEFORE estimating the work.
  */
-export const DEFAULT_DATASET_PIN = "2026.07.14.01";
+export const DEFAULT_DATASET_PIN = "2026.09.13.02";
 
 /**
  * Overlay pins, keyed by slice file — **per slice, not global**, because
@@ -39,8 +57,8 @@ export const DEFAULT_DATASET_PIN = "2026.07.14.01";
  * bug this map exists to fix, so the loader refuses rather than passes.
  */
 export const DEFAULT_OVERLAY_PINS: Readonly<Record<string, string>> = {
-  "automation-frontier.json": "0.7.5",
-  "aws-evidence.json": "1.6.1",
+  "automation-frontier.json": "0.13.0",
+  "aws-evidence.json": "4.3.0",
 };
 
 /**
@@ -67,5 +85,5 @@ export const DEFAULT_OVERLAY_PINS: Readonly<Record<string, string>> = {
  * have been wrong on the day it was written.
  */
 export const DEFAULT_PLANE_PINS: Readonly<Record<string, string>> = {
-  pipeline: "0.5.1",
+  pipeline: "0.9.3",
 };

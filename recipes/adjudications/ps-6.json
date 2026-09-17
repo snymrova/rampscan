@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Evidencing signed access agreements means reaching whatever holds them — an HR platform, a GRC tool or a document management system — and each is a system of record about named individuals. This plane adds none, which is also why the signatures it can see are the ones about code rather than the ones about people.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

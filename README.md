@@ -11,7 +11,7 @@ The evidence under those rows is signed and commit-anchored. `scan` produces it 
 
 ## Status
 
-**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,298 tests across 112 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
+**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,309 tests across 113 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
@@ -23,7 +23,7 @@ Ground rule: **every number here comes from a command.** These come from `rampsc
 $ pnpm rampscan frontier
 
 rampscan frontier — the KSI register
-class b · dataset 2026.07.14.01 · frontier overlay 0.7.5 · evidence: .
+class b · dataset 2026.09.13.02 · frontier overlay 0.13.0 · evidence: .
 
   KSI              methods    freshest         artifacts   worst gap
   KSI-CED-RAT      0/1        —                0/5         G1 coverage
@@ -40,18 +40,18 @@ class b · dataset 2026.07.14.01 · frontier overlay 0.7.5 · evidence: .
   artifacts: 0 of 41 KSIs hold all five owed artifacts — default_artifacts.KSI (2, 5 computed · 1, 3, 4 two-key judged)
   evidence class: 0 of 41 KSIs hold point-in-time evidence, rejectable when standalone — FRR-PVA-AA-06 (pipeline mints assert process-generated)
 
-  adjudication queue (G8): 68 unreviewed, sorted by leverage
-    AC-20 (01)   AC  lev 8  KSI-CNA-MAT KSI-IAM-ELP KSI-IAM-JIT KSI-MLA-LET KSI-MLA-OSM
+  adjudication queue (G8): 71 unreviewed, sorted by leverage
+    AC-07        AC  lev 8  KSI-IAM-JIT KSI-IAM-SUS
     …
 
-  legacy view: --by-controls   (23 of 209 controls · 38 reachable at this pin)
+  legacy view: --by-controls   (23 of 209 controls · 32 reachable at this pin)
 ```
 
 **13 of 41 KSIs meet the class-b method floor, and 28 have no pipeline method at all.** Read cold that looks like an unfinished tool, so read it the other way: the second number is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed all 41 from a checkout would be claiming it can see things that leave no trace in one. That is what `ingest` and the attestation clock exist for: a method the appliance did not execute can still be counted, once something signed says so.
 
 **Every zero above is a different gap, and the tool says which.** `0/1` methods is `G1 coverage`; a method past its window is `G3 freshness`; the clocks, history, artifact and evidence-class lines are `G3`, `G4`, `G5` and `G6` measured separately, each against the rule that owes it. `rampscan gaps` prints them as a register — every row a (KSI, gap class, rule ID, evidence digest) tuple. A single blended percentage would have hidden which one you can actually fix this week.
 
-`frontier` also names what nobody has decided yet: **68 controls unreviewed**, printed as a question rather than as a gap. `--by-controls` keeps the pre-pivot denominator printable — 23 of 209 controls covered against a ceiling of 38 — because a project that changes how it counts should be able to show both numbers, not just the flattering one.
+`frontier` also names what nobody has decided yet: **71 controls unreviewed**, printed as a question rather than as a gap. `--by-controls` keeps the pre-pivot denominator printable — 23 of 209 controls covered against a ceiling of 32 — because a project that changes how it counts should be able to show both numbers, not just the flattering one. Both of those moved on the 2026.09.13.02 re-pin and in the direction that costs this plane something: nine controls left upstream's frontier because upstream answered them, so the ceiling a commit can reach fell from 38 to 32, and the unreviewed queue grew because upstream also put five new controls onto it. The nine are retired in [`recipes/adjudications/`](recipes/adjudications/) with the concession written out rather than deleted.
 
 ## What it does
 
@@ -84,7 +84,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 1,298 tests across 112 files; the ones wanting a tool or PocketBase skip by name
+pnpm test               # 1,309 tests across 113 files; the ones wanting a tool or PocketBase skip by name
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard

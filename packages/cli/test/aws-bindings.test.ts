@@ -38,7 +38,8 @@ async function recipes(): Promise<AwsRecipe[]> {
   const ds = await loadLocalDataset(join(REPO_ROOT, "docs/context/ramprules/derived"), DEFAULT_DATASET_PIN);
   return ds.recipes();
 }
-const commandsOf = (r: Pick<AwsRecipe, "collection">) => ((r.collection as { commands?: string[] }).commands ?? []);
+/** the published text of each step — the `run`, the only half a binding rewrites */
+const commandsOf = (r: Pick<AwsRecipe, "collection">) => (r.collection.commands ?? []).map((c) => c.run);
 
 /** the tells of an example literal: the documentation's account ids, `my-…`, `EXAMPLE`, an example resource id, a fixed date */
 const EXAMPLE_TELLS = [
@@ -68,7 +69,7 @@ describe("T1-3 — the reviewed literal table is golden against the overlay (#16
     expect(unknownRecipe).toEqual([]);
     const stale = rs.flatMap((r) => applyLiteralBindings(r, t).stale.map((row) => `${row.recipe}: ${row.literal}`));
     expect(stale).toEqual([]);
-    expect(t.dataset).toBe("2026.07.14.01");
+    expect(t.dataset).toBe(DEFAULT_DATASET_PIN);
   });
 
   it("after the rewrite no example literal survives in any command, and every placeholder is well-formed", async () => {
@@ -104,9 +105,38 @@ describe("T1-3 — the reviewed literal table is golden against the overlay (#16
     const t = await table();
     const rs = await recipes();
     const runnable = rs.filter((r) => classifyAwsRecipe(applyLiteralBindings(r, t).recipe, l).kind === "runnable");
-    // computed, never typed — and lower than T1-2's 31, because an example account id is now an unbound placeholder (the credential report counts since T1-4)
-    expect(runnable).toHaveLength(20);
+    // computed, never typed: of 57 recipes, the ones that need no placeholder
+    // at all. `patch-and-vulnerability-remediation` is not among them — its
+    // example instance id is rewritten to `<INSTANCE_ID>` by the table below
+    expect(runnable).toHaveLength(22);
     expect(runnable.map((r) => r.id)).not.toContain("patch-and-vulnerability-remediation");
+  });
+
+  // Overlay 4.3.0 publishes placeholders of its own where it used to publish
+  // example literals, and it spells the request's window in five ways: ISO
+  // 8601 as `START_TIME`/`END_TIME` and as `T0`/`T1`, epoch seconds as
+  // `START_EPOCH`/`END_EPOCH` and as `SINCE_EPOCH`, and epoch milliseconds as
+  // `SINCE_EPOCH_MS` (GuardDuty's numeric `updatedAt` criterion). They are the
+  // appliance's to bind, not the operator's — a config cannot hold the window
+  // of a request that has not been made — so they are reserved and derived
+  // here. Left to `aws.params` they would be permanently unbound, and a dozen
+  // recipes would read as manual for a reason that was really ours.
+  it("the window binds upstream's own spellings of it, in seconds and in milliseconds", () => {
+    const params = bindAwsParams(CONFIG, WINDOW);
+    expect(params).toMatchObject({
+      START_TIME: WINDOW.start,
+      END_TIME: WINDOW.end,
+      T0: WINDOW.start,
+      T1: WINDOW.end,
+      START_EPOCH: "1786838400",
+      END_EPOCH: "1789430400",
+      SINCE_EPOCH: "1786838400",
+      SINCE_EPOCH_MS: "1786838400000",
+    });
+    // and none of them is the operator's to set
+    for (const name of ["START_TIME", "T1", "SINCE_EPOCH_MS"]) {
+      expect(() => AwsConfig.parse({ ...CONFIG, params: { [name]: "x" } }), name).toThrow(/reserved/);
+    }
   });
 
   it("bindAwsParams: reserved names from the account and the window, the rest from aws.params, nothing overridable", () => {
@@ -144,9 +174,10 @@ describe("T1-3 — the reviewed literal table is golden against the overlay (#16
   it("unboundParamsOf names what the config still owes for the table's non-reserved names", async () => {
     const t = await table();
     const owed = unboundParamsOf(t, bindAwsParams(CONFIG, WINDOW));
-    expect(owed).not.toContain("CLOUDTRAIL_BUCKET");
+    // the window and the region are the appliance's; a resource id is the operator's
     expect(owed).not.toContain("WINDOW_START");
-    expect(owed).toContain("TRAIL_ARN");
-    expect(owed).toContain("WEB_ACL_ID");
+    expect(owed).not.toContain("REGION");
+    expect(owed).toContain("SECURITY_GROUP_ID");
+    expect(owed).toContain("AUDIT_REPORTS_URI");
   });
 });

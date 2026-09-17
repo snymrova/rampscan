@@ -18,6 +18,12 @@
     "note": "Same verdict, complementary inventories, and one addition this plane can make that upstream's own research calls its sharpest finding. Three of the four upstream rationales over controls both projects adjudicated end on the observation that the evidence platform is itself an external system, raising SA-09 and CA-03 — the plane that would close SA-11 raises this control. That is not true here, and this is the record where it belongs in the argument rather than only in a field: collectors take no network, execution is local, signing is node:crypto, so adopting rampscan as an evidence path adds no provider to the very inventory this control asks for. An assessment tool that enlarges the boundary it reports on is a real cost, and the overlay that does not pay it should say on which control the cost would have landed."
   },
   "externalSystem": "Nothing, and on this control that is the whole point rather than a disclaimer. Every other evidence path considered for SA-09 — a SaaS scanner, a third-party risk platform, a compliance automation vendor — closes the control by becoming an entry in it. rampscan does not: it runs offline against a checkout on a machine the organization already controls, signs with the runtime's own library, and produces a bundle a third party can verify with standard tooling and no rampscan installation, so nothing about adopting it needs a new agreement or a new provider assessment.",
+  "retired": {
+    "at": "2026-09-18",
+    "overlayVersion": "0.13.0",
+    "reason": "Retired on the re-pin to overlay 0.13.0. Upstream authored external-provider-artifacts-and-dependencies over SA-09. Both planes rated it partial, from inventories that do not overlap, and agreed on which limb each reached: theirs is (c), monitoring a provider's compliance, now served by a machine-readable channel — AWS Artifact's report catalogue with the audit window each report covers — beside the account's VPC endpoints and trusted SAML and OIDC providers; ours was the same inventory limb taken from the other end, the external services the code is written against, knowable before deployment. Neither reaches the limb the control turns on, and both say so in the same terms: that a provider meets the requirements imposed on it, and that its compliance is monitored, are statements about somebody else's estate captured in an agreement. Conceded on arrival with nothing contested; the complementary reading is not an adjudication of an uncovered control any more.",
+    "upstreamRecipeIds": ["external-provider-artifacts-and-dependencies"]
+  },
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

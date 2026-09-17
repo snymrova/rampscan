@@ -101,6 +101,19 @@ export const FrontierControl = z
   .passthrough();
 export type FrontierControl = z.infer<typeof FrontierControl>;
 
+/**
+ * One published step. Upstream named its steps at overlay 4.x: a command was
+ * a bare string, and is now a `name` and the `run` it names. The name is not
+ * decoration — it is the label an assertion's `<label>.<JMESPath>` addresses
+ * that step's document by (SPEC §14.4a), so it replaces the rule rampscan
+ * used to derive a label from the argv and the reviewed table of the five
+ * names upstream had chosen by hand. Steps are joined by NAME from here on;
+ * nothing in this repo may key one by its position again, because upstream
+ * renumbers freely and a shifted index is a silent mis-read.
+ */
+export const AwsCommand = z.object({ name: z.string().min(1), run: z.string().min(1) }).passthrough();
+export type AwsCommand = z.infer<typeof AwsCommand>;
+
 // aws-evidence recipes, as published upstream (govcloud not yet renamed —
 // that rename is ours and applies to pipeline recipes, not this mirror).
 export const AwsRecipe = z
@@ -109,7 +122,7 @@ export const AwsRecipe = z
     ksi_ids: z.array(z.string()),
     control_ids: z.array(z.string()),
     evidence: z.string(),
-    collection: z.object({ kind: z.string() }).passthrough(),
+    collection: z.object({ kind: z.string(), commands: z.array(AwsCommand).optional() }).passthrough(),
     expected_output: z.string(),
     cadence: z.string(),
     govcloud: z.string(),

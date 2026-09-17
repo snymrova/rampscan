@@ -19,5 +19,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The retention declarations are read as files in the checkout, so evidencing this control introduces no log-shipping or archival service — which would otherwise be the ordinary route to it, and would place the retained information itself inside a supplier's estate under whatever retention that supplier enforces.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

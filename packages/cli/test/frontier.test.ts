@@ -337,13 +337,30 @@ describe("a record whose control leaves the frontier is retired, not deleted", (
     expect(dead.rollup.frontierTotal).toBe(live.rollup.frontierTotal);
   });
 
-  it("sr-8 is the real one, and it cites the upstream recipe that took it", async () => {
+  it("ten are real: sr-8 at 0.7.2 and the nine the 0.13.0 re-pin closed, each citing the recipe that took it", async () => {
     const map = await realMap();
-    const [sr8, ...rest] = map.retired;
-    expect(rest).toEqual([]);
-    expect(sr8?.controlId).toBe("sr-8");
+    // Nine controls left the frontier when upstream's overlays moved to
+    // 0.13.0, every one of them because upstream authored over it. They are
+    // retired rather than deleted, so a reader holding both overlays can still
+    // find what this plane had claimed and whether it conceded.
+    expect(map.retired.map((r) => r.controlId).sort()).toEqual([
+      "ac-14",
+      "ca-7",
+      "ia-2.8",
+      "ps-5",
+      "sa-22",
+      "sa-8",
+      "sa-9",
+      "sr-10",
+      "sr-5",
+      "sr-8",
+    ]);
+    for (const r of map.retired) {
+      expect(r.upstreamRecipeIds.length, r.controlId).toBeGreaterThan(0);
+      expect(r.overlayVersion, r.controlId).toBe(r.controlId === "sr-8" ? "0.7.2" : "0.13.0");
+    }
+    const sr8 = map.retired.find((r) => r.controlId === "sr-8");
     expect(sr8?.disposition).toBe("partial");
-    expect(sr8?.overlayVersion).toBe("0.7.2");
     // ground rule 10: agreement and disagreement are both DECLARED, and this
     // one is a concession, so the reason has to name what upstream authored
     expect(sr8?.upstreamRecipeIds).toEqual(["supply-chain-alert-notification-routing"]);
@@ -522,17 +539,20 @@ describe("the commit plane is named, and the name is enforced", () => {
   });
 
   it("a real row carrying both planes keeps them apart", async () => {
-    // The case the rename exists for, and it is not hypothetical: SA-08 is one
-    // of the three controls both projects adjudicated independently and agreed
-    // on. `row.upstream.pipeline` and `row.commit` are one word apart in prose
-    // and must never be one field in the map — a control both planes reasoned
-    // about is the interesting row, and it is exactly the row a shared name
-    // would have flattened.
-    const row = (await realMap()).rows.find((r) => r.controlId === "sa-8");
-    expect(row, "sa-8 left the frontier — the overlap this test reads is gone").toBeDefined();
-    expect(row!.upstream.pipeline?.disposition).toBe("partial"); // theirs
-    expect(row!.commit?.disposition).toBe("partial"); // ours, reached another way
-    expect(row!.upstream.commit).toBeUndefined(); // and never credited to them
+    // The case the rename exists for, and it is not hypothetical. SA-08 was
+    // the example until overlay 0.13.0, when upstream authored over it and it
+    // left the frontier; the shape it demonstrated did not leave with it, so
+    // the test reads whichever rows still carry both. `row.upstream.pipeline`
+    // and `row.commit` are one word apart in prose and must never be one field
+    // in the map — a control both planes reasoned about is the interesting row,
+    // and it is exactly the row a shared name would have flattened.
+    const both = (await realMap()).rows.filter((r) => r.upstream.pipeline !== undefined && r.commit !== undefined);
+    expect(both.length).toBeGreaterThan(0);
+    for (const row of both) {
+      expect(row.upstream.pipeline?.disposition, row.controlId).toBeTypeOf("string");
+      expect(row.commit?.disposition, row.controlId).toBeTypeOf("string");
+      expect(row.upstream.commit, row.controlId).toBeUndefined(); // and never credited to them
+    }
   });
 });
 
@@ -633,6 +653,16 @@ describe("where upstream has spoken, the record says whether it agrees", () => {
     //     divergences rather than quietly filed as agreement because a reader
     //     comparing the two overlays on these three controls should be sent to
     //     upstream's pass, not reassured by a second refusal.
+    //
+    // The re-pin to overlay 0.13.0 closes two of them by answering them.
+    // PS-05 — where this plane was the weaker one and said so — is upstream's
+    // now: they authored personnel-transfer-access-reassignment and went
+    // further than the route this record diverged from. SR-10 is upstream's
+    // too, on their other plane: the divergence was against an AWS-plane
+    // refusal about hardware inspection, and the software limb that refusal
+    // could not see is what build-provenance-attestation-verification reads.
+    // Both records are retired with the concession written out, so the list
+    // shrinks by two arguments settled rather than two dropped.
     expect(diverging).toEqual([
       "AC-01",
       "CP-02",
@@ -640,9 +670,7 @@ describe("where upstream has spoken, the record says whether it agrees", () => {
       "IA-06",
       "MA-02",
       "PL-08",
-      "PS-05",
       "RA-05 (11)",
-      "SR-10",
     ]);
     // and every other overlap agrees — the link check proves the dispositions
     // match, this proves nothing sits in between the two declarations

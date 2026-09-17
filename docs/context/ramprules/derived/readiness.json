@@ -1,12 +1,19 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slice": "readiness",
+  "contract_version": "1.0.0",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "covers": "The DATA in this response (derived slices and authored overlays). The site code is not licensed by it.",
+    "attribution": "ramprules.com"
+  },
   "data": {
     "info": {
       "title": "FedRAMP Consolidated Rules for 2026",
-      "version": "2026.07.14.01",
-      "lastUpdated": "2026-07-14"
+      "version": "2026.09.13.02",
+      "lastUpdated": "2026-09-13"
     },
     "classes": [
       {
@@ -836,6 +843,17 @@
             "label": "30 business days"
           },
           {
+            "requirementId": "CCM-OCR-AVL",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Report Availability",
+            "class": null,
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
             "requirementId": "CCM-QTR-MTG",
             "documentKey": "CCM",
             "documentName": "Collaborative Continuous Monitoring",
@@ -852,6 +870,17 @@
             "documentName": "FedRAMP Certification",
             "name": "Fresh Independent Assessment",
             "class": "b",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "VDR-TFR-NMV",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Non-Machine Verification and Validation",
+            "class": null,
             "force": "MUST",
             "num": 3,
             "type": "months",
@@ -922,10 +951,32 @@
             "num": 1,
             "type": "years",
             "label": "1 year"
+          },
+          {
+            "requirementId": "MKT-IIP-DLA",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Deadline for Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "years",
+            "label": "2 years"
+          },
+          {
+            "requirementId": "IVV-CSF-MCA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Mandatory Control Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 3,
+            "type": "years",
+            "label": "3 years"
           }
         ],
         "deadlineCounts": {
-          "universal": 10,
+          "universal": 14,
           "classScoped": 14
         }
       },
@@ -1831,6 +1882,17 @@
             "label": "30 business days"
           },
           {
+            "requirementId": "CCM-OCR-AVL",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Report Availability",
+            "class": null,
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
             "requirementId": "CCM-QTR-MTG",
             "documentKey": "CCM",
             "documentName": "Collaborative Continuous Monitoring",
@@ -1847,6 +1909,17 @@
             "documentName": "FedRAMP Certification",
             "name": "Fresh Independent Assessment",
             "class": "c",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "VDR-TFR-NMV",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Non-Machine Verification and Validation",
+            "class": null,
             "force": "MUST",
             "num": 3,
             "type": "months",
@@ -1906,10 +1979,32 @@
             "num": 1,
             "type": "years",
             "label": "1 year"
+          },
+          {
+            "requirementId": "MKT-IIP-DLA",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Deadline for Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "years",
+            "label": "2 years"
+          },
+          {
+            "requirementId": "IVV-CSF-MCA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Mandatory Control Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 3,
+            "type": "years",
+            "label": "3 years"
           }
         ],
         "deadlineCounts": {
-          "universal": 10,
+          "universal": 14,
           "classScoped": 14
         }
       },
@@ -2891,6 +2986,17 @@
             "label": "30 business days"
           },
           {
+            "requirementId": "CCM-OCR-AVL",
+            "documentKey": "CCM",
+            "documentName": "Collaborative Continuous Monitoring",
+            "name": "Report Availability",
+            "class": null,
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
             "requirementId": "CCM-QTR-MTG",
             "documentKey": "CCM",
             "documentName": "Collaborative Continuous Monitoring",
@@ -2907,6 +3013,17 @@
             "documentName": "FedRAMP Certification",
             "name": "Fresh Independent Assessment",
             "class": "d",
+            "force": "MUST",
+            "num": 3,
+            "type": "months",
+            "label": "3 months"
+          },
+          {
+            "requirementId": "VDR-TFR-NMV",
+            "documentKey": "VDR",
+            "documentName": "Vulnerability Detection and Response",
+            "name": "Non-Machine Verification and Validation",
+            "class": null,
             "force": "MUST",
             "num": 3,
             "type": "months",
@@ -2966,10 +3083,32 @@
             "num": 1,
             "type": "years",
             "label": "1 year"
+          },
+          {
+            "requirementId": "MKT-IIP-DLA",
+            "documentKey": "MKT",
+            "documentName": "Marketplace Listing",
+            "name": "Deadline for Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 2,
+            "type": "years",
+            "label": "2 years"
+          },
+          {
+            "requirementId": "IVV-CSF-MCA",
+            "documentKey": "IVV",
+            "documentName": "Independent Verification and Validation",
+            "name": "Mandatory Control Assessment",
+            "class": null,
+            "force": "MUST",
+            "num": 3,
+            "type": "years",
+            "label": "3 years"
           }
         ],
         "deadlineCounts": {
-          "universal": 10,
+          "universal": 14,
           "classScoped": 13
         }
       }

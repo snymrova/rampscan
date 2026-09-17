@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and the refusal here is not a trust-model refusal at all, which is worth separating from the ones that are. A criticality analysis is unreachable from a commit because it is a judgement nobody records as a checkable artifact, not because reading it would require an external system. Granting this plane a platform API, a work-tracking integration or a scanner would not move the disposition.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

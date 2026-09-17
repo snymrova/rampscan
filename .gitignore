@@ -32,3 +32,7 @@ console/web/PRODUCT.md
 
 # local tool permissions, not repository configuration
 .claude/
+
+# demo video build scratch (V plan, parked 2026-09-17) + its rendered outputs
+demo/.build/
+docs/images/*.mp4

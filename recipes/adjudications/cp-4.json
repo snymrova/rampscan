@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The negative answer costs something on this control and the record should say so rather than present it as free: the evidence that would move CP-04 is an execution record from whatever ran the test, and reaching one means an evidence path into a backup or orchestration service. This plane declines that, reaches nothing here as a result, and the trade is stated so a reader can judge it rather than discover it.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

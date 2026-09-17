@@ -19,5 +19,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The alternative evidence path for this control is a screenshot or a session recording of a real login, which means an external capture service holding images of an authentication screen — an exchange this control's own subject matter makes particularly unattractive.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

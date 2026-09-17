@@ -52,8 +52,9 @@ export interface IntakeContext {
   transforms?: ReadonlyArray<StepTransform | undefined>;
   /**
    * The label each step's document carries for upstream's `<label>.<path>`
-   * assertions (T2-5), by step index — the reviewed row or the rule
-   * (`stepLabels`). Absent: the rule alone, from each step's argv.
+   * assertions (T2-5), by step index — upstream's published step names, as
+   * the classifier read them and the request recorded them. Absent (a
+   * hand-built transcript): `derivedStepLabel` from each step's argv.
    */
   labels?: readonly string[];
   /** the cycle the method runs on — the recipe's */
@@ -194,7 +195,12 @@ function documentOf(bytes: Uint8Array, transform: StepTransform | undefined, sha
       return null;
     }
   }
-  return shape.kind === "collection" ? shape.rows : null;
+  if (shape.kind === "collection") return shape.rows;
+  // a `--query X --output text` step prints one bare value, and the overlay
+  // asserts over it by the step's name alone (`credential-report-generated-time
+  // max_age_days 1`). The document is that value; without this the path `@`
+  // resolves to null and a real reading fails as if the step had not run.
+  return text === "" ? null : text;
 }
 
 /** two steps under one label read as one document: objects shallow-merge, arrays concatenate, else the later */

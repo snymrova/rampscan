@@ -38,7 +38,7 @@ import { verify } from "../src/verify.js";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const PACKAGE = join(REPO_ROOT, "fixtures/ingest-package/synthetic-package.yaml");
-const CROSSWALK = join(REPO_ROOT, "recipes/crosswalks/ksi-phase-one-to-2026.07.14.01.json");
+const CROSSWALK = join(REPO_ROOT, "recipes/crosswalks/ksi-phase-one-to-2026.09.13.02.json");
 const RECIPES_DIR = join(REPO_ROOT, "recipes/commit");
 const DATASET_DIR = join(REPO_ROOT, "docs/context/ramprules/derived");
 const RULES_FILE = join(REPO_ROOT, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
@@ -79,7 +79,7 @@ describe("ingest package adapter — an assessed package becomes ledger citizens
       expect.objectContaining({
         ksi: "SVC-07",
         script: "patch-policy",
-        reason: expect.stringMatching(/no 2026\.07\.14\.01 successor.*FRR-VDR/),
+        reason: expect.stringMatching(/no 2026\.09\.13\.02 successor.*FRR-VDR/),
       }),
     ]);
   });
@@ -204,7 +204,7 @@ describe("ingest package adapter — an assessed package becomes ledger citizens
     const otherPin = join(dir, "other-pin.json");
     await writeFile(otherPin, JSON.stringify({ ...raw, to: "1999.01.01.01" }));
     await expect(ingest({ ...base, ledgerDir, keysDir, crosswalk: otherPin })).rejects.toThrow(
-      /1999\.01\.01\.01.*2026\.07\.14\.01/,
+      /1999\.01\.01\.01.*2026\.09\.13\.02/,
     );
     const missing = join(dir, "missing.json");
     await writeFile(
@@ -217,7 +217,7 @@ describe("ingest package adapter — an assessed package becomes ledger citizens
   });
 });
 
-describe("the Phase One → 2026.07.14.01 crosswalk is a reviewed artifact", () => {
+describe("the Phase One → 2026.09.13.02 crosswalk is a reviewed artifact", () => {
   it("resolves every successor in the pinned catalog, names each indicator once, and says where the retired ones went", async () => {
     const crosswalk = KsiCrosswalk.parse(JSON.parse(await readFile(CROSSWALK, "utf8")));
     expect(crosswalk.to).toBe(DEFAULT_DATASET_PIN);

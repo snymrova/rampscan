@@ -12,7 +12,7 @@
 ```
 $ pnpm rampscan ingest <clone>/machine-readable-package/8_29_25_paramify_coalfire_20x_machine_readable.yaml \
     --repo paramify-cloud \
-    --crosswalk recipes/crosswalks/ksi-phase-one-to-2026.07.14.01.json \
+    --crosswalk recipes/crosswalks/ksi-phase-one-to-2026.09.13.02.json \
     --cadence monthly \
     --ledger <scratch>/ledger --keys <scratch>/keys
 $ pnpm rampscan frontier --ledger <scratch>/ledger                       # class b, with rampscan's recipes

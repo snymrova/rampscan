@@ -1,12 +1,19 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slice": "checks",
+  "contract_version": "1.0.0",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "covers": "The DATA in this response (derived slices and authored overlays). The site code is not licensed by it.",
+    "attribution": "ramprules.com"
+  },
   "data": {
     "info": {
       "title": "FedRAMP Consolidated Rules for 2026",
-      "version": "2026.07.14.01",
-      "lastUpdated": "2026-07-14"
+      "version": "2026.09.13.02",
+      "lastUpdated": "2026-09-13"
     },
     "classClocks": [
       {
@@ -77,6 +84,7 @@
     "counts": {
       "total": 46,
       "inScope": 43,
+      "requiredInScope": 43,
       "outOfScope": [
         {
           "id": "KSI-CNA-OFA",
@@ -118,6 +126,11 @@
           "sr-11.1"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -171,6 +184,11 @@
           "ma-2"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -229,6 +247,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -277,6 +300,11 @@
           "cm-9"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -332,6 +360,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -374,6 +407,11 @@
           "si-3"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -428,6 +466,9 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "c"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -467,8 +508,7 @@
         "terms": [
           "Information Resource",
           "Machine-Based (Information Resources)",
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [
           "ac-17.3",
@@ -476,6 +516,11 @@
           "pl-10"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -542,6 +587,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -585,6 +635,7 @@
         ],
         "controls": [],
         "classesInScope": [],
+        "classesRequired": [],
         "cadence": []
       },
       {
@@ -606,6 +657,11 @@
           "si-8"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -657,6 +713,11 @@
           "si-8.2"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -715,6 +776,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -767,6 +833,10 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "c",
@@ -811,6 +881,11 @@
           "sc-23"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -891,6 +966,11 @@
           "si-3"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -979,6 +1059,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1028,6 +1113,11 @@
           "ra-5.5"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1085,6 +1175,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1132,6 +1227,11 @@
           "ir-8"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1194,6 +1294,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1247,6 +1352,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1293,6 +1403,9 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "c"
+        ],
         "cadence": [
           {
             "class": "c",
@@ -1332,6 +1445,11 @@
           "si-7.7"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1389,6 +1507,11 @@
           "si-7.7"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1457,6 +1580,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1506,6 +1634,11 @@
           "si-4.4"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1563,6 +1696,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1600,11 +1738,11 @@
         "name": "Reviewing Executive Support",
         "statement": "Executive support for achieving the provider's security goals is persistently reviewed and demonstrated.",
         "terms": [
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [],
         "classesInScope": [],
+        "classesRequired": [],
         "cadence": []
       },
       {
@@ -1614,8 +1752,7 @@
         "name": "Reviewing Investments in Security",
         "statement": "The effectiveness of the provider's investments in achieving security goals is persistently reviewed.",
         "terms": [
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [
           "ac-5",
@@ -1629,6 +1766,11 @@
           "sr-2.1"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1691,6 +1833,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1729,13 +1876,17 @@
         "statement": "The effectiveness of the provider's vulnerability disclosure program is persistently reviewed.",
         "terms": [
           "Persistently",
-          "Provider",
           "Vulnerability"
         ],
         "controls": [
           "ra-5.11"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1790,6 +1941,11 @@
           "si-12"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1856,6 +2012,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -1893,14 +2054,18 @@
         "name": "Reviewing Recovery Objectives",
         "statement": "The desired Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO) are defined and persistently reviewed for alignment with the provider's business needs and capabilities.",
         "terms": [
-          "Persistently",
-          "Provider"
+          "Persistently"
         ],
         "controls": [
           "cp-2.3",
           "cp-10"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -1958,6 +2123,11 @@
           "ir-3.2"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -2020,6 +2190,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -2073,6 +2248,11 @@
           "sr-8"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -2137,6 +2317,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -2185,6 +2370,11 @@
           "sc-17"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -2245,6 +2435,11 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "b",
+          "c",
+          "d"
+        ],
         "cadence": [
           {
             "class": "b",
@@ -2294,6 +2489,9 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "c"
+        ],
         "cadence": [
           {
             "class": "c",
@@ -2322,7 +2520,6 @@
         "name": "Removing Unwanted Data",
         "statement": null,
         "terms": [
-          "Agency",
           "Federal Customer Data",
           "Promptly"
         ],
@@ -2331,6 +2528,7 @@
           "si-18.4"
         ],
         "classesInScope": [],
+        "classesRequired": [],
         "cadence": []
       },
       {
@@ -2355,6 +2553,11 @@
           "sc-28.1"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"
@@ -2409,6 +2612,9 @@
           "c",
           "d"
         ],
+        "classesRequired": [
+          "c"
+        ],
         "cadence": [
           {
             "class": "c",
@@ -2451,6 +2657,11 @@
           "sr-10"
         ],
         "classesInScope": [
+          "b",
+          "c",
+          "d"
+        ],
+        "classesRequired": [
           "b",
           "c",
           "d"

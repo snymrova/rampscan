@@ -21,17 +21,29 @@ import type { AssertionResult, OffenderPointer, RecipeAssertion } from "@rampsca
 export type LabeledDocuments = Readonly<Record<string, unknown>>;
 
 /**
- * Split `<label>.<path>` at the first label the documents carry. The label
- * may itself contain dots and dashes (`s3-bucket-ssl-requests-only`), so
- * the longest known label that prefixes the field wins; a field whose
+ * Split a field into the step whose document it reads and the JMESPath over
+ * it. Three forms, all of which the overlay writes now that upstream names
+ * its own steps:
+ *
+ *   `<label>.<path>`   the common one — `restricted-ssh.EvaluationResults`
+ *   `<label>[<path>`   the path opens on a projection, bracket kept —
+ *                      `credential-report[].mfa_active`
+ *   `<label>`          the document itself, which is `@` in JMESPath —
+ *                      `credential-report-generated-time max_age_days 1`
+ *
+ * The label may itself contain dots and dashes (`s3-bucket-ssl-requests-only`),
+ * so the longest known label that prefixes the field wins; a field whose
  * prefix is no label is not labeled (it is a row-wise field).
  */
 export function labeledField(field: string, labels: Iterable<string>): { label: string; path: string } | undefined {
   let best: string | undefined;
   for (const label of labels) {
-    if (field.startsWith(`${label}.`) && (best === undefined || label.length > best.length)) best = label;
+    const fits = field === label || field.startsWith(`${label}.`) || field.startsWith(`${label}[`);
+    if (fits && (best === undefined || label.length > best.length)) best = label;
   }
-  return best === undefined ? undefined : { label: best, path: field.slice(best.length + 1) };
+  if (best === undefined) return undefined;
+  const rest = field.slice(best.length);
+  return { label: best, path: rest === "" ? "@" : rest.startsWith(".") ? rest.slice(1) : rest };
 }
 
 /** the value a path yields, or a failure the caller can report — a syntax error is the recipe's, not the account's */
@@ -141,19 +153,93 @@ function elementsAt(doc: unknown, path: string): unknown[] | undefined {
 }
 
 /**
- * Whether a `where` clause holds over the documents. A labeled where names
- * its own path, which cannot be aligned element-for-element with the
- * assertion's path (SPEC §14.4a), so it is a GUARD: it holds when any
- * element at its path satisfies the op. One pinned assertion uses this
- * (`temporary-account-automatic-revocation`, CreateDate within 90 days
- * where a user is tagged temporary); the field is then judged over every
- * element, and the detail says so.
+ * Whether a `where` clause holds over ONE element the assertion's own
+ * projection yielded. Upstream writes a labeled assertion's `where` as a
+ * path relative to that element, not as a second labeled path:
+ * `credential-report[].mfa_active where password_enabled eq TRUE` is "for
+ * each row of the credential report, if it has a console password then MFA
+ * is active". So the clause is aligned element-for-element, exactly as the
+ * row evaluator aligns a column with its row — the earlier reading, a guard
+ * over the whole document, both let a narrowing clause pass vacuously when
+ * it resolved to nothing AND judged the elements the clause excluded.
+ *
+ * The clause's own path may itself project (`Tags[?Key=='AccountType'].Value`),
+ * so it holds when any value it yields satisfies the op, and fails when it
+ * yields nothing — an element missing the key the clause names is not in the
+ * narrowed population.
  */
-function whereHolds(clause: NonNullable<RecipeAssertion["where"]>[number], docs: LabeledDocuments, now: Date): boolean {
-  const lf = labeledField(clause.field, Object.keys(docs));
-  if (lf === undefined) return false;
-  const elements = elementsAt(docs[lf.label], lf.path);
-  return elements !== undefined && elements.some((v) => holdsOp(clause.op, v, clause.value, now));
+function whereHoldsOn(element: unknown, clause: NonNullable<RecipeAssertion["where"]>[number], now: Date): boolean {
+  const values = elementsAt(element, clause.field);
+  if (values === undefined || values.length === 0) return clause.op === "not_exists";
+  return values.some((v) => holdsOp(clause.op, v, clause.value, now));
+}
+
+/**
+ * Split a labeled path into the projection that yields the elements a
+ * `where` filters and the leaf read from each survivor — the last flatten
+ * projection is the boundary, because that is where upstream's element
+ * begins. `credential-report[].mfa_active` is rows `credential-report[]` and
+ * leaf `mfa_active`; `unused-access-findings.findings[]` is rows
+ * `findings[]` and leaf `@`, the element itself.
+ */
+function splitProjection(path: string): { base: string; leaf: string } | undefined {
+  const at = path.lastIndexOf("[]");
+  if (at === -1) return undefined;
+  const base = path.slice(0, at + 2);
+  const rest = path.slice(at + 2);
+  return { base, leaf: rest === "" ? "@" : rest.startsWith(".") ? rest.slice(1) : rest };
+}
+
+/**
+ * A labeled assertion with a `where`: row-wise over its own projection. The
+ * base yields the elements, each clause filters them one by one, and the op
+ * is applied to what the leaf reads from each survivor.
+ *
+ * `population` is the count BEFORE the filter, the way the row evaluator
+ * states it (`assert.ts`): the population is a property of the observation,
+ * not of the clause, so "no temporary account among 412 users" reads as
+ * `0 of 412` rather than as a verdict. An element whose leaf yields nothing
+ * fails — `every survivor holds` over a missing key is the vacuous pass
+ * ground rule 7 forbids.
+ */
+function narrowed(
+  a: RecipeAssertion,
+  where: NonNullable<RecipeAssertion["where"]>,
+  lf: { label: string; path: string },
+  docs: LabeledDocuments,
+  now: Date,
+): AssertionResult {
+  const split = splitProjection(lf.path);
+  if (split === undefined) {
+    return fail(a, `${lf.label}: ${JSON.stringify(lf.path)} has no projection for its where to align on — the clause names a path over each element, and there are no elements`);
+  }
+  const elements = elementsAt(docs[lf.label], split.base);
+  if (elements === undefined) return fail(a, `JMESPath ${JSON.stringify(split.base)} does not parse`);
+  const population = elements.length;
+  const survivors = elements.filter((el) => where.every((w) => whereHoldsOn(el, w, now)));
+  const scope = `${lf.label}: ${survivors.length} of ${population} at ${split.base} in scope`;
+
+  if (a.op === "count_eq" || a.op === "count_lte") {
+    if (typeof a.value !== "number") return fail(a, `${a.op} requires a numeric value, got ${JSON.stringify(a.value)}`, { population });
+    const ok = a.op === "count_eq" ? survivors.length === a.value : survivors.length <= a.value;
+    const r: AssertionResult = { description: a.description, passed: ok, detail: `${scope} (${a.op} ${a.value})`, population };
+    return ok ? r : withOffenders(r, survivors);
+  }
+  const failing = survivors.filter((el) => {
+    const values = elementsAt(el, split.leaf);
+    if (values === undefined || values.length === 0) return a.op !== "not_exists";
+    return !values.every((v) => holdsOp(a.op, v, a.value, now));
+  });
+  const ok = failing.length === 0;
+  const r: AssertionResult = {
+    description: a.description,
+    passed: ok,
+    detail: ok
+      ? `${scope}, all holding ${split.leaf} ${a.op} ${JSON.stringify(a.value)}`
+      : `${scope}, ${failing.length} failing ${split.leaf} ${a.op} ${JSON.stringify(a.value)}`,
+    population,
+  };
+  return ok ? r : withOffenders(r, failing);
 }
 
 /**
@@ -166,11 +252,7 @@ export function evaluateLabeledAssertion(a: RecipeAssertion, docs: LabeledDocume
   if (lf === undefined) {
     return fail(a, `field ${a.field} names no step of this run (labels: ${Object.keys(docs).join(", ") || "none"})`);
   }
-  if (a.where !== undefined && a.where.length > 0 && !a.where.every((w) => whereHolds(w, docs, now))) {
-    // the guard did not hold: the assertion does not apply, and says so — a
-    // pass, because upstream's `where` narrows the population to nothing here
-    return { description: a.description, passed: true, detail: "where (a guard over its own path) did not hold; nothing to assert over", population: 0 };
-  }
+  if (a.where !== undefined && a.where.length > 0) return narrowed(a, a.where, lf, docs, now);
   const found = search(docs[lf.label], lf.path);
   if (!found.ok) return fail(a, `JMESPath ${JSON.stringify(lf.path)} does not parse: ${found.error}`);
   const value = found.value;

@@ -19,7 +19,6 @@ import type {
   AwsActionAllowlist,
   AwsConfig,
   AwsLiteralBindings,
-  AwsStepLabels,
   RecipeAssertion,
   RunEvent,
   RunRequest,
@@ -30,7 +29,6 @@ import { createLocalDetachedSigner, createLocalSigner } from "@rampscan/signer";
 import { applyLiteralBindings, bindAwsParams } from "./aws-bindings.js";
 import type { RequestWindow } from "./aws-bindings.js";
 import { classifyAwsRecipe, describeReason } from "./aws-classify.js";
-import { stepLabels } from "./aws-labels.js";
 import { requestDigest } from "./runs-intake.js";
 import { intakeTranscript } from "./runs-intake.js";
 import type { IntakeOutcome } from "./runs-intake.js";
@@ -52,7 +50,6 @@ export interface RunsDeps {
   aws: AwsConfig;
   list: AwsActionAllowlist;
   table: AwsLiteralBindings;
-  labels: AwsStepLabels;
   recipes: readonly AwsRecipe[];
   /** emulator only: accept transcripts without a self-check (T3-3) */
   requireSelfCheck?: boolean;
@@ -114,7 +111,7 @@ export async function mintRunRequest(deps: RunsDeps, options: MintRequestOptions
       request_digest,
       steps,
       transforms: cls.steps.map((s) => s.transform ?? null),
-      labels: stepLabels(recipe.id, steps, deps.labels),
+      labels: cls.steps.map((s) => s.label),
       cadence: recipe.cadence,
       repo: deps.repo,
       dataset_version: deps.datasetVersion,
@@ -399,14 +396,12 @@ export async function loadRunsDeps(env: {
   datasetPin: string;
   allowlistPath: string;
   bindingsPath: string;
-  labelsPath: string;
   requireSelfCheck?: boolean;
   log?: (line: string) => void;
 }): Promise<RunsDeps | { missing: string }> {
   const { loadAwsConfig } = await import("./aws-recipes.js");
   const { loadAwsActionAllowlist } = await import("./aws-actions.js");
   const { loadAwsLiteralBindings } = await import("./aws-bindings.js");
-  const { loadAwsStepLabels } = await import("./aws-labels.js");
   const { loadLocalDataset } = await import("@rampscan/dataset");
   const aws = await loadAwsConfig(env.repoRoot);
   if (aws === undefined) return { missing: `no \`aws\` block in ${env.repoRoot}/rampscan.config.json — declare the account a runner observes before requesting a run` };
@@ -419,7 +414,6 @@ export async function loadRunsDeps(env: {
     aws,
     list: await loadAwsActionAllowlist(env.allowlistPath),
     table: await loadAwsLiteralBindings(env.bindingsPath),
-    labels: await loadAwsStepLabels(env.labelsPath),
     recipes: dataset.recipes(),
     ...(env.requireSelfCheck !== undefined ? { requireSelfCheck: env.requireSelfCheck } : {}),
     ...(env.log !== undefined ? { log: env.log } : {}),
