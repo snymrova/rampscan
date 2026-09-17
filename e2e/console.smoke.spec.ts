@@ -1400,6 +1400,16 @@ test("cloud runs: Collect evidence mints a request, a stub runner polls and post
       }),
     },
     "iam generate-credential-report": { stdout: '{"State": "COMPLETE"}\n' },
+    // The third step upstream added at 2026.09.13.02, and the reason this
+    // shim spec is written by step NAME rather than by position: the recipe's
+    // series went from two commands to three inside one re-pin, and a spec
+    // keyed by index would have answered the wrong question rather than
+    // failing. The generated time is minted fresh because the recipe asserts
+    // `max_age_days: 1` over it — a fixture timestamp would pass today and
+    // start failing on its own tomorrow.
+    "iam get-credential-report --query GeneratedTime --output text": {
+      stdout: `${new Date().toISOString()}\n`,
+    },
     "iam get-credential-report --query Content --output text": { stdout: `${Buffer.from(report).toString("base64")}\n` },
   };
   const binDir = resolve("e2e/.smoke/stub-bin");
