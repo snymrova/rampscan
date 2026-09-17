@@ -35,6 +35,14 @@ export interface ReadmeFigures {
   frontierBlock: string[];
   /** "`rampscan scan .` on this repository, at `<sha>`:" and the fenced line under it */
   selfScan: { commit: string; line: string };
+  /**
+   * "**N rules are addressable at class b — M MUST and K SHOULD — and rampscan
+   * itself answers J.**" The rejection register's denominator (P2-3). Gated
+   * for the reason the others are, and with one of its own: this figure moves
+   * on every re-pin AND on every commit that teaches the appliance a new rule,
+   * so it is the README number most likely to go quietly stale.
+   */
+  submission: { addressable: number; must: number; should: number; computed: number };
 }
 
 const FLOOR_SENTENCE =
@@ -42,6 +50,8 @@ const FLOOR_SENTENCE =
 const SUITE_SENTENCE = /\b([\d,]+) tests across (\d+) files\b/g;
 const FRONTIER_BLOCK = /```\n\$ pnpm rampscan frontier\n([\s\S]*?)```/;
 const SELF_SCAN = /`rampscan scan \.` on this repository, at `([0-9a-f]{7,40})`:\n\n```\n([^\n]+)\n```/;
+const SUBMISSION_SENTENCE =
+  /\*\*(\d+) rules are addressable at class b — (\d+) MUST and (\d+) SHOULD — and rampscan itself answers (\d+)\.\*\*/;
 
 function missing(what: string, shape: string): PublishedNumbersError {
   return new PublishedNumbersError(
@@ -73,8 +83,21 @@ export function readmeFigures(readme: string): ReadmeFigures {
       "`rampscan scan .` on this repository, at `<sha>`: followed by a fenced verdict line",
     );
   }
+  const submission = SUBMISSION_SENTENCE.exec(readme);
+  if (submission === null) {
+    throw missing(
+      "the rejection register's denominator",
+      "**N rules are addressable at class b — M MUST and K SHOULD — and rampscan itself answers J.**",
+    );
+  }
   return {
     floor: { met: Number(floor[1]), total: Number(floor[2]), noMethod: Number(floor[3]) },
+    submission: {
+      addressable: Number(submission[1]),
+      must: Number(submission[2]),
+      should: Number(submission[3]),
+      computed: Number(submission[4]),
+    },
     suite,
     frontierBlock: block[1]!.replace(/\n$/, "").split("\n"),
     selfScan: { commit: self[1]!, line: self[2]! },
@@ -91,7 +114,7 @@ export function readmeFigures(readme: string): ReadmeFigures {
  * the legacy footer are derived from the catalog, the recipes and the pinned
  * dataset alone, and those are the ones a reader quotes.
  */
-const GATED_FRONTIER_LINES = /^  (floor met on |covering all |adjudication queue \(G8\): |legacy view: --by-controls)/;
+const GATED_FRONTIER_LINES = /^ {2}(floor met on |covering all |adjudication queue \(G8\): |legacy view: --by-controls)/;
 
 export function gatedFrontierLines(frontierOutput: string): string[] {
   const lines = frontierOutput.split("\n").filter((l) => GATED_FRONTIER_LINES.test(l));
@@ -106,7 +129,7 @@ export function gatedFrontierLines(frontierOutput: string): string[] {
 
 /** the floor line's three figures, read back from the command's own output */
 export function floorFromFrontier(frontierOutput: string): ReadmeFigures["floor"] {
-  const m = /^  floor met on (\d+) of (\d+) KSIs · at least one automated method on \d+ · no method on (\d+)$/m.exec(
+  const m = /^ {2}floor met on (\d+) of (\d+) KSIs · at least one automated method on \d+ · no method on (\d+)$/m.exec(
     frontierOutput,
   );
   if (m === null) {
@@ -162,6 +185,49 @@ export function frontierDrift(readme: string, frontierOutput: string): string[] 
     drift.push(
       `README's floor sentence says ${said.met} of ${said.total} meet the floor and ${said.noMethod} have no method; ` +
         `\`rampscan frontier\` says ${live.met} of ${live.total} and ${live.noMethod}`,
+    );
+  }
+  return drift;
+}
+
+/**
+ * README's rejection-register denominator against what `rampscan submission`
+ * prints today. Read from the command's own `--json`, not recomputed here:
+ * a gate that derived the figure a second way would be testing its own
+ * arithmetic rather than the README's claim.
+ */
+export function submissionDrift(readme: string, submissionJson: string): string[] {
+  const said = readmeFigures(readme).submission;
+  const view = JSON.parse(submissionJson) as {
+    sections: Array<{
+      section: string;
+      rows: Array<{ force?: string }>;
+      states?: { computed: number; declared: number; outside: number; unaddressed: number };
+    }>;
+  };
+  const section = view.sections.find((x) => x.section === "unaddressed-rules");
+  if (section?.states === undefined) {
+    throw new PublishedNumbersError(
+      "`rampscan submission --json` did not carry an `unaddressed-rules` section with its four state " +
+        "counts — the register moved; move this gate with it",
+    );
+  }
+  const states = section.states;
+  const addressable = states.computed + states.declared + states.outside + states.unaddressed;
+  const drift: string[] = [];
+  if (said.addressable !== addressable || said.computed !== states.computed) {
+    drift.push(
+      `README says ${said.addressable} rules are addressable at class b and rampscan answers ${said.computed}; ` +
+        `\`rampscan submission\` says ${addressable} and ${states.computed}`,
+    );
+  }
+  // The MUST/SHOULD split is the register's, over the rules it prints — the
+  // unaddressed rows carry their force, and the computed ones are counted by
+  // difference rather than asserted, so this arm cannot drift on its own.
+  if (said.must + said.should !== said.addressable) {
+    drift.push(
+      `README's split does not add up: ${said.must} MUST + ${said.should} SHOULD is ${said.must + said.should}, ` +
+        `and it says ${said.addressable} rules are addressable`,
     );
   }
   return drift;

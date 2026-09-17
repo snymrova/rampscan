@@ -9,6 +9,7 @@ import {
   DEFAULT_OVERLAY_PINS,
   OFFERING_CLASSES,
   loadKsiCatalog,
+  loadRuleRegister,
   loadLocalDataset,
   type OfferingClass,
 } from "@rampscan/dataset";
@@ -28,6 +29,7 @@ import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js
 import { buildGapRegister, renderGapRegister } from "./gaps.js";
 import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
 import { checkConformance, renderConformance } from "./fedramp-conformance.js";
+import { buildRejectionRegister, renderRejectionRegister } from "./submission.js";
 import { loadOffering } from "./offering.js";
 import { mintComputedArtifact } from "./artifacts.js";
 import { scaffoldArtifact } from "./artifacts-scaffold.js";
@@ -144,6 +146,17 @@ function usage(): never {
       "                    validation, so a file claiming a verdict it no longer earns fails.",
       "                    Exits 1 on any violation, disagreement, or unresolvable schema",
       "                    — never a skip",
+      "  submission [path]   the rejection register (P2, community #167): one section per",
+      "                    reason FedRAMP published for rejecting a 20x submission, each",
+      "                    carrying the reason's own words and the rules that bind it — the",
+      "                    per-class rule denominator nobody publishes (129 MUST/SHOULD at",
+      "                    class b), the KSIs with no method, the schema-bearing rules with",
+      "                    no example, and the conformance verdict reprojected. The",
+      "                    trust-center gate prints UNMEASURED always: it is FedRAMP's first",
+      "                    listed reason and a property of a live URL this appliance does not",
+      "                    fetch (#213). Exits 1 only on a rejection the appliance can stand",
+      "                    behind — an unaddressed rule is counted and named, never accused,",
+      "                    until the declaration surface exists. Accepts --class a|b|c|d",
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
@@ -294,6 +307,7 @@ async function main(): Promise<void> {
     command !== "gaps" &&
     command !== "artifacts" &&
     command !== "exports" &&
+    command !== "submission" &&
     certClass !== "b" &&
     certClass !== "c"
   ) {
@@ -921,6 +935,94 @@ async function main(): Promise<void> {
       if (values.json) console.log(JSON.stringify(conformanceResult, null, 2));
       else console.log(renderConformance(conformanceResult));
       if (!conformanceResult.conformant) process.exit(1);
+      return;
+    }
+    case "submission": {
+      // The rejection register (P2-3, docs/RESEARCH-REJECTION-LINTER.md §4):
+      // the five reasons FedRAMP published for rejecting a 20x submission
+      // (FedRAMP/community#167), plus the KSI half of reason 3.
+      //
+      // Every arm is OPTIONAL and a missing arm prints as unmeasured rather
+      // than clean, because this command answers a question about a package
+      // that may not exist yet. What is never optional is the denominator: the
+      // rule register loads from the pin, so "129 MUST/SHOULD applicable at
+      // class b" is stated even when nothing else can be.
+      const submissionClass = (values.class ?? "b") as OfferingClass;
+      if (!OFFERING_CLASSES.includes(submissionClass)) usage();
+      const ruleRegister = await loadRuleRegister(rulesFile, datasetPin);
+
+      // the KSI half: the same joins `gaps` makes, so reason 3's KSI arm is
+      // measured rather than skipped — this is the half rampscan is best at
+      const submissionDataset = await loadLocalDataset(datasetDir, datasetPin);
+      const submissionRecipes = await loadRecipes(recipesDir);
+      const submissionCatalog = await loadKsiCatalog(catalogSources);
+      const submissionMethods = deriveCatalogMethods(
+        submissionRecipes,
+        allCollectors.map((c) => c.manifest),
+      );
+      const submissionProjection = await createProjector({
+        recipes: submissionRecipes,
+        methods: submissionMethods,
+        ksiIds: submissionCatalog.ksis.map((k) => k.id),
+        methodFloor: submissionCatalog.floors[submissionClass].minPerKsi,
+        historyFloorMonths: submissionCatalog.historyFloors[submissionClass].months,
+        machineWindow: submissionCatalog.windows[submissionClass],
+        nonMachineWindow: submissionCatalog.nonMachineWindow,
+      }).fold(createLocalLedger(ledgerDir));
+      const submissionKsis = buildKsiRegister({
+        catalog: submissionCatalog,
+        offeringClass: submissionClass,
+        methods: submissionMethods,
+        methodRegisters: submissionProjection.methodRegisters,
+        frontier: buildFrontier({
+          frontier: submissionDataset.frontier(),
+          adjudications: await loadAdjudications(adjudicationsDir),
+          recipes: submissionRecipes,
+          collectors: allCollectors,
+          datasetVersion: submissionDataset.version(),
+          ksiReachedControls: submissionDataset.ksiReachedControls(),
+          upstreamRecipesFor: (controlId) => submissionDataset.upstreamRecipesFor(controlId),
+        }),
+      });
+
+      // the offering declaration, when the target repo carries one. Absent is
+      // a legitimate state: reason 5 and the trust-center row then say so.
+      const submissionRoot = target ?? process.cwd();
+      let submissionOffering: Awaited<ReturnType<typeof loadOffering>> | undefined;
+      try {
+        submissionOffering = await loadOffering(submissionRoot);
+      } catch {
+        submissionOffering = undefined;
+      }
+
+      // reason 4, REPROJECTED: `checkConformance` is the one verdict on schema
+      // validity and this register does not re-implement it (§5). A directory
+      // that is not there leaves the section unmeasured rather than clean.
+      const submissionOut = join(values.out ?? "./rampscan-out", "exports", "fedramp");
+      let submissionConformance: Awaited<ReturnType<typeof checkConformance>> | undefined;
+      try {
+        submissionConformance = await checkConformance({
+          schemaRoot: REPO_ROOT,
+          target: submissionOut,
+        });
+      } catch {
+        submissionConformance = undefined;
+      }
+
+      const submissionView = await buildRejectionRegister({
+        register: ruleRegister,
+        offeringClass: submissionClass,
+        ksis: submissionKsis,
+        ...(submissionOffering !== undefined ? { offering: submissionOffering } : {}),
+        ...(submissionConformance !== undefined ? { conformance: submissionConformance } : {}),
+        outDir: submissionOut,
+      });
+      if (values.json) console.log(JSON.stringify(submissionView, null, 2));
+      else console.log(renderRejectionRegister(submissionView, useColor));
+      // Only rejections the appliance can stand behind exit 1. An unaddressed
+      // rule is not one of them until P2-1 and P2-2 land — see the section's
+      // own note, and `submission.test.ts` for why either alternative is worse.
+      if (submissionView.rejections > 0) process.exit(1);
       return;
     }
     case "runner": {
