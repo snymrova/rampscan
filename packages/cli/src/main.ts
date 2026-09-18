@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,6 +31,11 @@ import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
 import { buildOngoingCertificationReport, buildPackageOverview } from "./fedramp-exports.js";
 import { checkConformance, renderConformance } from "./fedramp-conformance.js";
 import { buildRejectionRegister, renderRejectionRegister } from "./submission.js";
+import {
+  loadTrustCenterProbe,
+  pinnedDocumentValidator,
+  probeTrustCenter,
+} from "./trust-center-probe.js";
 import { readSdrCoverage, type SdrCoverage } from "./sdr.js";
 import { loadOffering } from "./offering.js";
 import { mintComputedArtifact } from "./artifacts.js";
@@ -84,6 +89,8 @@ import { verify } from "./verify.js";
 // Run from the repo: `pnpm rampscan <command>`.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+/** what the probe says it is, so a trust center's operator can see who knocked */
+const PROBE_USER_AGENT = "rampscan-trust-center-probe (+https://github.com/snymrova/rampscan)";
 
 function usage(): never {
   console.error(
@@ -156,15 +163,24 @@ function usage(): never {
       "                    per-class rule denominator nobody publishes (129 MUST/SHOULD at",
       "                    class b), the KSIs with no method, the schema-bearing rules with",
       "                    no example, and the conformance verdict reprojected. The",
-      "                    trust-center gate prints UNMEASURED always: it is FedRAMP's first",
-      "                    listed reason and a property of a live URL this appliance does not",
-      "                    fetch (#213). Exits 1 only on a rejection the appliance can stand",
+      "                    trust-center gate prints UNMEASURED unless --trust-center-probe",
+      "                    <file> names a `rampscan probe` transcript of the declared URL:",
+      "                    gated on positive evidence, open only on a proven document (P4).",
+      "                    Exits 1 only on a rejection the appliance can stand",
       "                    behind: with --sdr <security-decision-record.json> that includes a",
       "                    rule or KSI the record omits, which is what SDR-CSO-FRR obliges and",
       "                    what #167 reason 3 rejects on — the schema's own status enum admits",
       "                    \"Not Implemented\", so declaring a rule unimplemented is compliance",
       "                    and saying nothing is not. Without --sdr reason 3 reads UNMEASURED",
       "                    and accuses nobody. Accepts --class a|b|c|d",
+      "  probe <url>       the trust-center probe (P4, #213): GET the declared trust center and",
+      "                    each --document <url> ANONYMOUSLY — no cookie, credential or script",
+      "                    — and write a transcript (--out, default trust-center-probe.json)",
+      "                    for `submission --trust-center-probe`. Gated needs positive evidence",
+      "                    (401/403, a login redirect, an NDA/terms click-through, a password",
+      "                    field); open needs a named document validating against a pinned",
+      "                    FedRAMP schema. A clean 200 on a page is UNDETERMINED. The only",
+      "                    command that makes a network request; exits 1 when gated",
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
@@ -260,6 +276,8 @@ async function main(): Promise<void> {
       crosswalk: { type: "string" },
       cadence: { type: "string" },
       "exit-code": { type: "string" },
+      document: { type: "string", multiple: true },
+      "trust-center-probe": { type: "string" },
       signer: { type: "string" },
       strict: { type: "boolean" },
       "by-controls": { type: "boolean" },
@@ -959,6 +977,32 @@ async function main(): Promise<void> {
       if (!conformanceResult.conformant) process.exit(1);
       return;
     }
+    case "probe": {
+      // P4 (#213): the one command that makes a network request, and only to
+      // the URLs named on its own command line. Anonymous by construction.
+      if (!target) usage();
+      const probe = await probeTrustCenter({
+        trustCenter: target,
+        documents: values.document ?? [],
+        validate: await pinnedDocumentValidator(REPO_ROOT),
+        fetch: { userAgent: PROBE_USER_AGENT },
+      });
+      const probeOut = values.out ?? "trust-center-probe.json";
+      await writeFile(probeOut, `${JSON.stringify(probe, null, 2)}\n`);
+      for (const t of probe.targets) {
+        console.log(`${t.outcome.padEnd(12)} ${t.role.padEnd(12)} ${t.url}`);
+        for (const r of t.reasons) console.log(`${" ".repeat(26)}${r}`);
+      }
+      console.log(`probe: ${probe.outcome} — transcript written to ${probeOut}`);
+      if ((values.document ?? []).length === 0) {
+        console.log(
+          "probe: no --document was named, so nothing can read open — a landing page proves a page loaded, not that the data is ungated",
+        );
+      }
+      if (probe.outcome === "gated") process.exit(1);
+      return;
+    }
+
     case "submission": {
       // The rejection register (P2-3, docs/RESEARCH-REJECTION-LINTER.md §4):
       // the five reasons FedRAMP published for rejecting a 20x submission
@@ -1084,12 +1128,19 @@ async function main(): Promise<void> {
       // asked for is an error, not an absence.
       let submissionSdr: SdrCoverage | undefined;
       if (values.sdr !== undefined) submissionSdr = await readSdrCoverage(values.sdr);
+      // P4: reason 1's only measurement, read offline like the SDR — and for
+      // the same reason an unreadable transcript the user named is an error
+      const submissionProbe =
+        values["trust-center-probe"] !== undefined
+          ? await loadTrustCenterProbe(values["trust-center-probe"])
+          : undefined;
 
       const submissionView = await buildRejectionRegister({
         register: ruleRegister,
         offeringClass: submissionClass,
         ksis: submissionKsis,
         ...(submissionSdr !== undefined ? { sdr: submissionSdr } : {}),
+        ...(submissionProbe !== undefined ? { trustCenterProbe: submissionProbe } : {}),
         ...(submissionOffering !== undefined ? { offering: submissionOffering } : {}),
         ...(submissionConformance !== undefined ? { conformance: submissionConformance } : {}),
         ...(submissionProblems !== undefined ? { problems: submissionProblems } : {}),

@@ -1,0 +1,91 @@
+{
+  "serviceIdentification": {
+    "fedRampPackageId": "Example Cloud Inc. (EPEP)",
+    "providerName": "Example Cloud Inc.",
+    "serviceName": "Example Pipeline Evidence Plane",
+    "serviceAcronym": "EPEP",
+    "serviceDescription": "A CI/CD evidence plane for FedRAMP 20x key security indicators.",
+    "certificationType": "20x",
+    "website": "https://example.com/epep",
+    "logo": "https://example.com/logo.svg"
+  },
+  "serviceProperties": {
+    "serviceType": [
+      "SaaS"
+    ],
+    "deploymentModel": "Public Cloud",
+    "businessCategory": [
+      "Development Tools"
+    ],
+    "trustCenter": {
+      "repositoryType": [
+        "Trust Center"
+      ],
+      "url": "https://trust.example.com",
+      "repositoryDescription": "Certification data and assessment reports.",
+      "authenticationRequired": false
+    },
+    "nextOngoingCertificationReportDate": "2026-12-15"
+  },
+  "contactInformation": [
+    {
+      "contactType": "Security",
+      "contactName": "Security Team",
+      "contactEmail": "security@example.com"
+    },
+    {
+      "contactType": "Sales",
+      "contactName": "Sales Team",
+      "contactPhone": "202-555-0123"
+    }
+  ],
+  "assessor": {
+    "name": "Example Assessment Services",
+    "assessorID": "123456"
+  },
+  "x-rampscan": {
+    "generator": "rampscan",
+    "projectedAt": "2026-09-12T12:00:00.000Z",
+    "datasetVersion": "2026.07.14.01",
+    "fieldSources": {
+      "serviceIdentification": "declared",
+      "serviceProperties": "declared",
+      "contactInformation": "declared",
+      "assessor": "declared",
+      "certifiedServices": "declared",
+      "thirdPartyInformationResources": "declared"
+    },
+    "validation": {
+      "offeringClass": "b",
+      "ksisTracked": 0,
+      "automatedMethods": 0,
+      "methodFloor": null,
+      "ksisMeetingFloor": null,
+      "staleMethods": 0,
+      "gapsByClass": {},
+      "repo": "/repo/app"
+    },
+    "validationVulnerabilities": {
+      "note": "VDR-CSO-FAV records: a validation entering `violated` is a vulnerability with detection-and-response obligations. These are NOT this document's `acceptedVulnerabilities` — acceptance is a provider risk determination, and rampscan makes none.",
+      "open": 0,
+      "resolved": 0,
+      "records": []
+    },
+    "freshness": {
+      "ruleId": "FRC-APP-FCP",
+      "windowDays": 7,
+      "asOf": "2026-09-12T12:00:00.000Z",
+      "fresh": false,
+      "machineOnlyFresh": false,
+      "methodsCounted": 0,
+      "methodsInWindow": 0,
+      "methodsOutOfWindow": 0,
+      "methodsWithoutEvidence": 0,
+      "scopedOut": 0,
+      "nonMachineMethods": 0,
+      "machineMethods": 0,
+      "basis": "Computed from the method register at the fold instant. FRC-APP-FCP's seven days is an application-time window on the package and is NOT the class window (VDR-TFR-MVX / VDR-TFR-NMV): it reads the same for every class. `fresh` counts a method with no live evidence as unfresh, which is the fold's own rule for freshMet rather than a stricter one invented here; `machineOnlyFresh` answers the narrower reading in which a non-machine method keeps its own three-month cadence, and is false when there is no machine method to have asked about rather than vacuously true of none. An empty register is never fresh — a package validating nothing shows no status to have verified."
+    },
+    "note": "Every schema field in this document is DECLARED, read from rampscan.config.json's `offering` block. An evidence ledger holds none of these facts and this generator invents none of them. The validation summary below is computed from signed bundles and is the only part of this file rampscan attests to."
+  }
+}

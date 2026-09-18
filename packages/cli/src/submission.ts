@@ -12,6 +12,7 @@ import { FEDRAMP_SCHEMA_PINS } from "./fedramp-schemas.js";
 import type { ConformanceResult } from "./fedramp-conformance.js";
 import type { KsiRegisterView } from "./ksi-register.js";
 import type { SdrCoverage } from "./sdr.js";
+import type { TrustCenterProbe } from "./trust-center-probe.js";
 
 // `rampscan submission` — the rejection register (P2-3,
 // docs/RESEARCH-REJECTION-LINTER.md §4).
@@ -57,6 +58,11 @@ export const COMPUTED_RULES: Readonly<Record<string, string>> = {
   "CCM-OCR-NRD": "the exports' problems channel reports an undeclared next-OCR date — a calendar commitment the ledger cannot compute",
   "CDS-CSO-PUB": "the exports' problems channel reports an undeclared independent assessment service",
   "CDS-CSO-UTC": "the exports' problems channel reports an undeclared trust center; serving it is out of scope for a local appliance",
+  // P4 earned this one: `rampscan probe` reads the trust center as an
+  // anonymous reviewer would, gated only on positive evidence and open only on
+  // a document proven by its bytes. It answers the rule for the URLs it was
+  // pointed at, which the register says every time it prints the result.
+  "CDS-TRC-USH": "`rampscan probe` fetches the declared trust center and named certification documents anonymously; a gate is reported on positive evidence, and `submission --trust-center-probe` reads the transcript",
   "FRC-APP-FCP": "`applicationFreshness` computes the package's age from the register, with no config key that could have asserted it",
   "FRC-CSO-JSN": "`rampscan conformance` validates each document against its pinned schema, and cross-checks the document's own stamp",
   "FRC-CSO-PKG": "`rampscan exports` builds the certification package overview",
@@ -208,6 +214,11 @@ export interface RejectionRegisterInput {
   problems?: readonly string[];
   /** the directory the exports were written to; absent when none */
   outDir?: string;
+  /**
+   * A `rampscan probe` transcript (P4) — reason 1's only measurement. Absent
+   * leaves the trust-center gate unmeasured, as it was before P4.
+   */
+  trustCenterProbe?: TrustCenterProbe;
 }
 
 /** the documents present in the exports directory, or null when there is no directory to read */
@@ -236,6 +247,125 @@ function ruleRow(rule: FrrRule, cls: OfferingClass, detail: string): RejectionRo
   };
 }
 
+/** a URL in one spelling, so a trailing slash does not decide whether a probe measured this trust center */
+function sameUrl(a: string, b: string): boolean {
+  try {
+    const norm = (u: string) => new URL(u).toString().replace(/\/$/, "");
+    return norm(a) === norm(b);
+  } catch {
+    return a === b;
+  }
+}
+
+/**
+ * Reason 1. The most important section in the register: FedRAMP's FIRST
+ * listed reason, a property of a live URL that no package reveals. Before P4
+ * it was unmeasured by construction; now a `rampscan probe` transcript can
+ * measure it, and only in the directions the transcript PROVES (P4's rule — a
+ * negative is proven positively): a gate needs positive evidence, and "open"
+ * needs a certification document that came back anonymously and validated.
+ * Everything between stays unmeasured, with the probe's own reasons.
+ */
+function trustCenterSection(
+  declared: OfferingConfig["trustCenter"],
+  probe: TrustCenterProbe | undefined,
+): RejectionRegisterSection {
+  const section: RejectionRegisterSection = {
+    section: "trust-center-gate",
+    reason: 1,
+    quote:
+      "Your Trust Center requires acknowledgement and/or acceptance of a privacy policy, terms of service or non-disclosure agreement",
+    ruleIds: ["CDS-TRC-USH", "CDS-TRC-PAC", "CDS-TRC-HMR", "CDS-CSO-UTC"],
+    rows: [],
+  };
+  if (declared === undefined) {
+    section.unmeasured =
+      "this command does not fetch, and no trust center is declared, so there is no URL to probe — the row below is the rejection that is certain";
+    section.rows.push({
+      subject: "CDS-CSO-UTC",
+      detail:
+        "no trust center declared in the offering — there is not even a URL to probe, which the exports' problems channel already reports",
+      ruleId: "CDS-CSO-UTC",
+      rejection: true,
+    });
+    return section;
+  }
+  const authGate = declared.authenticationRequired === true;
+  section.rows.push({
+    subject: declared.url,
+    detail: `declared${authGate ? " — and declares that it requires authentication, which is the gate #167 names" : ""}`,
+    ...(authGate ? { rejection: true as const } : {}),
+  });
+
+  if (probe === undefined) {
+    section.unmeasured =
+      `this command does not fetch — whether a gate stands in front of ${declared.url} is not a property of any file it reads. ` +
+      `Run \`rampscan probe ${declared.url} --document <certification-document-url> --out probe.json\` and pass ` +
+      `--trust-center-probe probe.json — until then this is the reason FedRAMP listed first and the one rampscan ` +
+      `measures least, which is worth saying out loud rather than scoring`;
+    return section;
+  }
+  if (!sameUrl(probe.trust_center, declared.url)) {
+    section.unmeasured =
+      `the probe transcript is of ${probe.trust_center}, but the offering declares ${declared.url} — a probe of a ` +
+      `different URL measures a different trust center, so reason 1 stays unmeasured`;
+    return section;
+  }
+
+  const when = `probed ${probe.probed_at}`;
+  if (probe.outcome === "gated") {
+    // Reason 1 is ACCEPTANCE. A click-through is the rejection itself; a
+    // login is a rejection only when the offering declared there was none,
+    // because then the package states something false about its own
+    // repository. A declared login is permitted — and behind it this probe
+    // cannot see whether a click-through waits, so the section stays
+    // unmeasured rather than clean.
+    let hiddenBehindLogin = false;
+    for (const t of probe.targets.filter((t) => t.outcome === "gated")) {
+      const clickThrough = t.gate === "click-through";
+      const undeclaredLogin = t.gate === "authentication" && !authGate;
+      if (!clickThrough && !undeclaredLogin) hiddenBehindLogin = true;
+      section.rows.push({
+        subject: t.url,
+        detail:
+          `${t.role}, ${t.gate}: ${t.reasons.join("; ")} (${when})` +
+          (undeclaredLogin
+            ? " — the offering declares authenticationRequired: false, and an anonymous reader was refused"
+            : "") +
+          (!clickThrough && !undeclaredLogin
+            ? " — authentication is declared, which FedRAMP permits with access instructions"
+            : ""),
+        ...(clickThrough || undeclaredLogin ? { rejection: true as const } : {}),
+      });
+    }
+    if (hiddenBehindLogin) {
+      section.unmeasured =
+        "a declared login stands in front of the data, and whether acceptance of terms or an NDA waits behind it " +
+        "is not visible to an anonymous probe";
+    }
+    section.note = "gated on positive evidence — each row names what the anonymous fetch met";
+    return section;
+  }
+  if (probe.outcome === "open") {
+    const open = probe.targets.filter((t) => t.outcome === "open");
+    for (const t of open) {
+      section.rows.push({
+        subject: t.url,
+        detail: `reached anonymously and validates against ${t.schema} (sha256 ${t.sha256?.slice(0, 12)}…, ${when})`,
+      });
+    }
+    section.note =
+      `measured: ${open.length} named certification document(s) came back to an anonymous GET with no gate. ` +
+      `That proves those documents, not every document the trust center holds — a gate in front of one it was ` +
+      `not pointed at is not ruled out`;
+    return section;
+  }
+  section.unmeasured =
+    `the probe (${when}) found no gate and proved no document open: ` +
+    probe.targets.map((t) => `${t.url} — ${t.reasons.join("; ")}`).join(" | ");
+  return section;
+}
+
 export async function buildRejectionRegister(
   input: RejectionRegisterInput,
 ): Promise<RejectionRegisterView> {
@@ -246,41 +376,13 @@ export async function buildRejectionRegister(
 
   // ---- reason 1 — the trust center -------------------------------------
   //
-  // The most important section in the register, and the only one that is
-  // unmeasured by construction. It is FedRAMP's FIRST listed reason; it is a
-  // property of a live URL that no package reveals; and this appliance makes
-  // no fetch. A register that omitted it would be a vacuous pass on the most
-  // likely rejection, so it prints, always, as unmeasured until P4 (#213).
+  // The most important section in the register. It is FedRAMP's FIRST listed
+  // reason and a property of a live URL that no package reveals, so this
+  // command measures it only from a `rampscan probe` transcript (P4, #213) and
+  // prints it as unmeasured otherwise — a register that omitted it would be a
+  // vacuous pass on the most likely rejection.
   const declaredTrustCenter = input.offering?.trustCenter;
-  sections.push({
-    section: "trust-center-gate",
-    reason: 1,
-    quote:
-      "Your Trust Center requires acknowledgement and/or acceptance of a privacy policy, terms of service or non-disclosure agreement",
-    ruleIds: ["CDS-TRC-USH", "CDS-TRC-PAC", "CDS-TRC-HMR", "CDS-CSO-UTC"],
-    unmeasured:
-      `this appliance does not fetch — whether a gate stands in front of ${declaredTrustCenter?.url ?? "an undeclared trust center"} ` +
-      `is not a property of any file it reads. P4 (#213) is the probe; until it exists this is the reason FedRAMP listed first ` +
-      `and the one rampscan measures least, which is worth saying out loud rather than scoring`,
-    rows:
-      declaredTrustCenter === undefined
-        ? [
-            {
-              subject: "CDS-CSO-UTC",
-              detail:
-                "no trust center declared in the offering — there is not even a URL to probe, which the exports' problems channel already reports",
-              ruleId: "CDS-CSO-UTC",
-              rejection: true,
-            },
-          ]
-        : [
-            {
-              subject: declaredTrustCenter.url,
-              detail: `declared${declaredTrustCenter.authenticationRequired === true ? " — and declares that it requires authentication, which is the gate #167 names" : ""}`,
-              ...(declaredTrustCenter.authenticationRequired === true ? { rejection: true as const } : {}),
-            },
-          ],
-  });
+  sections.push(trustCenterSection(declaredTrustCenter, input.trustCenterProbe));
 
   // ---- reason 3, the rule half -----------------------------------------
   //
@@ -730,7 +832,10 @@ export function renderRejectionRegister(view: RejectionRegisterView, useColor: b
   lines.push(
     dim(
       `  ${view.rejections} rejection(s) this appliance can stand behind · ${view.unmeasured} section(s) unmeasured. ` +
-        `An unmeasured section is not a pass: reason 1 is FedRAMP's first and needs a live fetch this appliance does not make (#213)`,
+        `An unmeasured section is not a pass` +
+        (view.sections.some((sec) => sec.section === "trust-center-gate" && sec.unmeasured !== undefined)
+          ? `: reason 1 is FedRAMP's first — measure it with \`rampscan probe\` and --trust-center-probe`
+          : ""),
     ),
   );
   return lines.join("\n");
