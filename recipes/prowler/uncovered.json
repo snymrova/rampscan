@@ -1,0 +1,74 @@
+{
+  "_type": "https://rampscan.dev/prowler-uncovered/v1",
+  "reviewed": "2026-09-18",
+  "framework_version": "2026.07.14.01",
+  "framework_sha256": "cc1a5fa8c88ee4e327c84ae871b8e51553b4d0c614193a25a0d5490449a8e766",
+  "rule": "The thirteen indicators the pinned Prowler KSI framework maps no check to, on any provider. The SET is computed from the framework on every test run and is never edited here; what is reviewed is the `basis` — one line on why a scan of cloud resource state cannot observe this indicator. A `basis` is a reading of the indicator against the artifact at this pin, so a pin bump re-reads these rows rather than re-stamping them: if upstream authors a check for one of these, the row must go, and the test fails until it does. Nothing here excuses an indicator: an indicator no scanner sees is one rampscan's attestation and artifact planes have to price, which is the whole reason the gap is worth naming.",
+  "rows": [
+    {
+      "ksi": "KSI-CED-RAT",
+      "name": "Reviewing All Training",
+      "basis": "Asks that the EFFECTIVENESS of training be persistently reviewed, across four audiences. Training records live in an HR or LMS system and the review is a judgement about them; neither is cloud resource state, and no provider API answers whether a review happened or what it concluded."
+    },
+    {
+      "ksi": "KSI-CMT-RVP",
+      "name": "Reviewing Change Procedures",
+      "basis": "The subject is the effectiveness of documented procedures, not the configuration the procedures govern. A scanner can see that a change landed; it cannot see that anyone reviewed whether the procedure for landing it is working."
+    },
+    {
+      "ksi": "KSI-CMT-VTD",
+      "name": "Validating Throughout Deployment",
+      "basis": "The one of the thirteen that IS automatable — it asks that testing and validation of changes throughout deployment be automated — but the evidence is in the delivery pipeline, not in the account. An account scanner sees deployed state and never the gates a change passed on the way there, which is why this row is uncovered on all five providers rather than only on some."
+    },
+    {
+      "ksi": "KSI-INR-AAR",
+      "name": "Generating After Action Reports",
+      "basis": "The artifact is a report written after an incident and the obligation is that its lessons are incorporated. Both are documents and decisions; an incident's cloud-side traces do not tell a scanner whether a report exists or whether anything changed because of it."
+    },
+    {
+      "ksi": "KSI-INR-RIR",
+      "name": "Reviewing Incident Response Procedures",
+      "basis": "Effectiveness of documented procedures again. The framework carries an empty `config_requirements` for this row, which declares no threshold rather than declaring nothing — there is no configuration whose value would answer the question."
+    },
+    {
+      "ksi": "KSI-INR-RPI",
+      "name": "Reviewing Past Incidents",
+      "basis": "Asks that past incidents be reviewed for patterns not previously apparent. The finding is an analytic conclusion drawn by people over an incident history; a check can confirm logging exists and never that anyone read it for patterns."
+    },
+    {
+      "ksi": "KSI-MLA-RVL",
+      "name": "Reviewing Logs",
+      "basis": "Distinct from the log-configuration indicators Prowler does cover: this one asks that logs be persistently REVIEWED and audited, which is an act performed on the logs and not a property of the log pipeline. Retention, destinations and coverage are checkable; readership is not."
+    },
+    {
+      "ksi": "KSI-PIY-RES",
+      "name": "Reviewing Executive Support",
+      "basis": "The subject is organisational: executive support for the provider's security goals, reviewed and demonstrated. Nothing in a cloud account is evidence of it in either direction."
+    },
+    {
+      "ksi": "KSI-PIY-RIS",
+      "name": "Reviewing Investments in Security",
+      "basis": "Asks about the effectiveness of the provider's security investments. That is a budget and outcome judgement made outside any system a scanner reaches."
+    },
+    {
+      "ksi": "KSI-PIY-RSD",
+      "name": "Reviewing Security in the SDLC",
+      "basis": "Asks whether security and privacy are built into the SDLC in alignment with CISA Secure By Design, and whether that is persistently reviewed. The subject is a development process and its periodic assessment, neither of which is deployed state."
+    },
+    {
+      "ksi": "KSI-PIY-RVD",
+      "name": "Reviewing Vulnerability Disclosures",
+      "basis": "The subject is a vulnerability disclosure PROGRAM and its effectiveness — an inbox, a policy, and how reports are handled. A published policy might be fetchable from the web; nothing about it is a cloud resource, and the effectiveness review is a judgement regardless."
+    },
+    {
+      "ksi": "KSI-RPL-RRO",
+      "name": "Reviewing Recovery Objectives",
+      "basis": "RTO and RPO are stated business targets reviewed for alignment with capability. Prowler covers the mechanisms that serve them — backup retention, multi-AZ — but the target itself is a declaration, and a scanner has no statement to compare the mechanism against."
+    },
+    {
+      "ksi": "KSI-SVC-RUD",
+      "name": "Removing Unwanted Data",
+      "basis": "The one non-review indicator of the thirteen: unwanted federal customer data is removed promptly on request, including from backups where appropriate. It is an obligation about a specific event — an agency's request — and its satisfaction is the absence of particular records, which no general scan of resource state can observe. Also the only row here that the pinned rules make optional at class b."
+    }
+  ]
+}

@@ -1,8 +1,7 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { mkdtemp } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_DATASET_PIN, loadKsiCatalog, optionalKsis } from "@rampscan/dataset";
@@ -11,7 +10,6 @@ import {
   PROWLER_FRAMEWORK_DIR,
   PROWLER_FRAMEWORK_FILE,
   PROWLER_FRAMEWORK_PIN,
-  PROWLER_PROVIDERS,
   PROWLER_UNCOVERED_PATH,
   assertFrameworkMatchesCatalog,
   checksFor,
@@ -86,7 +84,11 @@ describe("P3-0 — the pinned Prowler KSI framework", () => {
     expect(fw.framework).toBe("FedRAMP-20x-KSI");
     expect(fw.version).toBe(PROWLER_FRAMEWORK_PIN.version);
     expect(fw.requirements).toHaveLength(46);
-    expect(PROWLER_FRAMEWORK_PIN.bytes).toBe(89892);
+    // the pin states a size as well as a digest, and a stated number nothing
+    // checks is the thing this repository re-pins to avoid
+    const bytes = await readFile(join(REPO_ROOT, PROWLER_FRAMEWORK_DIR, PROWLER_FRAMEWORK_FILE));
+    expect(bytes.byteLength).toBe(PROWLER_FRAMEWORK_PIN.bytes);
+    expect(createHash("sha256").update(bytes).digest("hex")).toBe(PROWLER_FRAMEWORK_PIN.sha256);
   });
 
   it("refuses bytes that do not match the pin, naming the re-read rather than the file", async () => {
@@ -164,6 +166,42 @@ describe("P3-0 — the both-ways golden test (§2e, §4d)", () => {
       "KSI-SVC-VCM",
     ]);
     expect(optionalAtClassB(fw)).toEqual(optionalKsis(cat, "b"));
+  });
+
+  it("agrees with the catalog on all 373 KSI→control edges, and on the two indicators that reach none", async () => {
+    // Not in the research note, and the strongest arm of the three: §2e
+    // established that the ID SETS match both ways, which is what makes the
+    // join legal. This says the two catalogs are the same catalog — every
+    // row's control mapping is identical, 373 edges against 373.
+    //
+    // The fold is where the two spellings meet and nothing more: rampscan's
+    // dataset canonicalises to `at-2.2`, Prowler keeps upstream's `AT-2.2`,
+    // and neither is rewritten in place to make this pass.
+    const [fw, cat] = await Promise.all([loadPinnedProwlerFramework(REPO_ROOT), catalog()]);
+    const fold = (ids: readonly string[]) => [...ids].map((c) => c.toLowerCase()).sort();
+    const disagree: string[] = [];
+    let edges = 0;
+    for (const req of fw.requirements) {
+      const entry = cat.ksis.find((k) => k.id === req.id)!;
+      edges += req.nistControls.length;
+      if (fold(req.nistControls).join(",") !== fold(entry.controls).join(",")) {
+        disagree.push(req.id);
+      }
+    }
+    expect(disagree).toEqual([]);
+    expect(edges).toBe(373);
+    expect(edges).toBe(cat.ksis.reduce((n, k) => n + k.controls.length, 0));
+    // and the two rows that omit the attribute are the two the catalog maps
+    // no control to — upstream's optional attribute, used where FedRAMP has
+    // nothing to put in it
+    expect(fw.requirements.filter((r) => r.nistControls.length === 0).map((r) => r.id)).toEqual([
+      "KSI-CNA-OFA",
+      "KSI-PIY-RES",
+    ]);
+    expect(cat.ksis.filter((k) => k.controls.length === 0).map((k) => k.id)).toEqual([
+      "KSI-CNA-OFA",
+      "KSI-PIY-RES",
+    ]);
   });
 
   it("states nothing about class a, and the test says so rather than comparing it", async () => {

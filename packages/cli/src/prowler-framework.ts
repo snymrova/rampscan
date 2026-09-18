@@ -80,10 +80,16 @@ export type ProwlerProvider = (typeof PROWLER_PROVIDERS)[number];
  * third value would change what a class-b meter divides by.
  *
  * Note what is NOT here: class A. The framework states the class-A subset in
- * prose — "Class A authorizations mandate a subset of seven KSIs via
- * FRC-CLA-MFR" — and in no field of any row, so class A is not derivable from
- * this file and nothing here pretends otherwise. Reading the silence would be
- * the `varies_by_class` trap of P2-0 §2a, one file over.
+ * its own prose — seven of the 46, mandated by a rule it names there — and in
+ * no field of any row, so class A is not derivable from this file and nothing
+ * here pretends otherwise. Reading the silence would be the `varies_by_class`
+ * trap of P2-0 §2a, one file over.
+ *
+ * (The rule's id is deliberately not written in this file. `submission.ts`'s
+ * drift guard reads a rule id anywhere in `packages/cli/src` as a claim that
+ * the appliance computes that rule, and this comment is the opposite of a
+ * claim — it is a note that the file says nothing we can read. The id is in
+ * `test/prowler-framework.test.ts` and in the research note.)
  */
 const CLASS_APPLICABILITY: Readonly<Record<string, ClassApplicability>> = {
   "Required for Classes B and C": "required-b-and-c",
@@ -114,8 +120,19 @@ export interface ProwlerRequirement {
   description: string;
   /** `KSI-CED: Cybersecurity Education` — the framework's own theme label */
   theme: string;
-  /** the NIST SP 800-53 control ids, as one comma-separated string upstream */
-  nistControls: string;
+  /**
+   * The NIST SP 800-53 control ids this indicator reaches, split out of
+   * upstream's one comma-separated string and left in UPSTREAM'S SPELLING
+   * (`AT-2.2`, where rampscan's dataset canonicalises to `at-2.2`). Rewriting
+   * them here would hide the only difference between the two catalogs.
+   *
+   * EMPTY where the attribute is absent, which is two rows — and those two are
+   * exactly the two indicators rampscan's own pinned catalog maps no control
+   * to. `attributes_metadata` marks this attribute optional while marking
+   * Theme and ClassApplicability required, so absence is upstream's own
+   * contract rather than a hole in the row.
+   */
+  nistControls: readonly string[];
   classApplicability: ClassApplicability;
   /** check ids per provider, in upstream's order; every provider key present */
   checks: Readonly<Record<ProwlerProvider, readonly string[]>>;
@@ -169,6 +186,30 @@ function closedKeys(node: unknown, allowed: ReadonlySet<string>, at: string, ori
   }
 }
 
+/**
+ * Split one row's `NISTControls` into ids. Absent is an empty list, and an
+ * EMPTY STRING is a refusal — upstream writes the attribute or omits it, and a
+ * present-but-blank value is a third state nobody meant that would read as
+ * "this indicator reaches no control".
+ */
+function nistControlsOf(
+  attributes: Record<string, unknown>,
+  id: string,
+  origin: string,
+): readonly string[] {
+  const raw = attributes["NISTControls"];
+  if (raw === undefined) return [];
+  if (typeof raw !== "string" || raw.trim().length === 0) {
+    throw new ProwlerFrameworkError(
+      `${origin}: ${id}.attributes has a NISTControls that is present and empty — an indicator reaching no control omits the attribute, as two rows at this pin do`,
+    );
+  }
+  return raw
+    .split(",")
+    .map((c) => c.trim())
+    .filter((c) => c.length > 0);
+}
+
 function str(node: Record<string, unknown>, key: string, at: string, origin: string): string {
   const v = node[key];
   if (typeof v !== "string" || v.length === 0) {
@@ -199,9 +240,13 @@ export function parseProwlerKsiFramework(doc: unknown, origin: string): ProwlerK
   if (!Array.isArray(metadata)) {
     throw new ProwlerFrameworkError(`${origin}: attributes_metadata is not an array`);
   }
-  const declared = metadata.find(
-    (m) => (m as Record<string, unknown>)["key"] === "ClassApplicability",
-  ) as Record<string, unknown> | undefined;
+  const attributeMeta = new Map<string, Record<string, unknown>>();
+  for (const entry of metadata) {
+    if (entry === null || typeof entry !== "object") continue;
+    const key = (entry as Record<string, unknown>)["key"];
+    if (typeof key === "string") attributeMeta.set(key, entry as Record<string, unknown>);
+  }
+  const declared = attributeMeta.get("ClassApplicability");
   const declaredEnum = declared?.["enum"];
   if (!Array.isArray(declaredEnum)) {
     throw new ProwlerFrameworkError(
@@ -215,6 +260,17 @@ export function parseProwlerKsiFramework(doc: unknown, origin: string): ProwlerK
       );
     }
   }
+
+  // Which attributes a row must carry is upstream's statement, not ours:
+  // `attributes_metadata` marks Theme and ClassApplicability `required` and
+  // leaves NISTControls unmarked, and two rows duly omit it. Reading the flag
+  // rather than hardcoding "all three" is what keeps the reader from being
+  // stricter than the file it reads — while the closed ATTRIBUTE_KEYS set
+  // above keeps it from being laxer, since a NEW attribute must still be read
+  // by a person. Two checks, two different questions.
+  const requiredAttributes = new Set(
+    [...attributeMeta.entries()].filter(([, m]) => m["required"] === true).map(([k]) => k),
+  );
 
   const rows = root["requirements"];
   if (!Array.isArray(rows)) {
@@ -236,6 +292,13 @@ export function parseProwlerKsiFramework(doc: unknown, origin: string): ProwlerK
     }
     closedKeys(attributes, ATTRIBUTE_KEYS, `${id}.attributes`, origin);
     const a = attributes as Record<string, unknown>;
+    for (const key of requiredAttributes) {
+      if (typeof a[key] !== "string" || (a[key] as string).length === 0) {
+        throw new ProwlerFrameworkError(
+          `${origin}: ${id}.attributes omits ${key}, which attributes_metadata declares required`,
+        );
+      }
+    }
     const rawClass = str(a, "ClassApplicability", `${id}.attributes`, origin);
     const classApplicability = CLASS_APPLICABILITY[rawClass];
     if (classApplicability === undefined) {
@@ -292,7 +355,7 @@ export function parseProwlerKsiFramework(doc: unknown, origin: string): ProwlerK
       name: str(r, "name", at, origin),
       description: str(r, "description", at, origin),
       theme: str(a, "Theme", `${id}.attributes`, origin),
-      nistControls: str(a, "NISTControls", `${id}.attributes`, origin),
+      nistControls: nistControlsOf(a, id, origin),
       classApplicability,
       checks,
       ...(configRequirements === undefined ? {} : { configRequirements }),
