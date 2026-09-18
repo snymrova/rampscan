@@ -1,8 +1,11 @@
 # P3 — ingesting Prowler's 20x KSI output as a client-run source
 
 **Issue:** #212, under the milestone *P1–P4 — the crowded-field response*.
-**Status:** research only. No code. Every number below came out of a command
-over the pinned upstream file, and §9 lists what this note could not establish.
+**Status:** research, and the build reading from it. **P3-0 landed 2026-09-18**
+— the pin and the golden test — and corrected §2a on three counts in doing so;
+§6 is the build list and the session log at the bottom moves the pointer. Every
+number here came out of a command over the pinned upstream file, §9 lists what
+the research could not establish, and §10 is where those answers landed.
 
 Prowler is the reason P3 exists: it runs where rampscan deliberately does not —
 inside the client's cloud, with a credential — so its output is exactly the
@@ -79,6 +82,42 @@ field — *"Class A authorizations mandate a subset of seven KSIs via
 FRC-CLA-MFR"* — so **class A is not derivable from the requirement rows**; a
 reader that filtered on `ClassApplicability` alone would silently treat class A
 as class B. This is the `varies_by_class` trap of P2-0's §2a, one file over.
+
+**Corrected 2026-09-18 while building P3-0.** The entry above is verbatim and
+the shape around it was not: writing the reader found three things this section
+did not have, two of which a reader built from it would have got wrong.
+
+1. **`config_requirements` is a sixth requirement key**, on **24** of the 46
+   rows — a list of `{Check, ConfigKey, Operator, Value, Provider}`, which is
+   the framework's own statement of the scan-config threshold a check must have
+   been run under for its result to mean what the KSI asks
+   (`KSI-IAM-AAM` wants `max_unused_access_keys_days` ≤ 45). It is §10d's
+   question in machine-readable form and P3-3 will want it. **Four of the 24
+   carry `[]`** — `KSI-IAM-SUS`, `KSI-INR-RIR`, `KSI-RPL-ARP`, `KSI-SVC-EIS` —
+   so a reader testing truthiness counts 20 where the file says 24.
+2. **`NISTControls` is optional**, and the example row's having it was
+   misleading. `attributes_metadata` marks `Theme` and `ClassApplicability`
+   `required: true` and leaves `NISTControls` unmarked, and **two rows omit it**
+   — `KSI-CNA-OFA` and `KSI-PIY-RES`. A reader that demanded all three refuses
+   the pinned file, which is what the first run of P3-0's loader did. The
+   presence rule is therefore read off `attributes_metadata` rather than
+   hardcoded; the key SET stays closed, because those answer different
+   questions.
+3. **`attributes_metadata` publishes `ClassApplicability`'s enum**, with
+   exactly the two values §2a counted. So the closed vocabulary is not
+   rampscan's invention, and the loader checks its interpreted set against
+   upstream's declared one — a third value is refused at the metadata, one
+   level before a row can use it to move a class-b denominator.
+
+**And one finding, which is the best news in the note.** §2e checked that the
+two catalogs agree on the *id set*. They also agree on the *mapping*: every one
+of the 46 rows carries the same control set as rampscan's pinned dataset, **373
+edges against 373**, once upstream's `AT-2.2` is folded against the dataset's
+canonical `at-2.2`. The two rows that omit `NISTControls` are exactly the two
+indicators FedRAMP maps no control to. These are not two catalogs that happen to
+share ids — at this pin they are the same catalog, which is a much stronger
+footing for "no crosswalk" (§2e) than the id set alone. It is asserted in
+`test/prowler-framework.test.ts`, not remembered here.
 
 ### 2b. The mapping is KSI-level, and that is exactly rampscan's method grain
 
@@ -658,3 +697,42 @@ against it either way. It does qualify §8's public argument, which should say
   `cc1a5fa8…`, 89,892 bytes) and the fact that **no published release ships the
   framework** — 5.42.0 predates its only commit by three days, which qualifies
   §8's public claim. Next: P3-0.
+
+- **2026-09-18 (P3-0)** — The fifth pin and its golden test. The pin verified
+  against the computed values exactly (`1b228d590b5faa92…`, sha256
+  `cc1a5fa8…`, 89,892 bytes) and is on the **bytes and the commit**, because
+  three labels point at three different things here — the file says
+  `2026.07.14.01`, the commit that added it says `2026.06.24.01`, and this
+  checkout pins `2026.09.13.02` — and none of them is a release. The reader
+  takes `fedramp-schemas.ts`'s rule into a third-party file: an unrecognised
+  key is an exit, not a pass, or "re-read the diff when the pin moves" decays
+  into "re-stamp the pin". The provider set and the `ClassApplicability`
+  vocabulary are closed (a sixth provider is a fourth `MethodSource`; the
+  applicability field is a class-b denominator); `Operator` is deliberately
+  not, because rampscan evaluates none of it yet and a refusal with no claim
+  behind it is ceremony.
+  **The golden test came out stronger than §4d asked for, and §2a came out
+  weaker than it read.** Writing the loader found three shape facts the note
+  did not have — `config_requirements` on 24 rows (four of them `[]`),
+  `NISTControls` optional and absent on two rows, and upstream's own published
+  enum for `ClassApplicability` — the second of which refused the pinned file
+  on the loader's first run, since the reader was stricter than the file's own
+  metadata. All three are corrected in §2a. Then the find: the two catalogs do
+  not merely share the 46 ids, they carry the **same control mapping, 373 edges
+  against 373**, and the two rows omitting `NISTControls` are exactly the two
+  indicators FedRAMP maps no control to. At this pin they are the same catalog,
+  which is a much better footing for "no crosswalk" than the id set alone.
+  Three arms now run in CI: ids both ways, the five class-b optional
+  indicators, and every control edge. Class A is asserted to be **unstated** —
+  the seven-KSI subset is in the framework's prose and in no field — rather
+  than compared, because comparing it would read silence as a claim.
+  Also landed: `recipes/prowler/uncovered.json`, the §4d judgement — the
+  thirteen uncovered indicators with one line each on why a scan of cloud
+  resource state cannot see them. The SET is computed from the framework on
+  every run and the rows are checked against it both ways, so the file can only
+  fail, never drift. One friction worth recording for P3-1..P3-5:
+  `submission.ts`'s drift guard reads a rule id **anywhere** in
+  `packages/cli/src` as a claim that the appliance computes that rule, so a
+  comment explaining what the framework does *not* let us read cannot name the
+  rule. It cost a sentence here; it would cost more in the adapter. Next item:
+  P3-1, the OCSF reader.

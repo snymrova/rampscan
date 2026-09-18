@@ -9,7 +9,9 @@ Bundled third-party content
 
 Two directories in this repository are snapshots of other projects, copied in on
 2026-08-13 so that work on rampscan has the demand-side dataset and the founding
-arguments in reach. They are redistributed here, so they are named here.
+arguments in reach. A third holds one file that is pinned rather than
+snapshotted, because code reads it. All three are redistributed here, so all
+three are named here.
 
 --------------------------------------------------------------------------------
 docs/context/ramprules/  —  the FedRAMP Rules Hub dataset
@@ -52,6 +54,29 @@ it.
 Where this repository's own adjudication records cite or disagree with an
 upstream disposition, the citation is recorded in the record itself
 (`citesUpstream`), not here.
+
+--------------------------------------------------------------------------------
+docs/context/prowler/  —  Prowler's FedRAMP 20x KSI compliance framework
+--------------------------------------------------------------------------------
+
+  Source:   Prowler — https://github.com/prowler-cloud/prowler
+            prowler/compliance/fedramp_20x_ksi_2026.json
+  Pinned:   commit 1b228d590b5faa92d9e0bbbab7d6c2c38d3cfeda (2026-09-14),
+            sha256 cc1a5fa8c88ee4e327c84ae871b8e51553b4d0c614193a25a0d5490449a8e766
+  Licence:  Apache License, Version 2.0 — the same licence this project is
+            under; upstream text: LICENSE in github.com/prowler-cloud/prowler
+
+One file, redistributed unchanged. It maps each of the 46 FedRAMP 20x Key
+Security Indicators to the Prowler check ids that evidence it, per cloud
+provider, and rampscan reads it to resolve an ingested Prowler scan onto its own
+board. It is PINNED, not snapshotted — on the bytes, because no published
+Prowler release carries the file and a branch can be rewritten under an
+unchanged version. See docs/context/prowler/README.md.
+
+rampscan does not vendor Prowler itself and never runs it. A Prowler scan
+reaches this appliance as a document the client produced, on the same client-run
+footing as every other ingested AWS result: the appliance holds no AWS
+credential and makes no AWS call (SECURITY.md).
 
 --------------------------------------------------------------------------------
 docs/context/harnessarch/  —  the founding brainstorms
