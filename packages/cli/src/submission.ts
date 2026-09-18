@@ -3,6 +3,7 @@ import type { DeclaredRuleCoverage, OfferingConfig } from "@rampscan/schema";
 import {
   addressableRules,
   effectiveForce,
+  effectiveStatement,
   type FrrRule,
   type OfferingClass,
   type RuleRegister,
@@ -104,6 +105,13 @@ export interface RejectionRow {
   /** the force at the reporting class, where the row is a rule */
   force?: string;
   /**
+   * The rule's own sentence at the reporting class, on a rule row. Carried in
+   * `--json` and not printed: 116 statements is a document, not a register,
+   * and a reader working the queue down needs the text the moment they pick a
+   * row. `effectiveStatement`, because 18 of them state one per class.
+   */
+  statement?: string;
+  /**
    * Set when the row is a rejection this appliance can stand behind, which is
    * what the exit code counts. An `unaddressed` rule is NOT one: with P2-1
    * unbuilt there is no reviewed `outside` set, so a rule no local appliance
@@ -174,7 +182,13 @@ export function schemaFileOf(url: string): string {
 
 function ruleRow(rule: FrrRule, cls: OfferingClass, detail: string): RejectionRow {
   const force = effectiveForce(rule, cls);
-  return { subject: rule.id, detail, ...(force !== null ? { force } : {}) };
+  const statement = effectiveStatement(rule, cls);
+  return {
+    subject: rule.id,
+    detail,
+    ...(force !== null ? { force } : {}),
+    ...(statement !== null ? { statement } : {}),
+  };
 }
 
 export async function buildRejectionRegister(
@@ -290,7 +304,11 @@ export async function buildRejectionRegister(
     // that lands, and a reader can see the zero is a missing surface and not a
     // measured absence.
     states.unaddressed += 1;
-    unaddressed.push(ruleRow(rule, cls, "no rampscan surface answers this rule, and the offering declares nothing about it"));
+    // The rule's own NAME, not a sentence about rampscan: every row in this
+    // section is a rule nothing answers, the note says so once, and 116 copies
+    // of the same clause is how a queue stops being read. The full statement
+    // at this class rides in `--json` for a reader working the queue down.
+    unaddressed.push(ruleRow(rule, cls, rule.name));
   }
   sections.push({
     section: "unaddressed-rules",

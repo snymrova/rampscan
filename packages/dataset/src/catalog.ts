@@ -813,8 +813,10 @@ export interface FrrRule {
   /** the subset key, e.g. `CSX` */
   readonly subset: string;
   readonly name: string;
-  /** the statement, or null when the rule states one per class */
+  /** the statement, or null when the rule states one per class — read it with `effectiveStatement` */
   readonly statement: string | null;
+  /** the per-class statement, or null when the rule states a single one */
+  readonly statementByClass: Readonly<Partial<Record<OfferingClass, string>>> | null;
   /** the single force, or null when the rule carries `varies_by_class` */
   readonly force: string | null;
   /** the per-class force, or null when the rule carries a single one */
@@ -907,18 +909,28 @@ function classesOf(declared: readonly string[], subset: string, where: string): 
   });
 }
 
-function forceByClassOf(
+/**
+ * The per-class variants of a `varies_by_class` rule — force AND statement
+ * together, because they vary together.
+ *
+ * Reading only the force was P2-0's own version of the trap §2a warns about:
+ * `FRC-CSX-VVK`'s force came out right and its statement came out `null`,
+ * along with 28 others, because a rule that states one sentence per class has
+ * no sentence at the top level to read. The same `varies_by_class` block holds
+ * both, so taking one and discarding the other is the bug, not the schema's.
+ */
+function variantsByClassOf(
   variesByClass: unknown,
   id: string,
   where: string,
-): Partial<Record<OfferingClass, string>> {
+): Partial<Record<OfferingClass, { force: string; statement: string }>> {
   const parsed = VariesByClass.parse(variesByClass);
-  const byClass: Partial<Record<OfferingClass, string>> = {};
+  const byClass: Partial<Record<OfferingClass, { force: string; statement: string }>> = {};
   for (const [cls, variant] of Object.entries(parsed)) {
     if (!OFFERING_CLASSES.includes(cls as OfferingClass)) {
       throw new CatalogSourceError(where, `${id} varies by class ${cls}, which is not a 20x class`);
     }
-    byClass[cls as OfferingClass] = variant.force;
+    byClass[cls as OfferingClass] = { force: variant.force, statement: variant.statement };
   }
   return byClass;
 }
@@ -936,6 +948,20 @@ function forceByClassOf(
  */
 export function effectiveForce(rule: FrrRule, cls: OfferingClass): string | null {
   return rule.forceByClass ? (rule.forceByClass[cls] ?? null) : rule.force;
+}
+
+/**
+ * The rule's own sentence AT THIS CLASS — `effectiveForce`'s other half, and
+ * necessary for the same reason.
+ *
+ * 21 of the 129 rules addressable at class b state a sentence per class and
+ * none at the top level, so a reader taking `statement` gets `null` for them:
+ * `CDS-CSO-AVR` is SHOULD at class a and MUST at b and says so in each
+ * variant's own words. Whoever reviews these rules needs the sentence that
+ * binds THIS class, not the absence of one.
+ */
+export function effectiveStatement(rule: FrrRule, cls: OfferingClass): string | null {
+  return rule.statementByClass ? (rule.statementByClass[cls] ?? null) : rule.statement;
 }
 
 /**
@@ -1012,10 +1038,22 @@ export async function loadRuleRegister(rulesFile: string, pin: string): Promise<
           if (rule.force === undefined && rule.varies_by_class === undefined) {
             throw new CatalogSourceError(where, `${id} carries neither a force nor varies_by_class`);
           }
-          const forceByClass =
+          const variants =
             rule.varies_by_class === undefined
               ? null
-              : forceByClassOf(rule.varies_by_class, id, where);
+              : variantsByClassOf(rule.varies_by_class, id, where);
+          const forceByClass =
+            variants === null
+              ? null
+              : (Object.fromEntries(
+                  Object.entries(variants).map(([cls, v]) => [cls, v.force]),
+                ) as Partial<Record<OfferingClass, string>>);
+          const statementByClass =
+            variants === null
+              ? null
+              : (Object.fromEntries(
+                  Object.entries(variants).map(([cls, v]) => [cls, v.statement]),
+                ) as Partial<Record<OfferingClass, string>>);
 
           // Upstream's `requirement` arm counts a rule's single force and so
           // omits the class-varied rules; `withClass` counts every variant.
@@ -1038,6 +1076,7 @@ export async function loadRuleRegister(rulesFile: string, pin: string): Promise<
             subset,
             name: rule.name,
             statement: rule.statement ?? null,
+            statementByClass,
             force: rule.force ?? null,
             forceByClass,
             affects: rule.affects,

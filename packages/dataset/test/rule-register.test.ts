@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   addressableRules,
   effectiveForce,
+  effectiveStatement,
   loadRuleRegister,
   type RuleRegister,
 } from "../src/index.js";
@@ -151,6 +152,43 @@ describe("the FRR rule register", () => {
     const atB = addressableRules(r, "b").filter((x) => x.schemaUrl !== null);
     expect(atB).toHaveLength(22);
     expect(new Set(atB.map((x) => x.schemaUrl)).size).toBe(8);
+  });
+
+  /**
+   * `effectiveForce`'s other half, and it was missing — the same trap, one
+   * field over. A rule that states a sentence PER CLASS has none at the top
+   * level, so the first cut of this loader read `statement` there, took the
+   * `varies_by_class` block's force and discarded its statement, and returned
+   * `null` for 21 of the 129 rules addressable at class b — 18 of them among
+   * the 116 the appliance does not answer itself, which is precisely the set
+   * P2-1 has to read. The force came out right, which is what made it easy to
+   * miss.
+   *
+   * `CDS-CSO-AVR` is the case that shows why it matters rather than merely
+   * being untidy: availability reporting is SHOULD at class a and MUST at
+   * class b, and each variant says so in its own words. Whoever reviews these
+   * rules — P2-1 — needs the sentence binding THIS class.
+   */
+  it("reads the statement per class for the rules that state one", async () => {
+    const r = await register();
+    const atB = addressableRules(r, "b");
+    // every addressable rule has a sentence at this class: none reads null
+    const mute = atB.filter((x) => effectiveStatement(x, "b") === null).map((x) => x.id);
+    expect(mute).toEqual([]);
+    // and 21 of them would have, read off the top level alone
+    expect(atB.filter((x) => x.statement === null)).toHaveLength(21);
+
+    const avr = r.rules.find((x) => x.id === "CDS-CSO-AVR");
+    expect(avr?.statement).toBeNull();
+    expect(effectiveStatement(avr!, "a")).toContain("Class A Certifications SHOULD maintain a web service");
+    expect(effectiveStatement(avr!, "b")).toContain("Class B Certifications MUST maintain a web service");
+    // force and statement vary together, which is why one reader takes both
+    expect(effectiveForce(avr!, "a")).toBe("SHOULD");
+    expect(effectiveForce(avr!, "b")).toBe("MUST");
+    // a rule with a single statement is unchanged by the per-class reader
+    const inb = r.rules.find((x) => x.id === "AFC-CSO-INB");
+    expect(inb?.statementByClass).toBeNull();
+    expect(effectiveStatement(inb!, "b")).toBe(inb?.statement);
   });
 
   it("refuses a pin the file does not carry", async () => {
