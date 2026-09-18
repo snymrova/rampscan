@@ -153,3 +153,48 @@ describe("rule coverage — the block on the offering", () => {
     ).toThrow(/FRC-APP-AFC/);
   });
 });
+
+// R2.0 (docs/PLAN-SDR.md D4, D7): the two keys the SDR reads that nothing
+// declared before.
+describe("rule coverage — how far an addressed rule is addressed (SDR D4)", () => {
+  it("accepts the two SDR statuses an addressed rule can carry, and absence", () => {
+    for (const implementationStatus of ["Implemented", "Partially Implemented"]) {
+      expect(DeclaredRuleCoverage.parse({ ...addressed, implementationStatus })).toMatchObject({
+        implementationStatus,
+      });
+    }
+    expect(DeclaredRuleCoverage.parse(addressed)).not.toHaveProperty("implementationStatus");
+  });
+
+  /**
+   * "Not Implemented" is the other branch, and that branch requires a reason.
+   * Letting an addressed rule call itself not implemented would give a decline
+   * with no "why", which is the omission #167 rejects, one level down.
+   */
+  it("refuses Not Implemented on an addressed rule, and any status on a declined one", () => {
+    expect(() => DeclaredRuleCoverage.parse({ ...addressed, implementationStatus: "Not Implemented" })).toThrow();
+    expect(() => DeclaredRuleCoverage.parse({ ...addressed, implementationStatus: "implemented" })).toThrow();
+    expect(() => DeclaredRuleCoverage.parse({ ...declined, implementationStatus: "Implemented" })).toThrow();
+  });
+});
+
+describe("offering — where signed evidence is published (SDR D7)", () => {
+  it("is optional, and accepts an http(s) base", () => {
+    expect(OfferingConfig.parse(offering).evidenceBaseUri).toBeUndefined();
+    const evidenceBaseUri = "https://evidence.example.com/eep";
+    expect(OfferingConfig.parse({ ...offering, evidenceBaseUri }).evidenceBaseUri).toBe(evidenceBaseUri);
+  });
+
+  /** `/sha256/<hex>` is appended, so anything that would bend the joined address is refused. */
+  it("refuses a base the digest path cannot be appended to cleanly", () => {
+    for (const evidenceBaseUri of [
+      "https://evidence.example.com/eep/",
+      "https://evidence.example.com/eep?v=1",
+      "https://evidence.example.com/eep#bundles",
+      "ftp://evidence.example.com/eep",
+      "evidence.example.com/eep",
+    ]) {
+      expect(() => OfferingConfig.parse({ ...offering, evidenceBaseUri }), evidenceBaseUri).toThrow();
+    }
+  });
+});

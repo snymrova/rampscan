@@ -65,9 +65,14 @@ export interface FedrampExportRunResult {
   conformant: boolean;
 }
 
-async function emit(
+/**
+ * Validate, stamp, re-validate and write one schema-target document. Exported
+ * so the SDR (R2.1) is written by the same hand as the CPO and OCR — one stamp
+ * shape, one verdict rule, for every document `conformance` later reads.
+ */
+export async function emit(
   built: FedrampExport,
-  input: FedrampExportRunInput,
+  input: { schemaRoot: string; exportsDir: string },
 ): Promise<WrittenExport> {
   const pin = FEDRAMP_SCHEMA_PINS[built.schemaFile];
   if (pin === undefined) {

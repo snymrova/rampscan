@@ -218,6 +218,16 @@ export const DeclaredRuleCoverage = z.discriminatedUnion("status", [
     status: z.literal("addressed"),
     /** where it is addressed — a URL, a document and section, a named artifact */
     citation: declaredAnswer("citation"),
+    /**
+     * How far it is addressed, in the SDR's own words (R2.0,
+     * docs/PLAN-SDR.md D4). "Addressed" says a rule has an answer, not that the
+     * answer is complete, and the SDR's `frrImplementationStatus` asks which.
+     * Optional because the schema makes the field optional: absent here means
+     * the SDR omits it, never that it guesses `Implemented`. There is no
+     * `Not Implemented` value on this branch — that answer is the other status,
+     * and it carries a reason this branch has no slot for.
+     */
+    implementationStatus: z.enum(["Implemented", "Partially Implemented"]).optional(),
   }),
   z.strictObject({
     ruleId: frrRuleId,
@@ -332,6 +342,28 @@ export const OfferingConfig = z.strictObject({
    * appliance gets the first without having to make the second.
    */
   report: DeclaredReport.optional(),
+  /**
+   * Where the provider publishes signed evidence bundles, if anywhere (R2.0,
+   * docs/PLAN-SDR.md D7). The SDR's `evidenceLocation` must be an absolute URI.
+   * With this key it is `<evidenceBaseUri>/sha256/<hex>`, an address that
+   * resolves once the bundle is published there. Without it, the SDR uses an
+   * RFC 6920 `ni:` name over the same digest. That name identifies the bundle
+   * but does not locate it, and the SDR says so in its problems. rampscan
+   * publishes nothing itself (`SECURITY.md`), so this is a declaration about
+   * the provider's own hosting and is never inferred.
+   *
+   * No trailing slash, query or fragment, because the digest path is appended
+   * to it. A base that already ended in `/`, or carried `?x=1`, would produce
+   * an address that points somewhere other than where the bundle is published.
+   */
+  evidenceBaseUri: z
+    .string()
+    .url()
+    .refine((u) => /^https?:\/\//.test(u), { message: "evidenceBaseUri must be an http(s) URL" })
+    .refine((u) => !/[/?#]$/.test(u) && !u.includes("?") && !u.includes("#"), {
+      message: "evidenceBaseUri must not end in a slash or carry a query or fragment — /sha256/<hex> is appended to it",
+    })
+    .optional(),
   /**
    * Reason 3's answer, one entry per rule (P2-2). Absent is a legitimate state
    * and is not read as "nothing is addressed": `rampscan submission` prints
