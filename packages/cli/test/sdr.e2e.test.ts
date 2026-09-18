@@ -1,4 +1,5 @@
 import { execFile, execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -8,6 +9,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { repoFacts } from "@rampscan/collectors";
 import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import { scan } from "../src/scan.js";
+import { SDR_DIGEST_LINE } from "../src/sdr-render.js";
 
 // R2.1's exit, end to end through the real CLI (docs/PLAN-SDR.md §5, §7):
 // a scanned repository declaring an authored artifact 1 gets a schema-valid
@@ -138,6 +140,20 @@ describe("rampscan sdr, end to end (R2.1)", () => {
     expect((row["ksiEvidence"] as unknown[]).length).toBeGreaterThan(0);
     expect((doc["metadata"] as Record<string, string>)["lastUpdated"]).toBe(asOf);
     expect((doc["x-rampscan"] as Record<string, Record<string, boolean>>)["conformance"]!["valid"]).toBe(true);
+  }, 120_000);
+
+  /** R2.2 (D3): both formats, and the human half names the exact bytes beside it */
+  it("writes the Markdown half beside the JSON, carrying the JSON file's sha256", async () => {
+    const out = join(base, "out-md");
+    const run = await cli("sdr", appRoot, "--ledger", ledgerDir, "--out", out, "--as-of", asOf);
+    expect(run.code, run.stderr).toBe(0);
+    const dir = join(out, "exports/fedramp");
+    const json = await readFile(join(dir, SDR_FILE));
+    const md = await readFile(join(dir, "fedramp-security-decision-record.md"), "utf8");
+    expect(SDR_DIGEST_LINE.exec(md)?.[1]).toBe(createHash("sha256").update(json).digest("hex"));
+    expect(md).toContain(`### ${KSI}`);
+    expect(md).toContain("> ## Vulnerability tracking");
+    expect(run.stdout).toContain("fedramp-security-decision-record.md → the human-readable half");
   }, 120_000);
 
   it("writes identical bytes on a second run at the same --as-of", async () => {
