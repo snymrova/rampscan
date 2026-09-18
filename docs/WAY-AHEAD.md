@@ -49,7 +49,10 @@ corrected again in the same change and the two catalogs turn out to share every
 control edge, not just the ids (see §8). **P3-1 landed 2026-09-18** — the OCSF
 reader, which sets the `MANUAL` row aside by making the indicator *absent*
 from the grouping rather than present and empty, and corrected §10a on two
-counts. Next is **P3-2**, the soundness test, written before the adapter.
+counts. **P3-2 landed 2026-09-18** — the soundness test, before the adapter:
+the hazard shown real against the shared evaluator, and the adapter's
+obligations under `it.fails` against a declared contract (see §8). Next is
+**P3-3**, the adapter, which is not done until it unwraps all four.
 Then **P4 (#213)**, a trust-center fetchability probe.
 2. **S3** sends, with #72 by 2026-10-09 — S4 closed 2026-09-15 by the owner's call to finish the software first. S3-2 (#138) is researched and drafted in `docs/RESEARCH-S3-2-OUTREACH.md` (channels, a second public package, the sequence, the three drafts); its §4 corrections landed 2026-09-15 (the "only package" claim, the Filevine register §3b), so the sends wait only on the owner for addresses and the go; then S3-3 (#72) and S3-4 (#105).
 3. **T** — T0–T4 code complete 2026-09-16. What is left is the owner's: (a) a **sandbox AWS account** for the T3/T4 exit gates — `rampscan-runner init`, `rampscan runner register`, `rampscan runner policy` → attach, `rampscan serve --repo <the repo>`, click *Collect evidence* on `KSI-IAM-APM`; then remove `iam:GetCredentialReport` and click again for the `failed(denied)` row; (b) two upstream filings in S3-4's channel — the credential-report assertions spell `TRUE` where AWS prints `true` (every principal fails as published), and the `where`-alignment limit of labeled assertions (SPEC §14.4a); (c) whether T5 (scheduled requests, ECS/Lambda packaging) is wanted for the first release. Dependabot #194–#196 (react, zod, next 16 — issue #30's Turbopack risk) are open and untouched.
@@ -187,3 +190,19 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
   P3-4's call, and making it here would have buried it. Suite 1,382 across 118
   files; README regenerated under ground rule 4. Next item: P3-2, the soundness
   test — `it.fails` until P3-3.
+
+- **2026-09-18 (P3-2)** — #221 (P3-1) green and awaiting the owner's merge;
+  P3-2 branched from it. `packages/cli/test/prowler-ingest-soundness.test.ts`,
+  seven tests: three that **pass today** and show the hazard is real —
+  `count_eq 0` over no rows passes in the shared evaluator with
+  `population: 0`, the same assertion over a looked-at population still
+  discriminates, and a MANUAL-only indicator is absent from `byKsi` — and four
+  under `it.fails` that state what the adapter owes: MANUAL-only indicators
+  skipped and named, never a bundle; no assertion passing over a population of
+  zero; exit 0 not outvoting a FAIL row; and (3b, added) a non-zero exit
+  skipping every indicator. Obligation 2 is phrased to hold whichever way P3-4
+  decides muting, so this item does not take that call early. The adapter's
+  contract is declared in `packages/cli/src/prowler-ingest.ts` with a body that
+  throws — an empty result would read as "the scan evidenced nothing", the
+  conflation P3-1's missing-file refusal exists to stop. Suite 1,389 across 119
+  files; README regenerated under ground rule 4. Next item: P3-3, the adapter.

@@ -408,10 +408,24 @@ arithmetic.
   findings is refused. `byKsi` has no entry for a MANUAL-only indicator —
   absence, not an empty array, is what makes §4c structural rather than
   remembered.
-- **P3-2.** **The soundness test, written before the adapter** — the §4c
+- **P3-2. LANDED 2026-09-18.** **The soundness test, written before the adapter** — the §4c
   trio, as `ingest-soundness.test.ts` was written for #147: a KSI whose only
   row is `MANUAL` never reads `evidenced`; an assertion over zero surviving rows
   fails; exit 0 with `-z` does not outvote a FAIL row. `it.fails` until P3-3.
+  *As built:* `prowler-ingest-soundness.test.ts` in two halves. The first
+  **passes today** and is characterization: `count_eq 0` over an empty row set
+  passes in the shared evaluator with `population: 0` (the hazard is real, and
+  lives in any caller that lets nothing reach it), and a MANUAL-only indicator
+  is absent from the reader's `byKsi`. The second is the obligations, four
+  under `it.fails` — the trio plus **3b**, a non-zero exit skips every
+  indicator with no bundle, which is #147's rule restated for this door.
+  Obligation 2 is written to hold under **either** P3-4 outcome for muting
+  (exclude-and-name, or refuse), so P3-2 does not pre-decide P3-4. The
+  contract lives in `packages/cli/src/prowler-ingest.ts`: the signature,
+  `ProwlerRunDeclaration` (the exit code is **declared** by the client, since
+  §10b found the document carries none), and a body that throws rather than
+  returning an empty result — an empty answer would be indistinguishable from
+  a scan that evidenced nothing.
 - **P3-3.** The adapter: sniff on **content**, not filename (the labels.json
   lesson again — `compliance.standards[0]` is in every row);
   `IngestSubmission` per (check, KSI) grouping many rows, because one check over
