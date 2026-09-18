@@ -58,3 +58,11 @@ raw PASS (`cognito_user_pool_password_policy_lowercase`), plus one synthetic
 AWS check to. Written by us from the documented shape, not captured from a real
 scan; the account id is synthetic.
 
+## trust-center-probe
+
+`certification-package-overview.json` is a package overview built by
+`buildPackageOverview` from the exports test's synthetic offering. It
+validates against the pinned schema. P4's probe test serves it from a local
+`node:http` server to prove the one thing that reads `open`: a certification
+document that came back to an anonymous GET and validates.
+

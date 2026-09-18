@@ -229,7 +229,7 @@ found* from *never checked*.
 
 | Section | Asks | State today |
 |---|---|---|
-| `trust-center-gate` | does the declared trust center serve certification data without an acknowledgement gate? | **`unmeasured`, always, until P4.** Prints the declared URL and `authenticationRequired`, names `CDS-TRC-USH` / `CDS-TRC-PAC`, and says plainly that this appliance does not fetch. |
+| `trust-center-gate` | does the declared trust center serve certification data without an acknowledgement gate? | **`unmeasured` until P4.** Prints the declared URL and `authenticationRequired`, names `CDS-TRC-USH` / `CDS-TRC-PAC`, and says plainly that this appliance does not fetch. *Since P4 (2026-09-18):* measured from a `rampscan probe` transcript. Gated needs positive evidence, and only a click-through (or a login the offering denied having) is a rejection. Open needs a document that validates. See `RESEARCH-TRUST-CENTER-PROBE.md`. |
 | `unaddressed-rules` | is every applicable MUST/SHOULD addressed? | the new work — §4b |
 | `unaddressed-ksis` | is every applicable KSI addressed? | reads `ksi-register.ts`; the register already knows |
 | `missing-example` | does every applicable schema-bearing rule have a document supplied? | new, cheap, complete for all eight schemas |
