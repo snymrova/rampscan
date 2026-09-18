@@ -1,8 +1,9 @@
 # P3 — ingesting Prowler's 20x KSI output as a client-run source
 
 **Issue:** #212, under the milestone *P1–P4 — the crowded-field response*.
-**Status:** research, and the build reading from it. **P3-0 landed 2026-09-18**
-— the pin and the golden test — and corrected §2a on three counts in doing so;
+**Status:** research, and the build reading from it. **P3-0 and P3-1 landed
+2026-09-18** — the pin and its golden test, then the OCSF reader, which
+corrected §2a on three counts and §10a on two between them;
 §6 is the build list and the session log at the bottom moves the pointer. Every
 number here came out of a command over the pinned upstream file, §9 lists what
 the research could not establish, and §10 is where those answers landed.
@@ -385,21 +386,28 @@ arithmetic.
 
 ## 6. Build items
 
-- **P3-0.** Vendor `fedramp_20x_ksi_2026.json` pinned on `version` + `sha256`
+- **P3-0. LANDED 2026-09-18.** Vendor `fedramp_20x_ksi_2026.json` pinned on `version` + `sha256`
   (the fifth pin; the exact values are in §10f, and the pin records the source
   **commit** because no release carries the file), with the both-ways golden
   test of §4d. Failing test first: the id-set comparison, and a planted
   framework with an id that does not resolve at the pin refusing rather than
   skipping. The test compares **class applicability** as well as the id set
   (§10a) — the second place the two catalogs can diverge at a re-pin.
-- **P3-1.** The OCSF reader, against §10a's field table — **not §2d's**, which
+- **P3-1. LANDED 2026-09-18.** The OCSF reader, against §10a's field table — **not §2d's**, which
   names the CSV's columns: parse the JSON array of `ComplianceFinding` events,
   group by `compliance.requirements[0]`, and refuse a document that is not one
   (`compliance.standards[0]` not the KSI framework, a KSI id that does not
   resolve at the pin, a file that is not an array). **An absent or empty file
   is a refusal, not zero findings** (§10a: no findings means no file, and no
   `MANUAL` rows either). `MANUAL` rows recognised by all three of §10a's
-  markers and set aside here, not downstream.
+  markers and set aside here, not downstream. *As built:* the markers are
+  checked for **agreement** (one of three is a refusal, not a vote); the check
+  id is read off `event_code` and **matched** into `compliance.checks` rather
+  than indexed at `[0]`, which would have assumed an arity §10a never
+  established; and an indicator carrying both a MANUAL row and reported
+  findings is refused. `byKsi` has no entry for a MANUAL-only indicator —
+  absence, not an empty array, is what makes §4c structural rather than
+  remembered.
 - **P3-2.** **The soundness test, written before the adapter** — the §4c
   trio, as `ingest-soundness.test.ts` was written for #147: a KSI whose only
   row is `MANUAL` never reads `evidenced`; an assertion over zero surviving rows
@@ -736,3 +744,44 @@ against it either way. It does qualify §8's public argument, which should say
   comment explaining what the framework does *not* let us read cannot name the
   rule. It cost a sentence here; it would cost more in the adapter. Next item:
   P3-1, the OCSF reader.
+
+- **2026-09-18 (P3-1)** — The OCSF reader, `packages/cli/src/prowler-ocsf.ts`,
+  sixteen tests. Written against §10a's table rather than §2d's CSV columns, as
+  §6 says — and the value of that correction is concrete: of the six fields the
+  adapter turns on, **not one is spelled the way §2d had it**.
+  The two refusals the file exists for are both structural rather than
+  remembered. A `MANUAL` row is set aside **at the reader**, and the form of
+  that matters more than the fact: `byKsi` has **no entry** for an indicator
+  whose only row is synthetic, rather than an empty array. An adapter that
+  forgets §4c therefore cannot mint a pass from this output — it gets
+  `undefined` and has nothing to assert over. And a missing or empty file is a
+  refusal sharing its wording with the empty-array case, because
+  `if findings:` guards the transform that emits the manual rows too: "no file"
+  and "the scan evidenced nothing" are different facts and the reader never
+  lets them meet.
+  **Two things the note had left under-determined, found by writing it.**
+  First, §10a lists `compliance.checks[0].uid` *and* `metadata.event_code` as
+  carrying the check id without establishing that `checks` has exactly one
+  entry — so reading `[0]` would have been an **assumption about arity** wearing
+  a field name. The reader takes the id from `event_code`, which unambiguously
+  names the check that produced the finding, then **searches** `checks` for that
+  uid to get the raw status, and refuses a row where none matches. Same read,
+  no assumption, and the failure mode is a refusal instead of a status
+  attributed to whichever check happened to be first. Second, §10a's three
+  MANUAL markers are checked **for agreement**: one or two of three is a
+  refusal, not a vote. Guessing which marker wins is guessing whether thirteen
+  indicators get evaluated.
+  One refusal §6 did not ask for, added because the document permits it and
+  nothing downstream could resolve it: an indicator carrying **both** a
+  synthetic MANUAL row and reported findings. One says no check reaches it and
+  the other is a check's result for it; nothing in the file decides which, so
+  the document is refused rather than averaged.
+  Left decided-nothing on purpose: `muted` is **read and recorded**, and the
+  reader does not act on it — whether a muted FAIL counts is P3-4's call, and
+  making it here would have buried it. The `status` vocabulary is closed to
+  `New`/`Suppressed` anyway, because a third value read as "not suppressed" is
+  a mute this appliance did not notice. `PROWLER_OCSF_STANDARD` is **built from
+  the pin** rather than typed, so a re-pin cannot leave a literal pointing at
+  the old framework; a scan run against any other version is refused at the
+  first row. Suite 1,382 across 118 files, README regenerated. Next item:
+  P3-2, the soundness test — written before the adapter, `it.fails` until P3-3.
