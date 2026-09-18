@@ -87,10 +87,18 @@ jobs:
       # default met `scan`'s openvex.json — a document no FedRAMP schema gates
       # — and exited. A gate that only passes when pointed somewhere other than
       # where it points itself is not testing the thing a provider would run.
+      #
+      # R2.3: the Security Decision Record joins them in the same directory, so
+      # `conformance` gates its schema here too. Its rule verdict prints and does
+      # NOT gate (no --require-rules): this repository declares no rule coverage
+      # and authors no artifacts, and with no ledger in CI every KSI row is
+      # empty. A gate that is red from the first run gets switched off. The
+      # verdict stays loud in the log, where it belongs.
       - name: package conformance check (FRC-CSO-JSN) over our own exports
         run: |
           set -euo pipefail
           pnpm rampscan exports --ledger "$RUNNER_TEMP/absent-ledger" --out "$RUNNER_TEMP/conformance"
+          pnpm rampscan sdr --ledger "$RUNNER_TEMP/absent-ledger" --out "$RUNNER_TEMP/conformance"
           pnpm rampscan conformance --out "$RUNNER_TEMP/conformance"
 
   # T3-0 (docs/PLAN-CLOUD-RUNNER.md, SPEC §14.4): the real `aws` binary against
