@@ -7,6 +7,7 @@ import {
   type SchemaViolation,
 } from "./fedramp-schemas.js";
 import { OCR_ARTIFACT, PACKAGE_OVERVIEW_ARTIFACT } from "./fedramp-exports.js";
+import { SDR_ARTIFACT } from "./sdr-build.js";
 
 // The package conformance check (plan Q5.2 — G10, `FRC-CSO-JSN`): certification
 // JSON validated against the pinned FedRAMP schemas, as a check over documents
@@ -44,6 +45,7 @@ import { OCR_ARTIFACT, PACKAGE_OVERVIEW_ARTIFACT } from "./fedramp-exports.js";
 const KNOWN_ARTIFACTS: Readonly<Record<string, string>> = {
   [PACKAGE_OVERVIEW_ARTIFACT]: "fedramp-certification-package-overview-schema-2026-06-24.json",
   [OCR_ARTIFACT]: "fedramp-ongoing-certification-report-schema-2026-06-24.json",
+  [SDR_ARTIFACT]: "fedramp-security-decision-record-schema-2026-06-24.json",
 };
 
 export interface ConformanceFinding {

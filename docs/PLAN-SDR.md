@@ -89,17 +89,17 @@ Items marked **(owner)** need an answer before or during the build. The owner ha
 
 **D3. The human-readable half is rendered from the built JSON object, not from the projection.** One computation feeds both formats, so they cannot disagree. The Markdown header carries the sha256 of the JSON bytes, and R2.3 checks that the pair still matches. Markdown suits a repository, and R5 owns an HTML or console rendering.
 
-**D4. `fedRampRequirements[]` has one row where the register speaks or the provider declared, and no row otherwise.** This is the parent plan's "populated where the register speaks and declared where it does not".
+**D4. `fedRampRequirements[]` has one row where the provider declared, and no row otherwise.** *(Narrowed while building R2.1: the first draft also gave a row to every rule in `COMPUTED_RULES`. The schema permits an empty `frrImplementation`, but such a row carries no explanation of how the rule is followed, which is what `SDR-CSO-FRR` asks for. It would also read as answered to `submission --sdr` and to FedRAMP. That is §9.3's "computed excuses nothing" again. So an undeclared computed rule gets no row. It is listed in `unaddressedRules` with `computedBy`, and a declared one gets rampscan's validation line.)* This is the parent plan's "populated where the register speaks and declared where it does not".
 - `ruleCoverage: addressed` → `frrImplementation` = the citation.
 - `ruleCoverage: not-implemented` → status `Not Implemented` and `frrImplementation` = the reason (grounded in FedRAMP/schemas#21).
-- A rule in `COMPUTED_RULES` → `frrValidation` gets the answering surface and its current result.
+- A declared rule that is also in `COMPUTED_RULES` → `frrValidation` names the rampscan surface that computes it. The current result lives on that surface; the SDR does not re-run it.
 - An undeclared, uncomputed rule gets **no row**, and is named in `x-rampscan.unaddressedRules` and in `problems`. A row with an empty implementation would be schema-valid and would hide the omission from `submission --sdr`. That check exists because FedRAMP rejects on the missing row (P2-1, research note §9).
 - Small schema change: `addressed` gains an optional `implementationStatus` (`Implemented` | `Partially Implemented`). "Addressed" alone does not say which. When it is absent, `frrImplementationStatus` is omitted, which the schema permits.
 
 **D5. `certificationPackageOverviewUri` reuses the declaration that already exists, `offering.report.certificationPackageOverviewUri`** (`packages/schema/src/offering.ts:98`). The OCR already reads it from there. One fact gets one declaration: a second key would let the SDR and the OCR name two different CPOs. If it is absent, no SDR JSON is written and the outcome says why. This is the OCR's incidents refusal again: a required field is never defaulted. rampscan's own config already declares a value (the README URL), so the exit gate needs no new configuration. There is one wrinkle. The key sits inside `report`, the OCR's block, so a provider who wants an SDR before their first OCR has to declare the `report` block. If that bites, hoisting the key to `offering` is a small, separate change. No owner call is needed.
 
 **D6 (owner; decided 2026-09-18: compute it). `ksiImplementationStatus` is computed conservatively: it may understate, it may never overstate.**
-- `Not Implemented`: no method holds live evidence.
+- `Not Implemented`: no method holds live evidence that passed. As built (R2.1), this includes a KSI whose only live evidence is a violated check: a failed measurement shows the KSI is not met, so calling it partial would overstate it.
 - `Implemented`: all of the following hold, and nothing less:
   - the floor is met (or the class owes no floor and at least one automated method is live),
   - `staleMethods == 0`,
@@ -152,7 +152,7 @@ Historical metrics are **not** in R2. They land in R3.3 (#108) in this same bloc
 |---|---|---|
 | `certificationPackageOverviewUri` | `offering.certificationPackageOverviewUri` | declared |
 | `metadata.*` | the fold's instant, content digest, tool version | computed |
-| `fedRampRequirements[].frrID` | `addressableRules(register, class)` ∩ (declared ∪ `COMPUTED_RULES`) | computed |
+| `fedRampRequirements[].frrID` | the declared `ruleCoverage` ids that name a rule at the pin (D4 as built) | declared |
 | `…frrImplementationStatus` | `ruleCoverage` status | declared |
 | `…frrImplementation` | citation or reason | declared |
 | `…frrValidation` | the `COMPUTED_RULES` surface plus its current result | computed |
@@ -187,7 +187,7 @@ The house convention applies: one squash PR per item, subjects suffixed `(#NN)`,
   - add `SDR-CSO-MTD`
   - reword `SDR-CSO-FRR` and `SDR-CSX-KSI` to name `rampscan sdr`
 
-  The drift guard in `submission.test.ts` forces the new entry. The README's computed-rule count moves 14 → 15 through the numbers gate, regenerated from the command.
+  The drift guard in `submission.test.ts` forces the new entry. The README's computed-rule count moves through the numbers gate, regenerated from the command. *As built: 15 → 17.* `SDR-CSX-KMT` was added too, because the SDR names it in its problems. The drift guard requires every cited rule to be in the map, and the `CDS-CSO-UTC` entry already counts a verdict of unmet, reported by name, as an answer.
 
 **Tests (failing first)**
 - **Schema:** the fixture ledger's SDR validates against the pinned schema, and a deliberately broken `lastUpdated` (a date-time where a date belongs) is refused.

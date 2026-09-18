@@ -11,6 +11,7 @@ import {
   loadKsiCatalog,
   loadRuleRegister,
   loadLocalDataset,
+  optionalKsis,
   type OfferingClass,
 } from "@rampscan/dataset";
 import { createLocalLedger } from "@rampscan/ledger";
@@ -37,6 +38,7 @@ import {
   probeTrustCenter,
 } from "./trust-center-probe.js";
 import { readSdrCoverage, type SdrCoverage } from "./sdr.js";
+import { renderSdr, writeSecurityDecisionRecord } from "./sdr-run.js";
 import { loadOffering } from "./offering.js";
 import { mintComputedArtifact } from "./artifacts.js";
 import { scaffoldArtifact } from "./artifacts-scaffold.js";
@@ -149,6 +151,13 @@ function usage(): never {
       "                    the scanned repo's declared `offering` block joined to the fold.",
       "                    Lands in <out>/exports/fedramp/. Exits 1 on a nonconforming document",
       "                    (FRC-CSO-JSN); every document carries its own conformance verdict",
+      "  sdr               the Security Decision Record (R2, SDR-CSO-FRR / SDR-CSX-KSI): one row",
+      "                    per KSI the class obliges, carrying its signed artifact bodies, its",
+      "                    derived tests and its live evidence, and one row per FedRAMP rule the",
+      "                    offering's ruleCoverage declares. An undeclared rule gets no row and is",
+      "                    named. Needs offering.report.certificationPackageOverviewUri. Lands in",
+      "                    <out>/exports/fedramp/; --as-of folds at a past instant for identical",
+      "                    bytes. Exits 1 on a nonconforming document (FRC-CSO-JSN)",
       "  conformance [path]  the package conformance check (plan Q5.2 — G10, FRC-CSO-JSN):",
       "                    certification JSON on disk validated against the PINNED FedRAMP",
       "                    schemas — rampscan's own exports or a document another tool wrote.",
@@ -338,6 +347,7 @@ async function main(): Promise<void> {
     command !== "gaps" &&
     command !== "artifacts" &&
     command !== "exports" &&
+    command !== "sdr" &&
     command !== "submission" &&
     certClass !== "b" &&
     certClass !== "c"
@@ -949,6 +959,85 @@ async function main(): Promise<void> {
       if (values.json) console.log(JSON.stringify(exportResult, null, 2));
       else console.log(renderFedrampExports(exportResult));
       if (!exportResult.conformant) process.exit(1);
+      return;
+    }
+    case "sdr": {
+      // The Security Decision Record, JSON half (R2.1, #102; docs/PLAN-SDR.md).
+      // A rendering of the fold beside the declared offering, the same as the
+      // CPO and OCR: nothing appended, nothing signed. With --as-of the fold
+      // instant is that instant, so two runs produce the same bytes.
+      const sdrRoot = target ?? ".";
+      const sdrOffering = await loadOffering(sdrRoot);
+      if (sdrOffering === undefined) {
+        console.error(
+          `no \`offering\` block in ${join(sdrRoot, "rampscan.config.json")} — the Security Decision Record needs the declared offering (its package overview address, its rule coverage) and cannot be generated from an evidence ledger alone`,
+        );
+        process.exit(1);
+      }
+      const sdrClass = (values.class ?? "b") as OfferingClass;
+      if (!OFFERING_CLASSES.includes(sdrClass)) usage();
+      const sdrAsOf = values["as-of"];
+      if (sdrAsOf !== undefined && Number.isNaN(Date.parse(sdrAsOf))) {
+        console.error(`--as-of is not a parseable instant: ${sdrAsOf}`);
+        process.exit(2);
+      }
+      const sdrAsOfIso = sdrAsOf !== undefined ? new Date(sdrAsOf).toISOString() : undefined;
+      const sdrCatalog = await loadKsiCatalog(catalogSources);
+      const sdrRules = await loadRuleRegister(rulesFile, datasetPin);
+      const sdrRecipes = await loadRecipes(recipesDir);
+      const sdrLedger = createLocalLedger(ledgerDir);
+      const sdrProjection = await createProjector({
+        recipes: sdrRecipes,
+        methods: deriveCatalogMethods(
+          sdrRecipes,
+          allCollectors.map((c) => c.manifest),
+        ),
+        ksiIds: sdrCatalog.ksis.map((k) => k.id),
+        methodFloor: sdrCatalog.floors[sdrClass].minPerKsi,
+        historyFloorMonths: sdrCatalog.historyFloors[sdrClass].months,
+        machineWindow: sdrCatalog.windows[sdrClass],
+        nonMachineWindow: sdrCatalog.nonMachineWindow,
+        ...(sdrAsOfIso !== undefined ? { asOf: sdrAsOfIso, now: () => new Date(sdrAsOfIso) } : {}),
+      }).fold(sdrLedger);
+      const sdrRepos = [...new Set(sdrProjection.methodRegisters.map((r) => r.repo))].sort();
+      if (sdrRepos.length > 1 && values.repo === undefined) {
+        console.error(
+          `the ledger holds ${sdrRepos.length} offerings (${sdrRepos.join(", ")}) — name the one this record speaks for with --repo`,
+        );
+        process.exit(1);
+      }
+      const sdrRepo = values.repo ?? sdrRepos[0];
+      // the newest statement the fold read, so the record names its ledger state
+      const sdrHead = (await sdrLedger.list())
+        .filter((e) => sdrAsOfIso === undefined || e.bundle.predicate.timestamp <= sdrAsOfIso)
+        .reduce<{ digest: string; at: string } | undefined>(
+          (best, e) =>
+            best === undefined || e.bundle.predicate.timestamp > best.at
+              ? { digest: e.digest, at: e.bundle.predicate.timestamp }
+              : best,
+          undefined,
+        );
+      const sdrResult = await writeSecurityDecisionRecord({
+        schemaRoot: REPO_ROOT,
+        exportsDir: join(values.out ?? "./rampscan-out", "exports", "fedramp"),
+        ledger: sdrLedger,
+        offering: sdrOffering,
+        offeringClass: sdrClass,
+        ...(sdrRepo !== undefined ? { repo: sdrRepo } : {}),
+        projectedAt: sdrProjection.projectedAt,
+        datasetVersion: sdrCatalog.datasetVersion,
+        ...(sdrHead !== undefined ? { ledgerHead: sdrHead.digest } : {}),
+        ksis: sdrCatalog.ksis.map((k) => ({ id: k.id, name: k.name })),
+        optionalKsis: optionalKsis(sdrCatalog, sdrClass),
+        defaultArtifacts: sdrCatalog.defaultArtifacts,
+        methodRegisters: sdrProjection.methodRegisters.filter(
+          (r) => sdrRepo === undefined || r.repo === sdrRepo,
+        ),
+        ruleRegister: sdrRules,
+      });
+      if (values.json) console.log(JSON.stringify(sdrResult, null, 2));
+      else console.log(renderSdr(sdrResult));
+      if (!sdrResult.conformant) process.exit(1);
       return;
     }
     case "conformance": {

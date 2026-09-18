@@ -72,8 +72,14 @@ export const COMPUTED_RULES: Readonly<Record<string, string>> = {
   // Security Decision Record carrying a row per applicable rule, and
   // `--sdr` now diffs exactly that. Note it does NOT excuse the rule's own
   // row — since §9.3 `computed` is axis B and excuses nothing.
-  "SDR-CSO-FRR": "`rampscan submission --sdr` diffs the record's fedRampRequirements against the rules addressable at the class, which is the coverage this rule obliges",
-  "SDR-CSX-KSI": "the artifact plane (R0/R1): the five artifacts owed per KSI",
+  "SDR-CSO-FRR": "`rampscan sdr` writes the record's JSON with a row per declared rule and names every undeclared one; `rampscan submission --sdr` diffs a record's fedRampRequirements against the rules addressable at the class",
+  // R2.1: `rampscan sdr` always emits the metadata block, computed from the
+  // fold — version from the content digest, never the wall clock
+  "SDR-CSO-MTD": "`rampscan sdr` computes the record's metadata: a content-digest version, the fold instant, and the ledger head it was rendered from",
+  // The CDS-CSO-UTC precedent: a verdict of unmet, reported by name, is an
+  // answer. The record carries no metrics until R3, and says so every time.
+  "SDR-CSX-KMT": "`rampscan sdr` reports by name that the record carries no historical metrics, citing FedRAMP/schemas#10 — unmet until R3 carries them",
+  "SDR-CSX-KSI": "the artifact plane (R0/R1): the five artifacts owed per KSI, rendered into each row of `rampscan sdr`",
   "VDR-CSO-FAV": "the failure-to-vulnerability feed — gaps G13",
   "VDR-TFR-MVX": "the machine validation window meter for the reporting class",
   "VDR-TFR-NMV": "the non-machine validation window, three months, for attested methods",
