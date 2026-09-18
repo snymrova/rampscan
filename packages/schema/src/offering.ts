@@ -136,6 +136,99 @@ export const DeclaredReport = z.strictObject({
 export type DeclaredReport = z.infer<typeof DeclaredReport>;
 
 /**
+ * FRR rule ids are three uppercase triplets — `FRC-CSX-VVK`, `CDS-CSO-UTC`.
+ * Checked here so a mistyped id fails at the config, and checked against the
+ * PIN by `submission.test.ts`, which asserts all 246 rule ids at the pinned
+ * rule set satisfy this shape. That second check is the one that matters: a
+ * future rule set numbering rules differently would make a legitimate
+ * declaration unparseable, and that must fail our test rather than a
+ * provider's config.
+ */
+const frrRuleId = z
+  .string()
+  .regex(
+    /^[A-Z]{3}-[A-Z]{3}-[A-Z]{3}$/,
+    "ruleId must be an FRR rule id — three uppercase triplets, e.g. FRC-CSX-VVK",
+  )
+  // A KSI indicator is the SAME shape (`KSI-CNA-OFA`), which makes it the most
+  // likely thing to be typed into this block by mistake — and the one thing
+  // that must not land here. Reason 3 has two halves: the rules, declared, and
+  // the KSIs, MEASURED from the method registers and the artifact plane. A KSI
+  // accepted here would let a provider declare their way past the half of #167
+  // rampscan actually computes, so it is refused by name and pointed at the
+  // surface that answers it.
+  .refine((id) => !id.startsWith("KSI-"), {
+    message:
+      "that is a KSI indicator, not an FRR rule — a KSI is answered by its validation methods and artifacts, which this appliance measures rather than reads from a declaration",
+  });
+
+/**
+ * Answers that are silence with extra steps. #167's ask is specifically that a
+ * provider *say why*, so a reason of "TBD" has not answered it, and a citation
+ * of "N/A" points at nothing. Refused at the declaration, where the person who
+ * typed one is still looking at it — ground rule 7 applied to a string.
+ */
+const NULL_ANSWERS = new Set(["n/a", "na", "n.a.", "none", "tbd", "todo", "pending", "unknown", "-", "—", "?"]);
+const declaredAnswer = (field: string) =>
+  z
+    .string()
+    .min(1)
+    .refine((s) => !NULL_ANSWERS.has(s.trim().toLowerCase()), {
+      message: `${field} must say something — "n/a", "TBD" and the like are exactly the omission #167 asks a provider not to make`,
+    });
+
+/**
+ * One applicable rule, addressed or declined (P2-2,
+ * docs/RESEARCH-REJECTION-LINTER.md §4b).
+ *
+ * WHY THIS EXISTS. FedRAMP/community#167's third listed reason for rejecting a
+ * submission is the only one that names the remedy in the same sentence:
+ * "ALL MUSTs and SHOULDs applicable to your class need to be addressed. If you
+ * don't have something implemented, say so and tell us why, don't just omit
+ * the KSI or rule altogether." So *declining* a rule with a reason is a pass
+ * and omitting it is the rejection — and before this block there was nowhere
+ * in a rampscan config to do the first. 129 rules are addressable at class b,
+ * the appliance itself answers 13, and the other 116 had no surface on which a
+ * provider could answer at all. The register counted them and deliberately
+ * refused to accuse them, because it could not tell silence from a declaration
+ * it does not read. This is that surface, and it is what turns reason 3 into a
+ * typed, tested requirement instead of a paragraph.
+ *
+ * THE FIELD NAMES ARE OURS, UNUSUALLY. Every other name in this file mirrors a
+ * FedRAMP schema on purpose (see the header). No FedRAMP schema has a slot for
+ * per-rule coverage, so these names cannot mirror one; they mirror #167's
+ * sentence instead, which is the nearest thing to a published vocabulary.
+ *
+ * THERE IS NO SLOT FOR "NOT APPLICABLE", AND THAT IS THE POINT. A provider can
+ * address a rule or decline it with a reason. A provider cannot declare a rule
+ * *outside* the appliance's reach or *inapplicable* to the offering, because
+ * applicability is declared upstream on the rule's own subset
+ * (`FRR.<doc>.info.subsets.<subset>.applicability`) and is read, never
+ * accepted — and the `outside` state is rampscan's own reviewed set (P2-1),
+ * written down with a reason per rule the way `recipes/aws-actions/allowlist.json`
+ * records a refused action. A config key that let a rule drift into `outside`
+ * would be the one escape hatch capable of emptying this whole check, so the
+ * type has no slot for one. Same mechanism as `certificationDataChanges`
+ * twenty lines up: the refusal is structural, not a validation rule someone
+ * can argue with.
+ */
+export const DeclaredRuleCoverage = z.discriminatedUnion("status", [
+  z.strictObject({
+    ruleId: frrRuleId,
+    status: z.literal("addressed"),
+    /** where it is addressed — a URL, a document and section, a named artifact */
+    citation: declaredAnswer("citation"),
+  }),
+  z.strictObject({
+    ruleId: frrRuleId,
+    status: z.literal("not-implemented"),
+    /** #167: "say so and tell us why" — the why is this field, and it is required */
+    reason: declaredAnswer("reason"),
+  }),
+]);
+export type DeclaredRuleCoverage = z.infer<typeof DeclaredRuleCoverage>;
+
+/**
  * The block itself. `{ offering: { ... } }` in rampscan.config.json, beside
  * `graph`, `contract` and `documents`.
  */
@@ -239,5 +332,37 @@ export const OfferingConfig = z.strictObject({
    * appliance gets the first without having to make the second.
    */
   report: DeclaredReport.optional(),
+  /**
+   * Reason 3's answer, one entry per rule (P2-2). Absent is a legitimate state
+   * and is not read as "nothing is addressed": `rampscan submission` prints
+   * every rule it cannot itself answer as `unaddressed` and says plainly that
+   * the count is an upper bound, which is the same thing this key's absence
+   * means. An EMPTY array, though, is refused — it declares nothing while
+   * looking like a declaration, and the distinction between "no answer" and
+   * "an answer that says nothing" is the one this whole block exists to draw.
+   */
+  ruleCoverage: z
+    .array(DeclaredRuleCoverage)
+    .min(1, "an empty ruleCoverage declares nothing — omit the key instead of declaring silence")
+    .superRefine((rules, ctx) => {
+      // One rule, one answer. Two entries for a rule would let a config both
+      // address it and decline it, and the register would print whichever it
+      // read last — the same refusal as the artifact plane's "one slot, one
+      // observation" (artifact-declarations.ts).
+      const seen = new Set<string>();
+      const repeated = new Set<string>();
+      for (const rule of rules) {
+        if (seen.has(rule.ruleId)) repeated.add(rule.ruleId);
+        seen.add(rule.ruleId);
+      }
+      const twice = [...repeated].sort();
+      if (twice.length > 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: `declared twice in ruleCoverage: ${twice.join(", ")} — one rule, one answer, or the register prints whichever it read last`,
+        });
+      }
+    })
+    .optional(),
 });
 export type OfferingConfig = z.infer<typeof OfferingConfig>;

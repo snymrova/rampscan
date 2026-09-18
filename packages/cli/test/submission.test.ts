@@ -33,6 +33,27 @@ async function citedIn(file: string): Promise<Set<string>> {
   return new Set((text.match(RULE_ID) ?? []).filter((id) => !id.startsWith("KSI-")));
 }
 
+/** an offering declaring the bare minimum the schema accepts, plus whatever a test needs */
+function declaredOffering(extra: Record<string, unknown> = {}) {
+  return OfferingConfig.parse({
+    providerName: "Example Cloud Inc.",
+    serviceName: "Example Evidence Plane",
+    serviceAcronym: "EEP",
+    serviceDescription: "A CI/CD evidence plane for FedRAMP 20x key security indicators.",
+    certificationType: "20x",
+    fedRampPackageId: "Example Cloud Inc. (EEP)",
+    website: "https://example.com/eep",
+    logo: "https://example.com/logo.svg",
+    serviceType: ["SaaS"],
+    deploymentModel: "Public Cloud",
+    contactInformation: [
+      { contactType: "Security", contactName: "Security Team", contactEmail: "security@example.com" },
+      { contactType: "Sales", contactName: "Sales Team", contactPhone: "202-555-0123" },
+    ],
+    ...extra,
+  });
+}
+
 // P2-3 (docs/RESEARCH-REJECTION-LINTER.md §4). The rejection register: one
 // section per reason FedRAMP published in community#167, each carrying the
 // reason's own words and the rules that make it binding.
@@ -103,11 +124,12 @@ describe("the rejection register", () => {
   /**
    * The exit-code decision, pinned so it cannot regress into either failure
    * mode by accident. §4b: reporting 116 unaddressed rules as rejections is a
-   * false accusation at scale — the appliance cannot tell "the provider is
-   * silent" from "the provider said so somewhere this appliance does not
-   * read" until P2-2 gives them a place to say it. Reporting them as fine is
-   * the vacuous pass. So they are counted, named, printed loud, and are not
-   * rejections; and the note says why in the register itself.
+   * false accusation at scale — with P2-1 unbuilt there is no reviewed
+   * `outside` set, so a rule no local appliance could ever answer (a FedRAMP
+   * Marketplace listing is not a property of a git checkout) reads exactly
+   * like one a provider omitted. Reporting them as fine is the vacuous pass.
+   * So they are counted, named, printed loud, and are not rejections; and the
+   * note says why in the register itself.
    */
   it("counts unaddressed rules loudly without calling them rejections", async () => {
     const view = await buildRejectionRegister({ register: await register(), offeringClass: "b" });
@@ -116,7 +138,9 @@ describe("the rejection register", () => {
     expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
     expect(section?.note).toContain("UPPER BOUND");
     expect(section?.note).toContain("P2-1");
-    expect(section?.note).toContain("P2-2");
+    // with no offering at all the note says so, rather than reading as though
+    // a provider had declared and been found wanting
+    expect(section?.note).toContain("No offering declaration was supplied");
     // the four undeclared-applicability subsets are named where the denominator is
     expect(section?.note).toContain("FRC/CSX");
   });
@@ -230,22 +254,7 @@ describe("the rejection register", () => {
   it("gives every rule the exports' problems actually cite a section to land in", async () => {
     // an offering that declares the minimum, so every absence-driven problem
     // in the channel fires at once
-    const offering = OfferingConfig.parse({
-      providerName: "Example Cloud Inc.",
-      serviceName: "Example Evidence Plane",
-      serviceAcronym: "EEP",
-      serviceDescription: "A CI/CD evidence plane for FedRAMP 20x key security indicators.",
-      certificationType: "20x",
-      fedRampPackageId: "Example Cloud Inc. (EEP)",
-      website: "https://example.com/eep",
-      logo: "https://example.com/logo.svg",
-      serviceType: ["SaaS"],
-      deploymentModel: "Public Cloud",
-      contactInformation: [
-        { contactType: "Security", contactName: "Security Team", contactEmail: "security@example.com" },
-        { contactType: "Sales", contactName: "Sales Team", contactPhone: "202-555-0123" },
-      ],
-    });
+    const offering = declaredOffering();
     const exportInput = {
       offering,
       offeringClass: "b" as const,
@@ -325,5 +334,140 @@ describe("the rejection register", () => {
     const text = renderRejectionRegister(view, false);
     expect(text).toContain("… 1 more: MLA×1");
     expect(text).not.toContain("KSI×");
+  });
+});
+
+// P2-2 (docs/RESEARCH-REJECTION-LINTER.md §4b). The declaration surface:
+// #167's third reason is the only one that names its own remedy — "if you
+// don't have something implemented, say so and tell us why" — and before this
+// there was nowhere in a rampscan config to say it. These tests pin the four
+// things that must not blur: a declaration counts, a declaration does not
+// overwrite a measurement, a declaration of a rule that does not exist is a
+// finding rather than a no-op, and a declaration the class does not oblige
+// does not inflate the numerator.
+describe("reason 3's declaration surface", () => {
+  /**
+   * The guard on `frrRuleId`. The schema refuses a ruleId that is not three
+   * uppercase triplets, which is only safe while every rule id at the pin IS
+   * one. A rule set that numbered rules differently would make a legitimate
+   * declaration unparseable — and that must fail here, where it is our bug,
+   * rather than in a provider's config, where it looks like theirs.
+   */
+  it("accepts every rule id the pinned rule set carries", async () => {
+    const ids = (await register()).rules.map((r) => r.id);
+    expect(ids.length).toBe(246);
+    const offering = declaredOffering({
+      ruleCoverage: ids.map((ruleId) => ({ ruleId, status: "addressed", citation: "SSP §1" })),
+    });
+    expect(offering.ruleCoverage).toHaveLength(246);
+  });
+
+  it("moves a declared rule out of unaddressed, whether addressed or declined", async () => {
+    const r = await register();
+    const view = await buildRejectionRegister({
+      register: r,
+      offeringClass: "b",
+      // §4b's own two examples: neither is visible to a local appliance, and
+      // both are exactly what #167 asks a provider to speak to rather than omit
+      offering: declaredOffering({
+        ruleCoverage: [
+          {
+            ruleId: "FRC-APP-MLF",
+            status: "not-implemented",
+            reason: "the offering is not yet listed in the FedRAMP Marketplace; the listing request is filed",
+          },
+          { ruleId: "FRC-APP-AFC", status: "addressed", citation: "application submitted 2026-09-02, ref A-1187" },
+        ],
+      }),
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-rules");
+    // the arithmetic still closes on the denominator — two rules moved, none created
+    expect(section?.states).toEqual({ computed: 13, declared: 2, outside: 0, unaddressed: 114 });
+    const total = Object.values(section!.states!).reduce((a, b) => a + b, 0);
+    expect(total).toBe(addressableRules(r, "b").length);
+    expect(section?.rows).toHaveLength(114);
+    expect(section?.rows.map((row) => row.subject)).not.toContain("FRC-APP-MLF");
+    // and a declaration is not a verification: the note says which one it is
+    expect(section?.note).toContain("1 declared addressed by citation and 1 declared not implemented");
+    expect(section?.note).toContain("does NOT verify");
+  });
+
+  /**
+   * SPEC §12.4 rule 3, arriving from a new direction: a declared value has no
+   * standing where a computed one exists. `FRC-CSX-VVK` is the method floor —
+   * rampscan measures it — so a config declaring it addressed does not move it
+   * into `declared`, and the overlap is reported rather than silently
+   * resolved in favour of whichever answer was read last.
+   */
+  it("keeps a computed rule computed when the offering declares it too", async () => {
+    const view = await buildRejectionRegister({
+      register: await register(),
+      offeringClass: "b",
+      offering: declaredOffering({
+        ruleCoverage: [
+          { ruleId: "FRC-CSX-VVK", status: "addressed", citation: "every KSI has two automated methods" },
+        ],
+      }),
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-rules");
+    expect(section?.states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
+    expect(section?.note).toContain("FRC-CSX-VVK");
+    expect(section?.note).toContain("a declaration does not overwrite a measurement");
+  });
+
+  /**
+   * A mistyped rule id is the failure mode this surface introduces, so it is
+   * the one it must catch: the config reads as answered while the rule the
+   * provider meant is still unaddressed. It prints as a rejection, and it
+   * prints FIRST — the renderer shows the leading rows in full and groups the
+   * tail, and a finding buried under 116 queue rows is a finding nobody reads.
+   */
+  it("reports a declaration of a rule that does not exist, at the head of the queue", async () => {
+    // the same offering, with and without the mistyped declaration, so the one
+    // extra rejection is the declaration's and nothing else's
+    const bare = await buildRejectionRegister({
+      register: await register(),
+      offeringClass: "b",
+      offering: declaredOffering(),
+    });
+    const view = await buildRejectionRegister({
+      register: await register(),
+      offeringClass: "b",
+      offering: declaredOffering({
+        ruleCoverage: [{ ruleId: "FRC-APP-MFL", status: "addressed", citation: "listed in the marketplace" }],
+      }),
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-rules");
+    expect(section?.rows[0]?.subject).toBe("FRC-APP-MFL");
+    expect(section?.rows[0]?.rejection).toBe(true);
+    expect(section?.rows[0]?.detail).toContain("no rule with this id exists");
+    expect(view.rejections).toBe(bare.rejections + 1);
+    // the typo answered nothing, so nothing moved out of unaddressed either
+    expect(section?.states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
+    expect(renderRejectionRegister(view, false)).toContain("FRC-APP-MFL");
+  });
+
+  /**
+   * Harmless over-declaration, counted and not punished. `CMU-CSO-UVM` is
+   * addressable at class c and not at class b, so a provider declaring toward
+   * c and scanning at b has said something true about a rule this class does
+   * not oblige. It is named in the note and kept out of a denominator it is
+   * not in — the same discipline as the KSI arm's optional indicators.
+   */
+  it("counts a declaration the class does not oblige without letting it into the numerator", async () => {
+    const r = await register();
+    expect(addressableRules(r, "b").some((x) => x.id === "CMU-CSO-UVM")).toBe(false);
+    expect(addressableRules(r, "c").some((x) => x.id === "CMU-CSO-UVM")).toBe(true);
+    const view = await buildRejectionRegister({
+      register: r,
+      offeringClass: "b",
+      offering: declaredOffering({
+        ruleCoverage: [{ ruleId: "CMU-CSO-UVM", status: "addressed", citation: "the class c uptime meter" }],
+      }),
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-rules");
+    expect(section?.states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
+    expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
+    expect(section?.note).toContain("class b does not oblige (CMU-CSO-UVM)");
   });
 });

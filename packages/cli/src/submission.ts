@@ -1,5 +1,5 @@
 import { readdir } from "node:fs/promises";
-import type { OfferingConfig } from "@rampscan/schema";
+import type { DeclaredRuleCoverage, OfferingConfig } from "@rampscan/schema";
 import {
   addressableRules,
   effectiveForce,
@@ -105,11 +105,12 @@ export interface RejectionRow {
   force?: string;
   /**
    * Set when the row is a rejection this appliance can stand behind, which is
-   * what the exit code counts. An `unaddressed` rule is NOT one: without the
-   * declaration surface (P2-2) and the reviewed `outside` set (P2-1) the
-   * appliance cannot distinguish "the provider is silent" from "the provider
-   * said so somewhere this appliance does not read", and reporting 116 rows as
-   * rejections is the false accusation at scale §4b warns about.
+   * what the exit code counts. An `unaddressed` rule is NOT one: with P2-1
+   * unbuilt there is no reviewed `outside` set, so a rule no local appliance
+   * could ever see — a FedRAMP Marketplace listing is not a property of a git
+   * checkout — is indistinguishable from one the provider simply omitted, and
+   * reporting 116 rows as rejections is the false accusation at scale §4b
+   * warns about.
    */
   rejection?: true;
 }
@@ -223,6 +224,46 @@ export async function buildRejectionRegister(
   });
 
   // ---- reason 3, the rule half -----------------------------------------
+  //
+  // P2-2: the offering's own `ruleCoverage` declaration, which is where #167's
+  // "say so and tell us why" lands. Three things a declaration must not be
+  // allowed to do, each handled below rather than in the loop, because each is
+  // about the declaration and not about the rule:
+  //
+  //   - OVERRIDE A COMPUTATION. A rule this appliance answers itself stays
+  //     `computed` whatever the config says, the same refusal SPEC §12.4 rule 3
+  //     makes of an overlay carrying an owed number. The note reports the
+  //     overlap rather than silently preferring one of two answers.
+  //   - COVER A RULE THAT DOES NOT EXIST. A mistyped id is not a harmless
+  //     no-op: it means the rule the provider MEANT is still unaddressed while
+  //     the config looks answered. It prints as a rejection.
+  //   - INFLATE THE NUMERATOR. A declaration for a rule the class does not
+  //     oblige is harmless — a provider may be declaring toward class c — but
+  //     it is counted in the note, never against a denominator it is not in.
+  const coverage = new Map<string, DeclaredRuleCoverage>(
+    (input.offering?.ruleCoverage ?? []).map((entry) => [entry.ruleId, entry]),
+  );
+  const addressableIds = new Set(addressable.map((r) => r.id));
+  const declaredOverComputed: string[] = [];
+  const declaredNotAddressable: string[] = [];
+  const unresolvableDeclarations: RejectionRow[] = [];
+  for (const [id, entry] of coverage) {
+    if (!byId.has(id)) {
+      unresolvableDeclarations.push({
+        subject: id,
+        detail:
+          `declared ${entry.status} in the offering's ruleCoverage, but no rule with this id exists at dataset ` +
+          `${register.datasetVersion} — a mistyped id leaves the rule it meant unaddressed while the config reads as answered`,
+        ruleId: id,
+        rejection: true,
+      });
+    } else if (COMPUTED_RULES[id] !== undefined) {
+      declaredOverComputed.push(id);
+    } else if (!addressableIds.has(id)) {
+      declaredNotAddressable.push(id);
+    }
+  }
+
   const states: Record<RuleState, number> = {
     computed: 0,
     declared: 0,
@@ -230,17 +271,26 @@ export async function buildRejectionRegister(
     unaddressed: 0,
   };
   const unaddressed: RejectionRow[] = [];
+  let declaredAddressed = 0;
+  let declaredNotImplemented = 0;
   for (const rule of addressable) {
     if (COMPUTED_RULES[rule.id] !== undefined) {
       states.computed += 1;
       continue;
     }
-    // `declared` and `outside` are unreachable until P2-2 and P2-1 exist.
-    // They are counted rather than omitted so the register's arithmetic is
-    // the same shape before and after those land, and a reader can see that
-    // the zero is a missing surface and not a measured absence.
+    const declared = coverage.get(rule.id);
+    if (declared !== undefined) {
+      states.declared += 1;
+      if (declared.status === "addressed") declaredAddressed += 1;
+      else declaredNotImplemented += 1;
+      continue;
+    }
+    // `outside` stays unreachable until P2-1 exists. It is counted rather than
+    // omitted so the register's arithmetic has the same shape before and after
+    // that lands, and a reader can see the zero is a missing surface and not a
+    // measured absence.
     states.unaddressed += 1;
-    unaddressed.push(ruleRow(rule, cls, "no rampscan surface answers this rule"));
+    unaddressed.push(ruleRow(rule, cls, "no rampscan surface answers this rule, and the offering declares nothing about it"));
   }
   sections.push({
     section: "unaddressed-rules",
@@ -254,13 +304,28 @@ export async function buildRejectionRegister(
       (register.applicabilityUnstated.length > 0
         ? `, including the rules of ${register.applicabilityUnstated.join(", ")}, whose subsets declare no applicability at all and which are therefore counted as owed`
         : "") +
-      `. The ${states.unaddressed} unaddressed is an UPPER BOUND and not a finding: no rule can yet be declared ` +
-      `addressed (P2-2 unbuilt — the offering declaration has no rule-coverage block) or ruled structurally ` +
-      `outside a local appliance (P2-1 unbuilt — that set is a reviewed artifact, like the AWS allowlist), so ` +
-      `every rule this appliance does not itself answer falls here by construction. That is why these rows are ` +
-      `not counted as rejections: reporting them as such would be a false accusation at scale, and reporting ` +
-      `them as fine would be the vacuous pass`,
-    rows: unaddressed,
+      `. ${states.computed} this appliance answers itself. ` +
+      (input.offering === undefined
+        ? "No offering declaration was supplied, so no rule can be declared addressed. "
+        : coverage.size === 0
+          ? "The offering declares no ruleCoverage, so no rule can be declared addressed. "
+          : `${declaredAddressed} declared addressed by citation and ${declaredNotImplemented} declared not implemented with a reason — ` +
+            `which #167 asks for explicitly and which this appliance does NOT verify: it checks that an answer exists, never that it is true. ` +
+            (declaredOverComputed.length > 0
+              ? `${declaredOverComputed.length} declaration(s) name a rule this appliance computes (${declaredOverComputed.sort().join(", ")}) and are counted as computed, not declared: a declaration does not overwrite a measurement. `
+              : "") +
+            (declaredNotAddressable.length > 0
+              ? `${declaredNotAddressable.length} declaration(s) name a rule class ${cls} does not oblige (${declaredNotAddressable.sort().join(", ")}), counted here against no denominator. `
+              : "")) +
+      `The ${states.unaddressed} unaddressed is an UPPER BOUND and not a finding: with P2-1 unbuilt no rule can yet ` +
+      `be ruled structurally outside a local appliance's reach — a FedRAMP Marketplace listing is not a property of a ` +
+      `git checkout — so a rule nobody could answer here is indistinguishable from one a provider omitted. That is why ` +
+      `these rows are printed as the queue rather than counted as rejections: reporting them as rejections would be a ` +
+      `false accusation at scale, and reporting them as fine would be the vacuous pass`,
+    // The unresolvable declarations lead, ahead of the queue: the renderer
+    // prints the first rows in full and groups the tail, and a typo'd rule id
+    // buried under 116 queue rows is a finding nobody reads.
+    rows: [...unresolvableDeclarations, ...unaddressed],
   });
 
   // ---- reason 3, the KSI half ------------------------------------------

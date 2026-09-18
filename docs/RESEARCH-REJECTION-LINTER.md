@@ -2,7 +2,12 @@
 
 > **Status.** Research and design, 2026-09-18. **P2-0 built 2026-09-18**; its
 > numbers corrected §2a in the same change, because they did not reproduce.
-> The build items are §6; the estimate and its caveat are §7.
+> **P2-3 and P2-4 built 2026-09-18** — `rampscan submission` ships the six
+> sections. **P2-2 built 2026-09-18**: `offering.ruleCoverage` is the
+> declaration surface, so `declared` is now a reachable state and §4b's table
+> is three-quarters live. `outside` still is not, which is P2-1 and is why the
+> unaddressed count remains an upper bound rather than a finding. The build
+> items are §6; the estimate and its caveat are §7.
 
 ## 1. The source
 
@@ -267,6 +272,31 @@ so this is a deliberate change) gains a rule-coverage block where a provider
 addresses a rule with a citation or declines it with a reason. The linter then
 refuses silence — which is #167's reason 3 turned into a typed, tested
 requirement, and is the part of P2 that no other tool in this field does.
+
+> **Built 2026-09-18, P2-2.** `offering.ruleCoverage`, a discriminated union on
+> `status`: `addressed` carries a `citation`, `not-implemented` carries a
+> `reason`, and `strictObject` on each arm means the wrong field for the status
+> refuses rather than declaring nothing. Two refusals were not in this design
+> and were found while building it, both worth recording because both are the
+> same mistake wearing different clothes:
+>
+> - **A KSI indicator is the same shape as a rule id** (`KSI-CNA-OFA` against
+>   `FRC-CSX-VVK`), so the regex that was supposed to catch typos accepted one.
+>   It is refused by name now. Reason 3 has two halves and the KSI half is the
+>   one rampscan *measures*; accepting a KSI here would have let a declaration
+>   talk its way past the artifact plane and the method floor, which is the
+>   part of #167 this appliance is best at.
+> - **A declaration cannot overwrite a computation.** A config declaring
+>   `FRC-CSX-VVK` addressed does not move it out of `computed`; the overlap is
+>   reported instead. Same refusal as SPEC §12.4 rule 3, arriving from the
+>   config side rather than the overlay side.
+>
+> Not dogfooded in `rampscan.config.json`, deliberately: rampscan is not a
+> cloud service offering pursuing certification, and per-rule coverage is a
+> provider's judgement about a package that in this repository's case does not
+> exist. The block is exercised by the suite, including a parse of all 246 rule
+> ids at the pin, which is the guard that matters — a rule set numbering rules
+> differently must fail our test rather than a provider's config.
 
 ## 5. Two answers that must not disagree
 
