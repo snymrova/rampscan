@@ -46,7 +46,10 @@ added P3-3a (the mapped-check coverage measure) and corrected three things the
 note had wrong. **P3-0 landed 2026-09-18** — the fifth pin, on the bytes and the
 commit, with the both-ways golden test and the reviewed uncovered set; §2a was
 corrected again in the same change and the two catalogs turn out to share every
-control edge, not just the ids (see §8). Next is **P3-1**, the OCSF reader.
+control edge, not just the ids (see §8). **P3-1 landed 2026-09-18** — the OCSF
+reader, which sets the `MANUAL` row aside by making the indicator *absent*
+from the grouping rather than present and empty, and corrected §10a on two
+counts. Next is **P3-2**, the soundness test, written before the adapter.
 Then **P4 (#213)**, a trust-center fetchability probe.
 2. **S3** sends, with #72 by 2026-10-09 — S4 closed 2026-09-15 by the owner's call to finish the software first. S3-2 (#138) is researched and drafted in `docs/RESEARCH-S3-2-OUTREACH.md` (channels, a second public package, the sequence, the three drafts); its §4 corrections landed 2026-09-15 (the "only package" claim, the Filevine register §3b), so the sends wait only on the owner for addresses and the go; then S3-3 (#72) and S3-4 (#105).
 3. **T** — T0–T4 code complete 2026-09-16. What is left is the owner's: (a) a **sandbox AWS account** for the T3/T4 exit gates — `rampscan-runner init`, `rampscan runner register`, `rampscan runner policy` → attach, `rampscan serve --repo <the repo>`, click *Collect evidence* on `KSI-IAM-APM`; then remove `iam:GetCredentialReport` and click again for the `failed(denied)` row; (b) two upstream filings in S3-4's channel — the credential-report assertions spell `TRUE` where AWS prints `true` (every principal fails as published), and the `where`-alignment limit of labeled assertions (SPEC §14.4a); (c) whether T5 (scheduled requests, ECS/Lambda packaging) is wanted for the first release. Dependabot #194–#196 (react, zod, next 16 — issue #30's Turbopack risk) are open and untouched.
@@ -161,3 +164,26 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
   commit by three days — which qualifies the note's §8 public claim to `master`.
   Next item: P3-0.
 - **2026-09-18 (P3-0)** — The fifth pin: Prowler's KSI framework vendored at `docs/context/prowler/`, pinned on the **bytes and the commit** rather than on a version, because three labels point at three different things here (the file says `2026.07.14.01`, its commit says `2026.06.24.01`, this checkout pins `2026.09.13.02`) and **no published Prowler release ships the file at all**. The reader takes `fedramp-schemas.ts`'s rule into a third-party document — an unrecognised key is an exit, not a pass — with the provider set and the `ClassApplicability` vocabulary closed for a reason each, and `Operator` deliberately left open because rampscan evaluates none of it yet. Writing it corrected §2a three times over, once by refusing the pinned file on the first run: `NISTControls` is optional and two rows omit it, `config_requirements` is a sixth key on 24 rows (four of them `[]`), and upstream publishes its own enum for the applicability field, which the loader now checks its interpreted set against. **The golden test came out stronger than the plan asked for.** §2e had established that the two catalogs share the 46 ids both ways; they also share the mapping — **373 KSI→control edges against 373**, every row identical once upstream's `AT-2.2` is folded against the dataset's `at-2.2`, and the two rows omitting the attribute are exactly the two indicators FedRAMP maps no control to. At this pin they are the same catalog, which is a far better footing for "no crosswalk" than the id set alone. Class A is asserted **unstated** rather than compared, because the seven-KSI subset is in the framework's prose and in no field, and comparing it would read silence as a claim. `recipes/prowler/uncovered.json` carries the §4d judgement: the thirteen indicators no check on any provider reaches, one line each on why a scan of cloud resource state cannot see them — the set computed from the framework on every run, so the file can only fail, never drift. Suite 1,366 across 117 files. Next item: P3-1, the OCSF reader.
+
+- **2026-09-18 (P3-1)** — #220 merged (P3-0). P3-1 in PR: the OCSF reader,
+  `packages/cli/src/prowler-ocsf.ts`, sixteen tests, red first. Written against
+  the note's §10a field table rather than §2d's CSV columns — and **not one of
+  the six fields the adapter turns on is spelled the way §2d had it**, so that
+  correction paid for itself. The two refusals the file exists for are
+  structural rather than remembered: a `MANUAL` row is set aside *at the
+  reader* and the indicator is **absent from `byKsi`**, not present with an
+  empty array, so an adapter that forgets §4c gets `undefined` and cannot mint
+  a pass; and a missing or empty file shares its refusal wording with the
+  empty-array case, because upstream's `if findings:` guards the transform that
+  emits the manual rows too — "no file" and "the scan evidenced nothing" never
+  meet. Writing it found two things §10a had left under-determined: the check
+  id is read off `metadata.event_code` and **matched** into `compliance.checks`
+  rather than indexed at `[0]`, which would have been an assumption about arity
+  wearing a field name; and the three MANUAL markers are checked for
+  **agreement**, since guessing which marker wins is guessing whether thirteen
+  indicators get evaluated. One refusal the plan did not ask for: an indicator
+  carrying both a MANUAL row and reported findings, which nothing in the
+  document can resolve. `muted` is read and **decides nothing** — that is
+  P3-4's call, and making it here would have buried it. Suite 1,382 across 118
+  files; README regenerated under ground rule 4. Next item: P3-2, the soundness
+  test — `it.fails` until P3-3.
