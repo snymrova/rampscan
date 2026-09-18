@@ -18,7 +18,7 @@ import {
 const contextDir = join(dirname(fileURLToPath(import.meta.url)), "../../../docs/context");
 const derivedDir = join(contextDir, "ramprules/derived");
 const rulesFile = join(contextDir, "fedramp-rules/fedramp-consolidated-rules.json");
-const PIN = "2026.07.14.01";
+const PIN = "2026.09.13.02";
 
 // Q1.3 — the dual-source contract (SPEC §12.4). Path A is the ramprules
 // derived-slice snapshot; Path B is fedramp-consolidated-rules.json direct.
@@ -103,10 +103,10 @@ describe("the dual-source equivalence contract", () => {
 // The owed numbers below are asserted LITERALLY, against both paths at once
 // (equivalence above makes one load representative). These are the load-bearing
 // numbers of the pivot — G1/G2's floors, G3's windows, G4's history — verified
-// by hand against fedramp-consolidated-rules.json 2026.07.14.01; a re-pin that
+// by hand against fedramp-consolidated-rules.json 2026.09.13.02; a re-pin that
 // moves one of them is supposed to arrive here as a failing test, because a
 // moved owed number is a reviewed change, never a drive-by (ground rule 2).
-describe("the owed state at pin 2026.07.14.01", () => {
+describe("the owed state at pin 2026.09.13.02", () => {
   const load = () => loadKsiCatalogFromSlices(derivedDir, PIN);
 
   it("carries 46 KSIs across 10 themes — the board's row set, always", async () => {

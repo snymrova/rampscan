@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Evidencing maintenance execution means reaching whatever performed it — a systems-management service, a change management platform, or the provider's own maintenance records. This plane reaches none of them, and the resulting refusal is the cost of the trust model rather than an oversight in the pass.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

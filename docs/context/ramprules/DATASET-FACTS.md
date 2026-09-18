@@ -6,7 +6,7 @@ Read this instead of scanning `docs/fedramp-consolidated-rules.json` (567 KB).
 Every number here is computed from the index at derive time, so it cannot
 disagree with the site. Machine-readable slices live in `data/derived/`.
 
-- **Dataset version** `2026.07.14.01` (last updated 2026-07-14)
+- **Dataset version** `2026.09.13.02` (last updated 2026-09-13)
 - **Title** FedRAMP Consolidated Rules for 2026
 
 ## KSI graph
@@ -18,7 +18,7 @@ disagree with the site. Machine-readable slices live in `data/derived/`.
 | KSI→control edges | 373 |
 | Distinct controls reached | 209 |
 | Control families reached | 17 |
-| FRD terms | 75 |
+| FRD terms | 80 |
 
 `controlsById` is **KSI-edge-only**. It deliberately excludes baseline-only
 and CTL-only controls; coverage is a set intersection against these keys.
@@ -29,8 +29,8 @@ and CTL-only controls; coverage is a set intersection against these keys.
 |---|---|
 | Documents | 17 |
 | Requirements | 246 |
-| Timeframed entries | 68 |
-| ...at requirement level | 17 |
+| Timeframed entries | 73 |
+| ...at requirement level | 22 |
 | ...inside `varies_by_class` | 51 |
 | Notification items | 31 |
 | PAIN grids | 16 |
@@ -46,18 +46,18 @@ is a known way to get this wrong:
 
 | Party | Requirements | Deadlines |
 |---|---|---|
-| Providers | 180 | 61 |
+| Providers | 180 | 65 |
 | Agencies | 24 | 0 |
 | Assessors | 23 | 6 |
 | FedRAMP | 16 | 1 |
-| Advisors | 3 | 0 |
+| Advisors | 3 | 1 |
 
 Beware: a naive recursive walk for `affects` returns 300, because
 `FRR.<doc>.info.subsets.*` carries the same key as a subset-applicability
 declaration. Only the requirement-level field is counted above. `Everyone` is
 in the schema enum and unused in the data.
 
-**Deadline units** (never converted for display): months 24 · years 17 · days 15 · bizdays 8 · weeks 3 · hours 1
+**Deadline units** (never converted for display): months 26 · years 19 · days 15 · bizdays 9 · weeks 3 · hours 1
 
 Tightest deadline: **VDR-TFR-PSD class d at 1 day**.
 
@@ -90,9 +90,9 @@ the canonical id, site-wide. See `docs/NOMENCLATURE.md` for the rules and
 | FRR document | 17 | — | `frr_document_key` | `AFC` | `afc` |
 | Certification class | 4 | 3 | `class_key` | `b` | `b` |
 | ODP parameter | 19 | — | — (ours) | `ac-6.1_odp.2` | `ac-6.1_odp.2` |
-| AWS evidence recipe | 49 | 49 | — (ours) | `iam-credential-report` | `iam-credential-report` |
+| evidence recipe | 70 | 70 | — (ours) | `iam-credential-report` | `iam-credential-report` |
 | Affected party | 5 | 5 | — (ours) | `Providers` | `providers` |
-| FRD term anchor | 75 | — | — (ours) | `fedramp-authorized` | `fedramp-authorized` |
+| FRD term anchor | 80 | — | — (ours) | `fedramp-authorized` | `fedramp-authorized` |
 
 **Named is not addressable.** An id can normalize cleanly and still have no
 page: addressability is keyed to KSI edges, not to the id space.
@@ -112,12 +112,18 @@ FedRAMP's schema constrains every id form except one: ODP parameter ids are type
 
 ## Export slices
 
-- `data/derived/coverage.json` — Rev5 baseline coverage per certification class, with orphan controls.
+- `data/derived/class-overview.json` — The four certification classes side by side: the invariant KSI layer, each class's Rev5 baseline and KSI-covered subset, and the automated-method quota FRC-CSX-VVK sets per class — scored at BOTH readings of the quota's unit, since the rule never says whether "each Key Security Indicator" means one of the 10 themes or one of the 46 indicators.
+- `data/derived/coverage.json` — Rev5 baseline coverage per certification class, with orphan controls, and the class-scoped indicator reach beside the all-classes one.
 - `data/derived/baseline.json` — Full Rev5 baseline enumeration per class: every control id with family, annual-assessment and KSI-coverage flags.
+- `data/derived/baseline-delta.json` — Every upward migration between two Rev5 baselines: the controls the higher class adds, each joined to whether a KSI reaches it and whether any recipe covers it or its base control; the added controls grouped by that mechanism; the per-class requirement clocks that tighten across the step; and the class-varying obligations that carry no timeframe at all, which is where the automated-method quota and the metrics-history window live.
 - `data/derived/checks.json` — Per-KSI collector scaffold: statement, terms, controls, classes in scope and the class vulnerability-response clock.
 - `data/derived/aws-evidence.json` — AUTHORED overlay: AWS calls that collect evidence per KSI/control, with cadence, GovCloud notes and an automatable-honesty rating. Versioned separately from the dataset.
+- `data/derived/evidence-recipes.json` — AUTHORED overlays, both planes in one array: every recipe from the AWS estate overlay and the pipeline overlay, each row stamped with the `source` plane it came from and each plane's own version in `overlays`. `aws-evidence` remains the AWS-only slice, unchanged, for consumers already pinned to it.
 - `data/derived/automation-frontier.json` — AUTHORED overlay: per-control dispositions for KSI-reached controls no AWS recipe covers — automatable, partial, or honestly closed as narrative, each with a stated reason. Versioned separately from the dataset.
 - `data/derived/evidence-plan.json` — The Evidence Plan: per class, authored recipes from every evidence plane grouped by KSI theme (densest first), the class clock, and the orphan/narrative register. Each item carries the `source` plane that produced it; each class carries one version stamp per contributing plane.
+- `data/derived/accumulation.json` — The history window FRC-CSX-MOT sets per certification class: the rule's own sentence, its force, and the period in months parsed out of it — the one obligation in the corpus that no amount of engineering shortens, since it is elapsed time rather than work. Carries the rule's note verbatim, which is the only place the rules address a provider applying for initial certification without the window behind them. Deliberately date-free: the calculator that turns a retention start date into an earliest qualifying date runs in the reader's browser against the reader's own clock, so this slice is stable across rebuilds.
+- `data/derived/certification-package.json` — The FedRAMP Certification Package, resolved from the rules' own enumeration: FRC-CSO-PKG and every requirement it transitively names, each node carrying its force, its published JSON schema, the literal fields a provider fills in, and whether any surface on this site produces it. Plus the rules governing how you apply, how often a certified package must be refreshed per class, and the rules that name the package without being enumerated by it — the enumeration says "at least", so the tree is a floor rather than the whole obligation.
+- `data/derived/boundary.json` — The Minimum Assessment Scope: every rule that decides which of a provider's information resources the assessment is about, the FRD-defined terms those rules turn on with their definitions, the categories FedRAMP places outside the programme entirely, and the 20x rule stating the indicators apply to everything inside the boundary. Publishes no judgement about any particular system — which resources handle federal customer data is a fact about the reader's estate, which this dataset does not hold.
 - `data/derived/obligations.json` — Every timeframed deadline, PAIN grid, notification and rollout date.
 - `data/derived/evidence.json` — Every artifact the rules demand, by requirement and deduplicated by artifact.
 - `data/derived/crosswalk.json` — Bidirectional KSI to NIST 800-53 control mapping.

@@ -19,5 +19,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The change history read here is git's own, in place, with no webhook, no app installation and no repository access granted to a third party — which is the usual price of continuous change monitoring and would put the full commit history of the assessed system inside a supplier's estate.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

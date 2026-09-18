@@ -40,6 +40,21 @@ describe("labeledField", () => {
     expect(labeledField("mfa_active", labels)).toBeUndefined();
     expect(labeledField("restricted-sshd.X", labels)).toBeUndefined();
   });
+
+  // Since the overlay names its own steps, an assertion may address a step's
+  // document three ways: by name alone (the document itself), by name and a
+  // dotted path, or by name and a path that opens on a projection.
+  it("a field that is the label names the whole document; one that opens on a bracket keeps the bracket", () => {
+    const labels = ["credential-report", "credential-report-generated-time", "list-virtual-mfa-devices"];
+    expect(labeledField("credential-report-generated-time", labels)).toEqual({ label: "credential-report-generated-time", path: "@" });
+    expect(labeledField("credential-report[].mfa_active", labels)).toEqual({ label: "credential-report", path: "[].mfa_active" });
+    expect(labeledField("list-virtual-mfa-devices[?ends_with(UserArn, ':root')]", labels)).toEqual({
+      label: "list-virtual-mfa-devices",
+      path: "[?ends_with(UserArn, ':root')]",
+    });
+    // the longest label still wins, so the shorter prefix does not steal the field
+    expect(labeledField("credential-report-generated-time[0]", labels)).toEqual({ label: "credential-report-generated-time", path: "[0]" });
+  });
 });
 
 describe("evaluateLabeledAssertion — the ops over a step's document", () => {
@@ -87,7 +102,13 @@ describe("evaluateLabeledAssertion — the ops over a step's document", () => {
     expect(evaluateLabeledAssertion(A("get-credential-report.GeneratedTime", "max_age_days", 1), docs, new Date("2026-09-18T00:00:00Z")).passed).toBe(false);
   });
 
-  it("a labeled where is a guard over its own path: any element satisfying it lets the field be judged over every element", () => {
+  // A labeled `where` is ELEMENT-RELATIVE: upstream writes it as a path over
+  // each element the assertion's own projection yields, not as a second
+  // labeled path. So the projection is split at its last `[]` — the base
+  // yields the elements, the where filters them one by one, and the leaf is
+  // read from each survivor. The population stays the observation's, as in
+  // the row evaluator: `0 of 2`, never `0 of 0` by omission.
+  it("an element-relative where filters element by element, and the untagged neighbour is out of scope", () => {
     const docs = {
       "get-account-authorization-details": {
         UserDetailList: [
@@ -96,14 +117,40 @@ describe("evaluateLabeledAssertion — the ops over a step's document", () => {
         ],
       },
     };
-    const where: RecipeAssertion["where"] = [
-      { field: "get-account-authorization-details.UserDetailList[].Tags[?Key=='AccountType'].Value", op: "in", value: ["temporary", "emergency"] },
-    ];
-    const r = evaluateLabeledAssertion(A("get-account-authorization-details.UserDetailList[].CreateDate", "max_age_days", 90, where), docs, NOW);
-    expect(r).toMatchObject({ passed: false, population: 2, offender_count: 1 });
-    // and when no user is tagged, the guard does not hold and the assertion does not apply
+    const where: RecipeAssertion["where"] = [{ field: "Tags[?Key=='AccountType'].Value", op: "in", value: ["temporary", "emergency"] }];
+    const field = "get-account-authorization-details.UserDetailList[].CreateDate";
+    // only `tmp-1` is a temporary account, and it was created inside 90 days —
+    // the guard reading judged `old` too and called a compliant account a finding
+    expect(evaluateLabeledAssertion(A(field, "max_age_days", 90, where), docs, NOW)).toMatchObject({ passed: true, population: 2 });
+    const stale = { "get-account-authorization-details": { UserDetailList: [{ UserName: "tmp-0", CreateDate: "2025-01-01T00:00:00Z", Tags: [{ Key: "AccountType", Value: "temporary" }] }, docs["get-account-authorization-details"].UserDetailList[1]!] } };
+    expect(evaluateLabeledAssertion(A(field, "max_age_days", 90, where), stale, NOW)).toMatchObject({ passed: false, population: 2, offender_count: 1 });
+    // no temporary account at all: nothing is in scope, and the population says so rather than the verdict
     const none = { "get-account-authorization-details": { UserDetailList: [{ CreateDate: "2025-01-01T00:00:00Z", Tags: [] }] } };
-    expect(evaluateLabeledAssertion(A("get-account-authorization-details.UserDetailList[].CreateDate", "max_age_days", 90, where), none, NOW)).toMatchObject({ passed: true, population: 0 });
+    expect(evaluateLabeledAssertion(A(field, "max_age_days", 90, where), none, NOW)).toMatchObject({ passed: true, population: 1 });
+  });
+
+  it("the credential report the new overlay publishes: MFA per console principal, keys per active key", () => {
+    const docs = {
+      "credential-report": [
+        { user: "a", password_enabled: "TRUE", mfa_active: "TRUE", access_key_1_active: "TRUE", access_key_1_last_rotated: "2026-09-01T00:00:00Z" },
+        { user: "b", password_enabled: "FALSE", mfa_active: "FALSE", access_key_1_active: "FALSE", access_key_1_last_rotated: "N/A" },
+      ],
+    };
+    const mfa = A("credential-report[].mfa_active", "eq", "TRUE", [{ field: "password_enabled", op: "eq", value: "TRUE" }]);
+    expect(evaluateLabeledAssertion(mfa, docs, NOW)).toMatchObject({ passed: true, population: 2 });
+    // `b` has no console password, so its FALSE is not a finding; turn `a`'s off and it is
+    const bad = { "credential-report": [{ ...docs["credential-report"][0]!, mfa_active: "FALSE" }, docs["credential-report"][1]!] };
+    expect(evaluateLabeledAssertion(mfa, bad, NOW)).toMatchObject({ passed: false, population: 2, offender_count: 1 });
+    const keys = A("credential-report[].access_key_1_last_rotated", "max_age_days", 90, [{ field: "access_key_1_active", op: "eq", value: "TRUE" }]);
+    // `b`'s "N/A" would fail max_age_days if the inactive key were judged
+    expect(evaluateLabeledAssertion(keys, docs, NOW)).toMatchObject({ passed: true, population: 2 });
+  });
+
+  it("a where over a projection with no `[]` to align on is a defect named, not a pass", () => {
+    const docs = { "describe-organization": { Organization: { FeatureSet: "ALL" } } };
+    const r = evaluateLabeledAssertion(A("describe-organization.Organization.FeatureSet", "eq", "ALL", [{ field: "Id", op: "exists" }]), docs, NOW);
+    expect(r.passed).toBe(false);
+    expect(r.detail).toMatch(/no projection/);
   });
 
   it("a label the run did not produce, or a path that does not parse, is a failure that names the problem", () => {

@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and the negative answer bears directly on this control's subject matter. The ordinary route to a continuous supply chain risk assessment is a third-party risk platform that ingests the component inventory, which places a complete list of the assessed system's suppliers inside another supplier's estate: the exact dependency class this control asks the organization to reason about, acquired in the act of reasoning about it.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

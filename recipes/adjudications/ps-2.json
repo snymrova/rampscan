@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Position risk designations live in an HR system, and an evidence path that read them would hold credentials to a system of record about employees and their assessed trustworthiness — an external system holding assessed judgements about how much harm each position could do. rampscan reads a checkout as files and adds none of it.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

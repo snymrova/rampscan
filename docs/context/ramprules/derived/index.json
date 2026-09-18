@@ -1,14 +1,22 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slices": [
     {
+      "name": "class-overview",
+      "description": "The four certification classes side by side: the invariant KSI layer, each class's Rev5 baseline and KSI-covered subset, and the automated-method quota FRC-CSX-VVK sets per class — scored at BOTH readings of the quota's unit, since the rule never says whether \"each Key Security Indicator\" means one of the 10 themes or one of the 46 indicators.",
+      "ordering": "`classes` ascending by class letter (a-d, including the class with no baseline); `themes` within each class in KSI theme order; `indicators` in KSI theme order then indicator order, filtered to those stating a level at that class.",
+      "file": "data/derived/class-overview.json",
+      "url": "/api/class-overview",
+      "bytes": 57779
+    },
+    {
       "name": "coverage",
-      "description": "Rev5 baseline coverage per certification class, with orphan controls.",
-      "ordering": "`classes` ascending by class letter; `orphanControls` and family rows ascending by canonical id / family code.",
+      "description": "Rev5 baseline coverage per certification class, with orphan controls, and the class-scoped indicator reach beside the all-classes one.",
+      "ordering": "`classes` ascending by class letter; `orphanControls`, `reachLostAtClass` and family rows ascending by canonical id / family code.",
       "file": "data/derived/coverage.json",
       "url": "/api/coverage",
-      "bytes": 25281
+      "bytes": 25948
     },
     {
       "name": "baseline",
@@ -16,7 +24,15 @@
       "ordering": "`classes` ascending by class letter; `controls` ascending by canonical control id; `families` ascending.",
       "file": "data/derived/baseline.json",
       "url": "/api/baseline",
-      "bytes": 178730
+      "bytes": 179020
+    },
+    {
+      "name": "baseline-delta",
+      "description": "Every upward migration between two Rev5 baselines: the controls the higher class adds, each joined to whether a KSI reaches it and whether any recipe covers it or its base control; the added controls grouped by that mechanism; the per-class requirement clocks that tighten across the step; and the class-varying obligations that carry no timeframe at all, which is where the automated-method quota and the metrics-history window live.",
+      "ordering": "`deltas` ascending by `from` then `to`; `added`/`removed` ascending by canonical control id; `byFamily` by count DESCENDING, ties on family code; `mechanisms` by control count DESCENDING with the null-recipe residue always last; `clocks` and `obligations` ascending by requirement id.",
+      "file": "data/derived/baseline-delta.json",
+      "url": "/api/baseline-delta",
+      "bytes": 291425
     },
     {
       "name": "checks",
@@ -24,7 +40,7 @@
       "ordering": "`checks` in dataset theme order, then indicator order within a theme; `controls` ascending by canonical id; `cadence` and `clocks` ascending by class letter.",
       "file": "data/derived/checks.json",
       "url": "/api/checks",
-      "bytes": 68744
+      "bytes": 72503
     },
     {
       "name": "aws-evidence",
@@ -32,7 +48,15 @@
       "ordering": "`recipes` in authored order — the overlay is a hand-maintained file and its sequence is editorial, not derived. Sort by `id` if you need a stable key.",
       "file": "data/derived/aws-evidence.json",
       "url": "/api/aws-evidence",
-      "bytes": 316905
+      "bytes": 585001
+    },
+    {
+      "name": "evidence-recipes",
+      "description": "AUTHORED overlays, both planes in one array: every recipe from the AWS estate overlay and the pipeline overlay, each row stamped with the `source` plane it came from and each plane's own version in `overlays`. `aws-evidence` remains the AWS-only slice, unchanged, for consumers already pinned to it.",
+      "ordering": "`recipes` grouped by plane in `EVIDENCE_SOURCES` order (aws, then pipeline) and in authored order within a plane — the overlays are hand-maintained files whose sequence is editorial. Sort by `id` if you need a stable key; ids are unique across planes.",
+      "file": "data/derived/evidence-recipes.json",
+      "url": "/api/evidence-recipes",
+      "bytes": 927135
     },
     {
       "name": "automation-frontier",
@@ -40,7 +64,7 @@
       "ordering": "`queue` by `leverage` DESCENDING, ties broken on canonical control id; `frontier` ascending by canonical control id.",
       "file": "data/derived/automation-frontier.json",
       "url": "/api/automation-frontier",
-      "bytes": 156846
+      "bytes": 173187
     },
     {
       "name": "evidence-plan",
@@ -48,7 +72,31 @@
       "ordering": "`classes` ascending by class letter; `themes` by `controlFootprint` DESCENDING (densest first), ties broken on theme key; `items` in overlay order; `orphanControls` ascending by canonical id.",
       "file": "data/derived/evidence-plan.json",
       "url": "/api/evidence-plan",
-      "bytes": 1622668
+      "bytes": 2774874
+    },
+    {
+      "name": "accumulation",
+      "description": "The history window FRC-CSX-MOT sets per certification class: the rule's own sentence, its force, and the period in months parsed out of it — the one obligation in the corpus that no amount of engineering shortens, since it is elapsed time rather than work. Carries the rule's note verbatim, which is the only place the rules address a provider applying for initial certification without the window behind them. Deliberately date-free: the calculator that turns a retention start date into an earliest qualifying date runs in the reader's browser against the reader's own clock, so this slice is stable across rebuilds.",
+      "ordering": "`classes` ascending by class letter, including any class whose statement names no period — a stated absence, never a window of zero.",
+      "file": "data/derived/accumulation.json",
+      "url": "/api/accumulation",
+      "bytes": 2244
+    },
+    {
+      "name": "certification-package",
+      "description": "The FedRAMP Certification Package, resolved from the rules' own enumeration: FRC-CSO-PKG and every requirement it transitively names, each node carrying its force, its published JSON schema, the literal fields a provider fills in, and whether any surface on this site produces it. Plus the rules governing how you apply, how often a certified package must be refreshed per class, and the rules that name the package without being enumerated by it — the enumeration says \"at least\", so the tree is a floor rather than the whole obligation.",
+      "ordering": "`root` and `flat` in the dataset's own enumeration order, depth-first — this is the order FedRAMP lists the package's contents in and it is not re-sorted. `applying` in dataset order within the FRC APP subset; `maintenance` 20x then Rev5; `alsoNamed` and `unsupported` ascending by requirement id.",
+      "file": "data/derived/certification-package.json",
+      "url": "/api/certification-package",
+      "bytes": 64759
+    },
+    {
+      "name": "boundary",
+      "description": "The Minimum Assessment Scope: every rule that decides which of a provider's information resources the assessment is about, the FRD-defined terms those rules turn on with their definitions, the categories FedRAMP places outside the programme entirely, and the 20x rule stating the indicators apply to everything inside the boundary. Publishes no judgement about any particular system — which resources handle federal customer data is a fact about the reader's estate, which this dataset does not hold.",
+      "ordering": "`rules` ascending by requirement id; `vocabulary` by the number of rules using a term DESCENDING, ties broken on the term; `exclusions` in the order the boundary rule states them.",
+      "file": "data/derived/boundary.json",
+      "url": "/api/boundary",
+      "bytes": 12613
     },
     {
       "name": "obligations",
@@ -56,7 +104,7 @@
       "ordering": "`deadlines` TIGHTEST FIRST across incompatible units, ties broken on requirement id then class. The comparison is an internal hours-normalized key; the displayed `num`/`type` are always the dataset's own units and are never converted.",
       "file": "data/derived/obligations.json",
       "url": "/api/obligations",
-      "bytes": 107522
+      "bytes": 122265
     },
     {
       "name": "evidence",
@@ -64,7 +112,7 @@
       "ordering": "`byRequirement` ascending by requirement id; `byArtifact` by number of demanding requirements DESCENDING (most widely demanded first), ties broken on the artifact text.",
       "file": "data/derived/evidence.json",
       "url": "/api/evidence",
-      "bytes": 79837
+      "bytes": 80143
     },
     {
       "name": "crosswalk",
@@ -72,7 +120,7 @@
       "ordering": "controls ascending by display id; families ascending.",
       "file": "data/derived/crosswalk.json",
       "url": "/api/crosswalk",
-      "bytes": 140783
+      "bytes": 140088
     },
     {
       "name": "families",
@@ -80,7 +128,7 @@
       "ordering": "rows ascending by class letter; families ascending by family code.",
       "file": "data/derived/families.json",
       "url": "/api/families",
-      "bytes": 5420
+      "bytes": 5710
     },
     {
       "name": "glossary",
@@ -88,7 +136,7 @@
       "ordering": "terms ascending alphabetically.",
       "file": "data/derived/glossary.json",
       "url": "/api/glossary",
-      "bytes": 56896
+      "bytes": 59042
     },
     {
       "name": "indicator-weight",
@@ -96,7 +144,7 @@
       "ordering": "indicators by control footprint DESCENDING, ties broken on indicator id.",
       "file": "data/derived/indicator-weight.json",
       "url": "/api/indicator-weight",
-      "bytes": 9332
+      "bytes": 9622
     },
     {
       "name": "readiness",
@@ -104,7 +152,7 @@
       "ordering": "`classes` ascending by class letter; control lists ascending by canonical id.",
       "file": "data/derived/readiness.json",
       "url": "/api/readiness",
-      "bytes": 97553
+      "bytes": 102133
     },
     {
       "name": "roles",
@@ -112,7 +160,7 @@
       "ordering": "parties by requirement count DESCENDING; requirements within a party ascending by requirement id.",
       "file": "data/derived/roles.json",
       "url": "/api/roles",
-      "bytes": 143725
+      "bytes": 145515
     },
     {
       "name": "search",
@@ -120,7 +168,7 @@
       "ordering": "entities grouped by kind, ascending by id within each kind.",
       "file": "data/derived/search.json",
       "url": "/api/search",
-      "bytes": 195594
+      "bytes": 215545
     }
   ]
 }

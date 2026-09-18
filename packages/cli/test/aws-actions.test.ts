@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_DATASET_PIN } from "@rampscan/dataset";
 import type { AwsActionAllowlist } from "@rampscan/schema";
 import {
   DEFAULT_ALLOWLIST_PATH,
@@ -13,7 +14,7 @@ import {
 
 // T1-1 (docs/PLAN-CLOUD-RUNNER.md, #167): the reviewed allowlist is golden
 // against the pinned overlay. Every `aws <service> <operation>` any of the
-// 49 recipes issues resolves to an entry a reviewer wrote — admitted with
+// 57 recipes issues resolves to an entry a reviewer wrote — admitted with
 // its IAM action and its reason, or refused with its reason. Nothing is
 // unknown, because unknown is manual, and the count of runnable recipes the
 // plan prints must come from this file and not from a verb regex.
@@ -22,7 +23,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const OVERLAY = join(REPO_ROOT, "docs/context/ramprules/derived/aws-evidence.json");
 
 interface Overlay {
-  data: { recipes: Array<{ id: string; collection: { kind: string; commands?: string[] } }> };
+  data: { recipes: Array<{ id: string; collection: { kind: string; commands?: Array<{ name: string; run: string }> } }> };
 }
 
 /** every distinct aws action the pinned recipes issue, with the recipes that issue it */
@@ -30,8 +31,8 @@ async function pinnedActions(): Promise<Map<string, Set<string>>> {
   const overlay = JSON.parse(await readFile(OVERLAY, "utf8")) as Overlay;
   const out = new Map<string, Set<string>>();
   for (const recipe of overlay.data.recipes) {
-    for (const command of recipe.collection.commands ?? []) {
-      for (const segment of command.split("|")) {
+    for (const step of recipe.collection.commands ?? []) {
+      for (const segment of step.run.split("|")) {
         const action = awsActionOf(segment);
         if (action === undefined) continue;
         if (!out.has(action)) out.set(action, new Set());
@@ -52,10 +53,10 @@ describe("T1-1 — the reviewed AWS action allowlist is golden against the pinne
   it("parses as the strict contract, dated, pinned to the dataset it was read from", async () => {
     const list = await allowlist();
     expect(list.reviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(list.dataset).toBe("2026.07.14.01");
+    expect(list.dataset).toBe(DEFAULT_DATASET_PIN);
   });
 
-  it("every action the 49 recipes issue is admitted or refused — none is unknown", async () => {
+  it("every action the 57 recipes issue is admitted or refused — none is unknown", async () => {
     const list = await allowlist();
     const actions = await pinnedActions();
     expect(actions.size).toBeGreaterThan(100);
@@ -70,7 +71,7 @@ describe("T1-1 — the reviewed AWS action allowlist is golden against the pinne
     expect(dead).toEqual([]);
   });
 
-  it("the two actions that change the account are refused, with the reason stated", async () => {
+  it("the three actions that change the account are refused, with the reason stated", async () => {
     const list = await allowlist();
     const send = classifyAwsAction(list, "ssm send-command");
     expect(send.kind).toBe("refused");
@@ -78,7 +79,11 @@ describe("T1-1 — the reviewed AWS action allowlist is golden against the pinne
     const athena = classifyAwsAction(list, "athena start-query-execution");
     expect(athena.kind).toBe("refused");
     if (athena.kind === "refused") expect(athena.entry.why).toMatch(/writes/);
-    expect(list.refused).toHaveLength(2);
+    // overlay 4.3.0's new one: an Inspector SBOM export puts objects in a bucket
+    const sbom = classifyAwsAction(list, "inspector2 create-sbom-export");
+    expect(sbom.kind).toBe("refused");
+    if (sbom.kind === "refused") expect(sbom.entry.why).toMatch(/writes a CycloneDX SBOM/);
+    expect(list.refused).toHaveLength(3);
   });
 
   it("an admitted verb the pattern would not have read as read-only carries the reviewer's line", async () => {
@@ -88,6 +93,7 @@ describe("T1-1 — the reviewed AWS action allowlist is golden against the pinne
       "cloudtrail start-query",
       "cloudtrail validate-logs",
       "iam generate-credential-report",
+      "iam generate-service-last-accessed-details",
       "logs start-query",
     ]);
     for (const e of byReview) expect(e.review, e.cli).toMatch(/admitted by review, not by verb/);

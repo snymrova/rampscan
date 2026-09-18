@@ -29,6 +29,12 @@
       "note": "This record's remainder names verification-before-consumption as the limb that is unbuilt here: the workflow patterns matched today detect provenance being GENERATED and SIGNED, and verifying an attestation against the supplier's identity before an artifact is consumed is a distinct pattern nothing in this collector set matches. Upstream's SI-07 (07) recipe is exactly that verification, and it is the rare case where the output alone decides the limb, because the check is a command with an exit status. It also reaches something this plane structurally cannot: their scope is the artifacts the deployment record says are RUNNING inside the boundary, read off the compute, where this one can only ever speak about what a checkout declares. Following the pointer still leaves SR-10's other limbs open — the hardware inspection, and the trigger conditions, which are a documented procedure on both planes."
     }
   ],
+  "retired": {
+    "at": "2026-09-18",
+    "overlayVersion": "0.13.0",
+    "reason": "Retired on the re-pin to overlay 0.13.0. Upstream's pipeline plane authored build-provenance-attestation-verification over SR-10, and it built the thing this record named as the hole in its own route. The rationale here said provenance was \"the same shape\" as the digest limb — the patterns matched today detect provenance being generated and signed, and \"verification-before-consumption, which is what would inspect an artifact's origin, is a distinct pattern nothing matches.\" Upstream's recipe is that verification: for each artifact actually running in the boundary, the signed provenance statement, the certificate identifying the workflow that produced it, and the record of which deployed artifacts were submitted for verification at all. They also draw a distinction this record did not know to draw — that countersigned timestamps are transparency-log entries for a public repository and are not that at all for a private one, which is the normal case inside a boundary, because GitHub's own Sigstore instance keeps no transparency log for it. That decides who can re-check the evidence later, and it is a better answer than this record had. Conceded. The divergence this record filed against upstream's AWS-plane refusal is closed with it: that refusal was about hardware inspection under the shared model, it was correct about hardware, and the software limb it could not see is now answered on their other plane rather than by an argument here.",
+    "upstreamRecipeIds": ["build-provenance-attestation-verification"]
+  },
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

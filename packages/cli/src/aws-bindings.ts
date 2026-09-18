@@ -45,21 +45,23 @@ export function applyLiteralBindings(
   const rows = table.entries
     .filter((r) => r.recipe === recipe.id)
     .sort((a, b) => b.literal.length - a.literal.length);
-  const commands = (recipe.collection as { commands?: unknown }).commands;
-  if (rows.length === 0 || !Array.isArray(commands)) return { recipe, stale: rows };
+  const commands = recipe.collection.commands;
+  if (rows.length === 0 || commands === undefined) return { recipe, stale: rows };
   const seen = new Set<AwsLiteralBinding>();
-  const rewritten = (commands as unknown[]).map((raw) => {
-    let c = String(raw);
+  // only `run` is rewritten: `name` is the label an assertion addresses the
+  // step's document by, and a binding that renamed it would break that join
+  const rewritten = commands.map((step) => {
+    let c = step.run;
     for (const row of rows) {
       if (c.includes(row.literal)) {
         seen.add(row);
         c = c.split(row.literal).join(replacementOf(row));
       }
     }
-    return c;
+    return { ...step, run: c };
   });
   return {
-    recipe: { id: recipe.id, collection: { ...(recipe.collection as object), kind: recipe.collection.kind, commands: rewritten } },
+    recipe: { id: recipe.id, collection: { ...recipe.collection, commands: rewritten } },
     stale: rows.filter((r) => !seen.has(r)),
   };
 }
@@ -70,10 +72,14 @@ export interface RequestWindow {
   end: string;
 }
 
-function epochSeconds(iso: string): string {
+function epochMillis(iso: string): number {
   const ms = Date.parse(iso);
   if (Number.isNaN(ms)) throw new Error(`request window is not an ISO 8601 instant: ${iso}`);
-  return String(Math.floor(ms / 1000));
+  return ms;
+}
+
+function epochSeconds(iso: string): string {
+  return String(Math.floor(epochMillis(iso) / 1000));
 }
 
 /**
@@ -90,6 +96,15 @@ export function bindAwsParams(aws: AwsConfig, window: RequestWindow): Record<str
     WINDOW_END: window.end,
     EPOCH_START: epochSeconds(window.start),
     EPOCH_END: epochSeconds(window.end),
+    // the same window in upstream's own spellings (overlay 4.3.0)
+    START_TIME: window.start,
+    END_TIME: window.end,
+    T0: window.start,
+    T1: window.end,
+    START_EPOCH: epochSeconds(window.start),
+    END_EPOCH: epochSeconds(window.end),
+    SINCE_EPOCH: epochSeconds(window.start),
+    SINCE_EPOCH_MS: String(epochMillis(window.start)),
   };
   return { ...aws.params, ...reserved };
 }

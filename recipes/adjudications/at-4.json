@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Worth stating in the strong form here, because this is the one control in the family where a naive integration would look attractive and be actively harmful: closing it would mean pulling individual training records — personal data about named employees — into an evidence store. rampscan collects from a checkout and adds no such data to the system it reports on, and the refusal above is preferable to the alternative rather than merely forced by it.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

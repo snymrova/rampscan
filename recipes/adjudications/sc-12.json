@@ -19,5 +19,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and on a key-management control the shape of that answer is worth being precise about: the scan reads a checkout for evidence about keys, it does not hold, escrow or transmit key material, and the signing key it uses for its own bundles is generated and kept on the machine that runs it. No custody moves anywhere as a consequence of evidencing this control.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

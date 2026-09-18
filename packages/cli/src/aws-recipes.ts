@@ -2,11 +2,11 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { AwsRecipe } from "@rampscan/dataset";
 import { GRAPH_CONFIG_FILE } from "@rampscan/graph";
-import { AwsConfig } from "@rampscan/schema";
+import { AwsConfig, RESERVED_AWS_PARAMS } from "@rampscan/schema";
 import type { AwsActionAllowlist, AwsLiteralBindings } from "@rampscan/schema";
 import { applyLiteralBindings, bindAwsParams, unboundParamsOf } from "./aws-bindings.js";
 import type { RequestWindow } from "./aws-bindings.js";
-import { classifyAwsRecipe, describeReason } from "./aws-classify.js";
+import { classifyAwsRecipe, describeReason, placeholdersOf } from "./aws-classify.js";
 import type { RecipeClass } from "./aws-classify.js";
 
 // `rampscan recipes --aws` (docs/PLAN-CLOUD-RUNNER.md T1-5): the
@@ -56,7 +56,13 @@ export interface AwsRecipesReport {
   dataset: string;
   config: { account_id: string; partition: string; region: string } | undefined;
   window: RequestWindow;
-  /** the table's non-reserved names the config does not supply */
+  /**
+   * Every non-reserved `<NAME>` the pinned recipes need and the config does
+   * not supply — the table's rewrites AND the placeholders upstream publishes
+   * itself, which at overlay 4.3.0 are most of them. Reading only the table
+   * would print a short list an operator could satisfy and still watch thirty
+   * recipes stay manual.
+   */
   owed_params: string[];
   recipes: ClassifiedRecipe[];
   runnable: number;
@@ -82,19 +88,28 @@ export function classifyAwsRecipes(
   dataset: string,
 ): AwsRecipesReport {
   const params = aws === undefined ? {} : bindAwsParams(aws, window);
-  const out: ClassifiedRecipe[] = recipes.map((r) => ({
-    id: r.id,
-    ksi_ids: r.ksi_ids,
-    automatable: r.automatable,
-    has_assertions: Array.isArray(r["assertions"]) && r["assertions"].length > 0,
-    result: classifyAwsRecipe(applyLiteralBindings(r, table).recipe, list, params),
-  }));
+  const published = new Set<string>();
+  const out: ClassifiedRecipe[] = recipes.map((r) => {
+    const bound = applyLiteralBindings(r, table).recipe;
+    for (const step of bound.collection.commands ?? []) for (const n of placeholdersOf(step.run)) published.add(n);
+    return {
+      id: r.id,
+      ksi_ids: r.ksi_ids,
+      automatable: r.automatable,
+      has_assertions: Array.isArray(r["assertions"]) && r["assertions"].length > 0,
+      result: classifyAwsRecipe(bound, list, params),
+    };
+  });
   const runnable = out.filter((r) => r.result.kind === "runnable");
+  const owed = new Set([...unboundParamsOf(table, params), ...published]);
+  for (const n of published) {
+    if ((RESERVED_AWS_PARAMS as readonly string[]).includes(n) || params[n] !== undefined) owed.delete(n);
+  }
   return {
     dataset,
     config: aws === undefined ? undefined : { account_id: aws.account_id, partition: aws.partition, region: aws.regions[0]! },
     window,
-    owed_params: aws === undefined ? unboundParamsOf(table, {}) : unboundParamsOf(table, params),
+    owed_params: [...owed].sort(),
     recipes: out,
     runnable: runnable.length,
     runnable_ksis: new Set(runnable.flatMap((r) => r.ksi_ids)).size,

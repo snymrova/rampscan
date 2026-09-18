@@ -15,7 +15,7 @@ const derivedDir = join(
   dirname(fileURLToPath(import.meta.url)),
   "../../../docs/context/ramprules/derived",
 );
-const PIN = "2026.07.14.01";
+const PIN = "2026.09.13.02";
 
 describe("loadLocalDataset", () => {
   it("answers ksisFor('ac-2.1') correctly against the snapshot", async () => {
@@ -36,7 +36,7 @@ describe("loadLocalDataset", () => {
     const recipe = ds.recipe("iam-credential-report");
     expect(recipe).toBeDefined();
     expect(recipe?.ksi_ids).toContain("KSI-IAM-APM");
-    expect(recipe?.control_ids).toContain("ac-2.1");
+    expect(recipe?.control_ids).toContain("ia-2");
     expect(ds.recipe("no-such-recipe")).toBeUndefined();
   });
 
@@ -85,7 +85,7 @@ describe("overlay_version pinning", () => {
   it("pins per slice — two slices carry different overlays under one dataset_version", async () => {
     // Not a hypothetical: this is why the pin cannot be a single constant.
     // The shipped snapshot holds automation-frontier at one overlay and
-    // aws-evidence at another, both at dataset_version 2026.07.14.01.
+    // aws-evidence at another, both at dataset_version 2026.09.13.02.
     expect(DEFAULT_OVERLAY_PINS["automation-frontier.json"]).not.toBe(
       DEFAULT_OVERLAY_PINS["aws-evidence.json"],
     );
@@ -180,7 +180,7 @@ describe("the plane pin — the third one, over upstream's own recipes", () => {
 
   it("reports every plane upstream stamps, read rather than assumed", async () => {
     const ds = await loadLocalDataset(derivedDir, PIN);
-    expect(ds.upstreamPlaneVersions()).toMatchObject({ aws: "1.6.1", pipeline: "0.5.1" });
+    expect(ds.upstreamPlaneVersions()).toMatchObject({ aws: "4.3.0", pipeline: "0.9.3" });
   });
 });
 

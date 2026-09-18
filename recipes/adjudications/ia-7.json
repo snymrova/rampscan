@@ -19,5 +19,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — and the signing is worth naming here rather than only reciting, because this is the control that asks what cryptographic module an evidence path authenticates to. This one authenticates to none: it signs with the runtime's own library on the machine that ran the scan, so no key custody moves to a service and no module outside the boundary is introduced by the act of evidencing.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

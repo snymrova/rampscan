@@ -1,12 +1,19 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slice": "glossary",
+  "contract_version": "1.0.0",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "covers": "The DATA in this response (derived slices and authored overlays). The site code is not licensed by it.",
+    "attribution": "ramprules.com"
+  },
   "data": {
     "info": {
       "title": "FedRAMP Consolidated Rules for 2026",
-      "version": "2026.07.14.01",
-      "lastUpdated": "2026-07-14"
+      "version": "2026.09.13.02",
+      "lastUpdated": "2026-09-13"
     },
     "entries": [
       {
@@ -49,13 +56,7 @@
           "agency",
           "agencies"
         ],
-        "referencedBy": [
-          {
-            "indicatorId": "KSI-SVC-RUD",
-            "indicatorName": "Removing Unwanted Data",
-            "themeKey": "SVC"
-          }
-        ]
+        "referencedBy": []
       },
       {
         "term": "All Affected Parties",
@@ -696,6 +697,14 @@
         "referencedBy": []
       },
       {
+        "term": "MAY",
+        "definition": "The rule is truly optional. Parties SHOULD address such rules in their security documentation by explaining their decisions about how they handle such rules.",
+        "note": "This definition only applies when the term is used in all capital letters in FedRAMP materials, otherwise the plain language meaning applies.",
+        "tag": "Force of the Rule",
+        "alts": [],
+        "referencedBy": []
+      },
+      {
         "term": "Minimal Customer Effect",
         "definition": "An unwanted customer effect that is only noticeable by some users. This includes minor inconveniences such as reduced performance.",
         "tag": "Customer Effect",
@@ -703,6 +712,22 @@
           "minimal customer effect",
           "minimal customer effects"
         ],
+        "referencedBy": []
+      },
+      {
+        "term": "MUST",
+        "definition": "The rule is an absolute requirement. Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability likely requiring corrective action and/or the denial of initial or ongoing FedRAMP Certification.",
+        "note": "This definition only applies when the term is used in all capital letters in FedRAMP materials, otherwise the plain language meaning applies.",
+        "tag": "Force of the Rule",
+        "alts": [],
+        "referencedBy": []
+      },
+      {
+        "term": "MUST NOT",
+        "definition": "The rule is an absolute prohibition. Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability likely requiring corrective action and/or the denial of initial or ongoing FedRAMP Certification.",
+        "note": "This definition only applies when the term is used in all capital letters in FedRAMP materials, otherwise the plain language meaning applies.",
+        "tag": "Force of the Rule",
+        "alts": [],
         "referencedBy": []
       },
       {
@@ -1014,33 +1039,7 @@
           "cloud service provider",
           "cloud service providers"
         ],
-        "referencedBy": [
-          {
-            "indicatorId": "KSI-CNA-IBP",
-            "indicatorName": "Implementing Best Practices",
-            "themeKey": "CNA"
-          },
-          {
-            "indicatorId": "KSI-PIY-RES",
-            "indicatorName": "Reviewing Executive Support",
-            "themeKey": "PIY"
-          },
-          {
-            "indicatorId": "KSI-PIY-RIS",
-            "indicatorName": "Reviewing Investments in Security",
-            "themeKey": "PIY"
-          },
-          {
-            "indicatorId": "KSI-PIY-RVD",
-            "indicatorName": "Reviewing Vulnerability Disclosures",
-            "themeKey": "PIY"
-          },
-          {
-            "indicatorId": "KSI-RPL-RRO",
-            "indicatorName": "Reviewing Recovery Objectives",
-            "themeKey": "RPL"
-          }
-        ]
+        "referencedBy": []
       },
       {
         "term": "Quarterly Review",
@@ -1117,6 +1116,22 @@
           "security decision records",
           "SDR"
         ],
+        "referencedBy": []
+      },
+      {
+        "term": "SHOULD",
+        "definition": "There may exist valid reasons in particular circumstances to ignore this rule, but the full implications must be understood and carefully weighed. Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.",
+        "note": "This definition only applies when the term is used in all capital letters in FedRAMP materials, otherwise the plain language meaning applies.",
+        "tag": "Force of the Rule",
+        "alts": [],
+        "referencedBy": []
+      },
+      {
+        "term": "SHOULD NOT",
+        "definition": "There may exist valid reasons in particular circumstances when the particular action is acceptable or even useful, but the full implications must be understand and carefully weighed. Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.",
+        "note": "This definition only applies when the term is used in all capital letters in FedRAMP materials, otherwise the plain language meaning applies.",
+        "tag": "Force of the Rule",
+        "alts": [],
         "referencedBy": []
       },
       {

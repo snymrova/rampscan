@@ -47,6 +47,13 @@ const TRANSFORM_TAILS: ReadonlyMap<string, StepTransform> = new Map([
 
 export interface RecipeStep {
   argv: string[];
+  /**
+   * The name upstream published for this step, which is the label an
+   * assertion's `<label>.<JMESPath>` addresses its document by (SPEC §14.4a).
+   * Upstream's, never derived here: it travels from the overlay through the
+   * request into intake, so no index is ever the join.
+   */
+  label: string;
   transform?: StepTransform;
 }
 
@@ -178,12 +185,11 @@ export function classifyAwsRecipe(
   list: AwsActionAllowlist,
   params: Readonly<Record<string, string>> = {},
 ): RecipeClass {
-  const commands = (recipe.collection as { commands?: unknown }).commands;
-  if (!Array.isArray(commands) || commands.length === 0) return { kind: "manual", reasons: [{ kind: "no-commands" }] };
+  const commands = recipe.collection.commands;
+  if (commands === undefined || commands.length === 0) return { kind: "manual", reasons: [{ kind: "no-commands" }] };
   const reasons: ManualReason[] = [];
   const steps: RecipeStep[] = [];
-  for (const raw of commands as unknown[]) {
-    const command = String(raw);
+  for (const { name, run: command } of commands) {
     let split = splitCommand(command);
     let transform: StepTransform | undefined;
     if (split.construct === "pipe") {
@@ -217,7 +223,7 @@ export function classifyAwsRecipe(
     }
     if (split.construct === undefined) {
       const argv = split.argv.map((w) => bind(w, params));
-      steps.push(transform === undefined ? { argv } : { argv, transform });
+      steps.push(transform === undefined ? { argv, label: name } : { argv, label: name, transform });
     }
   }
   return reasons.length > 0 ? { kind: "manual", reasons } : { kind: "runnable", steps };

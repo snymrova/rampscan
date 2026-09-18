@@ -18,6 +18,12 @@
     "note": "Same verdict and the same honest limit, reached from opposite sides of one claim. Upstream proves that authentication runs on signed, time-bounded temporary credentials rather than long-lived secrets — an estate fact this plane cannot see — and then cites the protocol for the resistance property itself. This plane cannot say which credentials an account used and can read the code that verifies them. Neither pass measures replay resistance and both say so, which is the part most worth citing: on a control where two independent passes each stop at 'cited, never measured', a confident automatable disposition from either would have been the warning sign rather than the achievement."
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto — the authentication path is read, never exercised. That matters here because the intuitive way to evidence replay resistance is to replay a captured credential against the running system, which requires a testing service inside the boundary, live credentials, and permission to attack production.",
+  "retired": {
+    "at": "2026-09-18",
+    "overlayVersion": "0.13.0",
+    "reason": "Retired on the re-pin to overlay 0.13.0. Upstream authored authenticator-strength-by-population over IA-02 (08) and the retirement concedes more than arrival: it concedes a sentence in this record's own rationale. That sentence said no evidence path measures replay resistance and that upstream \"says so and cites SigV4 from documentation rather than testing it\". At overlay 4.3.0 that is no longer the whole of their route — ListVirtualMFADevices names which principals hold a TOTP app rather than a passkey, security key or hardware token, so the measurable half of the enhancement (which factor a population actually holds, against AWS's own statement of which of its factors are phishing-resistant) is read from the API rather than argued from a specification. That is a genuinely stronger reading of what is measurable here than this record took, and it belongs in the retirement rather than in a footnote. The property itself is still nobody's: upstream does not test replay resistance either, and this record's remainder — a correct library used incorrectly reads in source exactly like a correct library — stands as written.",
+    "upstreamRecipeIds": ["authenticator-strength-by-population"]
+  },
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

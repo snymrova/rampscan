@@ -19,5 +19,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. The policy file is read in place and is not fetched from the published URL — which is the honest limit of the evidence and also the reason it adds no external system: verifying that the channel is live from the outside would mean a service that reaches the internet on the assessed system's behalf, and this evidence path has none.",
   "reviewed": "2026-08-17",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

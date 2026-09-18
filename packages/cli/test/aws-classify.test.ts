@@ -34,8 +34,8 @@ async function recipes() {
 function bindAll(rs: readonly AwsRecipe[]): Record<string, string> {
   const params: Record<string, string> = {};
   for (const r of rs) {
-    for (const c of ((r.collection as { commands?: string[] }).commands ?? [])) {
-      for (const name of placeholdersOf(c)) params[name] = `bound:${name}`;
+    for (const step of r.collection.commands ?? []) {
+      for (const name of placeholdersOf(step.run)) params[name] = `bound:${name}`;
     }
   }
   return params;
@@ -90,16 +90,23 @@ describe("splitCommand — one argv, or the construct that means it is not", () 
   });
 });
 
-describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)", () => {
-  it("unbound: every placeholder is a reason, and the two refused actions are named on their recipes", async () => {
+describe("T1-2 — classifyAwsRecipe is golden over the 57 pinned recipes (#168)", () => {
+  it("unbound: every placeholder is a reason, and the three refused actions are named on their recipes", async () => {
     const l = await list();
     const rs = await recipes();
-    expect(rs).toHaveLength(49);
+    expect(rs).toHaveLength(57);
     const out = new Map(rs.map((r) => [r.id, classifyAwsRecipe(r, l)]));
 
     const runnable = [...out.values()].filter((c) => c.kind === "runnable").length;
-    // computed, never typed: this is the number T1-5 prints and the plan's §1 table is replaced by
-    expect(runnable).toBe(31);
+    // computed, never typed: this is the number T1-5 prints and the plan's §1
+    // table is replaced by. Lower against overlay 4.3.0 than the 31 of 1.6.1,
+    // and not a regression: upstream turned its example literals into
+    // placeholders, so a recipe that used to classify against a documentation
+    // account id now says, correctly, that it needs a value first. Two more
+    // than T1-3's 22 because nothing here applies the reviewed literal table,
+    // so the example ids upstream still publishes as literals are taken as
+    // published
+    expect(runnable).toBe(24);
 
     const clock = out.get("clock-synchronization-and-timestamps")!;
     expect(clock.kind).toBe("manual");
@@ -134,18 +141,19 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     expect(report).toEqual({
       kind: "runnable",
       steps: [
-        { argv: ["aws", "iam", "generate-credential-report"] },
-        { argv: ["aws", "iam", "get-credential-report", "--query", "Content", "--output", "text"], transform: "base64-decode" },
+        { argv: ["aws", "iam", "generate-credential-report"], label: "generate-credential-report" },
+        { argv: ["aws", "iam", "get-credential-report", "--query", "GeneratedTime", "--output", "text"], label: "credential-report-generated-time" },
+        { argv: ["aws", "iam", "get-credential-report", "--query", "Content", "--output", "text"], label: "credential-report", transform: "base64-decode" },
       ],
     });
     // a pipe whose tail is not a known transform is still a shell construct
-    const other = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["aws iam list-roles | jq '.Roles[]'"] } }, l);
+    const other = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: [{ name: "list-roles", run: "aws iam list-roles | jq '.Roles[]'" }] } }, l);
     expect(other).toEqual({
       kind: "manual",
       reasons: [{ kind: "shell", construct: "pipe", command: "aws iam list-roles | jq '.Roles[]'" }],
     });
     // and the head keeps its own judgment: a refused action piped into a transform is refused
-    const refused = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["aws ssm send-command --x y | base64 -d"] } }, l);
+    const refused = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: [{ name: "send-command", run: "aws ssm send-command --x y | base64 -d" }] } }, l);
     expect(refused.kind).toBe("manual");
     if (refused.kind === "manual") expect(refused.reasons.map((r) => r.kind)).toEqual(["refused-action"]);
   });
@@ -159,10 +167,11 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
       .filter(([, c]) => c.kind === "manual");
     const summary = Object.fromEntries(manual.map(([id, c]) => [id, c.kind === "manual" ? kinds(c.reasons) : []]));
     expect(summary).toEqual({
+      "acquisition-scanning-and-sbom-inventory": ["refused-action"],
       "audit-reduction-and-report-generation": ["refused-action"],
       "clock-synchronization-and-timestamps": ["refused-action"],
     });
-    expect(rs.length - manual.length).toBe(47);
+    expect(rs.length - manual.length).toBe(54);
   });
 
   it("a runnable recipe's steps are argv with placeholders bound — the command run is the command published", async () => {
@@ -176,8 +185,8 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
     });
     expect(c.kind).toBe("runnable");
     if (c.kind === "runnable") {
-      expect(c.steps[0]).toEqual({ argv: ["aws", "sso-admin", "list-instances", "--query", "Instances[0].InstanceArn", "--output", "text"] });
-      expect(c.steps[1]).toEqual({ argv: ["aws", "sso-admin", "list-permission-sets", "--instance-arn", "arn:aws:sso:::instance/ssoins-0000"] });
+      expect(c.steps[0]).toEqual({ argv: ["aws", "sso-admin", "list-instances", "--query", "Instances[0].InstanceArn", "--output", "text"], label: "list-instances" });
+      expect(c.steps[1]).toEqual({ argv: ["aws", "sso-admin", "list-permission-sets", "--instance-arn", "arn:aws:sso:::instance/ssoins-0000"], label: "list-permission-sets" });
       for (const step of c.steps) expect(step.argv.join(" ")).not.toMatch(/<[A-Z_]+>/);
     }
   });
@@ -199,13 +208,13 @@ describe("T1-2 — classifyAwsRecipe is golden over the 49 pinned recipes (#168)
       kind: "manual",
       reasons: [{ kind: "no-commands" }],
     });
-    const c = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["aws iam delete-user --user-name a"] } }, l);
+    const c = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: [{ name: "delete-user", run: "aws iam delete-user --user-name a" }] } }, l);
     expect(c).toEqual({ kind: "manual", reasons: [{ kind: "unknown-action", action: "iam delete-user" }] });
   });
 
   it("a kubectl read is its own reason (T1-4a): a second axis the runner does not have yet", async () => {
     const l = await list();
-    const c = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: ["kubectl get pods -A -o json"] } }, l);
+    const c = classifyAwsRecipe({ id: "x", collection: { kind: "cli", commands: [{ name: "get-pods", run: "kubectl get pods -A -o json" }] } }, l);
     expect(c).toEqual({ kind: "manual", reasons: [{ kind: "kubectl", command: "kubectl get pods -A -o json" }] });
     if (c.kind === "manual") expect(describeReason(c.reasons[0]!)).toMatch(/T1-4a/);
   });

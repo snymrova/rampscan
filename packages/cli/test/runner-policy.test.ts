@@ -33,11 +33,11 @@ describe("rampscan runner policy (T3-3)", () => {
     expect(DENIAL_PROBES).toContain("athena:StartQueryExecution");
   });
 
-  it("no config: the actions of the 20 runnable recipes plus the runner's own; no refused action, no mutating probe, reproducible", async () => {
+  it("no config: the actions of the 22 runnable recipes plus the runner's own; no refused action, no mutating probe, reproducible", async () => {
     const { recipes, list, table } = await inputs();
     const report = classifyAwsRecipes(recipes, list, table, undefined, windowEnding(NOW, 30), DEFAULT_DATASET_PIN);
     const { policy, recipes: runnable } = runnerPolicy(report, list);
-    expect(runnable).toHaveLength(20);
+    expect(runnable).toHaveLength(22);
     expect(policy.Version).toBe("2012-10-17");
     const [own, reads] = policy.Statement;
     expect(own!.Action).toEqual(["iam:SimulatePrincipalPolicy", "sts:GetCallerIdentity"]);

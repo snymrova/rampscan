@@ -3,7 +3,7 @@
 # §2 (Package → Assessment → KSIs → Validations → Evidences → Artifacts),
 # written by us — shapes only, no content reuse. The KSI ids are the Phase One
 # numbered form on purpose, so ingesting it exercises the crosswalk
-# (recipes/crosswalks/ksi-phase-one-to-2026.07.14.01.json):
+# (recipes/crosswalks/ksi-phase-one-to-2026.09.13.02.json):
 #
 #   CNA-01  one Phase One KSI → one 2026 KSI; two evidences, one of them a
 #           script-produced export the package marks `automated: Yes`, the

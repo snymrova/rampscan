@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. On this enhancement the negative answer carries an extra caution rather than a reassurance: the evidence path that would close it is a system that reads and judges document content, which is the machinery the L4/L5 on-device model tier was cancelled for — a 0.5B model, given a context stating nothing had been recorded, drafted a passing verdict. Adding a judge to close a coverage limb would add to the boundary the one component this project has already refused on evidence.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

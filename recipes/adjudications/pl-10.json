@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. This control adds a caution worth stating in its own right: because the certification class is a per-invocation flag rather than a committed fact, and because the configuration that IS committed is refused above as evidence, nothing here lets the tool's own inputs become part of the authorization record it produces. An evidence path that could be tuned into a passing answer by editing its own settings would be a dependency of the worst kind, and the two refusals above are what keep it from being one.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }

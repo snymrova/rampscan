@@ -63,6 +63,26 @@ export type AwsActionAllowlist = z.infer<typeof AwsActionAllowlist>;
  * for, as ISO 8601 and as epoch seconds (`cloudtrail lookup-events` takes the
  * first, `logs start-query` the second).
  */
+/**
+ * The names the APPLIANCE binds at request time, which an operator's
+ * `aws.params` may therefore never set. Three groups:
+ *
+ *   the account      `ACCOUNT_ID`, `PARTITION`, `REGION`
+ *   our own window   `WINDOW_START`/`WINDOW_END`, `EPOCH_START`/`EPOCH_END` —
+ *                    the names the reviewed literal table rewrites an example
+ *                    date into
+ *   upstream's       `START_TIME`/`END_TIME`, `T0`/`T1`, `START_EPOCH`/
+ *                    `END_EPOCH`, `SINCE_EPOCH`, `SINCE_EPOCH_MS` — overlay
+ *                    4.3.0 publishes placeholders itself and spells the same
+ *                    window five ways, in ISO 8601, in epoch seconds and in
+ *                    epoch milliseconds
+ *
+ * The last group is reserved rather than left to the config for a reason of
+ * kind, not convenience: the window belongs to the REQUEST, and a config file
+ * written before the request cannot hold it. An operator asked to supply
+ * `T1` would either guess or leave it, and leaving it makes a dozen recipes
+ * read as manual for a gap that was ours.
+ */
 export const RESERVED_AWS_PARAMS = [
   "ACCOUNT_ID",
   "PARTITION",
@@ -71,6 +91,14 @@ export const RESERVED_AWS_PARAMS = [
   "WINDOW_END",
   "EPOCH_START",
   "EPOCH_END",
+  "START_TIME",
+  "END_TIME",
+  "T0",
+  "T1",
+  "START_EPOCH",
+  "END_EPOCH",
+  "SINCE_EPOCH",
+  "SINCE_EPOCH_MS",
 ] as const;
 export type ReservedAwsParam = (typeof RESERVED_AWS_PARAMS)[number];
 
@@ -130,28 +158,3 @@ export const AwsLiteralBindings = z.strictObject({
 });
 export type AwsLiteralBindings = z.infer<typeof AwsLiteralBindings>;
 
-// ---------------------------------------------------------------------------
-// Step labels (T2-5, SPEC §14.4a): the name an upstream assertion uses for a
-// step's document. Derived by rule — the step's `--config-rule-name(s)`,
-// else its CLI operation — with a reviewed override for the labels upstream
-// chose by hand (`identity-pool`, `public-zone-dnssec`).
-
-export const AWS_STEP_LABELS_TYPE = "https://rampscan.dev/aws-step-labels/v1" as const;
-
-export const AwsStepLabel = z.strictObject({
-  recipe: z.string().min(1),
-  /** 1-based index of the step in the recipe's published commands */
-  step: z.number().int().positive(),
-  label: z.string().regex(/^[A-Za-z0-9_-]+$/),
-  why: z.string().min(1),
-});
-export type AwsStepLabel = z.infer<typeof AwsStepLabel>;
-
-export const AwsStepLabels = z.strictObject({
-  _type: z.literal(AWS_STEP_LABELS_TYPE),
-  reviewed: z.string().min(1),
-  dataset: z.string().min(1),
-  rule: z.string().min(1),
-  entries: z.array(AwsStepLabel),
-});
-export type AwsStepLabels = z.infer<typeof AwsStepLabels>;

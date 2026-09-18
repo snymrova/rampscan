@@ -1,12 +1,19 @@
 {
-  "dataset_version": "2026.07.14.01",
-  "last_updated": "2026-07-14",
+  "dataset_version": "2026.09.13.02",
+  "last_updated": "2026-09-13",
   "slice": "coverage",
+  "contract_version": "1.0.0",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "covers": "The DATA in this response (derived slices and authored overlays). The site code is not licensed by it.",
+    "attribution": "ramprules.com"
+  },
   "data": {
     "info": {
       "title": "FedRAMP Consolidated Rules for 2026",
-      "version": "2026.07.14.01",
-      "lastUpdated": "2026-07-14"
+      "version": "2026.09.13.02",
+      "lastUpdated": "2026-09-13"
     },
     "classes": [
       {
@@ -223,7 +230,10 @@
           "sr-11.2",
           "sr-12"
         ],
-        "annualAssessmentCount": 35
+        "annualAssessmentCount": 35,
+        "indicatorsBindingCount": 46,
+        "classScopedCoveredCount": 95,
+        "reachLostAtClass": []
       },
       {
         "class": "c",
@@ -502,7 +512,10 @@
           "sr-11.2",
           "sr-12"
         ],
-        "annualAssessmentCount": 80
+        "annualAssessmentCount": 80,
+        "indicatorsBindingCount": 46,
+        "classScopedCoveredCount": 199,
+        "reachLostAtClass": []
       },
       {
         "class": "d",
@@ -868,7 +881,13 @@
           "sr-11.2",
           "sr-12"
         ],
-        "annualAssessmentCount": 101
+        "annualAssessmentCount": 101,
+        "indicatorsBindingCount": 41,
+        "classScopedCoveredCount": 197,
+        "reachLostAtClass": [
+          "ca-2.1",
+          "ca-7.1"
+        ]
       }
     ],
     "classesWithoutBaseline": [

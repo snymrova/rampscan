@@ -15,5 +15,5 @@
   },
   "externalSystem": "Nothing. Collectors take no network by decision, execution is local, and signing is node:crypto. Reading role assignments would mean reaching an identity provider or an HR directory, and reading training completion would mean reaching an LMS. Both are systems of record about employees, and an evidence path that held credentials to either would enlarge the authorization boundary by exactly the class of external system three of upstream's four overlapping rationales warn about. This plane adds neither, and refuses the control as a consequence rather than in spite of it.",
   "reviewed": "2026-08-18",
-  "datasetVersion": "2026.07.14.01"
+  "datasetVersion": "2026.09.13.02"
 }
