@@ -1,6 +1,9 @@
-import { readFile, readdir } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { addressableRules, loadRuleRegister, type RuleRegister } from "@rampscan/dataset";
 import { OfferingConfig } from "@rampscan/schema";
@@ -470,4 +473,67 @@ describe("reason 3's declaration surface", () => {
     expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
     expect(section?.note).toContain("class b does not oblige (CMU-CSO-UVM)");
   });
+});
+
+/**
+ * The one thing the unit suite above structurally cannot see: whether
+ * `main.ts` hands the register anything to work with.
+ *
+ * This test exists because it did not. `buildRejectionRegister` reprojects the
+ * exports' `problems` channel rather than recomputing it (§5), every arm of
+ * that reprojection was tested, and the shipped command passed no `problems`
+ * at all — so an undeclared next-OCR date reached nobody, and three sections
+ * carried only what they could compute for themselves while looking complete.
+ * A declared-but-unwired channel is invisible to a unit test by construction,
+ * so the guard has to run the command.
+ *
+ * It runs against a fixture config in a temp directory rather than this
+ * repository's own, so it is asserting the wiring and not the self-scan's
+ * current state: an offering that gains a next-OCR date should not break it.
+ */
+describe("the shipped command", () => {
+  it("hands the register the exports' problems, not just its own computations", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-submission-"));
+    await writeFile(
+      join(dir, "rampscan.config.json"),
+      // no `nextOngoingCertificationReportDate`, no assessor, no trust center:
+      // three problems the exports' channel reports and this register must
+      // carry under the reason each belongs to
+      JSON.stringify({ offering: declaredOffering() }, null, 2),
+    );
+    let stdout: string;
+    try {
+      // exit 1 is expected — the register exits 1 on the rejections it can
+      // stand behind, and this fixture earns several
+      ({ stdout } = await promisify(execFile)(
+        join(root, "node_modules/.bin/tsx"),
+        [
+          "packages/cli/src/main.ts",
+          "submission",
+          dir,
+          "--json",
+          "--ledger",
+          join(tmpdir(), "no-ledger-here"),
+        ],
+        { cwd: root, env: { ...process.env, NO_COLOR: "1" }, maxBuffer: 16 * 1024 * 1024 },
+      ));
+    } catch (cause) {
+      const out = (cause as { stdout?: string }).stdout;
+      if (typeof out !== "string" || out.length === 0) throw cause;
+      stdout = out;
+    }
+    const view = JSON.parse(stdout) as {
+      sections: { section: string; rows: { subject: string; ruleId?: string }[] }[];
+    };
+    const rowsOf = (name: string) =>
+      view.sections.find((s) => s.section === name)?.rows.map((r) => r.subject) ?? [];
+    // reprojected, each under the reason it belongs to rather than all in one place
+    expect(rowsOf("missing-example")).toContain("CCM-OCR-NRD");
+    expect(rowsOf("assessment-content")).toContain("CDS-CSO-PUB");
+    // and the trust-center section still prints ONE row for CDS-CSO-UTC: the
+    // section computes it from the offering and the channel reports it too,
+    // which is the dedupe by rule doing its job end to end
+    expect(rowsOf("trust-center-gate")).toEqual(["CDS-CSO-UTC"]);
+    await rm(dir, { recursive: true, force: true });
+  }, 60_000);
 });

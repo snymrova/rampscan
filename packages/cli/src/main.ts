@@ -28,6 +28,7 @@ import { renderCheckComment } from "./check-comment.js";
 import { buildFrontier, renderFrontier, unreviewedControls } from "./frontier.js";
 import { buildGapRegister, renderGapRegister } from "./gaps.js";
 import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
+import { buildOngoingCertificationReport, buildPackageOverview } from "./fedramp-exports.js";
 import { checkConformance, renderConformance } from "./fedramp-conformance.js";
 import { buildRejectionRegister, renderRejectionRegister } from "./submission.js";
 import { loadOffering } from "./offering.js";
@@ -995,6 +996,53 @@ async function main(): Promise<void> {
         submissionOffering = undefined;
       }
 
+      // reason 1, 2 and 5, REPROJECTED: the exports' own `problems` channel,
+      // read rather than recomputed (§5) — and read HERE rather than only in
+      // the unit suite, which is where it was until this commit. The register
+      // declared the reprojection and the shipped command handed it nothing to
+      // reproject, so three sections quietly carried only what they could
+      // compute for themselves and an undeclared next-OCR date reached nobody.
+      // Building the two documents is pure and writes nothing; only the
+      // problems are taken.
+      const submissionRepos = [
+        ...new Set(submissionProjection.methodRegisters.map((r) => r.repo)),
+      ].sort();
+      const submissionRepo =
+        values.repo ?? (submissionRepos.length === 1 ? submissionRepos[0] : undefined);
+      let submissionProblems: string[] | undefined;
+      if (submissionOffering === undefined) {
+        // nothing to read: the sections that would have carried these already
+        // say an offering was not supplied
+      } else if (submissionRepos.length > 1 && submissionRepo === undefined) {
+        // Not "pick the first", which is what §12.11's one-offering-per-document
+        // rule refuses: `FRC-APP-FCP` freshness over a union of offerings would
+        // let a fresh one mask a stale one, which is the optimistic direction.
+        console.error(
+          `the ledger holds ${submissionRepos.length} offerings (${submissionRepos.join(", ")}) — name the one this register speaks for with --repo to read the exports' problems channel; FRC-APP-FCP freshness over a union of offerings would let a fresh one mask a stale one`,
+        );
+      } else {
+        const submissionExportInput = {
+          offering: submissionOffering,
+          offeringClass: submissionClass,
+          ...(submissionRepo !== undefined ? { repo: submissionRepo } : {}),
+          projectedAt: submissionProjection.projectedAt,
+          datasetVersion: submissionProjection.datasetVersion,
+          methodRegisters: submissionProjection.methodRegisters.filter(
+            (r) => submissionRepo === undefined || r.repo === submissionRepo,
+          ),
+          vulnerabilities: submissionProjection.vulnerabilities.filter(
+            (v) => submissionRepo === undefined || v.repo === submissionRepo,
+          ),
+          drift: submissionProjection.drift.filter(
+            (d) => submissionRepo === undefined || d.repo === submissionRepo,
+          ),
+        };
+        submissionProblems = [
+          ...buildPackageOverview(submissionExportInput).problems,
+          ...(buildOngoingCertificationReport(submissionExportInput).export?.problems ?? []),
+        ];
+      }
+
       // reason 4, REPROJECTED: `checkConformance` is the one verdict on schema
       // validity and this register does not re-implement it (§5). A directory
       // that is not there leaves the section unmeasured rather than clean.
@@ -1015,6 +1063,7 @@ async function main(): Promise<void> {
         ksis: submissionKsis,
         ...(submissionOffering !== undefined ? { offering: submissionOffering } : {}),
         ...(submissionConformance !== undefined ? { conformance: submissionConformance } : {}),
+        ...(submissionProblems !== undefined ? { problems: submissionProblems } : {}),
         outDir: submissionOut,
       });
       if (values.json) console.log(JSON.stringify(submissionView, null, 2));
