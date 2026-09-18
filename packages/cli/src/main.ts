@@ -31,6 +31,7 @@ import { renderFedrampExports, writeFedrampExports } from "./fedramp-run.js";
 import { buildOngoingCertificationReport, buildPackageOverview } from "./fedramp-exports.js";
 import { checkConformance, renderConformance } from "./fedramp-conformance.js";
 import { buildRejectionRegister, renderRejectionRegister } from "./submission.js";
+import { readSdrCoverage, type SdrCoverage } from "./sdr.js";
 import { loadOffering } from "./offering.js";
 import { mintComputedArtifact } from "./artifacts.js";
 import { scaffoldArtifact } from "./artifacts-scaffold.js";
@@ -156,8 +157,12 @@ function usage(): never {
       "                    trust-center gate prints UNMEASURED always: it is FedRAMP's first",
       "                    listed reason and a property of a live URL this appliance does not",
       "                    fetch (#213). Exits 1 only on a rejection the appliance can stand",
-      "                    behind — an unaddressed rule is counted and named, never accused,",
-      "                    until the declaration surface exists. Accepts --class a|b|c|d",
+      "                    behind: with --sdr <security-decision-record.json> that includes a",
+      "                    rule or KSI the record omits, which is what SDR-CSO-FRR obliges and",
+      "                    what #167 reason 3 rejects on — the schema's own status enum admits",
+      "                    \"Not Implemented\", so declaring a rule unimplemented is compliance",
+      "                    and saying nothing is not. Without --sdr reason 3 reads UNMEASURED",
+      "                    and accuses nobody. Accepts --class a|b|c|d",
       "  gaps              the gap register as a computation (plan Q3 exit): every G1–G6, G8,",
       "                    G13 row, each citing its rule id and the evidence digest where",
       "                    evidence exists to cite. Accepts --class a|b|c|d like frontier",
@@ -239,6 +244,7 @@ async function main(): Promise<void> {
     options: {
       out: { type: "string" },
       ledger: { type: "string" },
+      sdr: { type: "string" },
       keys: { type: "string" },
       db: { type: "string" },
       dataset: { type: "string" },
@@ -1057,10 +1063,18 @@ async function main(): Promise<void> {
         submissionConformance = undefined;
       }
 
+      // P2-1: the Security Decision Record, reason 3's actual subject. Read
+      // before the register so a bad path fails loudly rather than silently
+      // downgrading the section to unmeasured — an unreadable SDR the user
+      // asked for is an error, not an absence.
+      let submissionSdr: SdrCoverage | undefined;
+      if (values.sdr !== undefined) submissionSdr = await readSdrCoverage(values.sdr);
+
       const submissionView = await buildRejectionRegister({
         register: ruleRegister,
         offeringClass: submissionClass,
         ksis: submissionKsis,
+        ...(submissionSdr !== undefined ? { sdr: submissionSdr } : {}),
         ...(submissionOffering !== undefined ? { offering: submissionOffering } : {}),
         ...(submissionConformance !== undefined ? { conformance: submissionConformance } : {}),
         ...(submissionProblems !== undefined ? { problems: submissionProblems } : {}),
@@ -1068,9 +1082,12 @@ async function main(): Promise<void> {
       });
       if (values.json) console.log(JSON.stringify(submissionView, null, 2));
       else console.log(renderRejectionRegister(submissionView, useColor));
-      // Only rejections the appliance can stand behind exit 1. An unaddressed
-      // rule is not one of them until P2-1 and P2-2 land — see the section's
-      // own note, and `submission.test.ts` for why either alternative is worse.
+      // Only rejections the appliance can stand behind exit 1. Since P2-1 that
+      // includes a rule or KSI the Security Decision Record omits, because
+      // SDR-CSO-FRR obliges a row per applicable rule and the schema admits
+      // "Not Implemented" as a status — so silence is the defect, read off the
+      // artifact FedRAMP reads. Without --sdr reason 3 is UNMEASURED and
+      // accuses nobody.
       if (submissionView.rejections > 0) process.exit(1);
       return;
     }

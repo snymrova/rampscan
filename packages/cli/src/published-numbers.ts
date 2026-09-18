@@ -198,27 +198,29 @@ export function frontierDrift(readme: string, frontierOutput: string): string[] 
  */
 export function submissionDrift(readme: string, submissionJson: string): string[] {
   const said = readmeFigures(readme).submission;
+  // Read off the view's own top-level figures rather than a section's state
+  // counts. Since P2-1 reason 3 is UNMEASURED without an SDR — whether a
+  // package answers a rule is a question about a document this run may not
+  // have been given — while the denominator and what this appliance computes
+  // are facts about the catalog and about rampscan, true either way. The gate
+  // reads the pair that always exists, so it stops breaking on a register that
+  // is honestly silent.
   const view = JSON.parse(submissionJson) as {
-    sections: Array<{
-      section: string;
-      rows: Array<{ force?: string }>;
-      states?: { computed: number; declared: number; outside: number; unaddressed: number };
-    }>;
+    addressable?: number;
+    computed?: number;
+    sections: Array<{ section: string; rows: Array<{ force?: string }> }>;
   };
-  const section = view.sections.find((x) => x.section === "unaddressed-rules");
-  if (section?.states === undefined) {
+  if (typeof view.addressable !== "number" || typeof view.computed !== "number") {
     throw new PublishedNumbersError(
-      "`rampscan submission --json` did not carry an `unaddressed-rules` section with its four state " +
-        "counts — the register moved; move this gate with it",
+      "`rampscan submission --json` did not carry `addressable` and `computed` at the top level — " +
+        "the register moved; move this gate with it",
     );
   }
-  const states = section.states;
-  const addressable = states.computed + states.declared + states.outside + states.unaddressed;
   const drift: string[] = [];
-  if (said.addressable !== addressable || said.computed !== states.computed) {
+  if (said.addressable !== view.addressable || said.computed !== view.computed) {
     drift.push(
       `README says ${said.addressable} rules are addressable at class b and rampscan answers ${said.computed}; ` +
-        `\`rampscan submission\` says ${addressable} and ${states.computed}`,
+        `\`rampscan submission\` says ${view.addressable} and ${view.computed}`,
     );
   }
   // The MUST/SHOULD split is the register's, over the rules it prints — the

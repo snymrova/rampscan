@@ -7,11 +7,11 @@ import { join } from "node:path";
 //
 // Two halves, and the second one needs its reasoning on the record.
 //
-// THE PINS. FedRAMP semvers each CR26 draft schema independently: the three
-// files here read 0.1.4, 0.3.0 and 0.2.0 off the same 2026-06-24 date stamp, so
-// the pin is per file, exactly as `DEFAULT_OVERLAY_PINS` is per slice and for
-// the same reason — one global constant would have been wrong the day it was
-// written. Each is pinned on `$schemaVersion` AND on the sha256 of the bytes,
+// THE PINS. FedRAMP semvers each CR26 draft schema independently: the four
+// files here read 0.1.4, 0.3.0, 0.2.0 and 1.1.1 off the same 2026-06-24 date
+// stamp, so the pin is per file, exactly as `DEFAULT_OVERLAY_PINS` is per
+// slice and for the same reason — one global constant would have been wrong
+// the day it was written. Each is pinned on `$schemaVersion` AND on the sha256 of the bytes,
 // because these are DRAFTS: a re-publication under an unchanged date and an
 // unchanged version is a move a draft can make, and it is precisely the class
 // of move `packages/dataset/src/pins.ts` was written to complain about — a
@@ -20,7 +20,7 @@ import { join } from "node:path";
 // THE VALIDATOR, AND WHY IT IS NOT AJV. The house has declined a dependency for
 // a bounded, testable job before — ustar by hand in `export.ts`, DSSE without
 // cosign, `setTimeout` without node-cron — and the job here is bounded twice
-// over: it validates against THREE PINNED FILES, whose complete keyword set is
+// over: it validates against FOUR PINNED FILES, whose complete keyword set is
 // enumerable and enumerated below. What makes that safe rather than merely
 // smaller is the failure direction:
 //
@@ -38,7 +38,7 @@ import { join } from "node:path";
 
 export const FEDRAMP_SCHEMA_DIR = join("docs", "context", "fedramp-schemas");
 
-/** The stamp every one of the three pinned files shares. */
+/** The stamp every one of the four pinned files shares. */
 export const FEDRAMP_SCHEMA_DATE = "2026-06-24";
 
 export interface SchemaPin {
@@ -65,18 +65,27 @@ export const FEDRAMP_SCHEMA_PINS: Readonly<Record<string, SchemaPin>> = {
     schemaVersion: "0.3.0",
     sha256: "1d2468ace4f2e9f08471ec2dae38e9f7847b04cd12ac54b61b0923319d16622d",
   },
+  // Vendored 2026-09-18 for P2-1. The research note's P2-6 said to take this
+  // file "only if P2 actually validates against it"; the submission register
+  // now reads it, so the condition is met. Its 1.1.1 is the furthest along of
+  // the four and is why the pin was never global.
+  "fedramp-security-decision-record-schema-2026-06-24.json": {
+    schemaVersion: "1.1.1",
+    sha256: "6a6d7dca1a9ae0031c06df6213bf5c5631e9b9b5fb81c050403cfd723484be86",
+  },
 };
 
 export const PACKAGE_OVERVIEW_SCHEMA =
   "fedramp-certification-package-overview-schema-2026-06-24.json";
 export const OCR_SCHEMA = "fedramp-ongoing-certification-report-schema-2026-06-24.json";
 export const COMMON_SCHEMA = "fedramp-common-definitions-schema-2026-06-24.json";
+export const SDR_SCHEMA = "fedramp-security-decision-record-schema-2026-06-24.json";
 
 type Json = unknown;
 type SchemaNode = Record<string, Json>;
 
 /**
- * Every keyword the three pinned schemas use, split by what we do with it.
+ * Every keyword the four pinned schemas use, split by what we do with it.
  * Derived from the files, not from memory: the enumeration is a test.
  */
 const ASSERTIONS = new Set([
