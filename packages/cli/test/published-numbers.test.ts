@@ -11,6 +11,7 @@ import {
   readmeFigures,
   reportSelfScan,
   selfScanDrift,
+  submissionDrift,
   suiteDrift,
 } from "../src/published-numbers.js";
 
@@ -46,15 +47,47 @@ async function frontier(): Promise<string> {
   return stdout;
 }
 
+/**
+ * `pnpm rampscan submission --json`, over no ledger, for the same reason the
+ * frontier arm runs over none: the denominator is derived from the catalog,
+ * the recipes and the pinned dataset alone, so it is the same in CI as on a
+ * developer's machine. Exit 1 is EXPECTED — the register exits 1 on the
+ * rejections it can stand behind, and this repository's own offering declares
+ * no assessor — so the stdout is read off the rejection rather than treated as
+ * a failure to run.
+ */
+async function submission(): Promise<string> {
+  try {
+    const { stdout } = await run(
+      join(REPO_ROOT, "node_modules/.bin/tsx"),
+      [
+        "packages/cli/src/main.ts",
+        "submission",
+        "--json",
+        "--ledger",
+        join(tmpdir(), "no-ledger-here"),
+      ],
+      { cwd: REPO_ROOT, env: { ...process.env, NO_COLOR: "1" }, maxBuffer: 16 * 1024 * 1024 },
+    );
+    return stdout;
+  } catch (cause) {
+    const stdout = (cause as { stdout?: string }).stdout;
+    if (typeof stdout === "string" && stdout.length > 0) return stdout;
+    throw cause;
+  }
+}
+
 let readme: string;
 let report: string;
 let live: string;
+let liveSubmission: string;
 
 beforeAll(async () => {
-  [readme, report, live] = await Promise.all([
+  [readme, report, live, liveSubmission] = await Promise.all([
     readFile(README, "utf8"),
     readFile(REPORT, "utf8"),
     frontier(),
+    submission(),
   ]);
 });
 
@@ -69,6 +102,10 @@ describe("published numbers — the README against the commands that produce its
 
   it("the frontier block and the floor sentence are what `rampscan frontier` prints today", () => {
     expect(frontierDrift(readme, live)).toEqual([]);
+  });
+
+  it("the rejection register's denominator is what `rampscan submission` prints today", () => {
+    expect(submissionDrift(readme, liveSubmission)).toEqual([]);
   });
 
   it("the self-scan line is the generated report's, at the commit the report names", () => {
@@ -107,6 +144,20 @@ describe("the gate fails on a hand-edited figure (ground rule 7)", () => {
     expect(frontierDrift(stale, live)).toEqual([
       expect.stringContaining(`README: floor met on ${figures.floor.met + 1} of`),
     ]);
+  });
+
+  it("names a rule denominator the register no longer prints", () => {
+    const figures = readmeFigures(readme).submission;
+    const stale = readme.replace(
+      `**${figures.addressable} rules are addressable at class b`,
+      `**${figures.addressable + 8} rules are addressable at class b`,
+    );
+    const drift = submissionDrift(stale, liveSubmission);
+    expect(drift).toHaveLength(2);
+    expect(drift[0]).toContain(`says ${figures.addressable + 8} rules are addressable`);
+    // and the internal-consistency arm fires too: the MUST/SHOULD split no
+    // longer adds up to the total, which is the shape of a partial hand-edit
+    expect(drift[1]).toContain("does not add up");
   });
 
   it("names a self-scan line quoted at a commit the report was not generated from", () => {

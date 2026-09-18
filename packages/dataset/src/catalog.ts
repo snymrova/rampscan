@@ -770,3 +770,338 @@ export function requiredKsis(catalog: KsiCatalog, cls: OfferingClass): readonly 
 export function optionalKsis(catalog: KsiCatalog, cls: OfferingClass): readonly string[] {
   return catalog.applicability.stated ? catalog.applicability.optionalAt[cls] : [];
 }
+
+// ---------------------------------------------------------------------------
+// The FRR rule register (P2-0, docs/RESEARCH-REJECTION-LINTER.md §2).
+//
+// The KSI loaders above read the 46 indicators. This reads the OTHER half of
+// the same file: the 246 FedRAMP Requirements rules, which until now nothing
+// in this repository enumerated — roughly sixteen rule ids were hardcoded at
+// the sites that needed them, and the `CPO-*` rules had no TypeScript
+// reference at all. FedRAMP/community#167's reason 3 ("ALL MUSTs and SHOULDs
+// applicable to your class need to be addressed") cannot be checked without
+// the denominator, so this is where the denominator comes from.
+//
+// One reader, in the package where rule text is read, for the reason
+// `ksi-register.ts:44` and `catalog.ts:196` give: one fact computed twice is
+// a bug here.
+// ---------------------------------------------------------------------------
+
+/**
+ * A rule's scope inside its document: `all` applies to every certification
+ * type, `20x` to 20x only, `rev5` to Rev5 only. Validated against this closed
+ * set so a republication that introduces a fourth scope arrives as a refused
+ * load rather than as rules silently counted in or out (§13.7 rule 1).
+ */
+const RULE_SCOPES = ["all", "20x", "rev5"] as const;
+export type RuleScope = (typeof RULE_SCOPES)[number];
+
+/** Applicability as the SUBSET declares it — no rule carries its own. */
+export interface RuleApplicability {
+  readonly types: readonly string[];
+  readonly paths: readonly string[];
+  readonly classes: readonly OfferingClass[];
+  readonly affects: readonly string[];
+}
+
+export interface FrrRule {
+  readonly id: string;
+  /** the FRR document key, e.g. `FRC` */
+  readonly document: string;
+  readonly documentName: string;
+  readonly scope: RuleScope;
+  /** the subset key, e.g. `CSX` */
+  readonly subset: string;
+  readonly name: string;
+  /** the statement, or null when the rule states one per class — read it with `effectiveStatement` */
+  readonly statement: string | null;
+  /** the per-class statement, or null when the rule states a single one */
+  readonly statementByClass: Readonly<Partial<Record<OfferingClass, string>>> | null;
+  /** the single force, or null when the rule carries `varies_by_class` */
+  readonly force: string | null;
+  /** the per-class force, or null when the rule carries a single one */
+  readonly forceByClass: Readonly<Partial<Record<OfferingClass, string>>> | null;
+  readonly affects: readonly string[];
+  /**
+   * The subset's declared applicability, or **null when the subset declares
+   * none** — never coerced to an empty applicability, because the two mean
+   * opposite things (§2b).
+   */
+  readonly applicability: RuleApplicability | null;
+  /** the schema this rule names, if any — 24 rules do */
+  readonly schemaUrl: string | null;
+}
+
+export interface RuleRegister {
+  readonly datasetVersion: string;
+  readonly rules: readonly FrrRule[];
+  readonly source: string;
+  /**
+   * `DOCUMENT/SUBSET` for every subset that carries rules a 20x register can
+   * address and declares no applicability, ascending. Named out loud rather
+   * than absorbed, the twin of `KsiRegisterView.summary.applicabilityUnstated`.
+   */
+  readonly applicabilityUnstated: readonly string[];
+  /** why that list is not empty, in words a report can print */
+  readonly applicabilityUnstatedReason: string;
+  /**
+   * Upstream publishes this same distribution in `obligations.json`, over both
+   * arms, from the other leg of §12.4. Computing it here means the enumeration
+   * is checked against a number this repository did not derive: `requirement`
+   * counts each rule's single force and therefore omits the class-varied
+   * rules, which is what upstream's own arm does; `withClass` counts every
+   * class variant. The equality is asserted in the test, not assumed.
+   */
+  readonly forceDistribution: {
+    readonly requirement: Readonly<Record<string, number>>;
+    readonly withClass: Readonly<Record<string, number>>;
+  };
+}
+
+const RuleApplicabilitySchema = z
+  .object({
+    types: z.array(z.string()),
+    paths: z.array(z.string()),
+    classes: z.array(z.string()),
+    affects: z.array(z.string()),
+  })
+  .passthrough();
+
+const FrrRuleSchema = z
+  .object({
+    name: z.string(),
+    statement: z.string().optional(),
+    force: z.string().optional(),
+    varies_by_class: z.unknown().optional(),
+    affects: z.array(z.string()),
+    schema: z.object({ url: z.string() }).passthrough().optional(),
+  })
+  .passthrough();
+
+const FrrDocumentSchema = z
+  .object({
+    info: z
+      .object({
+        name: z.string(),
+        subsets: z
+          .record(z.string(), z.object({ applicability: RuleApplicabilitySchema.optional() }).passthrough())
+          .optional(),
+      })
+      .passthrough(),
+    data: z.record(z.string(), z.record(z.string(), z.record(z.string(), z.unknown()))),
+  })
+  .passthrough();
+
+const RuleRegisterFile = z
+  .object({
+    info: z.object({ version: z.string() }).passthrough(),
+    FRR: z.record(z.string(), FrrDocumentSchema),
+  })
+  .passthrough();
+
+function classesOf(declared: readonly string[], subset: string, where: string): OfferingClass[] {
+  return declared.map((c) => {
+    const cls = c.toLowerCase() as OfferingClass;
+    if (!OFFERING_CLASSES.includes(cls)) {
+      throw new CatalogSourceError(where, `subset ${subset} declares class ${c}, which is not a 20x class`);
+    }
+    return cls;
+  });
+}
+
+/**
+ * The per-class variants of a `varies_by_class` rule — force AND statement
+ * together, because they vary together.
+ *
+ * Reading only the force was P2-0's own version of the trap §2a warns about:
+ * `FRC-CSX-VVK`'s force came out right and its statement came out `null`,
+ * along with 28 others, because a rule that states one sentence per class has
+ * no sentence at the top level to read. The same `varies_by_class` block holds
+ * both, so taking one and discarding the other is the bug, not the schema's.
+ */
+function variantsByClassOf(
+  variesByClass: unknown,
+  id: string,
+  where: string,
+): Partial<Record<OfferingClass, { force: string; statement: string }>> {
+  const parsed = VariesByClass.parse(variesByClass);
+  const byClass: Partial<Record<OfferingClass, { force: string; statement: string }>> = {};
+  for (const [cls, variant] of Object.entries(parsed)) {
+    if (!OFFERING_CLASSES.includes(cls as OfferingClass)) {
+      throw new CatalogSourceError(where, `${id} varies by class ${cls}, which is not a 20x class`);
+    }
+    byClass[cls as OfferingClass] = { force: variant.force, statement: variant.statement };
+  }
+  return byClass;
+}
+
+/**
+ * The force this rule carries AT THIS CLASS, which for 29 of the 246 rules is
+ * not the same as its force.
+ *
+ * This function is the whole of §2a's trap, closed. `FRC-CSX-VVK` reads
+ * MAY / SHOULD / MUST / MUST across classes a–d; a reader that took the
+ * top-level `force` would get `null` for it and for 28 others, and every
+ * class would come out with the same denominator. Returns null when the rule
+ * states no force at this class — which is a rule the class does not oblige,
+ * not a rule with no force.
+ */
+export function effectiveForce(rule: FrrRule, cls: OfferingClass): string | null {
+  return rule.forceByClass ? (rule.forceByClass[cls] ?? null) : rule.force;
+}
+
+/**
+ * The rule's own sentence AT THIS CLASS — `effectiveForce`'s other half, and
+ * necessary for the same reason.
+ *
+ * 21 of the 129 rules addressable at class b state a sentence per class and
+ * none at the top level, so a reader taking `statement` gets `null` for them:
+ * `CDS-CSO-AVR` is SHOULD at class a and MUST at b and says so in each
+ * variant's own words. Whoever reviews these rules needs the sentence that
+ * binds THIS class, not the absence of one.
+ */
+export function effectiveStatement(rule: FrrRule, cls: OfferingClass): string | null {
+  return rule.statementByClass ? (rule.statementByClass[cls] ?? null) : rule.statement;
+}
+
+/**
+ * The rules a provider seeking certification at this class must or should
+ * address — reason 3's denominator, and the number nobody in this field
+ * publishes (129 at class b, 131 at c, 132 at d).
+ *
+ * The filter, stated so a reader can re-derive it rather than trust it:
+ *
+ *   1. the rule's scope is not `rev5` — a 20x certification does not owe the
+ *      Rev5-only rules;
+ *   2. its subset's applicability, WHEN DECLARED, names type `20x` and names
+ *      this class. When the subset declares none, the rule is **kept** (§2b):
+ *      the four subsets in that state are all `20x` subsets, and dropping
+ *      them would drop the method floor, the history floor and the five owed
+ *      artifacts — the three rules this repository is built on;
+ *   3. the rule's own `affects` names `Providers` — the register also holds
+ *      rules addressed to FedRAMP, Agencies, Assessors and Advisors, which a
+ *      provider's submission is not judged against;
+ *   4. its effective force at this class is MUST or SHOULD. MAY is not owed,
+ *      and MUST NOT / SHOULD NOT are prohibitions rather than things a
+ *      package addresses.
+ */
+export function addressableRules(register: RuleRegister, cls: OfferingClass): readonly FrrRule[] {
+  return register.rules.filter((rule) => {
+    if (rule.scope === "rev5") return false;
+    if (rule.applicability !== null) {
+      if (!rule.applicability.types.includes("20x")) return false;
+      if (!rule.applicability.classes.includes(cls)) return false;
+    }
+    if (!rule.affects.includes("Providers")) return false;
+    const force = effectiveForce(rule, cls);
+    return force === "MUST" || force === "SHOULD";
+  });
+}
+
+/**
+ * Read the FRR rule set from `fedramp-consolidated-rules.json` at the pin —
+ * Path B of §12.4, the same file `loadKsiCatalogFromRules` reads for the
+ * indicators.
+ */
+export async function loadRuleRegister(rulesFile: string, pin: string): Promise<RuleRegister> {
+  const where = basename(rulesFile);
+  const file = RuleRegisterFile.parse(JSON.parse(await readFile(rulesFile, "utf8")));
+  if (file.info.version !== pin) {
+    throw new DatasetVersionMismatchError(pin, file.info.version, where);
+  }
+
+  const rules: FrrRule[] = [];
+  const requirement: Record<string, number> = {};
+  const withClass: Record<string, number> = {};
+  const unstated = new Set<string>();
+
+  for (const [document, doc] of Object.entries(file.FRR)) {
+    const subsets = doc.info.subsets ?? {};
+    for (const [scope, groups] of Object.entries(doc.data)) {
+      if (!RULE_SCOPES.includes(scope as RuleScope)) {
+        throw new CatalogSourceError(where, `FRR.${document}.data carries scope ${scope}, which is not a known rule scope`);
+      }
+      for (const [subset, group] of Object.entries(groups)) {
+        const declared = subsets[subset]?.applicability;
+        const applicability: RuleApplicability | null = declared
+          ? {
+              types: declared.types,
+              paths: declared.paths,
+              classes: classesOf(declared.classes, subset, where),
+              affects: declared.affects,
+            }
+          : null;
+        if (applicability === null && scope !== "rev5") unstated.add(`${document}/${subset}`);
+
+        for (const [id, raw] of Object.entries(group)) {
+          const rule = FrrRuleSchema.parse(raw);
+          if (rule.force === undefined && rule.varies_by_class === undefined) {
+            throw new CatalogSourceError(where, `${id} carries neither a force nor varies_by_class`);
+          }
+          const variants =
+            rule.varies_by_class === undefined
+              ? null
+              : variantsByClassOf(rule.varies_by_class, id, where);
+          const forceByClass =
+            variants === null
+              ? null
+              : (Object.fromEntries(
+                  Object.entries(variants).map(([cls, v]) => [cls, v.force]),
+                ) as Partial<Record<OfferingClass, string>>);
+          const statementByClass =
+            variants === null
+              ? null
+              : (Object.fromEntries(
+                  Object.entries(variants).map(([cls, v]) => [cls, v.statement]),
+                ) as Partial<Record<OfferingClass, string>>);
+
+          // Upstream's `requirement` arm counts a rule's single force and so
+          // omits the class-varied rules; `withClass` counts every variant.
+          // Reproducing both is what proves this walk against a number this
+          // repository did not derive.
+          if (forceByClass === null) {
+            requirement[rule.force as string] = (requirement[rule.force as string] ?? 0) + 1;
+            withClass[rule.force as string] = (withClass[rule.force as string] ?? 0) + 1;
+          } else {
+            for (const force of Object.values(forceByClass)) {
+              withClass[force] = (withClass[force] ?? 0) + 1;
+            }
+          }
+
+          rules.push({
+            id,
+            document,
+            documentName: doc.info.name,
+            scope: scope as RuleScope,
+            subset,
+            name: rule.name,
+            statement: rule.statement ?? null,
+            statementByClass,
+            force: rule.force ?? null,
+            forceByClass,
+            affects: rule.affects,
+            applicability,
+            schemaUrl: rule.schema?.url ?? null,
+          });
+        }
+      }
+    }
+  }
+
+  const applicabilityUnstated = [...unstated].sort();
+  return {
+    datasetVersion: pin,
+    rules,
+    source: where,
+    applicabilityUnstated,
+    applicabilityUnstatedReason:
+      applicabilityUnstated.length === 0
+        ? "every subset carrying rules declares its applicability"
+        : `${applicabilityUnstated.join(", ")} carry rules with no declared applicability — ` +
+          `the subset is absent from its document's own \`info.subsets\`, and every one of them is a 20x subset. ` +
+          `Those rules are counted as APPLICABLE at every class and named here, because reading the gap as ` +
+          `"does not apply" would silently drop FRC-CSX-VVK, FRC-CSX-MOT and SDR-CSX-KSI (ground rule 7). ` +
+          `Rev5-scope subsets carry the same gap and are outside any 20x register.`,
+    forceDistribution: { requirement, withClass },
+  };
+}
