@@ -27,7 +27,7 @@ Stated in full, as the JSON carries them:
 - ksiAssessment is empty on every row: it is the independent assessor's summary to supply, and no assessed body is in the ledger
 - evidenceLocation is an RFC 6920 `ni:` name over each bundle's digest: it identifies the signed bundle but a reader without this ledger cannot fetch it. Declare `offering.evidenceBaseUri` once the bundles are published
 - 127 of 129 rules addressable at class b have no row: the offering's ruleCoverage does not declare them, and SDR-CSO-FRR wants each one explained as followed or not followed with a reason. Omitting a row is FedRAMP's rejection reason 3 (community #167). 16 of them are rules rampscan computes; the evidence exists, and a declaration is what gives it a row. They are listed in x-rampscan.unaddressedRules
-- SDR-CSX-KMT (MUST at class b) wants historical metrics per KSI, and this document carries none: the pinned schema has no field for them (FedRAMP/schemas#10), and rampscan's carriage in x-rampscan lands in R3
+- SDR-CSX-KMT (MUST at class b): historical metrics are carried under x-rampscan.metrics, outside the pinned schema, which has no field for them (FedRAMP/schemas#10). A reviewer reading only the schema's fields will not see them
 
 ## Key Security Indicators
 
@@ -1669,6 +1669,60 @@ Stated in full, as the JSON carries them:
 |---|---|---|---|
 | Report | 2026-09-17 | pipeline:secrets-scan: evidenced, process-generated evidence | `ni:///sha-256;qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo` |
 
+## Historical metrics (SDR-CSX-KMT)
+
+SDR-CSX-KMT asks for these in the Security Decision Record, and the pinned schema has no field for them (FedRAMP/schemas#10). They are carried here, outside the schema, until FedRAMP names a place.
+
+No FedRAMP rule defines a metric (FedRAMP/schemas#10, question 3). FRC-CSX-MOT names one, status from persistent validation, so a KSI's metric for a day is the ksiImplementationStatus rampscan would have computed at that day's end, plus the counts it was computed from (the statusBasis fields of the same names). Each day is refolded from the ledger, never accumulated, so the same ledger at the same instant yields the same bytes. A day before the offering's first scan is absent: it is counted in daysAbsent and given no status, never a zero.
+
+The series reaches from 2025-09-18 to 2026-09-17 (365 days; UTC days; a day's metric is folded at its last millisecond, and only days that ended at or before the record's instant are included). The first covered day is 2026-08-09. The daily data is not included at this class.
+
+Days per status are Implemented / Partially Implemented / Not Implemented.
+
+| KSI | Past 30 days: covered | Days per status | Last | Past year: covered | Days per status | Last |
+|---|---|---|---|---|---|---|
+| KSI-CED-RAT | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CMT-LMC | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CMT-RMV | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CMT-RVP | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CMT-VTD | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-DFP | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-IBP | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-MAT | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-OFA | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-RNT | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-RVP | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-CNA-ULN | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-IAM-AAM | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-IAM-APM | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-IAM-ELP | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-IAM-JIT | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-IAM-SNU | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-IAM-SUS | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-INR-AAR | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-INR-RIR | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-INR-RPI | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-MLA-EVC | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-MLA-LET | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-MLA-OSM | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-MLA-RVL | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-PIY-GIV | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-PIY-RES | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-PIY-RIS | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-PIY-RSD | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-PIY-RVD | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-RPL-ABO | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-RPL-ARP | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-RPL-RRO | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-RPL-TRC | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SCR-MIT | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SCR-MON | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SVC-ACM | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SVC-ASM | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SVC-EIS | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SVC-SIN | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+| KSI-SVC-VRI | 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |
+
 ## FedRAMP rules (SDR-CSO-FRR)
 
 ### Declared by the offering
@@ -1814,6 +1868,6 @@ Each rule below is addressable at this class and the offering declares nothing f
 
 ## What this document does not contain
 
-- Historical metrics (SDR-CSX-KMT, R3), the independent assessor's content (R4.5), portsAndProtocols and securityControls (Rev5) are not in this document
+- The independent assessor's content (R4.5), portsAndProtocols and securityControls (Rev5) are not in this document
 - KSIs class b does not oblige and that hold no evidence: KSI-CNA-EIS, KSI-MLA-ALA, KSI-SVC-PRR, KSI-SVC-RUD, KSI-SVC-VCM.
 - A verification field. The schema has none. The two verifications `SDR-CSX-KSI` asks for (artifacts 3 and 4) are carried under `ksiValidation`, beside validation (artifact 5).

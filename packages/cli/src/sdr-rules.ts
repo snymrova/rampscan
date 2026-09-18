@@ -242,13 +242,34 @@ export function checkSdrRules(input: SdrRuleInput): SdrRuleVerdict[] {
       verdict: "unmet",
       detail:
         `${kmtForce} at class ${cls}, and it cannot be met inside the pinned schema, which has no field for historical metrics (FedRAMP/schemas#10). ` +
-        (Object.keys(carried).length > 0
-          ? "The record carries them under x-rampscan.metrics, outside the schema"
-          : "The record carries none, inside the schema or out"),
+        (Object.keys(carried).length > 0 ? carriedMetrics(carried, obliged, cls) : "The record carries none, inside the schema or out"),
     });
   }
 
   return verdicts;
+}
+
+/**
+ * What x-rampscan.metrics holds, measured against what SDR-CSX-KMT asks at
+ * the class (R3.3): both summaries for every obliged KSI, and at class c the
+ * daily data. Carriage outside the schema never turns the verdict to met.
+ */
+function carriedMetrics(carried: Record<string, unknown>, obliged: readonly string[], cls: string): string {
+  const perKsi = obj(carried["ksis"]);
+  const noSummary = obliged.filter((id) => {
+    const row = obj(perKsi[id]);
+    return Object.keys(obj(row["past30Days"])).length === 0 || Object.keys(obj(row["pastYear"])).length === 0;
+  });
+  const dailyWanted = cls === "c" || cls === "d";
+  const noDaily = dailyWanted ? obliged.filter((id) => !Array.isArray(obj(perKsi[id])["daily"])) : [];
+  const parts = [
+    `The record carries them under x-rampscan.metrics, outside the schema: the 30-day and one-year summaries for ${obliged.length - noSummary.length} of ${obliged.length} obliged KSIs`,
+  ];
+  if (dailyWanted) parts.push(`the daily data for ${obliged.length - noDaily.length} of ${obliged.length}`);
+  if (typeof carried["coveredFrom"] !== "string") parts.push("and no day is covered, because the ledger holds no scan of the offering in reach");
+  else parts.push(`covered from ${carried["coveredFrom"]}`);
+  const missing = [...new Set([...noSummary, ...noDaily])];
+  return `${parts.join(", ")}${missing.length > 0 ? `. Missing for: ${list(missing)}` : ""}`;
 }
 
 /** every verdict met; `awaiting` and `unmeasured` are not */

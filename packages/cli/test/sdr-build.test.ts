@@ -24,6 +24,7 @@ import {
   hex,
   input,
   ksiRow,
+  metricsFixture,
   offering,
   offeringJson,
   root,
@@ -309,7 +310,29 @@ describe("sdr — metadata, determinism, and the refusal (D5, D12)", () => {
 
   it("states the KMT metrics it does not carry at a class that owes them", async () => {
     const out = built(await input());
-    expect(out.problems.some((p) => p.startsWith("SDR-CSX-KMT (MUST at class b)") && p.includes("FedRAMP/schemas#10"))).toBe(true);
+    expect(out.problems.some((p) => p.startsWith("SDR-CSX-KMT (MUST at class b)") && p.includes("none were computed"))).toBe(true);
+    const x = out.document["x-rampscan"] as Record<string, unknown>;
+    expect(x["metrics"]).toBeUndefined();
+    expect(x["notCarried"]).toMatch(/^Historical metrics/);
+  });
+
+  it("carries the metrics under x-rampscan, for exactly the record's KSI rows, and says where (R3.3)", async () => {
+    const out = built(await input({ metrics: await metricsFixture("b") }));
+    const x = out.document["x-rampscan"] as Record<string, unknown>;
+    const m = x["metrics"] as Record<string, unknown>;
+    const rowIds = (out.document["keySecurityIndicators"] as Record<string, unknown>[]).map((k) => k["ksiId"]);
+    expect(Object.keys(m["ksis"] as object).sort()).toEqual([...rowIds].sort());
+    // an optional KSI with no evidence has no row, so it has no metrics either
+    for (const id of x["optionalKsis"] as string[]) expect(Object.keys(m["ksis"] as object)).not.toContain(id);
+    expect(m["divergence"]).toContain("FedRAMP/schemas#10");
+    expect(m["dailyIncluded"]).toBe(false);
+    expect(out.problems.some((p) => p.startsWith("SDR-CSX-KMT (MUST at class b): historical metrics are carried under x-rampscan.metrics"))).toBe(true);
+    expect(x["notCarried"]).not.toMatch(/Historical metrics/);
+  });
+
+  it("says a history with no covered day is no history, not a history of zeros", async () => {
+    const out = built(await input({ metrics: await metricsFixture("b", 0) }));
+    expect(out.problems.some((p) => p.includes("every day is absent"))).toBe(true);
   });
 
   it("states an empty ledger rather than rendering it as a quiet record", async () => {

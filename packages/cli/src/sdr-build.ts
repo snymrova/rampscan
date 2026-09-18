@@ -9,6 +9,7 @@ import {
 import type { OfferingConfig } from "@rampscan/schema";
 import type { FedrampExport } from "./fedramp-exports.js";
 import { SDR_SCHEMA } from "./fedramp-schemas.js";
+import type { SdrMetrics } from "./sdr-metrics.js";
 import { COMPUTED_RULES } from "./submission.js";
 
 // `rampscan sdr` — the Security Decision Record, JSON half (R2.1, #102;
@@ -65,6 +66,12 @@ export interface SdrBuildInput {
    * rendered empty and named in problems: the builder never reads the ledger.
    */
   bodies: ReadonlyMap<string, string>;
+  /**
+   * Historical metrics (R3, docs/PLAN-HISTORY.md), computed by refolding the
+   * ledger once per day. Absent means nobody computed them, and the record
+   * says so; the builder never reads the ledger itself.
+   */
+  metrics?: SdrMetrics;
 }
 
 export interface SdrOutcome {
@@ -483,13 +490,37 @@ export function buildSecurityDecisionRecord(input: SdrBuildInput): SdrOutcome {
     );
   }
 
-  // ---- SDR-CSX-KMT, stated rather than silently absent (R3) ---------------
+  // ---- SDR-CSX-KMT, carried outside the schema (R3.3, H6) -----------------
+  //
+  // Metrics only for the rows this record has, so the block and the KSI rows
+  // cannot disagree about which indicators the record speaks for.
+  const rowIds = new Set(keySecurityIndicators.map((k) => k["ksiId"] as string));
+  const metrics: SdrMetrics | undefined =
+    input.metrics === undefined
+      ? undefined
+      : {
+          ...input.metrics,
+          ksis: Object.fromEntries(
+            Object.entries(input.metrics.ksis).filter(([id]) => rowIds.has(id)),
+          ),
+        };
   const kmt = byId.get("SDR-CSX-KMT");
   const kmtForce = kmt !== undefined ? effectiveForce(kmt, cls) : null;
   if (kmtForce === "MUST" || kmtForce === "SHOULD") {
-    problems.push(
-      `SDR-CSX-KMT (${kmtForce} at class ${cls}) wants historical metrics per KSI, and this document carries none: the pinned schema has no field for them (FedRAMP/schemas#10), and rampscan's carriage in x-rampscan lands in R3`,
-    );
+    if (metrics === undefined) {
+      problems.push(
+        `SDR-CSX-KMT (${kmtForce} at class ${cls}) wants historical metrics per KSI, and this document carries none: the pinned schema has no field for them (FedRAMP/schemas#10), and none were computed for this record`,
+      );
+    } else {
+      problems.push(
+        `SDR-CSX-KMT (${kmtForce} at class ${cls}): historical metrics are carried under x-rampscan.metrics, outside the pinned schema, which has no field for them (FedRAMP/schemas#10). A reviewer reading only the schema's fields will not see them`,
+      );
+      if (metrics.coveredFrom === undefined) {
+        problems.push(
+          `the ledger holds no scan of this offering in the ${metrics.reachDays} days the metrics reach, so every day is absent: there is no history to summarize, which is different from a history of zeros`,
+        );
+      }
+    }
   }
 
   // ---- metadata (D12) ------------------------------------------------------
@@ -545,8 +576,11 @@ export function buildSecurityDecisionRecord(input: SdrBuildInput): SdrOutcome {
       optionalKsis: optionalOmitted,
       statusRule:
         "ksiImplementationStatus is computed and may understate, never overstate. Implemented needs every in-scope method holding live evidence, the automated-method floor met (or, where the class owes none, an automated method with live evidence), no method stale or violated, the history floor not failed, and all five artifacts present. With at least one passing method and any of those short it is Partially Implemented; with no passing method (including a row whose only evidence is violated) it is Not Implemented. Each row's inputs are under ksis.<id>.statusBasis",
+      ...(metrics !== undefined ? { metrics } : {}),
       notCarried:
-        "Historical metrics (SDR-CSX-KMT, R3), the independent assessor's content (R4.5), portsAndProtocols and securityControls (Rev5) are not in this document",
+        metrics !== undefined
+          ? "The independent assessor's content (R4.5), portsAndProtocols and securityControls (Rev5) are not in this document"
+          : "Historical metrics (SDR-CSX-KMT, R3), the independent assessor's content (R4.5), portsAndProtocols and securityControls (Rev5) are not in this document",
     },
   };
 
