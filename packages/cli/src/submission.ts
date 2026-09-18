@@ -11,7 +11,7 @@ import {
 import { FEDRAMP_SCHEMA_PINS } from "./fedramp-schemas.js";
 import type { ConformanceResult } from "./fedramp-conformance.js";
 import type { KsiRegisterView } from "./ksi-register.js";
-import type { SdrCoverage } from "./sdr.js";
+import { omittedRules, type SdrCoverage } from "./sdr.js";
 import type { TrustCenterProbe } from "./trust-center-probe.js";
 
 // `rampscan submission` — the rejection register (P2-3,
@@ -466,9 +466,11 @@ export async function buildRejectionRegister(
     if (declared.status === "addressed") declaredAddressed += 1;
     else declaredNotImplemented += 1;
   }
+  // the shared diff (sdr.ts), so this register and `conformance` cannot disagree
+  const omittedIds = new Set(omittedRules(register, cls, answers).map((r) => r.id));
   for (const rule of addressable) {
     const computes = COMPUTED_RULES[rule.id] !== undefined;
-    if (answers.has(rule.id)) {
+    if (!omittedIds.has(rule.id)) {
       states.answered += 1;
       if (computes) states.verifiable += 1;
       continue;

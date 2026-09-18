@@ -1,4 +1,10 @@
 import { readFile } from "node:fs/promises";
+import {
+  addressableRules,
+  type FrrRule,
+  type OfferingClass,
+  type RuleRegister,
+} from "@rampscan/dataset";
 
 // The Security Decision Record, read for coverage (P2-1,
 // docs/RESEARCH-REJECTION-LINTER.md §9).
@@ -192,4 +198,18 @@ export async function readSdrCoverage(path: string): Promise<SdrCoverage> {
   );
 
   return { path, ruleIds, ksiIds, statuses, problems };
+}
+
+/**
+ * Reason 3's diff, `SDR-CSO-FRR`'s coverage: the rules addressable at the
+ * class that the record has no row for. One function, because two surfaces
+ * ask it — `submission --sdr` (P2-1) and `conformance`'s rule verdict (R2.3)
+ * — and the P2 note's §5 rule is that one fact computed twice is a bug.
+ */
+export function omittedRules(
+  register: RuleRegister,
+  cls: OfferingClass,
+  answered: ReadonlySet<string>,
+): readonly FrrRule[] {
+  return addressableRules(register, cls).filter((rule) => !answered.has(rule.id));
 }

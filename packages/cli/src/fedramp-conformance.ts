@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { basename, join } from "node:path";
 import {
@@ -7,7 +8,12 @@ import {
   type SchemaViolation,
 } from "./fedramp-schemas.js";
 import { OCR_ARTIFACT, PACKAGE_OVERVIEW_ARTIFACT } from "./fedramp-exports.js";
+import { OFFERING_CLASSES, type KsiCatalog, type OfferingClass, type RuleRegister } from "@rampscan/dataset";
 import { SDR_ARTIFACT } from "./sdr-build.js";
+import { SDR_SCHEMA } from "./fedramp-schemas.js";
+import { SDR_DIGEST_LINE } from "./sdr-render.js";
+import { checkSdrRules, rulesMet, type SdrRuleVerdict } from "./sdr-rules.js";
+import { readSdrCoverage } from "./sdr.js";
 
 // The package conformance check (plan Q5.2 — G10, `FRC-CSO-JSN`): certification
 // JSON validated against the pinned FedRAMP schemas, as a check over documents
@@ -62,12 +68,38 @@ export interface ConformanceFinding {
    * lying one.
    */
   stampDisagreement?: string;
+  /** schema conformance only — the rule verdict below never moves it */
   conformant: boolean;
+  /**
+   * The second verdict, for a Security Decision Record only (R2.3): whether it
+   * meets the SDR rules, printed beside the schema verdict and never merged
+   * into it. Absent for every other document.
+   */
+  rules?: {
+    offeringClass?: OfferingClass;
+    classSource: string;
+    verdicts: SdrRuleVerdict[];
+    met: boolean;
+  };
 }
 
 export interface ConformanceResult {
   findings: ConformanceFinding[];
   conformant: boolean;
+  /**
+   * Every SDR's rule verdict is met. True when no SDR was checked, since then
+   * there was no rule to fail. The CLI gates on it only under
+   * `--require-rules`.
+   */
+  rulesMet: boolean;
+}
+
+/** what the SDR rule verdict needs that a schema check does not */
+export interface SdrRuleContext {
+  register: RuleRegister;
+  catalog: KsiCatalog;
+  /** `--class`; when absent, the class a rampscan-written record names */
+  offeringClass?: OfferingClass;
 }
 
 function stampOf(document: unknown): Record<string, unknown> | undefined {
@@ -122,8 +154,10 @@ async function checkOne(
   schemaRoot: string,
   path: string,
   override?: string,
+  sdr?: SdrRuleContext,
 ): Promise<ConformanceFinding> {
-  const document = JSON.parse(await readFile(path, "utf8")) as unknown;
+  const bytes = await readFile(path);
+  const document = JSON.parse(bytes.toString("utf8")) as unknown;
   const { schemaFile, schemaSource } = resolveSchema(path, document, override);
   const pin = FEDRAMP_SCHEMA_PINS[schemaFile];
   if (pin === undefined) throw new Error(`${schemaFile} is not pinned`);
@@ -156,7 +190,71 @@ async function checkOne(
     }
   }
 
+  if (schemaFile === SDR_SCHEMA && sdr !== undefined) {
+    finding.rules = await sdrRuleVerdict(path, bytes, document, loaded.schema, sdr);
+  }
+
   return finding;
+}
+
+async function sdrRuleVerdict(
+  path: string,
+  bytes: Buffer,
+  document: unknown,
+  schema: Record<string, unknown>,
+  sdr: SdrRuleContext,
+): Promise<NonNullable<ConformanceFinding["rules"]>> {
+  const doc = document !== null && typeof document === "object" ? (document as Record<string, unknown>) : {};
+
+  // the class: the flag wins; a record rampscan wrote names its own; otherwise none
+  let offeringClass: OfferingClass | undefined = sdr.offeringClass;
+  let classSource = "--class";
+  if (offeringClass === undefined) {
+    const named = (doc["x-rampscan"] as Record<string, unknown> | undefined)?.["offeringClass"];
+    if (typeof named === "string" && (OFFERING_CLASSES as readonly string[]).includes(named)) {
+      offeringClass = named as OfferingClass;
+      classSource = "the record's x-rampscan.offeringClass";
+    } else {
+      classSource = "none resolved";
+    }
+  }
+
+  // the companion: the same name with .md, read for the digest it carries
+  let companion: { path: string; digest: string | null } | undefined;
+  const mdPath = path.replace(/\.json$/, ".md");
+  if (mdPath !== path) {
+    try {
+      const text = await readFile(mdPath, "utf8");
+      companion = { path: mdPath, digest: SDR_DIGEST_LINE.exec(text)?.[1] ?? null };
+    } catch (cause) {
+      if ((cause as NodeJS.ErrnoException).code !== "ENOENT") throw cause;
+    }
+  }
+
+  let answeredRules: ReadonlySet<string> | undefined;
+  try {
+    answeredRules = (await readSdrCoverage(path)).ruleIds;
+  } catch {
+    answeredRules = undefined;
+  }
+
+  const verdicts = checkSdrRules({
+    document: doc,
+    ...(answeredRules !== undefined ? { answeredRules } : {}),
+    register: sdr.register,
+    catalog: sdr.catalog,
+    ...(offeringClass !== undefined ? { offeringClass } : {}),
+    classSource,
+    schemaRequired: Array.isArray(schema["required"]) ? (schema["required"] as string[]) : [],
+    jsonSha256: createHash("sha256").update(bytes).digest("hex"),
+    ...(companion !== undefined ? { companion } : {}),
+  });
+  return {
+    ...(offeringClass !== undefined ? { offeringClass } : {}),
+    classSource,
+    verdicts,
+    met: rulesMet(verdicts),
+  };
 }
 
 export interface ConformanceInput {
@@ -166,6 +264,8 @@ export interface ConformanceInput {
   target: string;
   /** force a pinned schema rather than resolving one per document */
   schema?: string;
+  /** when given, every SDR among the documents also gets the rule verdict (R2.3) */
+  sdr?: SdrRuleContext;
 }
 
 export async function checkConformance(input: ConformanceInput): Promise<ConformanceResult> {
@@ -189,9 +289,13 @@ export async function checkConformance(input: ConformanceInput): Promise<Conform
 
   const findings: ConformanceFinding[] = [];
   for (const path of paths) {
-    findings.push(await checkOne(input.schemaRoot, path, input.schema));
+    findings.push(await checkOne(input.schemaRoot, path, input.schema, input.sdr));
   }
-  return { findings, conformant: findings.every((f) => f.conformant) };
+  return {
+    findings,
+    conformant: findings.every((f) => f.conformant),
+    rulesMet: findings.every((f) => f.rules === undefined || f.rules.met),
+  };
 }
 
 /** The terminal reading. Every document named, conformant or not — a check that printed only failures would leave a reader unable to tell "clean" from "never ran". */
@@ -208,6 +312,19 @@ export function renderConformance(result: ConformanceResult): string {
       lines.push(`    ✗ ${v.path === "" ? "<root>" : v.path}: ${v.message}`);
     }
     if (f.stampDisagreement !== undefined) lines.push(`    ! ${f.stampDisagreement}`);
+    if (f.rules !== undefined) {
+      // two verdicts, two lines, never one merged answer
+      const count = (k: SdrRuleVerdict["verdict"]) => f.rules!.verdicts.filter((v) => v.verdict === k).length;
+      lines.push(
+        `    schema: ${f.conformant ? "valid" : "INVALID"}   rules: ${f.rules.met ? "met" : "NOT MET"} ` +
+          `(${count("met")} met, ${count("unmet")} unmet, ${count("awaiting")} awaiting the assessor, ${count("unmeasured")} unmeasured; ` +
+          `class ${f.rules.offeringClass ?? "?"} from ${f.rules.classSource})`,
+      );
+      const mark = { met: "✓", unmet: "✗", awaiting: "…", unmeasured: "?" } as const;
+      for (const v of f.rules.verdicts) {
+        lines.push(`      ${mark[v.verdict]} ${v.ruleId} — ${v.check}: ${v.detail}`);
+      }
+    }
   }
   lines.push(
     "",
@@ -215,5 +332,13 @@ export function renderConformance(result: ConformanceResult): string {
       ? `FRC-CSO-JSN: ${result.findings.length} document(s) conform to the pinned FedRAMP schemas`
       : `FRC-CSO-JSN: ${result.findings.filter((f) => !f.conformant).length} of ${result.findings.length} document(s) do not conform`,
   );
+  const sdrs = result.findings.filter((f) => f.rules !== undefined);
+  if (sdrs.length > 0) {
+    lines.push(
+      result.rulesMet
+        ? `SDR rules: met by ${sdrs.length} record(s)`
+        : `SDR rules: ${sdrs.filter((f) => !f.rules!.met).length} of ${sdrs.length} record(s) do not meet them. This fails the run only under --require-rules: a record cannot meet them all before an assessor has written into it`,
+    );
+  }
   return lines.join("\n");
 }

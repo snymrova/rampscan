@@ -241,7 +241,7 @@ The house convention applies: one squash PR per item, subjects suffixed `(#NN)`,
 
 **Exit codes.** Schema failure still exits 1, unchanged, so the existing CI step keeps its meaning. Rule failures print always and exit 1 only with `--require-rules`. The reason: an SDR for an offering with no assessor yet cannot be rule-complete, and a gate that is red from installation onward gets switched off. That is the same argument `artifacts check` made in R1.5.
 
-**The class** comes from the config or `--class`, which means conformance now loads the catalog. If no class can be resolved, the SDR rule checks are `unmeasured` and never skipped quietly.
+**The class** comes from the config or `--class`, which means conformance now loads the catalog. If no class can be resolved, the SDR rule checks are `unmeasured` and never skipped quietly. *As built: `--class`, else the class a rampscan-written record names in `x-rampscan.offeringClass`. `conformance` reads files, not a checkout, so it has no config to read. A record from another tool needs `--class`.*
 
 **Tests**
 - The divergence-1 document (schema-valid, zero KSIs) is schema ✓, rules ✗ `SDR-CSX-KSI`.
@@ -299,3 +299,14 @@ These come from this repo's recorded lessons:
 R2.0 → R2.1 → R2.2 → R2.3, stacked, about **5 working days**. The parent plan said 4. The extra day is R2.3's catalog loading and the cross-surface test.
 
 **Owner answers, given 2026-09-18:** §0 yes, R2 is unpaused. D6: compute the status.
+
+---
+
+## Build log
+
+- **2026-09-18.** R2.0 → R2.3 were built in one stacked run on branches `r2-1-sdr-json` → `r2-2-sdr-markdown` → `r2-3-sdr-rules`. Exit gate §7: items 1–3 are met locally. On this repository's own offering, `rampscan sdr` is schema-valid, and `conformance` prints schema ✓ and rules ✗, naming each failed rule. Divergence 1 is reported by name when a record omits `keySecurityIndicators`. KMT is reported as impossible in-schema. The test `agrees with submission --sdr about what it omits` covers item 3. Item 4 (#105) stays parked with the S3 sends. Changes made during the build, each recorded where it was decided:
+  - D4 narrowed: only declared rules get a row.
+  - D6 tightened: a KSI whose only evidence is violated is `Not Implemented`.
+  - `SDR-CSX-KMT` joined `COMPUTED_RULES`.
+  - The companion is found by filename, and its digest is read from a fixed `JSON sha256:` line.
+  - The class comes from the record when `--class` is absent.

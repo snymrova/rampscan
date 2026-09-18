@@ -181,6 +181,18 @@ describe("rampscan sdr, end to end (R2.1)", () => {
     expect(JSON.parse(run.stdout).findings[0]).toMatchObject({ schemaSource: "filename", conformant: true });
   }, 120_000);
 
+  /** R2.3: two verdicts, and only --require-rules turns the rule verdict into an exit code */
+  it("prints schema and rules apart, and exits 1 on the rules only under --require-rules", async () => {
+    const out = join(base, "out-r");
+    await cli("sdr", appRoot, "--ledger", ledgerDir, "--out", out, "--as-of", asOf);
+    const plain = await cli("conformance", "--out", out);
+    expect(plain.code, plain.stdout + plain.stderr).toBe(0);
+    expect(plain.stdout).toMatch(/schema: valid {3}rules: NOT MET/);
+    expect(plain.stdout).toContain("✓ SDR-CSO-FRR — both formats");
+    const strict = await cli("conformance", "--out", out, "--require-rules");
+    expect(strict.code).toBe(1);
+  }, 120_000);
+
   it("writes nothing when the offering declares no package overview address, and names the key", async () => {
     const bare = join(base, "bare");
     await mkdir(bare, { recursive: true });

@@ -165,7 +165,9 @@ function usage(): never {
       "                    checks each document's own conformance stamp AGAINST a fresh",
       "                    validation, so a file claiming a verdict it no longer earns fails.",
       "                    Exits 1 on any violation, disagreement, or unresolvable schema",
-      "                    — never a skip",
+      "                    — never a skip. A Security Decision Record also gets a second,",
+      "                    separate verdict against the SDR rules (R2.3), at --class or the",
+      "                    class the record names; it exits 1 only with --require-rules",
       "  submission [path]   the rejection register (P2, community #167): one section per",
       "                    reason FedRAMP published for rejecting a 20x submission, each",
       "                    carrying the reason's own words and the rules that bind it — the",
@@ -260,6 +262,9 @@ function usage(): never {
       "                    board is the baseline, and with no ledger there is none at all",
       "  --schema <file>   conformance: force a pinned FedRAMP schema instead of resolving",
       "                    one per document from its stamp or its filename",
+      "  --require-rules   conformance: also exit 1 when a Security Decision Record does not",
+      "                    meet the SDR rules — awaited assessor content and unmeasured checks",
+      "                    count as not met",
       "  --no-color        plain output",
     ].join("\n"),
   );
@@ -315,6 +320,7 @@ async function main(): Promise<void> {
       "run-url": { type: "string" },
       "baseline-ref": { type: "string" },
       schema: { type: "string" },
+      "require-rules": { type: "boolean" },
       artifact: { type: "string" },
       path: { type: "string" },
       "no-color": { type: "boolean" },
@@ -348,6 +354,7 @@ async function main(): Promise<void> {
     command !== "artifacts" &&
     command !== "exports" &&
     command !== "sdr" &&
+    command !== "conformance" &&
     command !== "submission" &&
     certClass !== "b" &&
     certClass !== "c"
@@ -1048,12 +1055,20 @@ async function main(): Promise<void> {
       // document whose schema cannot be resolved is an exit, not a skip.
       const conformanceTarget =
         target ?? join(values.out ?? "./rampscan-out", "exports", "fedramp");
+      // R2.3: an SDR also gets the rule verdict, which needs the catalog and
+      // the rule register. The class comes from --class, or from the record
+      if (values.class !== undefined && !OFFERING_CLASSES.includes(values.class as OfferingClass)) usage();
       let conformanceResult: Awaited<ReturnType<typeof checkConformance>>;
       try {
         conformanceResult = await checkConformance({
           schemaRoot: REPO_ROOT,
           target: conformanceTarget,
           ...(values.schema !== undefined ? { schema: values.schema } : {}),
+          sdr: {
+            register: await loadRuleRegister(rulesFile, datasetPin),
+            catalog: await loadKsiCatalog(catalogSources),
+            ...(values.class !== undefined ? { offeringClass: values.class as OfferingClass } : {}),
+          },
         });
       } catch (cause) {
         console.error(
@@ -1063,7 +1078,10 @@ async function main(): Promise<void> {
       }
       if (values.json) console.log(JSON.stringify(conformanceResult, null, 2));
       else console.log(renderConformance(conformanceResult));
+      // schema failure exits 1 as it always has; the rule verdict gates only
+      // when asked, because no record meets every rule before its assessor does
       if (!conformanceResult.conformant) process.exit(1);
+      if (values["require-rules"] && !conformanceResult.rulesMet) process.exit(1);
       return;
     }
     case "probe": {
