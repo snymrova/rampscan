@@ -28,7 +28,7 @@ Neither rule defines a *metric*. That is question 3 on FedRAMP/schemas#10 ("Does
 
 **H3 — A day the ledger does not cover is absent, never zero.** The series starts on the UTC day of the offering's first evidence statement in the ledger. Days before it are counted as `daysAbsent` in each summary, and no status is written for them. A day after it with no new scan is **covered**: the fold still knows the status, which is usually older evidence going stale, and that is a real status. Only completed UTC days are in the series. The day containing the fold instant is not, because its status is the document's own current row.
 
-**H4 — Which windows at which class.** The 30-day and one-year summaries are written at every class (MAY at a costs nothing and is honest). The daily data is written at class c and d. The series reaches back 365 days, or `FRC-CSX-MOT`'s floor where that is longer: 18 months (548 days) at class d. That is where the two rules meet.
+**H4 — Which windows at which class.** The 30-day and one-year summaries are written at every class (MAY at a costs nothing and is honest). The daily data is written at class c and d. The series reaches back 365 days, or `FRC-CSX-MOT`'s floor where that is longer: 18 months at class d, counted back from the last completed day with the fold's own month arithmetic (`monthsBefore`), so the series and the history meter agree on where the span opens. That is 547 to 551 days, depending on the months crossed (computed over every day from 2025-01-01 for 3,000 days). That is where the two rules meet.
 
 **H5 — The daily data is lossless run-length.** Each KSI's daily data is written as runs of consecutive days with identical metrics (`{ from, to, days, status, counts }`), not one object per day. A year of a KSI that sat in one state is one run. The runs expand to exactly one entry per covered day, and a test holds that. This keeps a class-c record at kilobytes, not megabytes.
 
@@ -41,7 +41,7 @@ Neither rule defines a *metric*. That is question 3 on FedRAMP/schemas#10 ("Does
 | Item | Issue | What |
 |---|---|---|
 | R3.1 | #106 | `sdr-metrics.ts`: the day fold (H2), coverage (H3), the 30-day and one-year summaries (H7). Pure over the entries and fold options. Tests: determinism, absent-before-coverage, a status change on the day it happens, a stale-by-time change with no new statement. |
-| R3.2 | #107 | The daily series at c and d (H4) as runs (H5), with the reach-back tied to `FRC-CSX-MOT` at d. Tests: runs expand to exactly the covered days; the class-d reach-back is 548 days. |
+| R3.2 | #107 | The daily series at c and d (H4) as runs (H5), with the reach-back tied to `FRC-CSX-MOT` at d. Tests: runs expand to exactly the covered days; a coverage gap stays a gap between runs; the class-d reach-back opens where `monthsBefore` says. |
 | R3.3 | #108 | Carriage (H6): `sdr-build` writes `x-rampscan.metrics` and drops the "lands in R3" problem; `sdr-render` renders the summaries; `sdr-rules` reports what is carried; `main.ts` wires the ledger entries in. The golden file is regenerated. |
 
 Stacked, coding straight through, as R2 was.

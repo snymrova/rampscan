@@ -1,5 +1,5 @@
 import type { LedgerEntry } from "@rampscan/core";
-import { foldEntries, type FoldOptions } from "@rampscan/projector";
+import { foldEntries, monthsBefore, type FoldOptions } from "@rampscan/projector";
 import { isEvidenceBundle } from "@rampscan/schema";
 import { ksiStatus, type KsiStatus } from "./sdr-build.js";
 
@@ -199,6 +199,76 @@ export function metricSummaries(series: KsiDaySeries): Record<string, KsiMetrics
       past30Days: summarize(series.days, metrics, 30),
       pastYear: summarize(series.days, metrics, 365),
     };
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// R3.2 — the daily data (class c and d) and FRC-CSX-MOT's reach-back
+// ---------------------------------------------------------------------------
+
+/** one run of consecutive covered days whose metrics are identical (H5) */
+export interface KsiMetricRun extends KsiDayMetric {
+  from: string;
+  to: string;
+  days: number;
+}
+
+/** SDR-CSX-KMT wants every day's data at class c; class d must supersede c, so it gets it too */
+export function dailyOwed(offeringClass: string): boolean {
+  return offeringClass === "c" || offeringClass === "d";
+}
+
+/**
+ * How many days the series reaches back (H4): a year, or FRC-CSX-MOT's
+ * history floor where that is longer (18 months at class d). The floor is
+ * counted back from the last completed day with the fold's own month
+ * arithmetic, so the series and the history meter agree on where it opens.
+ */
+export function reachDays(asOf: string, historyFloorMonths: number | null): number {
+  const days = completedDays(asOf, 1);
+  if (historyFloorMonths === null) return 365;
+  const last = Date.parse(`${days[0]!}T00:00:00.000Z`);
+  const opens = Date.parse(monthsBefore(dayEnd(days[0]!), historyFloorMonths).slice(0, 10));
+  return Math.max(365, Math.round((last - opens) / DAY_MS) + 1);
+}
+
+function sameMetric(a: KsiDayMetric, b: KsiDayMetric): boolean {
+  return a.status === b.status && METRIC_COUNTS.every((k) => a[k] === b[k]);
+}
+
+/**
+ * H5: the daily data, losslessly, as runs. An absent day ends a run and
+ * starts none, so a gap in coverage stays visible as a gap between runs.
+ */
+export function dailyRuns(
+  days: readonly string[],
+  metrics: readonly (KsiDayMetric | undefined)[],
+): KsiMetricRun[] {
+  const runs: KsiMetricRun[] = [];
+  let open: KsiMetricRun | undefined;
+  metrics.forEach((m, i) => {
+    if (m === undefined) {
+      open = undefined;
+      return;
+    }
+    if (open !== undefined && sameMetric(open, m)) {
+      open.to = days[i]!;
+      open.days++;
+      return;
+    }
+    open = { from: days[i]!, to: days[i]!, days: 1, ...m };
+    runs.push(open);
+  });
+  return runs;
+}
+
+/** the inverse of `dailyRuns`: one entry per covered day, oldest first */
+export function expandRuns(runs: readonly KsiMetricRun[]): { day: string; metric: KsiDayMetric }[] {
+  const out: { day: string; metric: KsiDayMetric }[] = [];
+  for (const { from, to: _to, days, ...metric } of runs) {
+    const start = Date.parse(`${from}T00:00:00.000Z`);
+    for (let i = 0; i < days; i++) out.push({ day: utcDay(start + i * DAY_MS), metric });
   }
   return out;
 }
