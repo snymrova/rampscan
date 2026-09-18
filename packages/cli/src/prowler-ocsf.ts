@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { PROWLER_FRAMEWORK_PIN } from "./prowler-framework.js";
+import { PROWLER_COMPLIANCE_ID, PROWLER_FRAMEWORK_PIN } from "./prowler-framework.js";
 
 // The Prowler OCSF compliance reader (P3-1, docs/RESEARCH-PROWLER-INGEST.md
 // §10a and §6) — the half of P3 that decides which documents are evaluable at
@@ -385,7 +385,7 @@ export async function loadProwlerOcsf(
     bytes = await readFile(path);
   } catch {
     throw new ProwlerOcsfError(
-      `${path}: no such file. Prowler writes no file at all when a scan produces no findings, so a missing compliance output is a scan this appliance cannot account for — never 46 indicators evidenced by an absence. Check the scan ran with --compliance ${PROWLER_FRAMEWORK_PIN.framework.toLowerCase().replace(/-/g, "_")} and that the output directory is the one being read`,
+      `${path}: no such file. Prowler writes no file at all when a scan produces no findings, so a missing compliance output is a scan this appliance cannot account for — never 46 indicators evidenced by an absence. Check the scan ran with --compliance ${PROWLER_COMPLIANCE_ID} and that the output directory is the one being read`,
     );
   }
   if (bytes.byteLength === 0) {

@@ -45,3 +45,16 @@ crosswalk in `recipes/crosswalks/`. Four validations: one Phase One indicator
 assessed `Partial` whose artifact carries neither reference nor date
 (IAM-01). Written by us, shapes only — no content from the observed package,
 which carries no license. Static and committed.
+
+## ingest-prowler
+
+A synthetic Prowler OCSF compliance output for the P3 adapter
+(`docs/RESEARCH-PROWLER-INGEST.md`): a bare JSON array of `ComplianceFinding`
+rows against `FedRAMP-20x-KSI-2026.07.14.01`, in §10a's field shape. Thirteen
+reported rows on six AWS checks (one maps to six KSIs), including a muted FAIL
+(`iam_user_accesskey_unused`) and a FAIL forced by the scan's own config over a
+raw PASS (`cognito_user_pool_password_policy_lowercase`), plus one synthetic
+`MANUAL` row for each of the thirteen indicators the pinned framework maps no
+AWS check to. Written by us from the documented shape, not captured from a real
+scan; the account id is synthetic.
+

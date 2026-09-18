@@ -5,6 +5,8 @@ import { DEFAULT_DATASET_PIN, loadKsiCatalog } from "@rampscan/dataset";
 import { evaluateAssertion } from "@rampscan/core";
 import { PROWLER_OCSF_STANDARD, parseProwlerOcsf } from "../src/prowler-ocsf.js";
 import { prowlerSubmissions } from "../src/prowler-ingest.js";
+import { loadPinnedProwlerFramework } from "../src/prowler-framework.js";
+import type { ProwlerKsiFramework } from "../src/prowler-framework.js";
 import type { ProwlerRunDeclaration } from "../src/prowler-ingest.js";
 
 // P3-2 (docs/RESEARCH-PROWLER-INGEST.md §4c): the soundness test, WRITTEN
@@ -29,15 +31,18 @@ import type { ProwlerRunDeclaration } from "../src/prowler-ingest.js";
 //
 // The first describe below shows that hazard is REAL against the shared
 // evaluator today — those tests pass, and are characterization, not aspiration.
-// The second describe states the three obligations the adapter owes and is
-// under `it.fails` until P3-3 exists. P3-3 is not done until it unwraps them.
+// The second describe states the three obligations the adapter owes and
+// ran under `it.fails` until P3-3 existed; P3-3 unwrapped them, and they now pass.
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 /** the 46 indicators at THIS checkout's dataset pin — the reader's other side */
 let ids: readonly string[] = [];
+/** the pinned framework — the adapter's join side */
+let fw: ProwlerKsiFramework;
 
 beforeAll(async () => {
+  fw = await loadPinnedProwlerFramework(REPO_ROOT);
   const cat = await loadKsiCatalog({
     derivedDir: join(REPO_ROOT, "docs/context/ramprules/derived"),
     rulesFile: join(REPO_ROOT, "docs/context/fedramp-rules/fedramp-consolidated-rules.json"),
@@ -123,6 +128,8 @@ const NO_FAILING_FINDINGS = {
 const CLEAN_EXIT: ProwlerRunDeclaration = {
   exit_code: 0,
   signer_identity: "runner:prowler@synthetic-csp",
+  cadence: "daily",
+  artifact: { name: "synthetic.ocsf.json", sha256: "0".repeat(64) },
 };
 
 const NOW = new Date("2026-09-18T10:00:00Z");
@@ -169,14 +176,14 @@ describe("the vacuous pass this input introduces is real (§4c)", () => {
   });
 });
 
-describe("the adapter's three obligations (P3-2 — unwrapped by P3-3)", () => {
-  it.fails("1. a KSI whose only row is MANUAL is skipped and named, never evidenced", () => {
+describe("the adapter's three obligations (P3-2, unwrapped by P3-3)", () => {
+  it("1. a KSI whose only row is MANUAL is skipped and named, never evidenced", () => {
     const doc = parseProwlerOcsf(
       [row(), manualRow("KSI-CED-RAT"), manualRow("KSI-PIY-RES")],
       "synthetic.ocsf.json",
       ids,
     );
-    const { submissions, skipped } = prowlerSubmissions(doc, CLEAN_EXIT);
+    const { submissions, skipped } = prowlerSubmissions(doc, CLEAN_EXIT, fw);
 
     // no submission for either uncovered indicator — under ANY verdict. Not
     // `unevidenced` either: a bundle says bytes were collected about this
@@ -191,7 +198,7 @@ describe("the adapter's three obligations (P3-2 — unwrapped by P3-3)", () => {
     }
   });
 
-  it.fails("2. an assertion over zero surviving rows fails — it does not pass vacuously", () => {
+  it("2. an assertion over zero surviving rows fails — it does not pass vacuously", () => {
     // The route to an empty population that exists at P3-2: every reported row
     // for the indicator is muted. Whatever P3-4 decides about muting — exclude
     // and name, or refuse the submission — the obligation here is the same and
@@ -209,7 +216,7 @@ describe("the adapter's three obligations (P3-2 — unwrapped by P3-3)", () => {
       "synthetic.ocsf.json",
       ids,
     );
-    const { submissions } = prowlerSubmissions(doc, CLEAN_EXIT);
+    const { submissions } = prowlerSubmissions(doc, CLEAN_EXIT, fw);
 
     for (const s of submissions) {
       for (const a of s.assertions) {
@@ -222,12 +229,12 @@ describe("the adapter's three obligations (P3-2 — unwrapped by P3-3)", () => {
     }
   });
 
-  it.fails("3. exit 0 does not outvote a FAIL row — `-z` suppresses the code, not the finding", () => {
+  it("3. exit 0 does not outvote a FAIL row — `-z` suppresses the code, not the finding", () => {
     // `--ignore-exit-code-3` leaves a scan that failed findings exiting 0, and
     // exit 3 is not emitted at all when every failure is muted. So this exit 0
     // is weaker than the tree adapter's, and the verdict comes from the rows.
     const doc = parseProwlerOcsf([row(), failRow()], "synthetic.ocsf.json", ids);
-    const { submissions } = prowlerSubmissions(doc, CLEAN_EXIT);
+    const { submissions } = prowlerSubmissions(doc, CLEAN_EXIT, fw);
 
     const apm = submissions.find((s) => s.ksi === "KSI-IAM-APM");
     expect(apm).toBeDefined();
@@ -237,12 +244,12 @@ describe("the adapter's three obligations (P3-2 — unwrapped by P3-3)", () => {
     expect(apm!.assertions.some((a) => (a.population ?? 0) === 2)).toBe(true);
   });
 
-  it.fails("3b. a non-zero exit is a failed run — nothing in the document becomes a bundle", () => {
+  it("3b. a non-zero exit is a failed run — nothing in the document becomes a bundle", () => {
     // #147's rule, unchanged: exit 1 is Prowler's critical error. The account
     // was not fully read, so there is nothing to attest to AND nothing to
     // violate. Every indicator is skipped and named; none is a bundle.
     const doc = parseProwlerOcsf([row(), failRow()], "synthetic.ocsf.json", ids);
-    const { submissions, skipped } = prowlerSubmissions(doc, { ...CLEAN_EXIT, exit_code: 1 });
+    const { submissions, skipped } = prowlerSubmissions(doc, { ...CLEAN_EXIT, exit_code: 1 }, fw);
 
     expect(submissions).toEqual([]);
     expect(skipped.map((s) => s.ksi)).toContain("KSI-IAM-APM");

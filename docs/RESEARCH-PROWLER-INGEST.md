@@ -426,7 +426,7 @@ arithmetic.
   §10b found the document carries none), and a body that throws rather than
   returning an empty result — an empty answer would be indistinguishable from
   a scan that evidenced nothing.
-- **P3-3.** The adapter: sniff on **content**, not filename (the labels.json
+- **P3-3. LANDED 2026-09-18.** The adapter: sniff on **content**, not filename (the labels.json
   lesson again — `compliance.standards[0]` is in every row);
   `IngestSubmission` per (check, KSI) grouping many rows, because one check over
   many resources is many rows and a per-row submission trips ingest's duplicate
@@ -435,17 +435,51 @@ arithmetic.
   config-override marker carried in the transcript;
   `evidence_class: "process-generated"`, `automated` from the runner's rule,
   `signer_identity` on the `runner:` convention, `reproduce` carrying the
-  invocation. Uncovered KSIs skipped and named, never minted.
-- **P3-3a.** The **mapped-check coverage measure** (§10c), which §6 did not have
+  invocation. Uncovered KSIs skipped and named, never minted. *As built:* the
+  content sniff is "the JSON file is an array" — a native submission is an
+  object — and the reader then refuses any array that is not the pinned
+  framework's output. The run facts the document lacks are **required flags**
+  (`--exit-code`, `--signer`, `--cadence`) rather than a sidecar manifest; a
+  missing one refuses. Every submission cites the compliance file itself as its
+  one digested artifact. All four P3-2 obligations unwrapped. One addition the
+  note did not have: a `MANUAL` row on an indicator the pin **does** map AWS
+  checks to refuses the batch, since the writer emits one exactly where the
+  framework maps nothing.
+- **P3-3a. LANDED 2026-09-18.** The **mapped-check coverage measure** (§10c), which §6 did not have
   before the arguments turned out to be unrecoverable: `reported / mapped` per
   KSI against the pinned framework's AWS list, recorded on the submission and
   printed. It is what lets the appliance state the population it evaluated
-  instead of calling a filtered scan a scan.
-- **P3-4.** The `Muted` decision (§4c) — the field is `status_id` /
+  instead of calling a filtered scan a scan. *As built:* recorded in every
+  assertion's `detail` (the submission contract is strict and gained no field),
+  returned as `coverage` for all 33 KSIs the framework maps on AWS, and printed
+  per KSI with the first five unreported checks named.
+- **P3-4. LANDED 2026-09-18.** The `Muted` decision (§4c) — the field is `status_id` /
   `status == "Suppressed"`, not a boolean (§10a) — and the `--provider` guard
   that refuses a non-AWS Prowler document until a fourth `MethodSource` exists.
-- **P3-5.** The register e2e: ingesting raises a KSI's method count, removing it
+  *As built — the muting call:* **a mute waives nothing.** A muted row stays in
+  the population with its own `status_code`, so a muted FAIL still fails, and
+  the muted count is named in the detail. §4c offered exclude-and-name or
+  refuse; this is stricter than the first and gentler than the second. The
+  reason: excluding a muted FAIL lets a provider's mutelist move the
+  `FRC-CSX-VVK` numerator by deleting the evidence against it, and rampscan's
+  waiver path is a signed adjudication, which a mutelist is not. It also makes
+  obligation 2 structural, since a group is built from reported rows. **This is
+  a judgement and the owner may reverse it**; the change is one filter in
+  `prowlerSubmissions`. *The provider guard* is the join, because the OCSF
+  compliance row carries no provider field this reader trusts: every reported
+  check must be one the pin maps on AWS for that KSI (a check mapped only on
+  another provider is refused and the provider named), and an account uid must
+  be twelve digits. There is no `--provider` flag; the document is refused, not
+  filtered.
+- **P3-5. LANDED 2026-09-18.** The register e2e: ingesting raises a KSI's method count, removing it
   lowers it again, and `rampscan submission`'s numbers do not move (§5).
+  *As built:* `prowler-ingest-register.e2e.test.ts` over
+  `fixtures/ingest-prowler/` — 13 reported rows on six checks mint eleven
+  bundles, the 13 `MANUAL` indicators are skipped, a muted FAIL and a
+  config-forced FAIL both read `violated`, and against an SDR omitting two
+  indicators the scan evidences, the `unaddressed-ksis` rows and the
+  answered/omitted counts are identical with and without the scan. **P3 is
+  code-complete.**
 
 ## 7. Estimate, with the P1 and P2 lessons applied
 

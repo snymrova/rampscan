@@ -1,0 +1,886 @@
+[
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "cloudfront_distributions_using_waf on dist-a: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-cloudfront_distributions_using_waf-111122223333-us-east-1-dist-a-KSI-CNA-RVP"
+    },
+    "metadata": {
+      "event_code": "cloudfront_distributions_using_waf",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CNA-RVP"
+      ],
+      "checks": [
+        {
+          "uid": "cloudfront_distributions_using_waf",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "cloudfront_distributions_using_waf on dist-b: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-cloudfront_distributions_using_waf-111122223333-us-east-1-dist-b-KSI-CNA-RVP"
+    },
+    "metadata": {
+      "event_code": "cloudfront_distributions_using_waf",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CNA-RVP"
+      ],
+      "checks": [
+        {
+          "uid": "cloudfront_distributions_using_waf",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "apigateway_restapi_waf_acl_attached on api-a: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-apigateway_restapi_waf_acl_attached-111122223333-us-east-1-api-a-KSI-CNA-RVP"
+    },
+    "metadata": {
+      "event_code": "apigateway_restapi_waf_acl_attached",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CNA-RVP"
+      ],
+      "checks": [
+        {
+          "uid": "apigateway_restapi_waf_acl_attached",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "iam_no_root_access_key on root: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-iam_no_root_access_key-111122223333-us-east-1-root-KSI-IAM-AAM"
+    },
+    "metadata": {
+      "event_code": "iam_no_root_access_key",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-IAM-AAM"
+      ],
+      "checks": [
+        {
+          "uid": "iam_no_root_access_key",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "iam_user_accesskey_unused on user-alice: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-iam_user_accesskey_unused-111122223333-us-east-1-user-alice-KSI-IAM-AAM"
+    },
+    "metadata": {
+      "event_code": "iam_user_accesskey_unused",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-IAM-AAM"
+      ],
+      "checks": [
+        {
+          "uid": "iam_user_accesskey_unused",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "Suppressed",
+    "status_id": 3,
+    "status_code": "FAIL",
+    "message": "iam_user_accesskey_unused on user-bob: FAIL.",
+    "finding_info": {
+      "uid": "prowler-aws-iam_user_accesskey_unused-111122223333-us-east-1-user-bob-KSI-IAM-AAM"
+    },
+    "metadata": {
+      "event_code": "iam_user_accesskey_unused",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-IAM-AAM"
+      ],
+      "checks": [
+        {
+          "uid": "iam_user_accesskey_unused",
+          "status": "FAIL"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "config_recorder_all_regions_enabled on recorder: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-config_recorder_all_regions_enabled-111122223333-us-east-1-recorder-KSI-CMT-LMC"
+    },
+    "metadata": {
+      "event_code": "config_recorder_all_regions_enabled",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CMT-LMC"
+      ],
+      "checks": [
+        {
+          "uid": "config_recorder_all_regions_enabled",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "config_recorder_all_regions_enabled on recorder: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-config_recorder_all_regions_enabled-111122223333-us-east-1-recorder-KSI-CNA-EIS"
+    },
+    "metadata": {
+      "event_code": "config_recorder_all_regions_enabled",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CNA-EIS"
+      ],
+      "checks": [
+        {
+          "uid": "config_recorder_all_regions_enabled",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "config_recorder_all_regions_enabled on recorder: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-config_recorder_all_regions_enabled-111122223333-us-east-1-recorder-KSI-MLA-EVC"
+    },
+    "metadata": {
+      "event_code": "config_recorder_all_regions_enabled",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-MLA-EVC"
+      ],
+      "checks": [
+        {
+          "uid": "config_recorder_all_regions_enabled",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "config_recorder_all_regions_enabled on recorder: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-config_recorder_all_regions_enabled-111122223333-us-east-1-recorder-KSI-MLA-LET"
+    },
+    "metadata": {
+      "event_code": "config_recorder_all_regions_enabled",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-MLA-LET"
+      ],
+      "checks": [
+        {
+          "uid": "config_recorder_all_regions_enabled",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "config_recorder_all_regions_enabled on recorder: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-config_recorder_all_regions_enabled-111122223333-us-east-1-recorder-KSI-PIY-GIV"
+    },
+    "metadata": {
+      "event_code": "config_recorder_all_regions_enabled",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-PIY-GIV"
+      ],
+      "checks": [
+        {
+          "uid": "config_recorder_all_regions_enabled",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "PASS",
+    "message": "config_recorder_all_regions_enabled on recorder: PASS.",
+    "finding_info": {
+      "uid": "prowler-aws-config_recorder_all_regions_enabled-111122223333-us-east-1-recorder-KSI-SVC-ACM"
+    },
+    "metadata": {
+      "event_code": "config_recorder_all_regions_enabled",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-SVC-ACM"
+      ],
+      "checks": [
+        {
+          "uid": "config_recorder_all_regions_enabled",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "FAIL",
+    "message": "Configuration not valid for this requirement. The scan's password policy threshold is looser than the requirement declares.",
+    "finding_info": {
+      "uid": "prowler-aws-cognito_user_pool_password_policy_lowercase-111122223333-us-east-1-pool-a-KSI-IAM-APM"
+    },
+    "metadata": {
+      "event_code": "cognito_user_pool_password_policy_lowercase",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-IAM-APM"
+      ],
+      "checks": [
+        {
+          "uid": "cognito_user_pool_password_policy_lowercase",
+          "status": "PASS"
+        }
+      ]
+    },
+    "unmapped": {
+      "cloud": {
+        "account": {
+          "uid": "111122223333"
+        },
+        "region": "us-east-1"
+      }
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-CED-RAT"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CED-RAT"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-CMT-RVP"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CMT-RVP"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-CMT-VTD"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-CMT-VTD"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-INR-AAR"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-INR-AAR"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-INR-RIR"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-INR-RIR"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-INR-RPI"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-INR-RPI"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-MLA-RVL"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-MLA-RVL"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-PIY-RES"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-PIY-RES"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-PIY-RIS"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-PIY-RIS"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-PIY-RSD"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-PIY-RSD"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-PIY-RVD"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-PIY-RVD"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-RPL-RRO"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-RPL-RRO"
+      ]
+    }
+  },
+  {
+    "class_uid": 2003,
+    "time": 1789725600,
+    "time_dt": "2026-09-18T10:00:00+00:00",
+    "status": "New",
+    "status_id": 1,
+    "status_code": "MANUAL",
+    "message": "Manual review required.",
+    "finding_info": {
+      "uid": "manual-KSI-SVC-RUD"
+    },
+    "metadata": {
+      "event_code": "manual",
+      "product": {
+        "name": "Prowler",
+        "version": "5.42.0"
+      }
+    },
+    "compliance": {
+      "standards": [
+        "FedRAMP-20x-KSI-2026.07.14.01"
+      ],
+      "requirements": [
+        "KSI-SVC-RUD"
+      ]
+    }
+  }
+]

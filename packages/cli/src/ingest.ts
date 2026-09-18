@@ -21,11 +21,19 @@ import {
 import { createLocalSigner } from "@rampscan/signer";
 import { loadPackage } from "./ingest-package.js";
 import type { PackageIngestOptions } from "./ingest-package.js";
+import { loadPinnedProwlerFramework } from "./prowler-framework.js";
+import { prowlerSubmissions } from "./prowler-ingest.js";
+import { parseProwlerOcsf } from "./prowler-ocsf.js";
 
 // `rampscan ingest <path>` (SPEC §12.8, plan Q4.1): client-run signed results
-// become ledger citizens. Three input shapes, one contract:
+// become ledger citizens. Four input shapes, one contract:
 //
-//   a JSON FILE  one native IngestSubmission document
+//   a JSON FILE  one native IngestSubmission document — or, when the file is
+//                a bare ARRAY, a Prowler OCSF compliance output (P3-3,
+//                `prowler-ingest.ts`). Sniffed on CONTENT, never on the file
+//                name: a native submission is an object, and the reader then
+//                refuses any array that is not the pinned KSI framework's
+//                output (`compliance.standards[0]` is on every row)
 //   a DIRECTORY  an Evidence/<family>/<KSI-ID>/ tree plus the client-authored
 //                ingest-manifest.json — the adapter that meets clients where
 //                they already are (docs/RESEARCH-PARAMIFY-PILOT.md §3)
@@ -101,9 +109,25 @@ export interface IngestOptions {
   keysDir: string;
   /** package path only: the reviewed KSI crosswalk, when the package's ids are an earlier catalog's */
   crosswalk?: string | undefined;
-  /** package path only: the declared refresh cycle — the package carries none */
+  /** package and Prowler paths: the declared refresh cycle — neither input carries one */
   cadence?: PackageIngestOptions["cadence"];
+  /** Prowler path only: the exit status the client recorded — the document carries none (§10b) */
+  exitCode?: number | undefined;
+  /** Prowler path only: who ran the scan and stands behind it */
+  signerIdentity?: string | undefined;
+  /** where the vendored Prowler framework is read from (default: the working directory) */
+  repoRoot?: string | undefined;
   log?: (line: string) => void;
+}
+
+/** what the Prowler path needs beside the file — the facts the document does not state */
+export interface ProwlerLoadOptions {
+  exitCode?: number | undefined;
+  signerIdentity?: string | undefined;
+  cadence?: PackageIngestOptions["cadence"];
+  repoRoot: string;
+  /** the catalog at this checkout's dataset pin — the reader's join side */
+  ksiIds: readonly string[];
 }
 
 async function sha256File(path: string): Promise<string> {
@@ -230,10 +254,46 @@ async function entryToSubmission(
   };
 }
 
-/** parse the input into native submissions — the three shapes, one output */
+/**
+ * The Prowler path: the declared run facts are REQUIRED, because the OCSF
+ * document has no header to read them from (§10b) and a guessed exit code is
+ * exactly the conflation obligation 3 exists to refuse.
+ */
+async function loadProwler(
+  path: string,
+  raw: unknown,
+  options: ProwlerLoadOptions | undefined,
+): Promise<LoadedSubmissions> {
+  const missing: string[] = [];
+  if (options?.exitCode === undefined) missing.push("--exit-code <n> (the status Prowler exited with)");
+  if (options?.signerIdentity === undefined) missing.push("--signer <identity> (who ran the scan)");
+  if (options?.cadence === undefined) missing.push("--cadence <cycle> (how often the scan runs)");
+  if (options === undefined || missing.length > 0) {
+    throw new Error(
+      `${path} is a Prowler OCSF compliance output, which records no exit code, no signer and no ` +
+        `cadence — declare them; none is guessed: ${missing.join(", ")}`,
+    );
+  }
+  const document = parseProwlerOcsf(raw, path, options.ksiIds);
+  const framework = await loadPinnedProwlerFramework(options.repoRoot);
+  const { submissions, skipped, notes } = prowlerSubmissions(
+    document,
+    {
+      exit_code: options.exitCode!,
+      signer_identity: options.signerIdentity!,
+      cadence: options.cadence!,
+      artifact: { name: basename(path), sha256: await sha256File(path) },
+    },
+    framework,
+  );
+  return { submissions, skipped, notes };
+}
+
+/** parse the input into native submissions — the four shapes, one output */
 export async function loadSubmissions(
   path: string,
   packageOptions?: PackageIngestOptions,
+  prowlerOptions?: ProwlerLoadOptions,
 ): Promise<LoadedSubmissions> {
   const info = await stat(path);
   if (info.isFile() && /^\.ya?ml$/i.test(extname(path))) {
@@ -268,6 +328,7 @@ export async function loadSubmissions(
   }
   if (info.isFile()) {
     const raw = JSON.parse(await readFile(path, "utf8")) as unknown;
+    if (Array.isArray(raw)) return loadProwler(path, raw, prowlerOptions);
     try {
       return { submissions: [IngestSubmissionSchema.parse(raw)], skipped: [] };
     } catch (cause) {
@@ -317,22 +378,32 @@ export async function loadSubmissions(
 
 export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
   const log = options.log ?? (() => {});
-  const { submissions, skipped, notes, refusalHint } = await loadSubmissions(options.path, {
-    crosswalk: options.crosswalk,
-    cadence: options.cadence,
-    datasetPin: options.datasetPin,
+  const catalog = await loadKsiCatalog({
+    derivedDir: options.datasetDir,
+    rulesFile: options.rulesFile,
+    pin: options.datasetPin,
   });
+  const { submissions, skipped, notes, refusalHint } = await loadSubmissions(
+    options.path,
+    {
+      crosswalk: options.crosswalk,
+      cadence: options.cadence,
+      datasetPin: options.datasetPin,
+    },
+    {
+      exitCode: options.exitCode,
+      signerIdentity: options.signerIdentity,
+      cadence: options.cadence,
+      repoRoot: options.repoRoot ?? process.cwd(),
+      ksiIds: catalog.ksis.map((k) => k.id),
+    },
+  );
   for (const line of notes ?? []) log(line);
   for (const s of skipped) log(`${s.script}#${s.ksi} → skipped: ${s.reason}`);
 
   // Refusal before append: unknown KSIs and in-batch duplicates are collected
   // and reported TOGETHER, and nothing is signed while any stand — a batch
   // that half-landed is a ledger that says something no one decided.
-  const catalog = await loadKsiCatalog({
-    derivedDir: options.datasetDir,
-    rulesFile: options.rulesFile,
-    pin: options.datasetPin,
-  });
   const known = new Set(catalog.ksis.map((k) => k.id));
   const problems: string[] = [];
   const seen = new Set<string>();
