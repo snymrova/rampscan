@@ -51,9 +51,12 @@ reader, which sets the `MANUAL` row aside by making the indicator *absent*
 from the grouping rather than present and empty, and corrected §10a on two
 counts. **P3-2 landed 2026-09-18** — the soundness test, before the adapter:
 the hazard shown real against the shared evaluator, and the adapter's
-obligations under `it.fails` against a declared contract (see §8). Next is
-**P3-3**, the adapter, which is not done until it unwraps all four.
-Then **P4 (#213)**, a trust-center fetchability probe.
+obligations under `it.fails` against a declared contract (see §8). **P3-3,
+P3-3a, P3-4 and P3-5 landed 2026-09-18** on one stacked branch — the adapter,
+the coverage measure, the muting call (a mute waives nothing — the owner's to
+reverse) with the provider guard, and the register e2e; all four obligations
+unwrapped. **P3 is code-complete**; #212 closes when the stack merges. Next is
+**P4 (#213)**, a trust-center fetchability probe.
 2. **S3** sends, with #72 by 2026-10-09 — S4 closed 2026-09-15 by the owner's call to finish the software first. S3-2 (#138) is researched and drafted in `docs/RESEARCH-S3-2-OUTREACH.md` (channels, a second public package, the sequence, the three drafts); its §4 corrections landed 2026-09-15 (the "only package" claim, the Filevine register §3b), so the sends wait only on the owner for addresses and the go; then S3-3 (#72) and S3-4 (#105).
 3. **T** — T0–T4 code complete 2026-09-16. What is left is the owner's: (a) a **sandbox AWS account** for the T3/T4 exit gates — `rampscan-runner init`, `rampscan runner register`, `rampscan runner policy` → attach, `rampscan serve --repo <the repo>`, click *Collect evidence* on `KSI-IAM-APM`; then remove `iam:GetCredentialReport` and click again for the `failed(denied)` row; (b) two upstream filings in S3-4's channel — the credential-report assertions spell `TRUE` where AWS prints `true` (every principal fails as published), and the `where`-alignment limit of labeled assertions (SPEC §14.4a); (c) whether T5 (scheduled requests, ECS/Lambda packaging) is wanted for the first release. Dependabot #194–#196 (react, zod, next 16 — issue #30's Turbopack risk) are open and untouched.
 4. **Owner call, not blocking:** whether #147 gets a published advisory like GHSA-7jff-6v53-r56x. Same class, but the path had only ever run on the fixture; S0-1's argument for filing (the advisory is an asset) applies, and so does the counter-argument that an advisory for a never-shipped path is noise.
@@ -206,3 +209,4 @@ Do not: start R work, start T code before S1 closes, add a `not_affected` path t
   throws — an empty result would read as "the scan evidenced nothing", the
   conflation P3-1's missing-file refusal exists to stop. Suite 1,389 across 119
   files; README regenerated under ground rule 4. Next item: P3-3, the adapter.
+- **2026-09-18 (P3-3 → P3-5)** — The owner asked for coding straight through the plan with no pauses to merge or wait on CI, so P3-3 is stacked on #222 and carries P3-3a, P3-4 and P3-5 as well. `rampscan ingest <file.ocsf.json> --exit-code --signer --cadence` mints one `aws-ingested` bundle per (check, KSI), evaluating rampscan's own `count_eq 0` over the effective `status_code`; the four P3-2 obligations are unwrapped. **The one judgement taken without the owner:** a muted finding is *counted, not waived* (§6 P3-4 has the argument and the one-line reversal). The provider guard is the join itself, since the compliance row names no provider: a check mapped only on Azure/GCP/K8s/M365 or a non-AWS account refuses the batch. Run through the real CLI on the fixture: 11 bundles, 13 skipped, `verify` clean on an ingested bundle. §5 held: the SDR omission rows do not move. Suite 1,399 across 121 files. Next item: P4 (#213).

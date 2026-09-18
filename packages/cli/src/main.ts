@@ -99,7 +99,9 @@ function usage(): never {
       "  ingest <path>     append CLIENT-RUN signed results as ledger citizens (SPEC §12.8):",
       "                    a submission file, an Evidence/ tree with ingest-manifest.json, or a",
       "                    machine-readable assessment package (.yaml; needs --cadence, and",
-      "                    --crosswalk when its KSI ids are an earlier catalog's).",
+      "                    --crosswalk when its KSI ids are an earlier catalog's), or a Prowler",
+      "                    OCSF compliance output (--compliance fedramp_20x_ksi_2026, AWS only;",
+      "                    needs --exit-code, --signer and --cadence).",
       "                    Requires --repo; validates against the pinned catalog; refuses the",
       "                    whole batch before signing anything. Never executes an AWS call",
       "  board             show the projection: registers, live evidence, graveyard (--json for the fold)",
@@ -198,7 +200,9 @@ function usage(): never {
       "                    the row key is never guessed)",
       "  --crosswalk <file>  ingest (package): the reviewed KSI crosswalk placing an earlier",
       "                    catalog's ids at this pin (recipes/crosswalks/)",
-      "  --cadence <c>     ingest (package): the declared refresh cycle — a package carries none",
+      "  --cadence <c>     ingest (package, Prowler): the declared refresh cycle — neither carries one",
+      "  --exit-code <n>   ingest (Prowler): the status the scan exited with — non-zero skips everything",
+      "  --signer <id>     ingest (Prowler): who ran the scan and stands behind it (runner:<name>)",
       "  --strict          frontier: exit 1 on a pipeline-unreviewed control, not only a broken link",
       "  --class <b|c>     target cert class → MVX window (b=7d, c=3d; default: b).",
       "                    owed, frontier, gaps and exports: also accept a and d — reporting",
@@ -255,6 +259,8 @@ async function main(): Promise<void> {
       repo: { type: "string" },
       crosswalk: { type: "string" },
       cadence: { type: "string" },
+      "exit-code": { type: "string" },
+      signer: { type: "string" },
       strict: { type: "boolean" },
       "by-controls": { type: "boolean" },
       aws: { type: "boolean" },
@@ -397,6 +403,12 @@ async function main(): Promise<void> {
         console.error(`--cadence must be one of ${Cadence.options.join("|")}, not ${values.cadence}`);
         process.exit(2);
       }
+      const exitCodeRaw = values["exit-code"];
+      if (exitCodeRaw !== undefined && !/^\d+$/.test(exitCodeRaw)) {
+        console.error(`--exit-code must be a non-negative integer, not ${exitCodeRaw}`);
+        process.exit(2);
+      }
+      const exitCode = exitCodeRaw === undefined ? undefined : Number(exitCodeRaw);
       await ingest({
         path: target,
         repo: values.repo,
@@ -407,6 +419,9 @@ async function main(): Promise<void> {
         keysDir,
         crosswalk: values.crosswalk,
         cadence: values.cadence as Cadence | undefined,
+        exitCode: exitCode,
+        signerIdentity: values.signer,
+        repoRoot: REPO_ROOT,
         log: (line) => console.log(line),
       });
       return;

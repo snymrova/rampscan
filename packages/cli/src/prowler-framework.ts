@@ -40,6 +40,8 @@ import { join } from "node:path";
 /** where the vendored framework lives, relative to the repo root */
 export const PROWLER_FRAMEWORK_DIR = join("docs", "context", "prowler");
 export const PROWLER_FRAMEWORK_FILE = "fedramp_20x_ksi_2026.json";
+/** the name Prowler's `--compliance` flag takes for it: the file's basename */
+export const PROWLER_COMPLIANCE_ID = PROWLER_FRAMEWORK_FILE.replace(/\.json$/, "");
 
 /** the reviewed record of what the framework leaves uncovered (§4d) */
 export const PROWLER_UNCOVERED_PATH = join("recipes", "prowler", "uncovered.json");
