@@ -11,6 +11,7 @@ import {
 import { FEDRAMP_SCHEMA_PINS } from "./fedramp-schemas.js";
 import type { ConformanceResult } from "./fedramp-conformance.js";
 import type { KsiRegisterView } from "./ksi-register.js";
+import type { SdrCoverage } from "./sdr.js";
 
 // `rampscan submission` — the rejection register (P2-3,
 // docs/RESEARCH-REJECTION-LINTER.md §4).
@@ -61,6 +62,11 @@ export const COMPUTED_RULES: Readonly<Record<string, string>> = {
   "FRC-CSO-PKG": "`rampscan exports` builds the certification package overview",
   "FRC-CSX-MOT": "the history meter walks the KSI's instants across the owed span (#159)",
   "FRC-CSX-VVK": "the method floor — the KSI register's automated-method numerator, and gaps G1/G2",
+  // P2-1 earned this entry rather than declaring it: the rule obliges a
+  // Security Decision Record carrying a row per applicable rule, and
+  // `--sdr` now diffs exactly that. Note it does NOT excuse the rule's own
+  // row — since §9.3 `computed` is axis B and excuses nothing.
+  "SDR-CSO-FRR": "`rampscan submission --sdr` diffs the record's fedRampRequirements against the rules addressable at the class, which is the coverage this rule obliges",
   "SDR-CSX-KSI": "the artifact plane (R0/R1): the five artifacts owed per KSI",
   "VDR-CSO-FAV": "the failure-to-vulnerability feed — gaps G13",
   "VDR-TFR-MVX": "the machine validation window meter for the reporting class",
@@ -92,8 +98,25 @@ const PROBLEM_RULE_SECTIONS: Readonly<Record<string, RejectionSection>> = {
 /** the rule ids a reprojected problem may cite — the map's keys, for the drift guard */
 export const PROBLEM_RULE_IDS: readonly string[] = Object.keys(PROBLEM_RULE_SECTIONS).sort();
 
-/** How a rule resolves for reason 3. §4b: getting this wrong either way is worse than not shipping it. */
-export type RuleState = "computed" | "declared" | "outside" | "unaddressed";
+/**
+ * Reason 3's counts, on the two axes §9.3 keeps apart.
+ *
+ * Axis A is FedRAMP's question and the only one that yields a rejection: does
+ * the submitted document answer this rule? Axis B is this appliance's — what
+ * it can independently check — and it excuses nothing. The earlier
+ * `computed | declared | outside | unaddressed` presented four values of one
+ * variable, which is how `computed` came to excuse a row FedRAMP still wants.
+ */
+export interface ReasonThreeStates {
+  /** axis A: applicable rules the document answers, whatever the status inside */
+  answered: number;
+  /** axis A: applicable rules with no row at all — the rejection */
+  omitted: number;
+  /** axis B: of `answered`, the ones this appliance can independently verify */
+  verifiable: number;
+  /** axis B: of `omitted`, the ones it computes anyway — evidence with no row to carry it */
+  computedButOmitted: number;
+}
 
 export interface RejectionRow {
   /** what the row is about: a rule id, a KSI, a document */
@@ -113,12 +136,14 @@ export interface RejectionRow {
   statement?: string;
   /**
    * Set when the row is a rejection this appliance can stand behind, which is
-   * what the exit code counts. An `unaddressed` rule is NOT one: with P2-1
-   * unbuilt there is no reviewed `outside` set, so a rule no local appliance
-   * could ever see — a FedRAMP Marketplace listing is not a property of a git
-   * checkout — is indistinguishable from one the provider simply omitted, and
-   * reporting 116 rows as rejections is the false accusation at scale §4b
-   * warns about.
+   * what the exit code counts.
+   *
+   * For reason 3's rule half that means: the rule is applicable at this class
+   * and the Security Decision Record has no row for it. It is read off the
+   * artifact FedRAMP reads, so it needs no judgement about what a local
+   * appliance can see (§9.2). A rule merely undeclared in the offering's
+   * `ruleCoverage` is NOT a rejection — that fallback is rampscan-local, and a
+   * provider may hold a complete SDR this run never saw.
    */
   rejection?: true;
 }
@@ -134,8 +159,8 @@ export interface RejectionRegisterSection {
   /** set when the section cannot be measured — never omitted to look clean */
   unmeasured?: string;
   rows: RejectionRow[];
-  /** reason 3 only: the four states and their counts */
-  states?: Readonly<Record<RuleState, number>>;
+  /** reason 3 only: the coverage counts; absent when the section is unmeasured */
+  states?: Readonly<ReasonThreeStates>;
   /** a note the section owes its reader, printed under the heading */
   note?: string;
 }
@@ -143,6 +168,19 @@ export interface RejectionRegisterSection {
 export interface RejectionRegisterView {
   offeringClass: OfferingClass;
   datasetVersion: string;
+  /**
+   * Rules addressable at the reporting class — the denominator nobody
+   * publishes. A fact about the catalog, so it survives reason 3 being
+   * unmeasured: whether a package answers them is a different question from
+   * how many there are.
+   */
+  addressable: number;
+  /**
+   * Rules this appliance answers for itself — axis B (§9.3), and likewise
+   * independent of any package. It is evidence to put in a row; since P2-1 it
+   * excuses no row.
+   */
+  computed: number;
   sections: RejectionRegisterSection[];
   /** rows the appliance can stand behind as rejections — the exit code's number */
   rejections: number;
@@ -159,6 +197,13 @@ export interface RejectionRegisterInput {
   ksis?: KsiRegisterView;
   /** `checkConformance`'s result over the exports directory; absent when not run */
   conformance?: ConformanceResult;
+  /**
+   * The Security Decision Record's coverage — reason 3's actual subject (§9).
+   * Absent when none was supplied, which makes reason 3 unmeasured rather than
+   * a queue of accusations against a checkout that never claimed to be a
+   * package.
+   */
+  sdr?: SdrCoverage;
   /** the exports' own problems channel, read rather than recomputed (§5) */
   problems?: readonly string[];
   /** the directory the exports were written to; absent when none */
@@ -278,74 +323,114 @@ export async function buildRejectionRegister(
     }
   }
 
-  const states: Record<RuleState, number> = {
-    computed: 0,
-    declared: 0,
-    outside: 0,
-    unaddressed: 0,
+  // ---- reason 3, the rule half: a coverage diff over the SDR (§9) --------
+  //
+  // `SDR-CSO-FRR` requires a row per applicable rule, and its schema makes
+  // `Not Implemented` a valid status. So the question is NOT "can this
+  // appliance verify rule R" — that question is unanswerable for most of the
+  // rule set and is what the cancelled `outside` set was trying to answer. The
+  // question is "does the submitted document answer rule R", which is a diff.
+  //
+  // Two axes, kept apart (§9.3). Axis A is FedRAMP's: answered or omitted.
+  // Axis B is this appliance's: what it can independently check. Conflating
+  // them is what let `computed` excuse a row FedRAMP still wants.
+  const source: "sdr" | "ruleCoverage" | null =
+    input.sdr !== undefined ? "sdr" : coverage.size > 0 ? "ruleCoverage" : null;
+  const answers: ReadonlySet<string> =
+    input.sdr !== undefined ? input.sdr.ruleIds : new Set(coverage.keys());
+
+  const states: ReasonThreeStates = {
+    answered: 0,
+    omitted: 0,
+    verifiable: 0,
+    computedButOmitted: 0,
   };
-  const unaddressed: RejectionRow[] = [];
+  const omitted: RejectionRow[] = [];
+  // the fallback's own breakdown: #167 asks for "say so and tell us why", and
+  // the two arms of `ruleCoverage` are which of those a provider used
   let declaredAddressed = 0;
   let declaredNotImplemented = 0;
-  for (const rule of addressable) {
-    if (COMPUTED_RULES[rule.id] !== undefined) {
-      states.computed += 1;
-      continue;
-    }
-    const declared = coverage.get(rule.id);
-    if (declared !== undefined) {
-      states.declared += 1;
-      if (declared.status === "addressed") declaredAddressed += 1;
-      else declaredNotImplemented += 1;
-      continue;
-    }
-    // `outside` stays unreachable until P2-1 exists. It is counted rather than
-    // omitted so the register's arithmetic has the same shape before and after
-    // that lands, and a reader can see the zero is a missing surface and not a
-    // measured absence.
-    states.unaddressed += 1;
-    // The rule's own NAME, not a sentence about rampscan: every row in this
-    // section is a rule nothing answers, the note says so once, and 116 copies
-    // of the same clause is how a queue stops being read. The full statement
-    // at this class rides in `--json` for a reader working the queue down.
-    unaddressed.push(ruleRow(rule, cls, rule.name));
+  for (const declared of coverage.values()) {
+    if (declared.status === "addressed") declaredAddressed += 1;
+    else declaredNotImplemented += 1;
   }
-  sections.push({
+  for (const rule of addressable) {
+    const computes = COMPUTED_RULES[rule.id] !== undefined;
+    if (answers.has(rule.id)) {
+      states.answered += 1;
+      if (computes) states.verifiable += 1;
+      continue;
+    }
+    states.omitted += 1;
+    // The §9.3 defect, now reported rather than excused: this appliance holds
+    // evidence for the rule and the document has nowhere to put it.
+    const detail = computes
+      ? `${rule.name} — omitted, and this appliance computes it (${COMPUTED_RULES[rule.id]}), so the evidence exists and the row to carry it does not`
+      : rule.name;
+    if (computes) states.computedButOmitted += 1;
+    const row = ruleRow(rule, cls, detail);
+    // A rejection this appliance can stand behind: the rule is applicable at
+    // this class and the submitted document has no row for it. That is reason
+    // 3's own defect, read off the artifact FedRAMP reads.
+    omitted.push(source === "sdr" ? { ...row, rejection: true as const } : row);
+  }
+
+  const ruleSection: RejectionRegisterSection = {
     section: "unaddressed-rules",
     reason: 3,
     quote:
       "Remember that ALL MUSTs and SHOULDs applicable to your class need to be addressed. If you don't have something implemented, say so and tell us why, don't just omit the KSI or rule altogether",
-    ruleIds: ["FRC-CSX-VVK", "FRC-CSX-MAS"],
-    states,
-    note:
+    ruleIds: ["SDR-CSO-FRR", "FRC-CSX-VVK", "FRC-CSX-MAS"],
+    // The unresolvable declarations lead, ahead of the queue: the renderer
+    // prints the first rows in full and groups the tail, and a typo'd rule id
+    // buried under a hundred queue rows is a finding nobody reads.
+    rows: [...unresolvableDeclarations],
+  };
+
+  if (source === null) {
+    // Not a pass, and not an accusation either. A bare checkout is not a
+    // submission: with no Security Decision Record and no declared coverage
+    // there is no answer to diff against, and printing every applicable rule
+    // as a rejection would be the false accusation at scale §4b warned about
+    // — arrived at from the other direction, by measuring nothing and
+    // reporting it as everything.
+    ruleSection.unmeasured =
+      `no Security Decision Record was read, so which of the ${addressable.length} rules addressable at class ${cls} the package answers is unknown — ` +
+      "pass --sdr <security-decision-record.json>, the document SDR-CSO-FRR obliges and the one FedRAMP reads";
+    ruleSection.note =
       `${addressable.length} rules are addressable at class ${cls}` +
       (register.applicabilityUnstated.length > 0
         ? `, including the rules of ${register.applicabilityUnstated.join(", ")}, whose subsets declare no applicability at all and which are therefore counted as owed`
         : "") +
-      `. ${states.computed} this appliance answers itself. ` +
-      (input.offering === undefined
-        ? "No offering declaration was supplied, so no rule can be declared addressed. "
-        : coverage.size === 0
-          ? "The offering declares no ruleCoverage, so no rule can be declared addressed. "
-          : `${declaredAddressed} declared addressed by citation and ${declaredNotImplemented} declared not implemented with a reason — ` +
-            `which #167 asks for explicitly and which this appliance does NOT verify: it checks that an answer exists, never that it is true. ` +
-            (declaredOverComputed.length > 0
-              ? `${declaredOverComputed.length} declaration(s) name a rule this appliance computes (${declaredOverComputed.sort().join(", ")}) and are counted as computed, not declared: a declaration does not overwrite a measurement. `
-              : "") +
-            (declaredNotAddressable.length > 0
-              ? `${declaredNotAddressable.length} declaration(s) name a rule class ${cls} does not oblige (${declaredNotAddressable.sort().join(", ")}), counted here against no denominator. `
-              : "")) +
-      `The ${states.unaddressed} unaddressed is an UPPER BOUND and not a finding: with P2-1 unbuilt no rule can yet ` +
-      `be ruled structurally outside a local appliance's reach — a FedRAMP Marketplace listing is not a property of a ` +
-      `git checkout — so a rule nobody could answer here is indistinguishable from one a provider omitted. That is why ` +
-      `these rows are printed as the queue rather than counted as rejections: reporting them as rejections would be a ` +
-      `false accusation at scale, and reporting them as fine would be the vacuous pass`,
-    // The unresolvable declarations lead, ahead of the queue: the renderer
-    // prints the first rows in full and groups the tail, and a typo'd rule id
-    // buried under 116 queue rows is a finding nobody reads.
-    rows: [...unresolvableDeclarations, ...unaddressed],
-  });
-
+      `. ${Object.keys(COMPUTED_RULES).length} this appliance computes for itself, which is evidence to put in a row and is not the row`;
+  } else {
+    ruleSection.states = states;
+    ruleSection.rows.push(...omitted);
+    ruleSection.note =
+      `${addressable.length} rules are addressable at class ${cls}` +
+      (register.applicabilityUnstated.length > 0
+        ? `, including the rules of ${register.applicabilityUnstated.join(", ")}, whose subsets declare no applicability at all and which are therefore counted as owed`
+        : "") +
+      (source === "sdr"
+        ? `. Read against the Security Decision Record at ${input.sdr?.path}: ${states.answered} answered, ${states.omitted} omitted. ` +
+          `An omitted row is the rejection #167 reason 3 names — the schema's own status enum admits "Not Implemented", so declaring a rule unimplemented is compliance with SDR-CSO-FRR and saying nothing is not. ` +
+          `This appliance does NOT check whether an answer is true: it checks that one exists. ` +
+          `Of the answered, ${states.verifiable} are rules it can independently verify. ` +
+          (states.computedButOmitted > 0
+            ? `${states.computedButOmitted} omitted rule(s) are ones it computes anyway, so the evidence exists and the document has no row to carry it. `
+            : "")
+        : `. No Security Decision Record was read, so this is the offering's declared ruleCoverage standing in for it — a rampscan-local fallback, not the artifact submitted to FedRAMP: ${states.answered} declared, ${states.omitted} undeclared. ` +
+          `${declaredAddressed} declared addressed by citation and ${declaredNotImplemented} declared not implemented with a reason — ` +
+          `which #167 asks for explicitly and which this appliance does NOT verify: it checks that an answer exists, never that it is true. ` +
+          `These rows are NOT counted as rejections, because a provider may hold a complete SDR this run never saw. Pass --sdr to measure the document itself. `) +
+      (declaredOverComputed.length > 0
+        ? `${declaredOverComputed.length} declaration(s) name a rule this appliance computes (${declaredOverComputed.sort().join(", ")}), which does not move the rule: a declaration is not a measurement, and a measurement is not a submitted row. `
+        : "") +
+      (declaredNotAddressable.length > 0
+        ? `${declaredNotAddressable.length} declaration(s) name a rule class ${cls} does not oblige (${declaredNotAddressable.sort().join(", ")}), counted here against no denominator. `
+        : "");
+  }
+  sections.push(ruleSection);
   // ---- reason 3, the KSI half ------------------------------------------
   const ksiSection: RejectionRegisterSection = {
     section: "unaddressed-ksis",
@@ -354,10 +439,47 @@ export async function buildRejectionRegister(
     ruleIds: ["FRC-CSX-VVK", "SDR-CSX-KSI"],
     rows: [],
   };
-  if (input.ksis === undefined) {
+  // §9.6: the SDR carries BOTH halves of reason 3, and this half had the same
+  // defect the rule half did. It reported "no validation method derives — the
+  // KSI is omitted rather than declared unimplemented", which asserts an
+  // omission from the PACKAGE on the strength of a fact about rampscan's own
+  // method derivation. A provider whose SDR carries all 46
+  // `keySecurityIndicators` rows would have been told 28 were omitted.
+  //
+  // So the omission is read off the document, exactly as the rule half is, and
+  // the method count stays on axis B where it belongs — it is what this
+  // appliance can independently verify, never what the provider owes.
+  if (input.sdr !== undefined) {
+    const obliged = (input.ksis?.rows ?? []).filter((r) => !r.optional);
+    const claimed = input.sdr.ksiIds;
+    for (const row of obliged) {
+      if (claimed.has(row.ksi)) continue;
+      ksiSection.rows.push({
+        subject: row.ksi,
+        detail:
+          "no row in the record's keySecurityIndicators — the KSI is omitted rather than declared unimplemented, and the schema's status enum admits \"Not Implemented\"",
+        rejection: true,
+      });
+    }
+    const answered = obliged.length - ksiSection.rows.length;
+    const noMethod = obliged.filter((r) => r.methods === 0 && claimed.has(r.ksi)).length;
+    ksiSection.ruleIds = ["SDR-CSX-KSI", "FRC-CSX-VVK"];
+    ksiSection.note =
+      (input.ksis === undefined
+        ? `the KSI register was not computed, so the catalog's obliged set is unknown and only the ${claimed.size} row(s) the record claims can be counted`
+        : `${input.ksis.rows.length} KSI(s) in the catalog, ${obliged.length} obliged at class ${cls}: ${answered} answered by the record, ${ksiSection.rows.length} omitted`) +
+      (noMethod > 0
+        ? `. ${noMethod} of the answered have no automated validation method here, which is this appliance's gap to close and not an omission from the package`
+        : "");
+  } else if (input.ksis === undefined) {
     ksiSection.unmeasured =
       "the KSI register was not computed for this run — it needs a catalog and a frontier, and an empty list here would read as full coverage";
   } else {
+    // No record to read. The method floor is still worth printing — it is the
+    // number this appliance is best at — but it is axis B, so it is NOT a
+    // rejection: a KSI with no method here may be fully declared in an SDR
+    // this run never saw.
+    //
     // The OBLIGED rows only, which is the KSI register's own denominator
     // (§13.7: every meter counts the obliged rows). Filtering on `methods`
     // alone recomputed a fact the register already judges and disagreed with
@@ -369,11 +491,12 @@ export async function buildRejectionRegister(
       if (row.optional || row.methods > 0) continue;
       ksiSection.rows.push({
         subject: row.ksi,
-        detail: "no validation method derives — the KSI is omitted rather than declared unimplemented",
-        rejection: true,
+        detail: "no automated validation method derives here — whether the package declares it is unknown without an SDR",
       });
     }
     const optionalBare = input.ksis.rows.filter((r) => r.optional && r.methods === 0).length;
+    ksiSection.unmeasured =
+      "no Security Decision Record was read, so whether the package omits these KSIs is unknown — pass --sdr; the rows below are this appliance's own method gap, not the provider's omission";
     ksiSection.note =
       `${input.ksis.rows.length} KSI(s) in the catalog, ${input.ksis.summary.noMethod} obliged at class ${cls} with no method` +
       (optionalBare > 0
@@ -513,6 +636,8 @@ export async function buildRejectionRegister(
   return {
     offeringClass: cls,
     datasetVersion: register.datasetVersion,
+    addressable: addressable.length,
+    computed: addressable.filter((r) => COMPUTED_RULES[r.id] !== undefined).length,
     sections,
     rejections: sections.reduce(
       (n, s) => n + s.rows.filter((r) => r.rejection === true).length,
@@ -551,8 +676,13 @@ export function renderRejectionRegister(view: RejectionRegisterView, useColor: b
     lines.push(dim(`    "${section.quote}"`));
     if (section.states !== undefined) {
       lines.push(
-        `    ${section.states.computed} computed · ${section.states.declared} declared · ` +
-          `${section.states.outside} outside · ${red(String(section.states.unaddressed))} unaddressed`,
+        `    ${section.states.answered} answered · ${red(String(section.states.omitted))} omitted` +
+          (section.states.verifiable > 0
+            ? ` · ${section.states.verifiable} independently verifiable`
+            : "") +
+          (section.states.computedButOmitted > 0
+            ? ` · ${red(String(section.states.computedButOmitted))} computed but omitted`
+            : ""),
       );
     }
     if (section.note !== undefined) lines.push(dim(`    ${section.note}`));

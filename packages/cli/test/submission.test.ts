@@ -17,6 +17,7 @@ import {
   buildRejectionRegister,
   renderRejectionRegister,
 } from "../src/submission.js";
+import { readSdrCoverage } from "../src/sdr.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const rulesFile = join(root, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
@@ -55,6 +56,42 @@ function declaredOffering(extra: Record<string, unknown> = {}) {
     ],
     ...extra,
   });
+}
+
+/** an SDR carrying a row for every rule addressable at `cls` except the ids handed in */
+async function sdrOmitting(
+  r: RuleRegister,
+  cls: "a" | "b" | "c" | "d",
+  omit: readonly string[],
+  ksis: readonly string[] = [],
+): Promise<string> {
+  const omitted = new Set(omit);
+  const rows = addressableRules(r, cls)
+    .filter((rule) => !omitted.has(rule.id))
+    .map((rule) => ({
+      frrID: rule.id,
+      frrImplementationStatus: "Implemented",
+      frrImplementation: [{ statement: "Addressed by the evidence plane." }],
+    }));
+  const dir = await mkdtemp(join(tmpdir(), "rampscan-sdr-"));
+  const path = join(dir, "security-decision-record.json");
+  await writeFile(
+    path,
+    JSON.stringify({
+      certificationPackageOverviewUri: "https://example.com/cpo.json",
+      fedRampRequirements: rows,
+      keySecurityIndicators: ksis.map((id) => ({
+        ksiId: id,
+        ksiImplementationStatus: "Implemented",
+        ksiImplementation: [],
+        ksiValidation: [],
+        ksiAssessment: [],
+        ksiTests: [],
+        ksiEvidence: [],
+      })),
+    }),
+  );
+  return path;
 }
 
 // P2-3 (docs/RESEARCH-REJECTION-LINTER.md §4). The rejection register: one
@@ -111,39 +148,55 @@ describe("the rejection register", () => {
     expect(bare.sections[0]?.rows[0]?.rejection).toBe(true);
   });
 
-  it("accounts for every addressable rule in exactly one of the four states", async () => {
+  // §9.4 P2-1c. With no SDR and no declared coverage there is nothing to diff
+  // against, and printing all 129 applicable rules as rejections would be the
+  // false accusation at scale reached from the other direction — measuring
+  // nothing and reporting it as everything. The register already owns a
+  // channel for exactly this, and reason 3 now uses it.
+  it("leaves reason 3 unmeasured when no SDR and no declared coverage were supplied", async () => {
     const r = await register();
     const view = await buildRejectionRegister({ register: r, offeringClass: "b" });
     const section = view.sections.find((s) => s.section === "unaddressed-rules");
-    const states = section?.states;
-    expect(states).toBeDefined();
-    const total = states!.computed + states!.declared + states!.outside + states!.unaddressed;
-    expect(total).toBe(addressableRules(r, "b").length);
-    expect(total).toBe(129);
-    // 13 rules have a surface; the other 116 have nowhere yet to be declared
-    expect(states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
+    expect(section?.unmeasured).toBeDefined();
+    expect(section?.unmeasured).toContain("--sdr");
+    expect(section?.states).toBeUndefined();
+    // no rows, and above all no rejections against a checkout that never
+    // claimed to be a submission
+    expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
+    expect(addressableRules(r, "b").length).toBe(129);
+    // and the note still states the denominator nobody publishes
+    expect(section?.note).toContain("129 rules are addressable at class b");
   });
 
   /**
    * The exit-code decision, pinned so it cannot regress into either failure
-   * mode by accident. §4b: reporting 116 unaddressed rules as rejections is a
-   * false accusation at scale — with P2-1 unbuilt there is no reviewed
-   * `outside` set, so a rule no local appliance could ever answer (a FedRAMP
-   * Marketplace listing is not a property of a git checkout) reads exactly
-   * like one a provider omitted. Reporting them as fine is the vacuous pass.
-   * So they are counted, named, printed loud, and are not rejections; and the
-   * note says why in the register itself.
+   * mode by accident (§9.2). Against a real Security Decision Record an
+   * omitted rule IS a rejection: `SDR-CSO-FRR` obliges a row per applicable
+   * rule and the schema's own status enum admits "Not Implemented", so
+   * declaring a rule unimplemented satisfies the rule and saying nothing does
+   * not. No judgement about what a local appliance can see is involved —
+   * which is why the reviewed `outside` set was the wrong artifact.
    */
-  it("counts unaddressed rules loudly without calling them rejections", async () => {
-    const view = await buildRejectionRegister({ register: await register(), offeringClass: "b" });
+  it("calls an omitted rule a rejection when there is an SDR to read", async () => {
+    const r = await register();
+    const path = await sdrOmitting(r, "b", ["MAS-CSO-FLO", "SCG-CSO-RSC"]);
+    const view = await buildRejectionRegister({
+      register: r,
+      offeringClass: "b",
+      sdr: await readSdrCoverage(path),
+    });
     const section = view.sections.find((s) => s.section === "unaddressed-rules");
-    expect(section?.rows).toHaveLength(116);
-    expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
-    expect(section?.note).toContain("UPPER BOUND");
-    expect(section?.note).toContain("P2-1");
-    // with no offering at all the note says so, rather than reading as though
-    // a provider had declared and been found wanting
-    expect(section?.note).toContain("No offering declaration was supplied");
+    expect(section?.unmeasured).toBeUndefined();
+    expect(section?.rows.map((row) => row.subject)).toEqual(["MAS-CSO-FLO", "SCG-CSO-RSC"]);
+    expect(section?.rows.every((row) => row.rejection === true)).toBe(true);
+    expect(section?.states?.answered).toBe(127);
+    expect(section?.states?.omitted).toBe(2);
+    // the denominator still closes, and the note names the document it read
+    expect(section!.states!.answered + section!.states!.omitted).toBe(
+      addressableRules(r, "b").length,
+    );
+    expect(section?.note).toContain("Security Decision Record at");
+    expect(section?.note).toContain("Not Implemented");
     // the four undeclared-applicability subsets are named where the denominator is
     expect(section?.note).toContain("FRC/CSX");
   });
@@ -186,12 +239,13 @@ describe("the rejection register", () => {
     const unmeasured = view.sections.filter((s) => s.unmeasured !== undefined).map((s) => s.section);
     expect(unmeasured).toEqual([
       "trust-center-gate",
+      "unaddressed-rules",
       "unaddressed-ksis",
       "missing-example",
       "schema-invalid",
       "assessment-content",
     ]);
-    expect(view.unmeasured).toBe(5);
+    expect(view.unmeasured).toBe(6);
   });
 
   /**
@@ -306,13 +360,26 @@ describe("the rejection register", () => {
     const view = await buildRejectionRegister({ register: await register(), offeringClass: "b" });
     const text = renderRejectionRegister(view, false);
     expect(text).toContain("rampscan submission — the rejection register");
-    expect(text).toContain("13 computed · 0 declared · 0 outside · 116 unaddressed");
+    // reason 3 is unmeasured in this fixture, so the counts line is absent
+    expect(text).toContain("no Security Decision Record was read");
     expect(text).toContain("unmeasured:");
     expect(text).toContain("FedRAMP/community#167");
     // the tail is grouped by document rather than truncated: a reader needs to
-    // know where the remaining rules are
-    expect(text).toMatch(/… 104 more: /);
-    expect(text).toContain("CDS×16");
+    // know where the remaining rules are. Reason 3 only has rows to group once
+    // there is an SDR to diff, so the grouping is asserted on that path.
+    const r = await register();
+    const omitAll = addressableRules(r, "b").map((rule) => rule.id);
+    const withSdr = renderRejectionRegister(
+      await buildRejectionRegister({
+        register: r,
+        offeringClass: "b",
+        sdr: await readSdrCoverage(await sdrOmitting(r, "b", omitAll)),
+      }),
+      false,
+    );
+    expect(withSdr).toMatch(/… \d+ more: /);
+    // and the grouping names the families, not just a count
+    expect(withSdr).toMatch(/[A-Z]{3}×\d+/);
     // no ANSI when colour is off
     expect(text).not.toContain("[");
     expect(renderRejectionRegister(view, true)).toContain("[");
@@ -384,11 +451,16 @@ describe("reason 3's declaration surface", () => {
       }),
     });
     const section = view.sections.find((s) => s.section === "unaddressed-rules");
-    // the arithmetic still closes on the denominator — two rules moved, none created
-    expect(section?.states).toEqual({ computed: 13, declared: 2, outside: 0, unaddressed: 114 });
-    const total = Object.values(section!.states!).reduce((a, b) => a + b, 0);
-    expect(total).toBe(addressableRules(r, "b").length);
-    expect(section?.rows).toHaveLength(114);
+    // the arithmetic still closes on the denominator — two rules answered,
+    // none created. As a FALLBACK: ruleCoverage is rampscan-local, so these
+    // are not rejections (§9.4 P2-1d).
+    expect(section?.states?.answered).toBe(2);
+    expect(section?.states?.omitted).toBe(127);
+    expect(section!.states!.answered + section!.states!.omitted).toBe(
+      addressableRules(r, "b").length,
+    );
+    expect(section?.note).toContain("rampscan-local fallback");
+    expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
     expect(section?.rows.map((row) => row.subject)).not.toContain("FRC-APP-MLF");
     // and a declaration is not a verification: the note says which one it is
     expect(section?.note).toContain("1 declared addressed by citation and 1 declared not implemented");
@@ -413,9 +485,8 @@ describe("reason 3's declaration surface", () => {
       }),
     });
     const section = view.sections.find((s) => s.section === "unaddressed-rules");
-    expect(section?.states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
     expect(section?.note).toContain("FRC-CSX-VVK");
-    expect(section?.note).toContain("a declaration does not overwrite a measurement");
+    expect(section?.note).toContain("a declaration is not a measurement");
   });
 
   /**
@@ -445,8 +516,8 @@ describe("reason 3's declaration surface", () => {
     expect(section?.rows[0]?.rejection).toBe(true);
     expect(section?.rows[0]?.detail).toContain("no rule with this id exists");
     expect(view.rejections).toBe(bare.rejections + 1);
-    // the typo answered nothing, so nothing moved out of unaddressed either
-    expect(section?.states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
+    // the typo answered nothing, so nothing moved out of omitted either
+    expect(section?.states?.answered).toBe(0);
     expect(renderRejectionRegister(view, false)).toContain("FRC-APP-MFL");
   });
 
@@ -469,7 +540,7 @@ describe("reason 3's declaration surface", () => {
       }),
     });
     const section = view.sections.find((s) => s.section === "unaddressed-rules");
-    expect(section?.states).toEqual({ computed: 13, declared: 0, outside: 0, unaddressed: 116 });
+    expect(section?.states?.answered).toBe(0);
     expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
     expect(section?.note).toContain("class b does not oblige (CMU-CSO-UVM)");
   });
@@ -536,4 +607,119 @@ describe("the shipped command", () => {
     expect(rowsOf("trust-center-gate")).toEqual(["CDS-CSO-UTC"]);
     await rm(dir, { recursive: true, force: true });
   }, 60_000);
+});
+
+// P2-1 (docs/RESEARCH-REJECTION-LINTER.md §9). Reason 3 is a coverage diff over
+// the Security Decision Record, not a judgement about what a local appliance
+// can verify. `SDR-CSO-FRR` requires a row per applicable rule and its schema
+// makes "Not Implemented" a valid status, so the defect FedRAMP rejects on is
+// a MISSING ROW.
+describe("P2-1 — the SDR coverage diff", () => {
+  // THE DEFECT §9.3 NAMES. `computed` is a fact about rampscan (axis B). It is
+  // being used to excuse a row on axis A, which is FedRAMP's question. A
+  // provider whose SDR omits FRC-CSX-VVK is reported clean today because this
+  // appliance happens to compute that rule itself — but rampscan's computation
+  // is evidence to put IN the row, it is not the row. Ground rule 7, arriving
+  // from the direction §5 was not watching.
+  it("reports a computed rule the SDR omits", async () => {
+    const path = await sdrOmitting(await register(), "b", ["FRC-CSX-VVK"]);
+    const view = await buildRejectionRegister({
+      register: await register(),
+      offeringClass: "b",
+      sdr: await readSdrCoverage(path),
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-rules");
+    expect(section?.rows.map((r) => r.subject)).toContain("FRC-CSX-VVK");
+    // and the row says why it matters: the evidence exists, the row does not
+    const row = section?.rows.find((r) => r.subject === "FRC-CSX-VVK");
+    expect(row?.detail).toContain("this appliance computes it");
+    expect(row?.rejection).toBe(true);
+    expect(section?.states?.computedButOmitted).toBe(1);
+  });
+
+  /** write an SDR body verbatim, for the refusals that need a malformed document */
+  async function sdrFile(body: unknown): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-sdr-raw-"));
+    const path = join(dir, "sdr.json");
+    await writeFile(path, JSON.stringify(body));
+    return path;
+  }
+
+  // The P2-2 refusal arriving from the document side. A KSI indicator is the
+  // same shape as a rule id, so counting one as a rule row would mark a rule
+  // answered that is still omitted — a declaration talking its way past the
+  // very thing this register measures.
+  it("refuses a KSI claimed in the rule array, and does not let it answer a rule", async () => {
+    const path = await sdrFile({
+      certificationPackageOverviewUri: "https://example.com/cpo.json",
+      fedRampRequirements: [
+        { frrID: "KSI-CNA-OFA", frrImplementation: [] },
+        { frrID: "MAS-CSO-FLO", frrImplementation: [] },
+        { frrID: "MAS-CSO-FLO", frrImplementation: [] },
+        { frrID: "FRC-APP-MFL", frrImplementation: [] },
+      ],
+    });
+    const sdr = await readSdrCoverage(path);
+    expect([...sdr.ruleIds]).toEqual(["MAS-CSO-FLO", "FRC-APP-MFL"]);
+    const said = sdr.problems.map((p) => p.subject);
+    expect(said).toEqual(["KSI-CNA-OFA", "MAS-CSO-FLO"]);
+    expect(sdr.problems[0]?.detail).toContain("Key Security Indicator");
+    // the duplicate is named, and counted once
+    expect(sdr.problems[1]?.detail).toContain("more than once");
+  });
+
+  // Not an SDR at all. `fedRampRequirements` is required by the schema and IS
+  // reason 3's rule half, so a document without it cannot be read for coverage
+  // — and reading it as "covers nothing" would accuse a provider of omitting
+  // all 129 rules on the strength of a wrong file path.
+  it("refuses a document with no fedRampRequirements rather than reading it as empty", async () => {
+    const path = await sdrFile({ certificationPackageOverviewUri: "https://example.com/cpo.json" });
+    await expect(readSdrCoverage(path)).rejects.toThrow(/no fedRampRequirements array/);
+  });
+
+  // §9.6: the same document carries the KSI half, and it had the same defect —
+  // it asserted an omission from the package on the strength of rampscan's own
+  // method derivation.
+  it("reads the KSI half off the record, not off the method floor", async () => {
+    const r = await register();
+    const ksis = {
+      rows: [
+        { ksi: "KSI-CNA-OFA", methods: 0, optional: false },
+        { ksi: "KSI-CNA-RNT", methods: 0, optional: false },
+        { ksi: "KSI-IAM-APM", methods: 2, optional: false },
+      ],
+      summary: { noMethod: 2 },
+    } as never;
+    // the record answers both method-less KSIs and omits the one rampscan can verify
+    const path = await sdrOmitting(r, "b", [], ["KSI-CNA-OFA", "KSI-CNA-RNT"]);
+    const view = await buildRejectionRegister({
+      register: r,
+      offeringClass: "b",
+      ksis,
+      sdr: await readSdrCoverage(path),
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-ksis");
+    // KSI-IAM-APM is the omission: it has a method here and no row there
+    expect(section?.rows.map((row) => row.subject)).toEqual(["KSI-IAM-APM"]);
+    // and the two with no method are NOT accused — that is rampscan's gap
+    expect(section?.note).toContain("this appliance's gap to close");
+  });
+
+  // Without a record the KSI half must not accuse either: a KSI with no method
+  // here may be fully declared in an SDR this run never saw.
+  it("stops calling a method-less KSI an omission when there is no record", async () => {
+    const ksis = {
+      rows: [{ ksi: "KSI-CNA-OFA", methods: 0, optional: false }],
+      summary: { noMethod: 1 },
+    } as never;
+    const view = await buildRejectionRegister({
+      register: await register(),
+      offeringClass: "b",
+      ksis,
+    });
+    const section = view.sections.find((s) => s.section === "unaddressed-ksis");
+    expect(section?.rows.map((row) => row.subject)).toEqual(["KSI-CNA-OFA"]);
+    expect(section?.rows.filter((row) => row.rejection === true)).toEqual([]);
+    expect(section?.unmeasured).toContain("--sdr");
+  });
 });

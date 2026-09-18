@@ -201,9 +201,12 @@ describe("the pinned schemas", () => {
 
   it("pins each schema separately, because FedRAMP semvers them separately", () => {
     const versions = new Set(Object.values(FEDRAMP_SCHEMA_PINS).map((p) => p.schemaVersion));
-    // three files, three different versions off one date stamp — a single
-    // global pin would have been wrong the day it was written
-    expect(versions.size).toBe(3);
+    // four files, four different versions off one date stamp — a single global
+    // pin would have been wrong the day it was written. The Security Decision
+    // Record joined at 1.1.1 (P2-1), further along than the other three and
+    // the sharpest illustration of why the pin was never global.
+    expect(Object.keys(FEDRAMP_SCHEMA_PINS)).toHaveLength(4);
+    expect(versions.size).toBe(4);
   });
 
   it("refuses a schema whose bytes drifted from the pin", async () => {

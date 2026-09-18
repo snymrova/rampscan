@@ -363,3 +363,137 @@ submit, and the numbers in §2a are the ones nobody is publishing.
 The most quotable line the register can print is also the most honest one: the
 reason FedRAMP listed **first** is the one a local appliance cannot check, and
 saying so is the difference between a tool and a checkbox.
+
+---
+
+## 9. Correction, 2026-09-18: P2-1 was the wrong artifact
+
+P2-1 was scoped as a reviewed `outside` set — one reason per rule, over 120
+rules, deciding which are "structurally not visible to a local appliance" so
+that the rest could be counted as rejections. Building it started with reading
+the queue, and the queue did not support the design. **P2-1 as scoped is
+cancelled.** What replaces it is smaller, decidable, and closer to what FedRAMP
+actually publishes.
+
+### 9.1 What the rule set says
+
+`SDR-CSO-FRR` is normative and it is the rule this whole section should have
+been built on. It requires a Security Decision Record, in human-readable and
+JSON formats, carrying **for each applicable FedRAMP rule**:
+
+> Explanation of how the rule is followed, **or an explanation of the reason
+> and resulting risk to customers for not following the rule.**
+
+and its published schema
+(`fedramp-security-decision-record-schema-2026-06-24.json`, `$schemaVersion`
+1.1.1) makes the same point machine-readable:
+
+```
+fedRampRequirements[] : { frrID, frrImplementationStatus, frrImplementation, … }
+frrImplementationStatus enum: ["Implemented", "Not Implemented", "Partially Implemented"]
+```
+
+`"Not Implemented"` is a **schema-valid status**. Community #167's reason 3 —
+"if you don't have something implemented, say so and tell us why, don't just
+omit the KSI or rule altogether" — is not a paraphrase of a compliance
+expectation. It is `SDR-CSO-FRR` restated, and the defect it names is a
+**missing row**, never the status inside one.
+
+### 9.2 Why that cancels the `outside` set
+
+If the defect is a missing row, then reason 3's rule half is:
+
+```
+applicable rule ids  −  frrIDs present in the SDR  =  the omissions
+```
+
+That is a diff over one document, decidable and complete. There is no rule for
+which it is unanswerable — including `FRC-APP-MLF`, the worked example in §4b.
+rampscan cannot see whether a provider is listed in the FedRAMP Marketplace,
+but reason 3 never asked it to: it asks whether the SDR has a row for
+`FRC-APP-MLF`, and that is a question about a file.
+
+§4b drew its line on the wrong question. It asked *"can a local appliance verify
+compliance with rule R?"*, which is unanswerable for most of the rule set and is
+why the line could not be drawn without a 120-row judgement call. The question
+reason 3 asks is *"does the package answer rule R?"*, which needs no judgement
+at all.
+
+### 9.3 The two axes §4b conflated
+
+`computed`, `declared`, `outside` and `unaddressed` were presented as four
+values of one variable. They are two:
+
+| axis | question | values | whose question |
+|---|---|---|---|
+| A | does the package answer this rule? | answered / **silent** | FedRAMP's — silence is the rejection |
+| B | what can rampscan do with it? | computes a verdict / reads the claim only / blind | rampscan's — this is the value-add |
+
+Conflating them produced a live defect in the shipped register: **`computed`
+excuses a row on axis A that FedRAMP still wants.** A provider whose SDR omits
+`FRC-CSX-VVK` is reported clean today because rampscan computes that rule
+itself. rampscan's computation is *evidence to put in the row*; it is not the
+row. That is ground rule 7 arriving from a direction §5 was not watching, and
+it is the failing test this item opens with.
+
+On axis B, `outside` survives — as an annotation reading "your SDR answers this
+and this appliance cannot check whether the answer is true". It excuses
+nothing, so it cannot become the escape hatch §4b feared, and it needs no
+reviewed set of 120 rules to be honest.
+
+### 9.4 What P2-1 becomes
+
+- **P2-1a.** Vendor and pin `fedramp-security-decision-record-schema-2026-06-24.json`
+  on `$schemaVersion` and sha256, beside the other three. This is P2-6, whose
+  condition ("only if P2 actually validates against it") is now met.
+- **P2-1b.** Read an SDR; enumerate `frrID`s; diff against the applicable rule
+  register from P2-0. Failing test first: a row rampscan computes and the SDR
+  omits must be reported, and is not today.
+- **P2-1c.** No SDR supplied → the section is `unmeasured`, the channel the
+  register already uses for `missing-example` and `schema-invalid`. A bare
+  checkout is not a package and must not be printed as 116 rejections.
+- **P2-1d.** `offering.ruleCoverage` (P2-2) is demoted to the fallback for a
+  provider with no SDR yet. It stays; it stops being the primary source. The
+  SDR is what gets submitted, and it is what should be read.
+
+### 9.5 What this costs and buys
+
+It partly rewinds P2-2, three days after it merged. It buys a register that
+reads the artifact FedRAMP actually rejects, rather than reconstructing that
+artifact's contents by inference from a rampscan config — and it removes a
+reviewed judgement over 120 rules that would have been this item's whole cost
+and its weakest link. No other tool in this field reads the SDR.
+
+### 9.6 The same document carries the KSI half — and the same defect
+
+The SDR schema does not stop at the rule set. It carries both halves of reason
+3, with the same status vocabulary on each:
+
+```
+fedRampRequirements[]  : { frrID, frrImplementationStatus, … }
+keySecurityIndicators[]: { ksiId, ksiImplementationStatus, ksiImplementation,
+                           ksiValidation, ksiAssessment, ksiTests, ksiEvidence }
+```
+
+So `unaddressed-ksis` is measuring the wrong thing for the same reason
+`unaddressed-rules` was. It prints today:
+
+> `KSI-CNA-OFA` — no validation method derives — the KSI is omitted rather than
+> declared unimplemented
+
+That sentence asserts an omission from the package on the strength of a fact
+about **rampscan's own method derivation**. A provider whose SDR carries all 46
+`keySecurityIndicators` rows would still be told 28 are omitted. It is axis B
+reported as axis A, in the section this appliance is supposed to be best at.
+
+The fix is the same diff against the same document, so P2-1 is **one reader and
+two diffs**, not two features:
+
+- **P2-1e.** Diff the catalog's KSIs against `keySecurityIndicators[].ksiId`.
+  A KSI with no derived method is a fact about rampscan and belongs on axis B;
+  a KSI with no row in the SDR is the omission #167 names.
+
+`ksiTests` and `ksiEvidence` being required on every row is also where the
+artifact plane (R0/R1, the five artifacts owed per KSI) meets the submitted
+document. That is not this item's work, but it is the reason R is worth
+resuming after S3 rather than before.
