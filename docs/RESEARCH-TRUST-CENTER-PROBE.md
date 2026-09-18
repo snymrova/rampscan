@@ -89,12 +89,18 @@ documentation. `COMPUTED_RULES` gained USH only.
 
 ## 3. Also found
 
-- **P2's declared-auth row may overreach (not changed here).** Since P2,
-  `authenticationRequired: true` in the offering prints as a rejection
-  labelled *"the gate #167 names"*. §2 argues that a declared login is
-  permitted. P4 does not change P2's row, because it is a prior decision in
-  the other direction (a false rejection, not a false pass). **The owner
-  should decide whether to remove it.**
+- **P2's declared-auth row overreached. Decided and removed 2026-09-18.**
+  Since P2, `authenticationRequired: true` in the offering had printed as a
+  rejection labelled *"the gate #167 names"*. The pinned rules say otherwise:
+  `CDS-TRC-USH` shares with *"all necessary parties"*, not the public. Its
+  note defines "without interruption" as no manual approval *each time*, and
+  prefers just-in-time access provisioning. The package schema requires
+  `accessRequestInstructions` exactly when authentication is declared. So a
+  declared login is permitted, and the declaration row is now a plain
+  `declared` row that says so. Reason 1 still rejects a click-through, and a
+  login the offering denied having, and only a probe can show either one.
+  The false rejection was also a contradiction: with a probe, the probe row
+  said "permitted" while the declaration row above it still rejected.
 - **The transcript is not signed.** Like the SDR input, it is read and
   re-checked, not trusted. The overall outcome is recomputed from the targets,
   and a transcript whose summary disagrees with its evidence is refused. An

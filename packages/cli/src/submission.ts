@@ -290,11 +290,15 @@ function trustCenterSection(
     });
     return section;
   }
+  // A declared login is not reason 1. CDS-TRC-USH shares with "all necessary
+  // parties", not the public, and its note prefers just-in-time access
+  // provisioning; the package schema carries authenticationRequired and
+  // requires accessRequestInstructions exactly when it is true. #167 rejects
+  // ACCEPTANCE of terms or an NDA — which only a probe can see.
   const authGate = declared.authenticationRequired === true;
   section.rows.push({
     subject: declared.url,
-    detail: `declared${authGate ? " — and declares that it requires authentication, which is the gate #167 names" : ""}`,
-    ...(authGate ? { rejection: true as const } : {}),
+    detail: `declared${authGate ? " — and declares that it requires authentication, which FedRAMP permits with access instructions (CDS-TRC-USH prefers just-in-time access)" : ""}`,
   });
 
   if (probe === undefined) {

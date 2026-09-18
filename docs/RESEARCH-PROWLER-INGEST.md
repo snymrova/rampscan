@@ -463,8 +463,9 @@ arithmetic.
   reason: excluding a muted FAIL lets a provider's mutelist move the
   `FRC-CSX-VVK` numerator by deleting the evidence against it, and rampscan's
   waiver path is a signed adjudication, which a mutelist is not. It also makes
-  obligation 2 structural, since a group is built from reported rows. **This is
-  a judgement and the owner may reverse it**; the change is one filter in
+  obligation 2 structural, since a group is built from reported rows. **Kept
+  2026-09-18 on FedRAMP grounds:** a provider does not waive its own finding.
+  FedRAMP reviews accepted risk, and nobody reviews a mutelist. Reversing it would be one filter in
   `prowlerSubmissions`. *The provider guard* is the join, because the OCSF
   compliance row carries no provider field this reader trusts: every reported
   check must be one the pin maps on AWS for that KSI (a check mapped only on

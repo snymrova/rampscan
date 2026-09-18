@@ -246,6 +246,13 @@ describe("reason 1 in the rejection register (P4)", () => {
     expect(s.rows.some((r) => r.rejection === true)).toBe(false);
   });
 
+  it("a declared login is not a rejection on its own — with no probe, nothing in the section rejects", async () => {
+    const s = await section(true);
+    expect(s.rows.some((r) => r.rejection === true)).toBe(false);
+    expect(s.rows[0]?.detail).toContain("FedRAMP permits");
+    expect(s.unmeasured).toContain("rampscan probe");
+  });
+
   it("a click-through is the rejection itself", async () => {
     const s = await section(
       false,
@@ -260,9 +267,8 @@ describe("reason 1 in the rejection register (P4)", () => {
       true,
       probeOf([{ ...landing, outcome: "gated", gate: "authentication", reasons: ["HTTP 401"] }], "gated"),
     );
-    // the declared-auth row is P2's; the PROBE row is not a rejection
-    const probeRow = s.rows.find((r) => r.detail.includes("authentication:"))!;
-    expect(probeRow.rejection).toBeUndefined();
+    // neither the declaration row nor the probe row is a rejection
+    expect(s.rows.some((r) => r.rejection === true)).toBe(false);
     expect(s.unmeasured).toContain("behind it");
   });
 
