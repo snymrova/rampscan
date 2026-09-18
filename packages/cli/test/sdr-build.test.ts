@@ -1,18 +1,10 @@
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { allCollectors } from "@rampscan/collectors";
-import type { ArtifactCell, MethodCell, MethodRegisterRow } from "@rampscan/core";
-import {
-  DEFAULT_DATASET_PIN,
-  loadKsiCatalog,
-  loadRuleRegister,
-  optionalKsis,
-  type KsiCatalog,
-  type RuleRegister,
-} from "@rampscan/dataset";
+import type { MethodRegisterRow } from "@rampscan/core";
+import { optionalKsis } from "@rampscan/dataset";
 import { OfferingConfig } from "@rampscan/schema";
 import { SDR_SCHEMA, loadPinnedSchema, validateAgainst } from "../src/fedramp-schemas.js";
 import {
@@ -20,10 +12,25 @@ import {
   buildSecurityDecisionRecord,
   evidenceLocation,
   ksiStatus,
-  type SdrBuildInput,
 } from "../src/sdr-build.js";
 import { readSdrCoverage } from "../src/sdr.js";
 import { buildRejectionRegister } from "../src/submission.js";
+import {
+  AT,
+  BODIES,
+  artifacts,
+  built,
+  cell,
+  hex,
+  input,
+  ksiRow,
+  offering,
+  offeringJson,
+  root,
+  row,
+  ruleRow,
+  sources,
+} from "./sdr-fixture.js";
 
 // R2.1 (#102, docs/PLAN-SDR.md §5). What these pin, most painful first:
 //
@@ -34,150 +41,6 @@ import { buildRejectionRegister } from "../src/submission.js";
 //      answering what the provider never answered (D4).
 //   4. The document is schema-valid, deterministic, and agrees with
 //      `submission --sdr` about what it omits.
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const rulesFile = join(root, "docs/context/fedramp-rules/fedramp-consolidated-rules.json");
-const derivedDir = join(root, "docs/context/ramprules/derived");
-
-let catalogCache: KsiCatalog | undefined;
-let registerCache: RuleRegister | undefined;
-async function sources(): Promise<{ catalog: KsiCatalog; register: RuleRegister }> {
-  catalogCache ??= await loadKsiCatalog({ derivedDir, rulesFile, pin: DEFAULT_DATASET_PIN });
-  registerCache ??= await loadRuleRegister(rulesFile, DEFAULT_DATASET_PIN);
-  return { catalog: catalogCache, register: registerCache };
-}
-
-const AT = "2026-09-18T12:00:00.000Z";
-const hex = (c: string) => c.repeat(64);
-
-const offeringJson = {
-  providerName: "Example Cloud Inc.",
-  serviceName: "Example Evidence Plane",
-  serviceAcronym: "EEP",
-  serviceDescription: "A CI/CD evidence plane.",
-  certificationType: "20x",
-  fedRampPackageId: "Example Cloud Inc. (EEP)",
-  website: "https://example.com/eep",
-  logo: "https://example.com/logo.svg",
-  serviceType: ["SaaS"],
-  deploymentModel: "Public Cloud",
-  contactInformation: [
-    { contactType: "Security", contactName: "Security Team" },
-    { contactType: "Sales", contactName: "Sales Team" },
-  ],
-  report: {
-    certificationPackageOverviewUri: "https://trust.example.com/cpo.json",
-    plannedCertificationDataChanges: { planningHorizonThrough: "2026-12-31", changes: [] },
-    acceptedVulnerabilities: "none accepted",
-    transformativeChanges: [],
-    updatedRecommendations: [],
-    activeAgencies: [],
-    reportableIncidents: { incidents: [] },
-  },
-};
-const offering = (over: Record<string, unknown> = {}) => OfferingConfig.parse({ ...offeringJson, ...over });
-
-/** overrides may unset an optional field by passing undefined */
-type Over<T> = { [K in keyof T]?: T[K] | undefined };
-function strip<T extends object>(o: T): T {
-  for (const k of Object.keys(o) as (keyof T)[]) if (o[k] === undefined) delete o[k];
-  return o;
-}
-
-function cell(over: Over<MethodCell> = {}): MethodCell {
-  return strip({
-    methodId: "pipeline:secrets-scan",
-    source: "pipeline",
-    automated: true,
-    clock: "machine",
-    standing: "full",
-    recipeId: "secrets-scan",
-    collector: "gitleaks",
-    state: "evidenced",
-    bundleDigest: hex("a"),
-    freshAsOf: "2026-09-17T08:00:00.000Z",
-    evidenceClass: "process-generated",
-    window: { num: 7, unit: "days" },
-    freshMet: true,
-    ...over,
-  } as MethodCell);
-}
-
-/** five artifact cells; `bodies` names which slots hold a body, keyed by slot */
-function artifacts(present: readonly number[]): ArtifactCell[] {
-  return ([1, 2, 3, 4, 5] as const).map((slot) => {
-    const base: ArtifactCell = {
-      artifact: slot,
-      basis: slot === 2 || slot === 5 ? "computed" : "judged",
-      present: present.includes(slot),
-    };
-    if (!present.includes(slot)) return base;
-    return {
-      ...base,
-      body: {
-        digest: `stmt-${slot}`,
-        bodyDigest: hex(String(slot)),
-        source: slot === 1 || slot === 3 ? "authored" : "computed",
-        validFrom: "2026-09-01T00:00:00.000Z",
-        freshMet: true,
-        bodyBytes: 20,
-        ...(slot === 1 || slot === 3 ? { anchor: { commit: hex("c").slice(0, 40), path: `docs/ksi/${slot}.md` } } : {}),
-      },
-    };
-  });
-}
-
-function row(ksi: string, over: Partial<MethodRegisterRow> = {}): MethodRegisterRow {
-  const art = over.artifacts ?? artifacts([1, 2, 3, 4, 5]);
-  return {
-    repo: "example/eep",
-    ksi,
-    methods: [cell()],
-    automatedMethods: 1,
-    methodFloor: 1,
-    floorMet: true,
-    freshAsOf: "2026-09-17T08:00:00.000Z",
-    historySince: "2026-01-01T00:00:00.000Z",
-    historyFloorMonths: null,
-    historyMet: null,
-    staleMethods: 0,
-    artifacts: art,
-    artifactsPresent: art.filter((a) => a.present).length,
-    pointInTimeMethods: 0,
-    ...over,
-  };
-}
-
-const BODIES = new Map([1, 2, 3, 4, 5].map((s) => [`stmt-${s}`, `Body of artifact ${s}.`]));
-
-async function input(over: Over<SdrBuildInput> = {}): Promise<SdrBuildInput> {
-  const { catalog, register } = await sources();
-  return strip({
-    offering: offering(),
-    offeringClass: "b",
-    repo: "example/eep",
-    projectedAt: AT,
-    datasetVersion: catalog.datasetVersion,
-    ledgerHead: hex("f"),
-    ksis: catalog.ksis.map((k) => ({ id: k.id, name: k.name })),
-    optionalKsis: optionalKsis(catalog, "b"),
-    defaultArtifacts: catalog.defaultArtifacts,
-    methodRegisters: [row("KSI-SVC-SIN")],
-    ruleRegister: register,
-    bodies: BODIES,
-    ...over,
-  } as SdrBuildInput);
-}
-
-function built(i: SdrBuildInput) {
-  const out = buildSecurityDecisionRecord(i);
-  if (out.export === undefined) throw new Error(`no SDR: ${out.skipped}`);
-  return out.export;
-}
-const ksiRow = (doc: Record<string, unknown>, id: string) =>
-  (doc["keySecurityIndicators"] as Record<string, unknown>[]).find((k) => k["ksiId"] === id);
-const ruleRow = (doc: Record<string, unknown>, id: string) =>
-  (doc["fedRampRequirements"] as Record<string, unknown>[]).find((r) => r["frrID"] === id);
 
 describe("sdr — the schema", () => {
   it("validates against the pinned SDR schema, and the validator refuses a date-time where a date belongs", async () => {
@@ -346,7 +209,7 @@ describe("sdr — the rule half (D4)", () => {
     expect(ruleRow(doc, "FRC-APP-MLF")).toEqual({
       frrID: "FRC-APP-MLF",
       frrImplementationStatus: "Not Implemented",
-      frrImplementation: ["Not implemented. the Marketplace listing request is filed and pending"],
+      frrImplementation: ["Not implemented: the Marketplace listing request is filed and pending"],
     });
     // a computed rule the provider declared gets rampscan's validation line
     expect(ruleRow(doc, "FRC-CSX-VVK")).toMatchObject({

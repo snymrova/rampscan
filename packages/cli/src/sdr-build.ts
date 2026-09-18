@@ -430,6 +430,8 @@ export function buildSecurityDecisionRecord(input: SdrBuildInput): SdrOutcome {
   const fedRampRequirements: Record<string, unknown>[] = [];
   const unknownDeclarations: string[] = [];
   const declaredNotAddressable: string[] = [];
+  /** force at the class for each declared row — the human half prints it (R2.2) */
+  const declaredRuleForce: Record<string, string | null> = {};
 
   for (const entry of [...declared].sort((a, b) => a.ruleId.localeCompare(b.ruleId))) {
     if (!byId.has(entry.ruleId)) {
@@ -437,13 +439,14 @@ export function buildSecurityDecisionRecord(input: SdrBuildInput): SdrOutcome {
       continue;
     }
     declaredIds.add(entry.ruleId);
+    declaredRuleForce[entry.ruleId] = effectiveForce(byId.get(entry.ruleId)!, cls);
     if (!addressableIds.has(entry.ruleId)) declaredNotAddressable.push(entry.ruleId);
     const row: Record<string, unknown> = { frrID: entry.ruleId };
     if (entry.status === "not-implemented") {
       // FedRAMP/schemas#21: a rule the provider chooses not to implement is
       // "Not Implemented", with the reason as the statement
       row["frrImplementationStatus"] = "Not Implemented";
-      row["frrImplementation"] = [`Not implemented. ${entry.reason}`];
+      row["frrImplementation"] = [`Not implemented: ${entry.reason}`];
     } else {
       if (entry.implementationStatus !== undefined) row["frrImplementationStatus"] = entry.implementationStatus;
       row["frrImplementation"] = [entry.citation];
@@ -513,6 +516,14 @@ export function buildSecurityDecisionRecord(input: SdrBuildInput): SdrOutcome {
       datasetVersion: input.datasetVersion,
       offeringClass: cls,
       ...(input.repo !== undefined ? { repo: input.repo } : {}),
+      // carried so the human-readable half renders from this object alone (D3)
+      offering: {
+        providerName: input.offering.providerName,
+        serviceName: input.offering.serviceName,
+        serviceAcronym: input.offering.serviceAcronym,
+      },
+      artifactLabels: input.defaultArtifacts,
+      declaredRuleForce,
       fieldSources: {
         certificationPackageOverviewUri: "declared",
         metadata: "computed",

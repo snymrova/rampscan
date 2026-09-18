@@ -1,8 +1,11 @@
-import { mkdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import type { LedgerStore, MethodRegisterRow } from "@rampscan/core";
 import { artifactBodyDigest, isArtifact } from "@rampscan/schema";
 import { emit, type WrittenExport } from "./fedramp-run.js";
 import { buildSecurityDecisionRecord, type SdrBuildInput } from "./sdr-build.js";
+import { SDR_MARKDOWN_ARTIFACT, renderSdrMarkdown } from "./sdr-render.js";
 
 // Writing the Security Decision Record (R2.1): read the artifact bodies the
 // projection points at, build, then validate/stamp/re-validate/write through
@@ -60,6 +63,8 @@ export interface SdrRunInput extends Omit<SdrBuildInput, "bodies"> {
 
 export interface SdrRunResult {
   written?: WrittenExport;
+  /** the human-readable half, rendered from the JSON bytes as written (R2.2) */
+  markdown?: { filename: string; path: string; jsonSha256: string };
   /** why no SDR was written — never a silent absence */
   skipped?: string;
   conformant: boolean;
@@ -77,7 +82,21 @@ export async function writeSecurityDecisionRecord(input: SdrRunInput): Promise<S
   built.export.problems.unshift(...readProblems);
   await mkdir(input.exportsDir, { recursive: true });
   const written = await emit(built.export, input);
-  return { written, conformant: written.violations.length === 0 };
+
+  // D3: render from the bytes on disk, not from the object in memory, so the
+  // digest in the Markdown names exactly the file beside it
+  const bytes = await readFile(written.path);
+  const jsonSha256 = createHash("sha256").update(bytes).digest("hex");
+  const markdownPath = join(input.exportsDir, SDR_MARKDOWN_ARTIFACT);
+  await writeFile(
+    markdownPath,
+    renderSdrMarkdown(JSON.parse(bytes.toString("utf8")) as Record<string, unknown>, jsonSha256),
+  );
+  return {
+    written,
+    markdown: { filename: SDR_MARKDOWN_ARTIFACT, path: markdownPath, jsonSha256 },
+    conformant: written.violations.length === 0,
+  };
 }
 
 export function renderSdr(result: SdrRunResult): string {
@@ -87,5 +106,10 @@ export function renderSdr(result: SdrRunResult): string {
   const lines = [`${w.filename} → ${verdict}  (${w.schemaFile} @ ${w.schemaVersion})`];
   for (const v of w.violations) lines.push(`    ✗ ${v.path === "" ? "<root>" : v.path}: ${v.message}`);
   for (const p of w.problems) lines.push(`    · ${p}`);
+  if (result.markdown !== undefined) {
+    lines.push(
+      `${result.markdown.filename} → the human-readable half, rendered from the JSON (sha256 ${result.markdown.jsonSha256.slice(0, 12)}…)`,
+    );
+  }
   return lines.join("\n");
 }
