@@ -347,24 +347,42 @@ arithmetic.
 ## 6. Build items
 
 - **P3-0.** Vendor `fedramp_20x_ksi_2026.json` pinned on `version` + `sha256`
-  (the fifth pin), with the both-ways golden test of §4d. Failing test first:
-  the id-set comparison, and a planted framework with an id that does not
-  resolve at the pin refusing rather than skipping.
-- **P3-1.** The OCSF reader: parse a Prowler compliance OCSF file, group
-  findings by `Requirements_Id`, and refuse a document that is not one
-  (no framework header, a framework that is not `FedRAMP-20x-KSI`, a KSI id
-  that does not resolve). `MANUAL` rows recognised and set aside here, not
-  downstream.
+  (the fifth pin; the exact values are in §10f, and the pin records the source
+  **commit** because no release carries the file), with the both-ways golden
+  test of §4d. Failing test first: the id-set comparison, and a planted
+  framework with an id that does not resolve at the pin refusing rather than
+  skipping. The test compares **class applicability** as well as the id set
+  (§10a) — the second place the two catalogs can diverge at a re-pin.
+- **P3-1.** The OCSF reader, against §10a's field table — **not §2d's**, which
+  names the CSV's columns: parse the JSON array of `ComplianceFinding` events,
+  group by `compliance.requirements[0]`, and refuse a document that is not one
+  (`compliance.standards[0]` not the KSI framework, a KSI id that does not
+  resolve at the pin, a file that is not an array). **An absent or empty file
+  is a refusal, not zero findings** (§10a: no findings means no file, and no
+  `MANUAL` rows either). `MANUAL` rows recognised by all three of §10a's
+  markers and set aside here, not downstream.
 - **P3-2.** **The soundness test, written before the adapter** — the §4c
   trio, as `ingest-soundness.test.ts` was written for #147: a KSI whose only
   row is `MANUAL` never reads `evidenced`; an assertion over zero surviving rows
   fails; exit 0 with `-z` does not outvote a FAIL row. `it.fails` until P3-3.
-- **P3-3.** The adapter: sniff extension, `IngestSubmission` per (check, KSI),
+- **P3-3.** The adapter: sniff on **content**, not filename (the labels.json
+  lesson again — `compliance.standards[0]` is in every row);
+  `IngestSubmission` per (check, KSI) grouping many rows, because one check over
+  many resources is many rows and a per-row submission trips ingest's duplicate
+  refusal on the whole batch (§10e); the assertion evaluated over **`status_code`,
+  the effective status** (§10d), with the raw check status and any
+  config-override marker carried in the transcript;
   `evidence_class: "process-generated"`, `automated` from the runner's rule,
   `signer_identity` on the `runner:` convention, `reproduce` carrying the
   invocation. Uncovered KSIs skipped and named, never minted.
-- **P3-4.** The `Muted` decision (§4c), and the `--provider` guard that refuses
-  a non-AWS Prowler document until a fourth `MethodSource` exists.
+- **P3-3a.** The **mapped-check coverage measure** (§10c), which §6 did not have
+  before the arguments turned out to be unrecoverable: `reported / mapped` per
+  KSI against the pinned framework's AWS list, recorded on the submission and
+  printed. It is what lets the appliance state the population it evaluated
+  instead of calling a filtered scan a scan.
+- **P3-4.** The `Muted` decision (§4c) — the field is `status_id` /
+  `status == "Suppressed"`, not a boolean (§10a) — and the `--provider` guard
+  that refuses a non-AWS Prowler document until a fourth `MethodSource` exists.
 - **P3-5.** The register e2e: ingesting raises a KSI's method count, removing it
   lowers it again, and `rampscan submission`'s numbers do not move (§5).
 
@@ -404,30 +422,208 @@ That is the product argument in one sentence, and it is stronger for being made
 **Prowler answers what it can see, and rampscan is what counts the rest against
 you.**
 
+One qualification, from §10f: **no published Prowler release ships the KSI
+framework yet** — its only commit postdates 5.42.0. Until one does, the sentence
+above is about Prowler at `master`, and saying so is the difference between the
+claim being true and being the kind of thing this project exists to catch.
+
 ## 9. What this note did not establish
 
 Marked unknowns, not guesses. Each needs answering before or during the item
-that depends on it.
+that depends on it. **Four of the six were answered the same day, in §10**;
+each is marked with where. Left as written, with the answers beside them,
+rather than edited into hindsight.
 
-- **The OCSF compliance JSON's exact per-finding schema.** The CSV row model was
+- ~~**The OCSF compliance JSON's exact per-finding schema.**~~ **Answered, §10a.** The CSV row model was
   read in full; the OCSF sibling (`universal/ocsf_compliance.py`) was not. P3-1
   depends on it.
-- **Whether the scan's arguments are recoverable from the output alone** — in
+- ~~**Whether the scan's arguments are recoverable from the output alone**~~
+  **Answered, §10b — no.** — in
   particular whether `-z`, `--status`, `--severity` or a mute configuration can
   be detected by a consumer. If they cannot, a filtered scan is
   indistinguishable from a full one and the adapter must say so rather than
   assume a full one. **This is the most important open question in the note.**
-- **Any scan-level provenance** — a scan id, start/end timestamps, the Prowler
+- ~~**Any scan-level provenance**~~ **Answered, §10a/§10b — none as a header;
+  the Prowler version, account, region and timestamp are per-row.** — a scan id, start/end timestamps, the Prowler
   version, the account id — beyond the per-row `AssessmentDate`, `AccountId` and
   `Region`. Nothing signs or checksums Prowler's output, so the appliance's own
   signature over the submitted bytes is the only integrity there is.
-- **Which Prowler release first ships the framework.** The PR references SDK
-  `5.32.0 UNRELEASED`; not confirmed against a published release.
-- **Whether the framework file format is stable.** It has already changed shape
+- ~~**Which Prowler release first ships the framework.**~~ **Answered, §10f:
+  none yet.** The PR references SDK `5.32.0 UNRELEASED`; the framework's only
+  commit postdates the latest release, so it is `master`-only today.
+- **Whether the framework file format is stable.** Still open — and §10f's
+  release gap is a second reason to expect movement. It has already changed shape
   once since the PR that introduced it (five files → one), which is itself the
   argument for pinning on `sha256` rather than tracking `master`.
 - **The 158 vs 129/131/132 discrepancy** between Prowler's FRR class C framework
   and P2-0's rule register (§2e). A P2 question, deliberately left open.
+
+---
+
+## 10. §9 answered — the OCSF row, and the arguments that are not in it
+
+Read at `master` after §9 was written: `universal/ocsf_compliance.py` (477
+lines), `compliance.py`, `prowler/__main__.py`, `lib/check/check.py`,
+`lib/check/compliance_config_eval.py`, `lib/check/compliance_models.py` and the
+framework file at its only commit. Four of §9's six items are closed below.
+Two stay open: whether the file format is stable — §10f's release gap is a
+second reason to expect it to move — and the 158-vs-129 discrepancy, which
+stays P2's.
+
+### 10a. The OCSF row — and §2d names fields the adapter will not see
+
+§2d documented the **CSV** row, because that is what the universal writer's
+table path emits. The adapter reads the **OCSF** sibling (§2d's own conclusion),
+and the OCSF writer is a different function with different field names. A
+reader written against `Status`, `CheckId`, `Muted`, `Requirements_Id` finds
+**none of them**. Correcting that here rather than letting P3-1 discover it.
+
+The file is a bare JSON **array** of OCSF `ComplianceFinding` events
+(`class_uid` 2003), serialised `exclude_none=True` — so absent fields are
+absent, not null. Per row, what P3 needs:
+
+| Meaning | OCSF path | Note |
+|---|---|---|
+| KSI id | `compliance.requirements[0]` | an array; one row per (finding × requirement) |
+| Framework + version | `compliance.standards[0]` | `"FedRAMP-20x-KSI-2026.07.14.01"` — `framework + "-" + version` |
+| Effective status | `status_code` | `PASS` / `FAIL` / `MANUAL` |
+| Raw check status | `compliance.checks[0].status` | the check's own verdict, **before** config override |
+| Check id | `compliance.checks[0].uid`, `metadata.event_code` | both carry it |
+| Muted | `status_id` / `status` | `Suppressed` when muted, else `New` — **not** a boolean |
+| Prowler version | `metadata.product.version` | per row, on manual rows too |
+| Account / region | `unmapped.cloud.account.uid`, `.region`; `resources[0].region` | |
+| Timestamp | `time`, `time_dt` | manual rows carry the scan-start timestamp |
+| Requirement attributes | `unmapped.requirement_attributes` | `theme`, `nist_controls`, `class_applicability` |
+
+The attributes survive because `OutputFormats.ocsf` defaults to `True`
+(`compliance_models.py:629`) and this framework declares no `output_formats` on
+any of its three `attributes_metadata` entries. So **`ClassApplicability` is in
+the output** — `"Required for Classes B and C"` or `"Optional for Class B,
+required for Class C"` — and the both-ways golden test of §4d should compare it
+against rampscan's own class applicability as well as the id set, since it is a
+second place the two catalogs can silently diverge at a re-pin.
+
+A **`MANUAL` row is a different constructor**
+(`_build_manual_compliance_finding`, `ocsf_compliance.py:381-432`) and is
+identifiable three independent ways: `status_code == "MANUAL"`,
+`metadata.event_code == "manual"`, and `finding_info.uid` prefixed `manual-`.
+It carries **no `compliance.checks` and no `resources` at all**, and no
+`unmapped.cloud` — so a reader that reaches for the check id on every row throws
+on exactly the thirteen indicators §4c is about.
+
+**The file is absent, not empty, when a scan finds nothing.**
+`OCSFComplianceOutput.__init__` guards `if findings:` before `_transform`
+(`ocsf_compliance.py:148-156`), and the manual rows are emitted *inside*
+`_transform` — so zero findings means no transform, no file descriptor, no
+file, **and no thirteen MANUAL rows either**. A missing or empty compliance
+output is therefore a refusal, never "the scan evidenced nothing".
+
+### 10b. The arguments are not recoverable. This is the answer, and it is no.
+
+§9 called this the most important open question. Prowler serialises its own
+command line **exactly once in the entire codebase** — `prowler_args = " ".join(sys.argv[1:])`
+at `__main__.py:646`, inside the Slack block, passed to `slack.send(stats, prowler_args)`
+and written to a chat message. **No output file records it.** The OCSF
+compliance array has no header object of any kind: no scan id, no arguments, no
+mutelist path, no start/end pair. Everything in §10a's table is per-row.
+
+And the filters are applied upstream of every writer, so their effect is
+removal, not annotation:
+
+- **`--status`** drops findings inside `execute_checks`
+  (`check.py:754-760`, *"Exclude findings per status"*), before muting, before
+  `Finding.generate_output`, before any output object exists. A
+  `--status PASS` scan writes a compliance file containing PASS rows and the
+  thirteen MANUAL rows and **nothing else**.
+- **`--severity`**, `--check`, `--service`, `--excluded-check` narrow
+  `checks_to_execute` (`__main__.py:362`) — the checks never run.
+- **The mutelist** is the one that does annotate: muted findings keep their
+  status and are flagged, reaching OCSF as `status = "Suppressed"` (§10a).
+
+So a full scan and a filtered one are **indistinguishable from the document**,
+and §4c's third defence generalises: the exit code is not the only thing about
+this input that decides nothing. The adapter must **state the population it
+evaluated** rather than describe what it read as a scan.
+
+### 10c. What is recoverable — the mapped-check coverage measure
+
+The constructive half. rampscan holds the pinned framework, so for each KSI it
+knows the full set of AWS check ids upstream maps to it; the OCSF file names
+which of them actually reported. **`reported / mapped` per KSI is computable**,
+and it is the honest description of the population the assertion ran over.
+
+It is also a real defence, and the exact size of it is worth stating rather
+than overselling. Hiding a failure with `--status PASS` removes that check's
+FAIL row — and if that check produced no other row for the KSI, it drops out of
+the reported set and coverage falls below full. **A `--status PASS` scan cannot
+manufacture full mapped-check coverage** unless the hidden check also passed on
+some other resource, which is only possible for a check that returned mixed
+results across resources. That residual is narrow, nameable, and does not
+compress further; it is the reason coverage is *recorded and printed* rather
+than treated as proof of a complete scan.
+
+This is also a build item §6 did not have. It belongs to P3-3, beside the
+submission's `reproduce`.
+
+### 10d. A scan's own config can force FAIL — read the effective status
+
+Not in §9 because the note had not found it. `apply_config_status`
+(`compliance_config_eval.py`) lets a requirement declare `ConfigRequirements`
+over the configurable checks it maps, and when the scan ran with a config too
+loose to satisfy them the requirement is **forced to `FAIL` regardless of the
+finding's own status**, with the reason prepended to the message. The module's
+worked example is CIS AWS 6.0 §2.11: loosen `max_unused_access_keys_days` to
+120 and `iam_user_accesskey_unused` passes while the requirement is not
+satisfied.
+
+Upstream made it machine-detectable on purpose — `CONFIG_NOT_VALID_PREFIX`
+(*"Configuration not valid for this requirement."*) is documented as opening
+every such message so it "doubles as a stable marker for detecting the case
+programmatically". In OCSF the row then carries `status_code == "FAIL"` with
+`compliance.checks[0].status == "PASS"`, and the marker at the head of
+`message` / `status_detail`.
+
+**rampscan evaluates over `status_code`, the effective status, not the nested
+raw check status.** The nested one is the looser of the two readings, and
+taking it would reintroduce exactly the hole upstream closed. The raw status
+travels in the transcript, and a divergence between the two is recorded rather
+than discarded — it is a fact about the scan's configuration, which is the one
+piece of scan-level context this input does carry.
+
+### 10e. One check is many rows — group before submitting
+
+`finding_info.uid` is `f"{finding.uid}-{requirement.id}"`, unique per resource.
+One check over forty IAM users emits forty rows for the same KSI, and one
+finding whose check maps to two KSIs is emitted twice (§2b). So **`(check_id,
+KSI)` is not unique in the file**, and rampscan's ingest refuses a duplicate
+`(recipe, KSI)` by rejecting the *whole batch* before anything is signed
+(`SPEC.md:452`). §6's P3-3 already says "`IngestSubmission` per (check, KSI)" and is
+right; the reason it cannot be per row is recorded here, because the failure
+mode is a refused batch rather than a wrong number.
+
+### 10f. No published release ships this framework
+
+`fedramp_20x_ksi_2026.json` has **one commit**, `1b228d59`, 2026-09-14. The
+latest Prowler release is **5.42.0, published 2026-09-11**, and the file returns
+404 at both `5.42.0` and `5.41.0`. §9's question is closed: **no published
+release ships it** — not this framework, and not the pilot frameworks the PR
+replaced. Today the input P3 ingests can only be produced from `master`.
+
+That does not block P3: the artifact is pinned and the fixtures are written
+against it either way. It does qualify §8's public argument, which should say
+`master` until a release carries it, and it is one more reason the pin is on
+`sha256` and the golden test runs both ways.
+
+**The pin for P3-0**, computed:
+
+| | |
+|---|---|
+| Path | `prowler/compliance/fedramp_20x_ksi_2026.json` |
+| Commit | `1b228d590b5f`, 2026-09-14 |
+| `framework` | `FedRAMP-20x-KSI` |
+| `version` | `2026.07.14.01` |
+| `sha256` | `cc1a5fa8c88ee4e327c84ae871b8e51553b4d0c614193a25a0d5490449a8e766` |
+| Bytes | 89,892 |
 
 ---
 
@@ -441,3 +637,24 @@ that depends on it.
   `aws-ingested`, no schema change) and §4b (rampscan evaluates its own
   assertion) as recommended, both recorded in place. Next: P3-0, the pin and
   the both-ways golden test.
+- **2026-09-18 (§9 answered, §10)** — #217 merged; `main` = `6bf24d0`. The
+  §9 unknowns taken before P3-0, because the one the note called most important
+  could have forced a rewrite. It did not force a rewrite; it forced a build
+  item. **The arguments are not recoverable** — Prowler serialises its own
+  `sys.argv` exactly once in the codebase, into a Slack message, and no output
+  file carries it — and `--status` drops findings inside `execute_checks`
+  before any writer exists, so a `--status PASS` scan and a clean scan are the
+  same document. The constructive answer is §10c's mapped-check coverage, now
+  P3-3a: the pinned framework names the checks each KSI expects, the file names
+  the ones that reported, and hiding a FAIL removes its check from the reported
+  set unless that check also passed on another resource — a narrow, nameable
+  residual instead of an assumption. Three things the note had wrong or missing:
+  §2d documents the **CSV** row and the adapter reads **OCSF**, where none of
+  those field names exist (§10a); a scan's own config can force a requirement to
+  `FAIL` while the nested check still reads `PASS`, so the effective
+  `status_code` is the one to evaluate (§10d); and no findings means **no file
+  at all**, not an empty one, so a missing document is a refusal rather than
+  thirteen `MANUAL` rows. Also computed: the pin (`1b228d59`, sha256
+  `cc1a5fa8…`, 89,892 bytes) and the fact that **no published release ships the
+  framework** — 5.42.0 predates its only commit by three days, which qualifies
+  §8's public claim. Next: P3-0.
