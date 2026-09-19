@@ -4,9 +4,13 @@ import type { EvidenceBundle, MethodScope, PipelineRecipe } from "@rampscan/sche
 import { methodsOfRecipe } from "@rampscan/schema";
 import {
   completedDays,
+  dailyOwed,
+  dailyRuns,
   daySeries,
   dayEnd,
+  expandRuns,
   metricSummaries,
+  reachDays,
   summarize,
   type MetricsInput,
 } from "../src/sdr-metrics.js";
@@ -169,5 +173,58 @@ describe("the summaries (R3.1, H7)", () => {
     });
     const s = summarize(days, [m("Not Implemented"), m("Implemented"), undefined], 2);
     expect(s).toMatchObject({ from: "d2", to: "d3", daysCovered: 1, daysAbsent: 1, lastStatus: "Implemented" });
+  });
+});
+
+describe("the daily data (R3.2, H4/H5)", () => {
+  it("is owed at class c and d only", () => {
+    expect(["a", "b", "c", "d"].map(dailyOwed)).toEqual([false, false, true, true]);
+  });
+
+  it("runs expand to exactly one entry per covered day, in order, with the day's own metric", () => {
+    const series = daySeries(input(LEDGER, AS_OF));
+    const mit = series.byKsi.get("KSI-SCR-MIT")!;
+    const runs = dailyRuns(series.days, mit);
+    const covered = series.days
+      .map((day, i) => ({ day, metric: mit[i] }))
+      .filter((d) => d.metric !== undefined);
+    expect(expandRuns(runs)).toEqual(covered);
+    // 08-01..08-07 fresh, 08-08..08-14 stale, 08-15..08-19 violated
+    expect(runs.map((r) => [r.from, r.to, r.days, r.status])).toEqual([
+      ["2026-08-01", "2026-08-07", 7, "Partially Implemented"],
+      ["2026-08-08", "2026-08-14", 7, "Partially Implemented"],
+      ["2026-08-15", "2026-08-19", 5, "Not Implemented"],
+    ]);
+  });
+
+  it("keeps a gap in coverage as a gap between runs", () => {
+    const m = {
+      status: "Implemented" as const,
+      methodsInScope: 1,
+      methodsPassing: 1,
+      violatedMethods: 0,
+      staleMethods: 0,
+      automatedWithEvidence: 1,
+      artifactsPresent: 5,
+    };
+    const days = ["2026-01-01", "2026-01-02", "2026-01-03"];
+    const runs = dailyRuns(days, [m, undefined, m]);
+    expect(runs.map((r) => [r.from, r.to])).toEqual([
+      ["2026-01-01", "2026-01-01"],
+      ["2026-01-03", "2026-01-03"],
+    ]);
+  });
+
+  it("reaches back a year, or FRC-CSX-MOT's floor where that is longer", () => {
+    expect(reachDays(AS_OF, null)).toBe(365);
+    expect(reachDays(AS_OF, 6)).toBe(365);
+    // 18 months back from the last completed day, 2026-08-19, opens on 2025-02-19
+    const d = reachDays(AS_OF, 18);
+    expect(d).toBe((Date.parse("2026-08-19") - Date.parse("2025-02-19")) / 86_400_000 + 1);
+    expect(d).toBe(547);
+    const series = daySeries({ ...input(LEDGER, AS_OF), reachDays: d });
+    expect(series.days[0]).toBe("2025-02-19");
+    // the summaries still speak for their own windows
+    expect(metricSummaries(series)["KSI-SCR-MIT"]!.pastYear.daysInWindow).toBe(365);
   });
 });
