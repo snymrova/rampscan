@@ -37,7 +37,7 @@ importers:
         version: link:../../packages/projector
       next:
         specifier: ^15.4.0
-        version: 15.5.23(@playwright/test@1.63.0)(react-dom@19.2.8(react@19.3.0))(react@19.3.0)
+        version: 15.5.23(@playwright/test@1.63.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       pocketbase:
         specifier: ^0.28.1
         version: 0.28.1
@@ -45,8 +45,8 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0
       react-dom:
-        specifier: ^19.1.0
-        version: 19.2.8(react@19.3.0)
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
     devDependencies:
       '@rampscan/collectors':
         specifier: workspace:*
@@ -965,10 +965,10 @@ packages:
     resolution: {integrity: sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  react-dom@19.2.8:
-    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
+  react-dom@19.3.0:
+    resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
-      react: ^19.2.8
+      react: ^19.3.0
 
   react@19.3.0:
     resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
@@ -979,8 +979,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  scheduler@0.27.0:
-    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+  scheduler@0.28.0:
+    resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
 
   semver@7.8.5:
     resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
@@ -1606,14 +1606,14 @@ snapshots:
 
   nanoid@3.3.18: {}
 
-  next@15.5.23(@playwright/test@1.63.0)(react-dom@19.2.8(react@19.3.0))(react@19.3.0):
+  next@15.5.23(@playwright/test@1.63.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       '@next/env': 15.5.23
       '@swc/helpers': 0.5.15
       caniuse-lite: 1.0.30001809
       postcss: 8.4.31
       react: 19.3.0
-      react-dom: 19.2.8(react@19.3.0)
+      react-dom: 19.3.0(react@19.3.0)
       styled-jsx: 5.1.6(react@19.3.0)
     optionalDependencies:
       '@next/swc-darwin-arm64': 15.5.23
@@ -1658,10 +1658,10 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  react-dom@19.2.8(react@19.3.0):
+  react-dom@19.3.0(react@19.3.0):
     dependencies:
       react: 19.3.0
-      scheduler: 0.27.0
+      scheduler: 0.28.0
 
   react@19.3.0: {}
 
@@ -1697,7 +1697,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.62.4
       fsevents: 2.3.3
 
-  scheduler@0.27.0: {}
+  scheduler@0.28.0: {}
 
   semver@7.8.5:
     optional: true
