@@ -36,7 +36,7 @@ code, .mono { font-family: var(--mono); font-size: 12.5px; }
 
 /* ---- nav ---- */
 .nav {
-  display: flex; align-items: center; gap: 20px;
+  display: flex; align-items: center; gap: 18px;
   padding: 14px 0; margin-bottom: 24px;
   border-bottom: 1px solid var(--border);
 }
@@ -46,8 +46,10 @@ code, .mono { font-family: var(--mono); font-size: 12.5px; }
 .nav a.nav-link:hover { color: var(--text); text-decoration: none; }
 .nav a.nav-link.active { color: var(--text); border-bottom: 2px solid var(--accent); }
 .nav-spacer { flex: 1; }
-.nav-user { color: var(--text-dim); font-size: 12.5px; }
+.nav-user { color: var(--text-dim); font-size: 12.5px; white-space: nowrap; }
 .nav-user b { color: var(--text); font-weight: 600; }
+.nav-scope { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.nav-scope select { max-width: 220px; }
 
 /* ---- generic ---- */
 h1 { font-size: 19px; margin: 0 0 4px; }
@@ -66,6 +68,9 @@ table.reg td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertic
 table.reg tr:last-child td { border-bottom: none; }
 table.reg tr.rowlink { cursor: pointer; }
 table.reg tr.rowlink:hover td { background: var(--bg-hover); }
+/* the row a deep link named (U0): marked by its edge, not a new colour */
+table.reg tr.linked td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+table.reg tr[id] { scroll-margin-top: 16px; }
 
 /* ---- daemon status strip (I2b) ---- */
 .strip {
@@ -410,6 +415,8 @@ pre.raw {
   }
   /* chrome that cannot mean anything on paper */
   .nav, .btn, button, .filters, .strip, .diff-strip, .asof-strip { display: none !important; }
+  /* a basename is a screen convenience; paper states the path it stands for */
+  .repo-name[data-full]::after { content: " (" attr(data-full) ")"; font-size: 9pt; color: #444; }
   .shell { max-width: none; margin: 0; padding: 0; }
   a { color: #000; text-decoration: none; }
   /* the URL behind a link is the reader's only way back */

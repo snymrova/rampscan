@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Nav } from "../components/Nav";
+import { ScopeProvider } from "../lib/scope";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,8 +15,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <div className="shell">
-          <Nav />
-          {children}
+          {/* the repo scope reads ?repo=, and useSearchParams needs a
+              Suspense boundary for the static prerender */}
+          <Suspense fallback={null}>
+            <ScopeProvider>
+              <Nav />
+              {children}
+            </ScopeProvider>
+          </Suspense>
         </div>
       </body>
     </html>
