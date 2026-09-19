@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { EntityLink } from "./EntityLink";
 import { useEffect, useState } from "react";
 import { cloudRunPill, describeCloudRun, sortCloudRuns } from "../lib/cloud-runs";
 import type { CloudRunRow } from "../lib/cloud-runs";
@@ -59,13 +59,31 @@ export function CloudRuns() {
                 <td>
                   <span className={`pill ${cloudRunPill(row.state)}`}>{row.state}</span>
                 </td>
-                <td className="mono">{row.recipe_id}</td>
-                <td className="mono">{row.ksi}</td>
+                <td className="mono">
+                  {/* a cloud recipe has no pipeline cell to open; once accepted,
+                      its evidence is the level below */}
+                  {row.evidence_digest ? (
+                    <EntityLink kind="evidence" digest={row.evidence_digest}>
+                      {row.recipe_id}
+                    </EntityLink>
+                  ) : (
+                    <span data-entity="check">{row.recipe_id}</span>
+                  )}
+                </td>
+                <td>
+                  <EntityLink kind="ksi" id={row.ksi} />
+                </td>
                 <td className="muted" title={row.requester}>
                   {new Date(row.issued_at).toLocaleString()}
                 </td>
                 <td className="muted" style={{ fontSize: 12.5 }}>
-                  {row.evidence_digest ? <Link href={`/evidence/${row.evidence_digest}`}>{describeCloudRun(row)}</Link> : describeCloudRun(row)}
+                  {row.evidence_digest ? (
+                    <EntityLink kind="evidence" digest={row.evidence_digest} className="">
+                      {describeCloudRun(row)}
+                    </EntityLink>
+                  ) : (
+                    describeCloudRun(row)
+                  )}
                 </td>
               </tr>
             ))}
