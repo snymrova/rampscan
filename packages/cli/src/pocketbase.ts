@@ -69,11 +69,18 @@ export async function startPocketBase(options: StartPocketBaseOptions): Promise<
   }
 
   const superuser = await loadOrCreateSuperuser(options.dataDir);
-  // idempotent: creates on first run, resets the password to ours on later runs
-  await execFileAsync(options.binPath, [
-    "superuser", "upsert", superuser.email, superuser.password,
-    "--dir", options.dataDir,
+  // idempotent: creates on first run, resets the password to ours on later runs.
+  // "--" ends the flags: the password is base64url, so one in 64 begins with
+  // "-", and PocketBase read it as a flag (#219). PocketBase also exits 0 on
+  // that error, so its success line is the proof the superuser was saved.
+  const upsert = await execFileAsync(options.binPath, [
+    "superuser", "upsert", "--dir", options.dataDir,
+    "--", superuser.email, superuser.password,
   ]);
+  if (!upsert.stdout.includes("Successfully saved superuser")) {
+    const said = `${upsert.stdout}${upsert.stderr}`.trim() || "(no output)";
+    throw new Error(`pocketbase superuser upsert saved no superuser: ${said}`);
+  }
 
   const url = `http://127.0.0.1:${options.port}`;
   const child = spawn(
@@ -87,15 +94,22 @@ export async function startPocketBase(options: StartPocketBaseOptions): Promise<
   });
 
   const admin = new PocketBaseAdmin(url);
-  for (let i = 0; i < 100; i++) {
-    if (child.exitCode !== null) {
-      throw new Error(`pocketbase exited with code ${child.exitCode} before becoming healthy`);
+  try {
+    for (let i = 0; i < 100; i++) {
+      if (child.exitCode !== null) {
+        throw new Error(`pocketbase exited with code ${child.exitCode} before becoming healthy`);
+      }
+      if (await admin.health()) break;
+      await new Promise((r) => setTimeout(r, 100));
     }
-    if (await admin.health()) break;
-    await new Promise((r) => setTimeout(r, 100));
+    if (!(await admin.health())) throw new Error("pocketbase did not become healthy in 10s");
+    await admin.auth(superuser.email, superuser.password);
+  } catch (err) {
+    // no handle reaches the caller, so nothing else would stop it: a leaked
+    // serve keeps the port and answers the next start's health check
+    child.kill();
+    throw err;
   }
-  if (!(await admin.health())) throw new Error("pocketbase did not become healthy in 10s");
-  await admin.auth(superuser.email, superuser.password);
   log(`pocketbase ${url} up (data: ${options.dataDir})`);
   return { url, child, superuser, admin };
 }
