@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/big-shoulders": "5.3.0",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/martian-mono": "5.3.0",
     "@rampscan/cli": "workspace:*",
     "@rampscan/projector": "workspace:*",
     "next": "^15.4.0",

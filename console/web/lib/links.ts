@@ -16,6 +16,11 @@ export function ksiHref(ksi: string): string {
   return `/${q({ ksi })}`;
 }
 
+/** L1 — one KSI theme, read off the posture block */
+export function themeHref(theme: string): string {
+  return `/${q({ theme })}`;
+}
+
 /** L3 — until U3, the recipe register's row for this (repo, recipe) cell */
 export function checkHref(recipe: string, repo: string): string {
   return `/recipes${q({ repo, recipe })}`;

@@ -378,7 +378,7 @@ function Evidence({ digest }: { digest: string }) {
             U4 replaces this with breadcrumbs built from the entity */}
         <Link href={withScope("/", String(p["repo"] ?? "") || null)}>← board</Link>
       </p>
-      <h1 className="mono" style={{ fontSize: 16 }}>
+      <h1 className="mono entity-title">
         {isScanRun ? (
           <span data-entity="run">{p["run_id"]}</span>
         ) : (

@@ -1,20 +1,51 @@
-/* rampscan console — a register is a table you can trust. Dense, dark,
-   monospace where identity matters (recipes, digests, commits). */
+/* rampscan console: Depth Axis.
+   The console is a descent. Six levels of zoom are depths; the thermocline
+   cyan is the only colour that means "you are here"; the four verdict hues
+   are the only colours that mean anything else, and each always carries its
+   word. DESIGN.md is the rulebook this file implements. */
 
 :root {
-  --bg: #0d1117;
-  --bg-raised: #151b23;
-  --bg-hover: #1c232d;
-  --border: #2a313c;
-  --text: #dbe2ea;
-  --text-dim: #8a94a1;
-  --text-faint: #5b6672;
+  /* the water column: surface to floor */
+  --abyss: #050a14;
+  --floor: #03070e;
+  --raised: #081626;
+  --shelf: #0d2034;
+  --well: #02050b;
+  --rule: #163049;
+  --rule-strong: #26496b;
+  /* a control's boundary: 3:1 against every ground (WCAG 1.4.11) */
+  --edge: #3a6690;
+
+  --text: #e4eef6;
+  --text-dim: #a7b9ca;
+  --text-faint: #8197ac;
+
+  /* you are here: the rail band, the active lens, keyboard focus */
+  --thermo: #23d6e6;
+  /* go there: every entity link */
+  --link: #7cc4ff;
+
+  /* the four verdicts, GitHub's hues so an engineer reads them for free */
   --evidenced: #3fb950;
   --violated: #f85149;
   --unevidenced: #d29922;
-  --na: #8957e5;
-  --accent: #58a6ff;
-  --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  --na: #a371f7;
+
+  /* kept names: older markup reads these */
+  --bg: var(--abyss);
+  --bg-raised: var(--raised);
+  --bg-hover: var(--shelf);
+  --border: var(--rule);
+  --accent: var(--link);
+
+  --display: "Big Shoulders Variable", "Arial Narrow", sans-serif;
+  --sans: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Martian Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --rail-w: 212px;
+  --stop-h: 66px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -22,418 +53,716 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
   color: var(--text);
-  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font: 14px/1.55 var(--sans);
+  font-feature-settings: "ss01", "tnum";
+  -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+/* the ground deepens as it goes down, and marine snow drifts through it:
+   two sparse dot fields at different scales, fixed so they read as water,
+   not as a pattern printed on the page */
+body {
+  background-color: var(--abyss);
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgb(214 236 255 / 0.16) 50%, transparent 51%),
+    radial-gradient(1px 1px at 70% 80%, rgb(214 236 255 / 0.10) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 45% 60%, rgb(214 236 255 / 0.07) 50%, transparent 51%),
+    linear-gradient(180deg, #071224 0%, var(--abyss) 38%, var(--floor) 100%);
+  background-size: 190px 170px, 260px 230px, 340px 310px, 100% 100%;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
 
-code, .mono { font-family: var(--mono); font-size: 12.5px; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 
-.shell { max-width: 1180px; margin: 0 auto; padding: 0 20px 64px; }
+:focus-visible {
+  outline: 2px solid var(--thermo);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 
-/* ---- nav ---- */
+code, .mono {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-stretch: 82%;
+  letter-spacing: 0;
+}
+
+::selection { background: color-mix(in srgb, var(--thermo) 35%, transparent); color: #fff; }
+
+/* ---- the shell: rail | stage ---- */
+.shell {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  min-height: 100vh;
+}
+.stage { min-width: 0; display: flex; flex-direction: column; }
+.page {
+  width: 100%;
+  max-width: 1480px;
+  padding: 30px 44px 96px;
+}
+
+/* ---- the depth rail ---- */
+.rail {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--rule);
+  background: linear-gradient(180deg, rgb(8 22 38 / 0.72), rgb(3 7 14 / 0.9));
+  padding: 18px 0 20px;
+}
+.rail-brand {
+  font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1;
+  letter-spacing: 0.01em; color: var(--text);
+  padding: 0 22px 26px;
+}
+.rail-brand span { color: var(--thermo); }
+.rail-brand:hover { text-decoration: none; }
+
+.rail-stops {
+  list-style: none; margin: 0; padding: 0;
+  position: relative;
+}
+/* the plumb line every stop hangs on */
+.rail-stops::before {
+  content: ""; position: absolute; left: 30px; top: 14px; bottom: 14px;
+  width: 1px; background: var(--rule-strong);
+}
+.rail-band {
+  position: absolute; left: 0; right: 0; top: 0; height: var(--stop-h);
+  transform: translateY(calc(var(--depth) * var(--stop-h)));
+  transition: transform 520ms var(--ease-out), opacity 300ms var(--ease-out);
+  background:
+    linear-gradient(90deg, rgb(35 214 230 / 0.26), rgb(35 214 230 / 0.06) 70%, transparent);
+  border-top: 1px solid rgb(35 214 230 / 0.55);
+  border-bottom: 1px solid rgb(35 214 230 / 0.25);
+  box-shadow: 0 0 28px -4px rgb(35 214 230 / 0.45);
+  pointer-events: none;
+}
+.rail-band.off { opacity: 0; }
+.rail.lens .rail-stops::before { background: var(--thermo); opacity: 0.7; box-shadow: 0 0 8px rgb(35 214 230 / 0.6); }
+/* the first render places the band; only later moves slide it */
+.rail:not(.settled) .rail-band { transition: none; }
+.rail-stop { position: relative; height: var(--stop-h); }
+.rail-hit {
+  position: relative; display: grid; grid-template-columns: 22px 1fr;
+  column-gap: 16px; align-content: center; height: 100%;
+  padding: 0 14px 0 20px; color: var(--text-faint);
+}
+a.rail-hit:hover { text-decoration: none; color: var(--text); }
+/* the stop's tick on the plumb line */
+.rail-hit::before {
+  content: ""; position: absolute; left: 27px; top: 50%;
+  width: 7px; height: 7px; margin-top: -4px; border-radius: 50%;
+  background: var(--abyss); border: 1px solid var(--rule-strong);
+}
+.rail-code {
+  grid-column: 2; font-family: var(--mono); font-size: 10px; font-stretch: 80%;
+  letter-spacing: 0.08em; line-height: 1.2;
+}
+.rail-name {
+  grid-column: 2; font-family: var(--display); font-size: 19px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1;
+}
+.rail-entity {
+  grid-column: 2; font-family: var(--mono); font-size: 10.5px; font-stretch: 78%;
+  color: var(--text); margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rail-stop.above .rail-hit { color: var(--text-dim); }
+.rail-stop.above .rail-hit::before { background: var(--rule-strong); }
+.rail-stop.here .rail-hit { color: var(--text); }
+.rail-stop.here .rail-code { color: var(--thermo); }
+.rail-stop.here .rail-hit::before {
+  background: var(--thermo); border-color: var(--thermo);
+  box-shadow: 0 0 10px 1px rgb(35 214 230 / 0.7);
+}
+
+.rail-readout {
+  margin-top: auto; padding: 16px 22px 0; border-top: 1px solid var(--rule);
+  display: grid; gap: 2px;
+}
+.rail-readout-label {
+  font-family: var(--display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-faint);
+}
+.rail-readout-value {
+  font-family: var(--display); font-weight: 800; font-size: 54px; line-height: 0.95;
+  color: var(--thermo);
+}
+.rail-readout-value.lens { font-size: 38px; color: var(--text); text-shadow: none; text-transform: uppercase; }
+.rail-readout-note { font-size: 12px; color: var(--text-faint); line-height: 1.4; }
+.rail-user {
+  padding: 14px 22px 0; margin-top: 14px; border-top: 1px solid var(--rule);
+  font-size: 12px; color: var(--text-faint); display: grid; gap: 2px; min-width: 0;
+}
+.rail-user b { color: var(--text-dim); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail-user .nav-role { margin: 0; }
+
+/* ---- the top bar: scope, then the lenses ---- */
 .nav {
-  display: flex; align-items: center; gap: 18px;
-  padding: 14px 0; margin-bottom: 24px;
-  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 30px;
+  min-height: 58px; padding: 0 44px; white-space: nowrap;
+  border-bottom: 1px solid var(--rule);
+  background: rgb(5 10 20 / 0.86);
+  backdrop-filter: blur(10px);
 }
-.nav-brand { font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
-.nav-brand span { color: var(--accent); }
-.nav a.nav-link { color: var(--text-dim); padding: 4px 2px; }
+.nav-groups { display: flex; align-items: center; gap: 24px; flex: none; }
+.nav-group { display: flex; align-items: baseline; gap: 12px; }
+.nav-group + .nav-group { padding-left: 24px; border-left: 1px solid var(--rule); }
+.nav-group-label {
+  font-family: var(--display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-faint);
+}
+.nav a.nav-link {
+  color: var(--text-dim); font-size: 13.5px; padding: 18px 0 16px;
+  border-bottom: 1px solid transparent;
+}
 .nav a.nav-link:hover { color: var(--text); text-decoration: none; }
-.nav a.nav-link.active { color: var(--text); border-bottom: 2px solid var(--accent); }
+.nav a.nav-link.active { color: var(--text); border-bottom-color: var(--thermo); }
 .nav-spacer { flex: 1; }
-.nav-user { color: var(--text-dim); font-size: 12.5px; white-space: nowrap; }
-.nav-user b { color: var(--text); font-weight: 600; }
-.nav-scope select { max-width: 200px; font-size: 12.5px; }
+.nav-user { color: var(--text-faint); font-size: 12.5px; white-space: nowrap; }
+.nav-user b { color: var(--text-dim); font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: bottom; }
+.nav-role {
+  font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em;
+  font-weight: 700; font-size: 12px; margin: 0 8px;
+}
+.nav-scope { display: flex; align-items: center; gap: 8px; }
+.nav-scope-label {
+  font-family: var(--display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--thermo);
+}
+.nav-scope select {
+  max-width: 220px; font-family: var(--mono); font-stretch: 82%; font-size: 11.5px;
+}
 
-/* a link whose text is a time or an age, not an id (U0): it goes one level
-   down to the bundle, but it must not outshout the ids beside it */
+/* a link whose text is a time or an age, not an id: it goes one level down
+   to the bundle, but it must not outshout the ids beside it */
 a.quiet { color: inherit; }
-a.quiet:hover { color: var(--accent); }
+a.quiet:hover { color: var(--link); }
 
-/* ---- generic ---- */
-h1 { font-size: 19px; margin: 0 0 4px; }
-.subtitle { color: var(--text-dim); margin: 0 0 20px; font-size: 13px; }
-.panel { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; }
+/* ---- type ---- */
+h1 {
+  font-family: var(--display); font-weight: 800; font-size: 44px; line-height: 1;
+  text-transform: uppercase; letter-spacing: 0.01em;
+  margin: 0 0 8px; text-wrap: balance;
+}
+h2, h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.03em; }
+/* an id as a page title stays exactly as a reader would grep it */
+h1.mono, h1.entity-title {
+  font-family: var(--mono); font-size: 26px; font-weight: 500; font-stretch: 78%;
+  text-transform: none; letter-spacing: 0; line-height: 1.2;
+}
+.subtitle {
+  color: var(--text-dim); margin: 0 0 24px; font-size: 13px; max-width: 92ch;
+}
 .muted { color: var(--text-dim); }
 .faint { color: var(--text-faint); }
+.error { color: var(--violated); font-size: 13px; margin: 10px 0; }
+.empty { padding: 32px; text-align: center; color: var(--text-faint); }
+.badge-count { color: var(--text-faint); font-weight: 400; }
 
+.section-title {
+  font-family: var(--display); font-size: 16px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-dim); margin: 34px 0 10px;
+}
+/* a note riding a section title is prose, not a placard */
+.section-title .faint, .section-title .muted {
+  font-family: var(--sans); font-size: 12.5px; font-weight: 400;
+  letter-spacing: 0; text-transform: none;
+}
+
+/* ---- panels: instrument housings, hairline and square ---- */
+.panel {
+  background: rgb(8 22 38 / 0.78);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+/* ---- the register ---- */
 table.reg { width: 100%; border-collapse: collapse; }
 table.reg th {
-  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--text-faint); font-weight: 600; padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
+  text-align: left; font-family: var(--display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--text-faint); padding: 11px 14px 9px;
+  border-bottom: 1px solid var(--rule-strong);
 }
-table.reg td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.reg td {
+  padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top;
+}
 table.reg tr:last-child td { border-bottom: none; }
 table.reg tr.rowlink { cursor: pointer; }
-table.reg tr.rowlink:hover td { background: var(--bg-hover); }
-/* the row a deep link named (U0): marked by its edge, not a new colour */
-table.reg tr.linked td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
-table.reg tr[id] { scroll-margin-top: 16px; }
+table.reg tr.rowlink:hover td { background: var(--shelf); }
+/* the row a deep link named: marked at its edge in the you-are-here colour */
+table.reg tr.linked td:first-child { box-shadow: inset 2px 0 0 var(--thermo); }
+table.reg tr.linked td { background: color-mix(in srgb, var(--thermo) 6%, transparent); }
+table.reg tr[id] { scroll-margin-top: 76px; }
+tr.hl > td { background: color-mix(in srgb, var(--thermo) 7%, transparent); }
 
-/* ---- daemon status strip (I2b) ---- */
+/* ---- verdict tags ----
+   A tag is its hue three ways at once: the word at full strength, a hairline
+   at 55%, a wash at 13%. Square-cornered, set in the display face: it is a
+   placard on an instrument, not a sticker. */
+.pill {
+  display: inline-block; padding: 0 7px;
+  border-radius: 2px; border: 1px solid var(--rule-strong);
+  font-family: var(--sans); font-size: 11px; font-weight: 650; line-height: 1.6;
+  text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap;
+  color: var(--text-dim);
+}
+.pill.evidenced { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 55%, transparent); background: color-mix(in srgb, var(--evidenced) 13%, transparent); }
+.pill.violated { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 55%, transparent); background: color-mix(in srgb, var(--violated) 13%, transparent); }
+.pill.unevidenced { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 55%, transparent); background: color-mix(in srgb, var(--unevidenced) 13%, transparent); }
+.pill.notApplicable { color: var(--na); border-color: color-mix(in srgb, var(--na) 55%, transparent); background: color-mix(in srgb, var(--na) 13%, transparent); }
+.pill.live { color: var(--text-dim); border-color: var(--edge); }
+.pill.dead { color: var(--text-faint); border-color: var(--rule-strong); }
+
+/* the domain a verdict was reached over (N0-T1): an empty one is a warning */
+.pill.population { color: var(--text-dim); border-color: var(--rule-strong); font-weight: 600; }
+.pill.population.empty-domain {
+  color: var(--unevidenced); font-weight: 800;
+  border-color: var(--unevidenced);
+  background: color-mix(in srgb, var(--unevidenced) 14%, transparent);
+}
+
+/* collector runtime (J2): a skip is the loudest fact */
+.pill.runtime-skipped { color: var(--unevidenced); font-weight: 800; border-color: var(--unevidenced); background: color-mix(in srgb, var(--unevidenced) 17%, transparent); }
+.pill.runtime-cache-hit { color: var(--link); border-color: color-mix(in srgb, var(--link) 45%, transparent); }
+.pill.runtime-docker { color: var(--link); border-color: color-mix(in srgb, var(--link) 35%, transparent); }
+.pill.runtime-binary { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 40%, transparent); }
+.pill.runtime-absent { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 55%, transparent); }
+.pill.runtime-pure { color: var(--text-dim); border-color: var(--rule-strong); }
+
+/* action queue tiers (I2a): divergence loudest, then down the ranks */
+.pill.qkind-divergence { color: var(--violated); font-weight: 800; border-color: var(--violated); background: color-mix(in srgb, var(--violated) 20%, transparent); }
+.pill.qkind-expiring { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 55%, transparent); background: color-mix(in srgb, var(--unevidenced) 13%, transparent); }
+.pill.qkind-new-violation { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 55%, transparent); background: color-mix(in srgb, var(--violated) 13%, transparent); }
+.pill.qkind-actionable-unevidenced { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 35%, transparent); }
+
+/* the as-of view (I3d): the past board, loudly labeled */
+.pill.asof { color: var(--thermo); border-color: color-mix(in srgb, var(--thermo) 55%, transparent); background: color-mix(in srgb, var(--thermo) 12%, transparent); }
+.asof-strip { border-color: color-mix(in srgb, var(--thermo) 45%, transparent); }
+
+/* ---- the posture block (L0) ---- */
+.posture {
+  display: grid; grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 0; margin: 4px 0 30px;
+  border: 1px solid var(--rule); border-radius: 3px;
+  background: rgb(8 22 38 / 0.55);
+}
+.posture-main { padding: 26px 30px 24px; min-width: 0; }
+.posture-side { border-left: 1px solid var(--rule); display: flex; flex-direction: column; }
+.posture-numeral {
+  display: flex; align-items: baseline; gap: 18px;
+  font-family: var(--display); font-weight: 800; line-height: 0.82;
+  margin: 0 0 14px;
+}
+.posture-numeral .met { font-size: 128px; color: var(--text); }
+/* green is earned: only a board with every obliged indicator at its floor */
+.posture-numeral.all-met .met { color: var(--evidenced); text-shadow: 0 0 34px rgb(63 185 80 / 0.35); }
+.posture-numeral .of { font-size: 60px; color: var(--text-faint); font-weight: 600; }
+.posture-numeral .total { font-size: 128px; color: var(--text); }
+.posture-numeral .word {
+  align-self: flex-end; font-size: 22px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-dim); line-height: 1.1; padding-bottom: 6px;
+}
+.posture-sentence { font-size: 17px; line-height: 1.5; color: var(--text); margin: 0 0 22px; max-width: 70ch; text-wrap: pretty; }
+
+.strata-head {
+  display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-strong); padding: 0 0 8px; margin-bottom: 2px;
+}
+.strata-title {
+  font-family: var(--display); font-size: 20px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-dim); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+ol.strata { list-style: none; margin: 0; padding: 0; }
+.stratum {
+  display: grid; grid-template-columns: 48px minmax(160px, 250px) minmax(0, 1fr);
+  align-items: center; gap: 14px; padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.stratum:last-child { border-bottom: none; }
+.stratum.focus { background: linear-gradient(90deg, color-mix(in srgb, var(--thermo) 10%, transparent), transparent 60%); }
+.stratum-code {
+  font-family: var(--mono); font-size: 12px; font-stretch: 80%; letter-spacing: 0.06em;
+  color: var(--link);
+}
+.stratum-name {
+  font-family: var(--display); font-size: 16px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-dim); line-height: 1.15;
+}
+.stratum-bar { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; min-width: 0; }
+.cellrun { display: inline-flex; align-items: center; gap: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.run-count {
+  font-family: var(--mono); font-size: 10.5px; font-stretch: 80%; color: var(--text-dim);
+  margin-left: 6px; margin-right: 4px; white-space: nowrap;
+}
+/* one cell is one KSI: a lamp in its standing */
+.cell {
+  display: block; width: 16px; height: 14px; border-radius: 1px;
+  border: 1px solid transparent;
+}
+a.cell:hover { outline: 1px solid var(--text); outline-offset: 1px; }
+.cell.s-violated { background: var(--violated); box-shadow: 0 0 8px -1px rgb(248 81 73 / 0.7); }
+.cell.s-stale { background: repeating-linear-gradient(-45deg, var(--violated) 0 3px, color-mix(in srgb, var(--violated) 35%, transparent) 3px 6px); }
+.cell.s-none { background: var(--unevidenced); opacity: 0.9; }
+.cell.s-short { border-color: var(--unevidenced); background: color-mix(in srgb, var(--unevidenced) 16%, transparent); }
+.cell.s-clear { background: var(--evidenced); }
+.legend .cell { width: 12px; height: 10px; }
+
+.side-block { padding: 20px 22px; border-bottom: 1px solid var(--rule); }
+.side-block:last-child { border-bottom: none; }
+.side-title {
+  font-family: var(--display); font-size: 20px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px;
+}
+ol.actions { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.action { display: grid; gap: 4px; }
+.action-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.action-fix {
+  font-size: 12.5px; color: var(--text-dim); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+@media print { .action-fix { display: block; -webkit-line-clamp: none; } }
+.gauge { display: grid; gap: 6px; }
+.gauge-value {
+  font-family: var(--display); font-weight: 800; font-size: 46px; line-height: 0.95;
+  color: var(--text);
+}
+.gauge-value small { font-size: 22px; color: var(--text-faint); font-weight: 600; margin-left: 6px; }
+.gauge-value.expiring { color: var(--unevidenced); }
+.gauge-value.expired { color: var(--violated); }
+.gauge-note { font-size: 12px; color: var(--text-faint); }
+
+/* ---- daemon status strip (I2b): the worst true thing about the system ---- */
 .strip {
   display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px;
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 8px 12px; margin: 0 0 16px; font-size: 13px;
+  border: 1px solid var(--rule); border-radius: 3px;
+  padding: 9px 14px; margin: 0 0 16px; font-size: 13px;
+  background: rgb(8 22 38 / 0.6);
 }
 .strip + .strip { margin-top: -8px; }
 .strip-dot {
   width: 8px; height: 8px; border-radius: 50%; align-self: center;
   background: var(--text-faint); flex: none;
 }
-.strip.alive { border-color: color-mix(in srgb, var(--evidenced) 35%, transparent); }
-.strip.alive .strip-dot { background: var(--evidenced); }
-.strip.alive.diverged { border-color: color-mix(in srgb, var(--violated) 45%, transparent); }
+.strip.alive { border-color: color-mix(in srgb, var(--evidenced) 40%, transparent); }
+.strip.alive .strip-dot { background: var(--evidenced); box-shadow: 0 0 8px var(--evidenced); }
+.strip.alive.diverged { border-color: color-mix(in srgb, var(--violated) 50%, transparent); }
 .strip.stale {
   border-color: var(--violated); font-weight: 500;
-  background: color-mix(in srgb, var(--violated) 10%, transparent);
+  background: color-mix(in srgb, var(--violated) 11%, transparent);
 }
-.strip.stale .strip-dot { background: var(--violated); }
+.strip.stale .strip-dot { background: var(--violated); box-shadow: 0 0 8px var(--violated); }
 .strip.stale b { color: var(--violated); letter-spacing: 0.03em; }
-.strip.nodaemon { color: var(--text-dim); }
+.strip.nodaemon { color: var(--text-dim); border-color: color-mix(in srgb, var(--unevidenced) 35%, transparent); }
+.strip.nodaemon .strip-dot { background: var(--unevidenced); }
 .strip-sep { color: var(--text-faint); }
 .strip-divergence { color: var(--violated); }
 .strip-repo { margin-left: auto; }
 
 /* ---- fix pointers on violated rows (I2c) ---- */
-.pointer-row {
-  padding-top: 0 !important;
-  border-bottom: 1px solid var(--border);
-}
+.pointer-row { padding-top: 0 !important; border-bottom: 1px solid var(--rule); }
 .pointer-row .pointer {
-  display: inline-block; margin-right: 10px;
-  color: var(--violated);
-  overflow-wrap: anywhere;
+  display: inline-block; margin-right: 12px;
+  color: var(--violated); overflow-wrap: anywhere;
 }
-
-/* ---- the control/KSI register (I3a): the deep-linked rollup row ---- */
-tr.hl > td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
 
 /* ---- the "since baseline" diff strip (I2d) ---- */
 .diff-strip {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 8px 12px; margin-bottom: 12px; font-size: 13px;
-}
-
-/* ---- the as-of view (I3d): the past board, loudly labeled ---- */
-.asof-strip { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
-.pill.asof {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-input[type="datetime-local"] {
-  background: var(--bg-raised); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 4px 9px; font: inherit; font-size: 13px;
-  color-scheme: dark;
+  padding: 9px 14px; margin-bottom: 12px; font-size: 13px;
 }
 
 /* ---- the cadence-gap timeline (I3d over I1d) ---- */
 .gap-summary {
   display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border);
+  padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--rule);
   color: var(--text-dim);
 }
 .gap-ongoing-count { color: var(--violated); font-weight: 700; letter-spacing: 0.03em; }
 .gaptrack {
-  position: relative; height: 10px; border-radius: 3px;
-  background: var(--bg-hover); overflow: hidden; min-width: 180px;
+  position: relative; height: 10px; border-radius: 1px;
+  background: var(--shelf); overflow: hidden; min-width: 180px;
 }
-.gapseg {
-  position: absolute; top: 0; bottom: 0;
-  background: var(--violated); opacity: 0.85; border-radius: 2px;
-}
+.gapseg { position: absolute; top: 0; bottom: 0; background: var(--violated); opacity: 0.85; }
 .gapseg:hover { opacity: 1; }
+/* still open: the one pattern fill, and it means exactly that */
 .gapseg.ongoing {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--violated) 0 4px,
-    color-mix(in srgb, var(--violated) 55%, transparent) 4px 8px
-  );
+  background: repeating-linear-gradient(-45deg, var(--violated) 0 4px, color-mix(in srgb, var(--violated) 45%, transparent) 4px 8px);
 }
 
-/* ---- the run view (J2): what ran, and how it went ---- */
+/* ---- the run view (J2) ---- */
 .run-skips { color: var(--unevidenced); font-weight: 700; letter-spacing: 0.03em; }
 table.reg.subtable {
-  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  background: rgb(3 7 14 / 0.6); border: 1px solid var(--rule); border-radius: 2px;
   margin-bottom: 6px;
 }
-table.reg.subtable th { padding: 6px 10px; }
-table.reg.subtable td { padding: 6px 10px; }
+table.reg.subtable th { padding: 7px 10px 6px; font-size: 12px; }
+table.reg.subtable td { padding: 7px 10px; }
 .run-artifact { display: inline-block; margin-right: 12px; }
-.run-digest { color: var(--text-faint); opacity: 0.8; }
+.run-digest { color: var(--text-faint); }
 .run-argv {
-  background: #0a0e13; border: 1px solid var(--border); border-radius: 5px;
-  padding: 5px 9px; margin-top: 4px; font-size: 11.5px;
+  background: var(--well); border: 1px solid var(--rule); border-radius: 2px;
+  padding: 6px 10px; margin-top: 4px; font-size: 11px;
   overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;
 }
 
-/* ---- artifact viewers (J4): what the tool actually said ---- */
+/* ---- artifact viewers (J4) ---- */
 .artifact-view { margin-top: 8px; }
 .artifact-view p { margin: 4px 0 6px; font-size: 12.5px; }
-/* the reader's own hash check, stated where the table begins */
 .artifact-verified { color: var(--evidenced); }
-/* a wide findings table scrolls itself — the page body never scrolls sideways */
 .artifact-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
 
-/* ---- the provenance chain (J5): recipe → collector → tool → artifact → bundle ---- */
-ol.chain { list-style: none; margin: 0; padding: 0; }
+/* ---- the provenance chain (J5): drawn as a descent line with stops ---- */
+ol.chain { list-style: none; margin: 0; padding: 4px 0; }
 .chain-hop {
-  position: relative; padding: 6px 0 6px 18px; font-size: 13px;
-  border-left: 2px solid var(--border); margin-left: 6px;
+  position: relative; padding: 7px 0 7px 22px; font-size: 13px;
+  border-left: 1px solid var(--rule-strong); margin-left: 8px;
 }
 .chain-hop::before {
-  content: ""; position: absolute; left: -5px; top: 12px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--accent); border: 1px solid var(--bg);
+  content: ""; position: absolute; left: -4px; top: 14px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--link); box-shadow: 0 0 0 2px var(--abyss);
 }
 /* a gap in the chain is drawn as a gap, never as a shorter chain */
-.chain-hop.chain-missing { border-left-color: var(--unevidenced); }
+.chain-hop.chain-missing { border-left: 1px dashed var(--unevidenced); }
 .chain-hop.chain-missing::before { background: var(--unevidenced); }
 .chain-kind {
-  display: inline-block; min-width: 74px; font-size: 10.5px;
-  text-transform: uppercase; letter-spacing: 0.06em;
+  display: inline-block; min-width: 86px; font-family: var(--display);
+  font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
 }
 .chain-label { font-weight: 600; }
-.chain-hop > div { margin-left: 74px; font-size: 12px; }
+.chain-hop > div { margin-left: 86px; font-size: 12px; }
 
 /* ---- call paths (I3f): every hop marked exact, inferred, or sbom ---- */
 .callpath { margin-top: 4px; overflow-wrap: anywhere; }
 .hop-exact { color: var(--evidenced); }
-/* the weak link, drawn differently rather than footnoted */
 .hop-inferred { color: var(--unevidenced); font-weight: 700; }
-/* a hop the code graph never saw — declared by a package manifest (S1-2) */
-.hop-sbom { color: var(--accent); font-weight: 700; }
+.hop-sbom { color: var(--link); font-weight: 700; }
 .hop-unmarked { color: var(--text-faint); }
 
-/* ---- tooling health (J5): how each tool resolves, live and per run ---- */
+/* ---- tooling health (J5) ---- */
 .tooling { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 2px; }
 .tool-card {
-  border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px;
-  font-size: 12px; min-width: 190px; background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 2px; padding: 8px 11px;
+  font-size: 12px; min-width: 190px; background: rgb(3 7 14 / 0.6);
 }
 .tool-card .tool-name { font-weight: 600; }
 .tool-card.tool-changed { border-color: var(--unevidenced); }
 
-/* ---- the board hop (J3): conclusion → the machinery that produced it ---- */
+/* ---- the board hop (J3) ---- */
 .runhop {
   font-size: 12px; white-space: nowrap; margin-right: 10px;
-  color: var(--text-dim); text-decoration: none;
-  border-bottom: 1px dotted var(--border);
+  color: var(--text-dim); border-bottom: 1px dotted var(--rule-strong);
 }
-.runhop:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.runhop:hover { color: var(--link); border-bottom-color: var(--link); text-decoration: none; }
 
-/* An arrival notice: what this page was asked to show, and when it cannot,
-   why. Reads as an answer, not an error — the fact is usually benign. */
+/* an arrival notice: an answer, not an error */
 .notice {
-  padding: 9px 12px; margin: 0 0 12px; font-size: 12.5px;
-  color: var(--text-dim); background: var(--bg-raised);
-  border: 1px solid var(--border); border-left: 3px solid var(--accent);
-  border-radius: 6px;
+  padding: 10px 14px; margin: 0 0 14px; font-size: 12.5px;
+  color: var(--text-dim); background: rgb(8 22 38 / 0.7);
+  border: 1px solid color-mix(in srgb, var(--link) 35%, var(--rule));
+  border-radius: 3px;
 }
 
-/* ---- state pills ---- */
-.pill {
-  display: inline-block; padding: 1px 9px; border-radius: 999px;
-  font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em;
-  border: 1px solid transparent; white-space: nowrap;
-}
-.pill.evidenced { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 45%, transparent); background: color-mix(in srgb, var(--evidenced) 12%, transparent); }
-.pill.violated { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 45%, transparent); background: color-mix(in srgb, var(--violated) 12%, transparent); }
-.pill.unevidenced { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 45%, transparent); background: color-mix(in srgb, var(--unevidenced) 12%, transparent); }
-.pill.notApplicable { color: var(--na); border-color: color-mix(in srgb, var(--na) 45%, transparent); background: color-mix(in srgb, var(--na) 12%, transparent); }
-.pill.live { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 45%, transparent); }
-.pill.dead { color: var(--text-dim); border-color: var(--border); }
-
-/* ---- the domain a verdict was reached over (N0-T1) ----
-   A pass over an empty domain is TRUE and nearly worthless, and until N0 it
-   wore the same green badge as an exhaustive search. It does not any more:
-   the population rides the pill, and an empty one is drawn as the warning it
-   is rather than left for the reader to discover on the evidence page. */
-.pill.population { color: var(--text-dim); border-color: var(--border); font-weight: 500; }
-.pill.population.empty-domain {
-  color: var(--unevidenced); font-weight: 700;
-  border-color: color-mix(in srgb, var(--unevidenced) 55%, transparent);
-  background: color-mix(in srgb, var(--unevidenced) 12%, transparent);
-}
-
-/* ---- collector runtime pills (J2): a skip is the loudest fact ---- */
-.pill.runtime-skipped { color: var(--unevidenced); font-weight: 700; border-color: var(--unevidenced); background: color-mix(in srgb, var(--unevidenced) 16%, transparent); }
-.pill.runtime-cache-hit { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
-.pill.runtime-docker { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-.pill.runtime-binary { color: var(--evidenced); border-color: color-mix(in srgb, var(--evidenced) 35%, transparent); }
-.pill.runtime-absent { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 45%, transparent); }
-.pill.runtime-pure { color: var(--text-dim); border-color: var(--border); }
-
-/* ---- action queue tiers (I2a): divergence loudest, then down the ranks ---- */
-.pill.qkind-divergence { color: var(--violated); font-weight: 700; border-color: var(--violated); background: color-mix(in srgb, var(--violated) 18%, transparent); }
-.pill.qkind-expiring { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 45%, transparent); background: color-mix(in srgb, var(--unevidenced) 12%, transparent); }
-.pill.qkind-new-violation { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 45%, transparent); background: color-mix(in srgb, var(--violated) 12%, transparent); }
-.pill.qkind-actionable-unevidenced { color: var(--unevidenced); border-color: color-mix(in srgb, var(--unevidenced) 30%, transparent); }
-
-/* ---- filters / tabs ---- */
-.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
-.tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+/* ---- filters, tabs, controls ---- */
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.tabs { display: inline-flex; border: 1px solid var(--edge); border-radius: 3px; overflow: hidden; }
 .tabs button {
-  background: transparent; color: var(--text-dim); border: none; padding: 5px 12px;
-  font: inherit; font-size: 13px; cursor: pointer; border-right: 1px solid var(--border);
+  background: transparent; color: var(--text-dim); border: none; padding: 6px 13px;
+  font: inherit; font-size: 13px; cursor: pointer; border-right: 1px solid var(--rule-strong);
 }
 .tabs button:last-child { border-right: none; }
-.tabs button.active { background: var(--bg-hover); color: var(--text); font-weight: 600; }
-.tabs button .count { color: var(--text-faint); margin-left: 5px; font-size: 11.5px; }
-select, input[type="text"], textarea {
-  background: var(--bg-raised); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 9px; font: inherit; font-size: 13px;
+.tabs button:hover { color: var(--text); }
+.tabs button.active {
+  background: color-mix(in srgb, var(--thermo) 12%, transparent); color: var(--text); font-weight: 600;
+  box-shadow: inset 0 -1px 0 var(--thermo);
 }
+.tabs button .count { color: var(--text-faint); margin-left: 6px; font-family: var(--mono); font-size: 10.5px; font-stretch: 80%; }
+
+select, input[type="text"], input[type="email"], input[type="password"], textarea, input[type="datetime-local"] {
+  background: rgb(3 7 14 / 0.75); color: var(--text); border: 1px solid var(--edge);
+  border-radius: 2px; padding: 6px 10px; font: inherit; font-size: 13px;
+}
+select:hover, input:hover, textarea:hover { border-color: var(--text-faint); }
 textarea { width: 100%; font-family: inherit; resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+
 button.btn {
-  background: var(--bg-hover); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 13px; font: inherit; font-size: 13px; cursor: pointer;
+  background: transparent; color: var(--text); border: 1px solid var(--edge);
+  border-radius: 2px; padding: 5px 13px;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 500; line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out);
 }
-button.btn:hover { border-color: var(--text-faint); }
-button.btn.primary { background: #1f6feb; border-color: #1f6feb; color: #fff; }
-button.btn.danger { color: var(--violated); }
-button.btn:disabled { opacity: 0.5; cursor: default; }
+button.btn:hover { border-color: var(--text-dim); background: var(--shelf); }
+/* the one affirmative act in a flow: lit in the you-are-here colour */
+button.btn.primary {
+  background: var(--thermo); border-color: var(--thermo); color: #021016;
+  font-family: var(--display); font-size: 14.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 15px;
+}
+button.btn.primary:hover { background: #5ce4ef; border-color: #5ce4ef; }
+button.btn.danger { color: var(--violated); border-color: color-mix(in srgb, var(--violated) 45%, transparent); }
+button.btn:disabled { opacity: 0.45; cursor: default; }
+
+/* a button that reads as a link: an in-page toggle is a button, not an anchor */
+button.linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--link); cursor: pointer; }
+button.linkish:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---- clock ---- */
-.clockbar { position: relative; height: 6px; border-radius: 3px; background: var(--bg-hover); overflow: hidden; min-width: 140px; }
-.clockbar > div { position: absolute; inset: 0 auto 0 0; border-radius: 3px; }
+.clockbar { position: relative; height: 4px; border-radius: 0; background: var(--rule-strong); overflow: hidden; min-width: 140px; margin-top: 6px; }
+.clockbar > div { position: absolute; inset: 0 auto 0 0; }
 .clock-fresh > div { background: var(--evidenced); }
 .clock-expiring > div { background: var(--unevidenced); }
 .clock-expired > div { background: var(--violated); }
-.remaining { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.remaining { font-family: var(--mono); font-size: 12px; font-stretch: 82%; white-space: nowrap; }
 .remaining.expired { color: var(--violated); font-weight: 700; }
 .remaining.expiring { color: var(--unevidenced); font-weight: 600; }
 
 /* ---- drift ---- */
-.drift-day { margin: 22px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
-.drift-event { display: flex; gap: 12px; padding: 9px 12px; border-bottom: 1px solid var(--border); align-items: baseline; }
+.drift-day {
+  margin: 26px 0 8px; font-family: var(--display); font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint);
+}
+.drift-event { display: flex; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--rule); align-items: baseline; }
 .drift-event:last-child { border-bottom: none; }
-.drift-kind { width: 118px; flex: none; font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-.drift-kind.born { color: var(--evidenced); }
+.drift-kind {
+  width: 124px; flex: none; font-family: var(--display); font-size: 14px; font-weight: 800;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.drift-kind.born { color: var(--text); }
 .drift-kind.died { color: var(--violated); }
-.drift-kind.verdict-flipped { color: var(--unevidenced); }
+.drift-kind.verdict-flipped { color: var(--text); }
 .drift-kind.scoped { color: var(--na); }
 
 /* ---- detail ---- */
-.kv { display: grid; grid-template-columns: 170px 1fr; gap: 6px 16px; padding: 14px 16px; }
-.kv dt { color: var(--text-faint); font-size: 12.5px; }
-.kv dd { margin: 0; overflow-wrap: anywhere; }
-.section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); margin: 26px 0 8px; font-weight: 700; }
-.assertion-pass { color: var(--evidenced); font-family: var(--mono); }
-.assertion-fail { color: var(--violated); font-family: var(--mono); }
-pre.raw {
-  background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px;
-  padding: 14px; overflow-x: auto; font-size: 12px; line-height: 1.45;
+.kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px 18px; padding: 16px 18px; }
+.kv dt {
+  color: var(--text-faint); font-family: var(--display); font-size: 13.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.07em;
 }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.assertion-pass { color: var(--evidenced); font-family: var(--mono); font-stretch: 82%; }
+.assertion-fail { color: var(--violated); font-family: var(--mono); font-stretch: 82%; }
+pre.raw {
+  background: var(--well); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 16px; overflow-x: auto; font-family: var(--mono); font-stretch: 82%;
+  font-size: 11.5px; line-height: 1.55;
+}
+/* the command well: sits BELOW the page field, because it is the thing you
+   take away and run on your own machine */
 .copycmd {
-  display: block; background: #0a0e13; border: 1px solid var(--border); border-radius: 6px;
-  padding: 8px 12px; font-family: var(--mono); font-size: 12.5px; color: var(--text);
+  display: block; background: var(--well);
+  border: 1px solid var(--rule-strong); border-radius: 2px;
+  padding: 10px 14px; font-family: var(--mono); font-stretch: 82%; font-size: 12px; color: var(--text);
   overflow-x: auto; white-space: pre;
 }
 
 /* ---- login ---- */
-.login-card { max-width: 380px; margin: 80px auto; padding: 28px; }
-.login-card h1 { margin-bottom: 16px; }
-.login-card label { display: block; margin: 12px 0 4px; color: var(--text-dim); font-size: 13px; }
+.login-card { max-width: 400px; margin: 90px auto; padding: 32px; }
+.login-card h1 { margin-bottom: 18px; }
+.login-card label {
+  display: block; margin: 14px 0 5px; color: var(--text-faint);
+  font-family: var(--display); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;
+}
 .login-card input { width: 100%; }
-.login-card .hint { margin-top: 16px; font-size: 12.5px; color: var(--text-faint); line-height: 1.6; }
-
-.error { color: var(--violated); font-size: 13px; margin-top: 10px; }
-.empty { padding: 28px; text-align: center; color: var(--text-faint); }
-.badge-count { color: var(--text-faint); font-weight: 400; }
+.login-card .hint { margin-top: 18px; font-size: 12.5px; color: var(--text-faint); line-height: 1.6; }
 
 /* ---- the plain-language layer (K1) ----
-   Authored operator English about the CHECK, never about the row's verdict —
-   which is why it is set apart from the computed values around it rather than
-   woven into them. The board keeps it collapsed (one row per recipe, opened on
-   demand); the evidence page shows all three parts; the queue takes the "fix"
-   sentence only. */
+   Authored operator English about the CHECK, never the row's verdict, which
+   is why it sits apart from the computed values around it. */
 .plainbtn {
   background: none; border: none; padding: 0 8px 0 0; cursor: pointer;
   color: var(--text-faint); font: inherit; font-size: 12px; line-height: 1;
 }
-.plainbtn:hover { color: var(--accent); }
+.plainbtn:hover { color: var(--link); }
 .plain-row > td {
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 12px 12px;
+  background: rgb(3 7 14 / 0.55);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 18px 16px;
 }
-.plain dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+.plain dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; }
 .plain dt {
-  color: var(--text-faint); font-size: 11.5px; text-transform: uppercase;
-  letter-spacing: 0.06em; padding-top: 2px;
+  color: var(--text-faint); font-family: var(--display); font-weight: 700; font-size: 13px;
+  text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1px;
 }
-.plain dd { margin: 0; color: var(--text-dim); font-size: 13px; line-height: 1.65; max-width: 74ch; }
+.plain dd { margin: 0; color: var(--text-dim); font-size: 13.5px; line-height: 1.65; max-width: 72ch; }
 .plain-src { margin-top: 10px; color: var(--text-faint); font-size: 11.5px; }
 
-/* ---- glossary on hover (K1) ----
-   A word with an entry gets a dotted underline and a popover; a word without
-   one is rendered by the component as bare text and never reaches this CSS. */
+/* ---- glossary on hover (K1) ---- */
 .term {
   border-bottom: 1px dotted var(--text-faint); cursor: help;
   position: relative; outline-offset: 2px;
 }
-.term:hover, .term:focus-visible { border-bottom-color: var(--accent); }
+.term:hover, .term:focus-visible { border-bottom-color: var(--thermo); }
 .termtip {
   position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
   width: max-content; max-width: 340px;
-  background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px;
-  padding: 8px 10px; font-size: 12.5px; line-height: 1.55;
+  background: var(--raised); border: 1px solid var(--rule-strong); border-radius: 3px;
+  padding: 9px 11px; font-family: var(--sans); font-size: 12.5px; line-height: 1.55;
   color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: normal;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); white-space: normal;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.55);
+  white-space: normal;
 }
 .termtip b { color: var(--text); }
 
-/* ---- guided empty states (K1 over J1) ----
-   Why an unevidenced row is empty, in the run record's own words. Sits under
-   the row like the violated row's fix pointers, and reads as a diagnosis
-   rather than a verdict — the cell is still unevidenced either way. */
+/* ---- guided empty states (K1 over J1) ---- */
 .why-row > td {
-  background: color-mix(in srgb, var(--unevidenced) 5%, transparent);
-  border-bottom: 1px solid var(--border);
-  padding: 8px 12px 10px; font-size: 12.5px; line-height: 1.6;
+  background: color-mix(in srgb, var(--unevidenced) 6%, transparent);
+  border-bottom: 1px solid var(--rule);
+  padding: 9px 14px 11px; font-size: 12.5px; line-height: 1.6;
 }
 .why-reason { color: var(--text-dim); }
 .why-action { color: var(--text); }
 .why-src { color: var(--text-faint); }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
 /* ---- print (I3e) ----
-   The evidence page is the auditor's takeaway when a tar is one step too many:
-   a printed page must carry the facts that make the claim checkable — digest,
-   commit, dataset pin, tool versions, assertions and their offenders — and
-   nothing that only works on a screen. Truncation is a screen affordance;
-   on paper it is a missing fact, so overflow containers are unwrapped and
-   scroll boxes are allowed to run to as many pages as they need. CSS only,
-   deliberately: a PDF service is deferred by name. */
+   A printed page carries the facts that make the claim checkable and nothing
+   that only works on a screen. Truncation is a screen affordance; on paper it
+   is a missing fact. */
 @media print {
   html, body {
-    background: #fff; color: #000;
+    background: #fff !important; color: #000;
     font-size: 11pt;
   }
-  /* chrome that cannot mean anything on paper */
-  .nav, .btn, button, .filters, .strip, .diff-strip, .asof-strip { display: none !important; }
-  /* a basename is a screen convenience; paper states the path it stands for */
+  .nav, .rail, .btn, button, .filters, .strip, .diff-strip, .asof-strip { display: none !important; }
+  .shell { display: block; }
+  .page { max-width: none; padding: 0; }
+  h1 { font-size: 20pt; }
   .repo-name[data-full]::after { content: " (" attr(data-full) ")"; font-size: 9pt; color: #444; }
-  .shell { max-width: none; margin: 0; padding: 0; }
   a { color: #000; text-decoration: none; }
-  /* the URL behind a link is the reader's only way back */
   a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444; }
-  /* the hop's href IS the run id — on paper the link text alone says nothing,
-     and the a[href] rule above turns it into a stated fact */
-  .panel, pre.raw, .copycmd, .notice {
+  a.cell::after { content: none; }
+  .cell, .clockbar > div, .gapseg {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .cell { border: 1px solid #000 !important; }
+  .posture-numeral .met { color: #000 !important; }
+  .panel, pre.raw, .copycmd, .notice, .posture {
     background: #fff; border: 1px solid #999; border-radius: 0;
     color: #000;
-    /* every truncation on screen is a withheld fact on paper */
     overflow: visible !important; white-space: pre-wrap !important; word-break: break-all;
     break-inside: auto;
   }
+  .posture-numeral .met, .posture-numeral .total, .gauge-value { color: #000; text-shadow: none; }
   .muted, .faint, .subtitle { color: #333; }
   .mono, code, pre { font-size: 9.5pt; }
   .pill {
@@ -443,26 +772,8 @@ pre.raw {
   table { break-inside: auto; }
   tr { break-inside: avoid; }
   .section-title { break-after: avoid; }
-  /* an OPEN artifact table is content and prints; its scroll box is a screen
-     affordance, and a cut-off table on paper is a withheld fact (J4) */
   .artifact-scroll { overflow: visible !important; max-height: none !important; }
-  /* K1: the plain-language paragraphs are part of the takeaway — a reader
-     holding the printout should not need this console to know what the check
-     was. The glossary is the opposite: a popover that only exists on hover
-     cannot print, and a dotted underline on paper points at nothing. */
   .plain, .plain dd, .why-row > td { color: #000; }
   .termtip { display: none !important; }
   .term { border-bottom: none; }
 }
-
-/* a button that reads as a link: an in-page toggle is a button, not an anchor
-   (the a11y rule the lint gate holds the console to on touch) */
-button.linkish {
-  background: none;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  color: var(--accent);
-  cursor: pointer;
-}
-button.linkish:hover { text-decoration: underline; }
