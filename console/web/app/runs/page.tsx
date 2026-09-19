@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { CloudRuns } from "../../components/CloudRuns";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
+import { useRepoScope } from "../../lib/scope";
 import { useCollection } from "../../lib/pb";
 import { producedByRun, toolHealth } from "../../lib/provenance";
 import type { ProducedEvidence, ToolHealth } from "../../lib/provenance";
@@ -58,7 +59,6 @@ function Runs() {
   //                                     collector's skip reason lives
   const linkedScan = params.get("scan");
   const linkedCollector = params.get("collector");
-  const linkedRepo = params.get("repo");
   const runs = useCollection<ScanRunRecord>("scan_runs", { sort: "-run_timestamp" });
   const meta = useCollection<MetaRecord>("meta");
   // the chain's back edge (J5): which signed statements each collector of a
@@ -66,13 +66,17 @@ function Runs() {
   // no verdict is read here and none is rendered, so this page still states
   // no conclusions about the board.
   const bundles = useCollection<BundleRecord>("bundles");
-  const [repo, setRepo] = useState(linkedRepo ?? "all");
   const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
 
   const metaRow = meta.records[0];
   const sorted = useMemo(() => sortRuns(runs.records), [runs.records]);
-  const repos = useMemo(() => [...new Set(sorted.map((r) => r.repo))].sort(), [sorted]);
-  const filtered = repo === "all" ? sorted : sorted.filter((r) => r.repo === repo);
+  // The console's repo scope (U-R5), with one exception: a link that names a
+  // scan and no repo is about THAT scan, so it scopes to the scan's repo
+  // rather than hiding it behind the default one.
+  const scope = useRepoScope();
+  const linkedRun = linkedScan ? sorted.find((r) => r.run_id === linkedScan) : undefined;
+  const repo = scope.explicit !== null ? scope.repo : (linkedRun?.repo ?? scope.repo);
+  const filtered = repo === null ? sorted : sorted.filter((r) => r.repo === repo);
 
   // Which run the arrival expands. A named scan wins; otherwise a hop that
   // named only a collector resolves to the newest run on screen — sortRuns
@@ -124,16 +128,6 @@ function Runs() {
       <CloudRuns />
 
 
-      {repos.length > 1 && (
-        <div className="filters">
-          <select value={repo} onChange={(e) => setRepo(e.target.value)}>
-            <option value="all">all repos</option>
-            {repos.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        </div>
-      )}
 
       {/* arriving from a board hop (J3): say what this page was asked to show
           and, when it cannot show it, why — never leave the reader to infer it
@@ -152,10 +146,11 @@ function Runs() {
           The bundle itself is unaffected: it verifies offline exactly as before.
         </p>
       )}
-      {linkedRepo !== null && linkedCollector !== null && !runs.loading && filtered.length > 0 && (
+      {/* the unevidenced hop (J3) names a repo and a collector but no scan */}
+      {linkedScan === null && repo !== null && linkedCollector !== null && !runs.loading && filtered.length > 0 && (
         <p className="notice">
           no run produced that board cell — showing the newest recorded scan of{" "}
-          <span className="mono">{linkedRepo}</span>
+          <RepoName repo={repo} className="mono" />
           {linkedCollectorAbsent ? (
             <>
               , which never dispatched{" "}
@@ -211,7 +206,7 @@ function Runs() {
               <RunRow
                 key={run.id}
                 run={run}
-                showRepo={repos.length > 1 && repo === "all"}
+                showRepo={repo === null}
                 open={expanded.get(run.run_id) ?? run.run_id === openRunId}
                 linkedCollector={run.run_id === openRunId ? linkedCollector : null}
                 produced={produced}
@@ -298,9 +293,16 @@ function RunRow({
         <td className="faint">{open ? "▾" : "▸"}</td>
         <td>
           {new Date(run.run_timestamp).toLocaleString()}
-          {showRepo && <div className="faint">{run.repo}</div>}
+          {showRepo && (
+            <div className="faint">
+              <RepoName repo={run.repo} />
+            </div>
+          )}
         </td>
-        <td className="mono">{run.commit_sha.slice(0, 12)}</td>
+        <td>
+          {/* this row IS the scan that read the commit */}
+          <EntityLink kind="commit" sha={run.commit_sha} />
+        </td>
         <td className="mono faint">{run.trigger_kind}</td>
         <td className="muted">{formatRunDuration(run.duration_ms)}</td>
         <td>
@@ -315,7 +317,7 @@ function RunRow({
         </td>
         <td className="mono" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           {/* the run record itself — signed, addressable, verifiable offline */}
-          <Link href={`/evidence/${run.digest}`}>{run.digest.slice(0, 12)}</Link>
+          <EntityLink kind="evidence" digest={run.digest} className="" />
         </td>
       </tr>
       {open && (
@@ -326,6 +328,7 @@ function RunRow({
               linkedCollector={linkedCollector}
               runId={run.run_id}
               produced={produced}
+              repo={run.repo}
             />
           </td>
         </tr>
@@ -339,17 +342,19 @@ function CollectorTable({
   linkedCollector,
   runId,
   produced,
+  repo,
 }: {
   collectors: CollectorRunRecord[];
   linkedCollector: string | null;
   runId: string;
   produced: Map<string, ProducedEvidence[]>;
+  repo: string;
 }) {
   const rows = useMemo(() => sortCollectors(collectors), [collectors]);
   return (
     <>
       <div className="faint" style={{ fontSize: 12, margin: "2px 0 8px" }}>
-        run <span className="mono">{runId}</span> — skipped collectors first, because a skip is why
+        run <span className="mono" data-entity="run">{runId}</span> — skipped collectors first, because a skip is why
         a board cell is unevidenced
       </div>
       <table className="reg subtable" data-run={runId}>
@@ -372,6 +377,7 @@ function CollectorTable({
               c={c}
               linked={c.collector === linkedCollector}
               produced={produced.get(`${runId}\n${c.collector}`) ?? []}
+              repo={repo}
             />
           ))}
         </tbody>
@@ -384,10 +390,12 @@ function CollectorRow({
   c,
   linked,
   produced,
+  repo,
 }: {
   c: CollectorRunRecord;
   linked: boolean;
   produced: ProducedEvidence[];
+  repo: string;
 }) {
   const [showArgv, setShowArgv] = useState(linked);
   const kind = runtimeKind(c);
@@ -483,10 +491,8 @@ function CollectorRow({
         {produced.length > 0 ? (
           produced.map((e) => (
             <div key={e.digest} style={{ fontSize: 12 }}>
-              <Link href={`/evidence/${e.digest}`} className="mono">
-                {e.recipeId}
-              </Link>{" "}
-              <span className="mono faint">{e.digest.slice(0, 12)}</span>
+              <EntityLink kind="check" recipe={e.recipeId} repo={repo} />{" "}
+              <EntityLink kind="evidence" digest={e.digest} className="mono faint" />
             </div>
           ))
         ) : (

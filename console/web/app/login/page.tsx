@@ -39,6 +39,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="username"
+          // biome-ignore lint/a11y/noAutofocus: the page is this one form; the cursor belongs in its first field
           autoFocus
         />
         <label htmlFor="password">Password</label>

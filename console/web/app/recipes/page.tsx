@@ -121,6 +121,7 @@ function Board() {
   // the diff is computed server-side by the SAME code the CLI runs
   // (computeBoardDiff — two as-of folds of the ledger). Refetched whenever
   // the projection moves, so the badges never describe a stale board.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: projectedAt is the refetch trigger, not an input
   useEffect(() => {
     if (!since) {
       setDiffData(null);
@@ -197,7 +198,7 @@ function Board() {
       <div className="filters">
         <div className="tabs">
           {STATES.map((s) => (
-            <button
+            <button type="button"
               key={s.key}
               className={state === s.key ? "active" : ""}
               onClick={() => setState(s.key)}
@@ -222,7 +223,7 @@ function Board() {
           ))}
         </select>
         {!historical && (
-          <button
+          <button type="button"
             className={`btn${since ? " primary" : ""}`}
             onClick={() => {
               setSince(since ? null : "previous");
@@ -245,7 +246,7 @@ function Board() {
               ))}
           </select>
         )}
-        <button
+        <button type="button"
           className={`btn${historical ? " primary" : ""}`}
           onClick={() => {
             // the two lenses on the past are exclusive: turning the as-of
@@ -283,7 +284,7 @@ function Board() {
             )}
           </>
         )}
-        <button
+        <button type="button"
           className="btn"
           title="the rows on screen, filters and as-of instant included"
           disabled={filtered.length === 0}
@@ -488,6 +489,9 @@ function RegisterRowView({
         id={`recipe-${row.recipe_id}`}
         className={`${open ? "rowlink" : ""} ${linked ? "linked" : ""}`}
         onClick={open}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") open?.();
+        }}
       >
         <td>
           <span className={`pill ${row.state}`}>
@@ -549,7 +553,7 @@ function RegisterRowView({
         <td className="muted">
           {row.fresh_as_of ? `${formatAge(row.fresh_as_of)} ago` : "—"}
         </td>
-        <td onClick={(e) => e.stopPropagation()}>
+        <td onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           {/* K1: authored operator English about the check, one click away and
               beside the row's other question ("how was this produced?").
               Rendered only where the catalog carries it — a recipe that left
@@ -558,7 +562,7 @@ function RegisterRowView({
               recipe cell is a click target and an accessible name that other
               surfaces match on, and a button inside it would change both. */}
           {row.plain && (
-            <button
+            <button type="button"
               className="plainbtn"
               aria-expanded={explaining}
               title="what this check means, in plain English"
@@ -571,7 +575,7 @@ function RegisterRowView({
               for an empty row, which run failed to produce it */}
           <RunHopLink row={row} historical={historical} />
           {row.state === "unevidenced" && !historical && (
-            <button className="btn" onClick={() => setProposing((p) => !p)}>
+            <button type="button" className="btn" onClick={() => setProposing((p) => !p)}>
               propose N/A
             </button>
           )}
@@ -584,7 +588,7 @@ function RegisterRowView({
       </tr>
       {explaining && row.plain && (
         <tr className="plain-row">
-          <td colSpan={cols} onClick={(e) => e.stopPropagation()}>
+          <td colSpan={cols} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <PlainLanguage plain={row.plain} recipeId={row.recipe_id} />
           </td>
         </tr>
@@ -594,13 +598,17 @@ function RegisterRowView({
           changes it — this cell is unevidenced with or without the sentence. */}
       {why && (
         <tr className="why-row">
-          <td colSpan={cols} onClick={(e) => e.stopPropagation()}>
+          <td colSpan={cols} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <span className="why-reason">{why.reason}</span>{" "}
             {why.action !== "" && <span className="why-action">→ {why.action}</span>}{" "}
             <span className="why-src">
-              {why.runId
-                ? `read from the run record of ${why.runId}`
-                : "read from this projection's run records"}
+              {why.runId ? (
+                <>
+                  read from the run record of <EntityLink kind="run" scan={why.runId} className="" />
+                </>
+              ) : (
+                "read from this projection's run records"
+              )}
               {why.actionable ? "" : " · not a task — recorded so the empty row is not a mystery"}
             </span>
           </td>
@@ -608,7 +616,7 @@ function RegisterRowView({
       )}
       {proposing && (
         <tr>
-          <td colSpan={cols} onClick={(e) => e.stopPropagation()}>
+          <td colSpan={cols} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <ProposeForm row={row} done={() => setProposing(false)} />
           </td>
         </tr>
@@ -616,10 +624,16 @@ function RegisterRowView({
       {row.state === "violated" && ((row.pointers?.length ?? 0) > 0 || row.introducing_commit) && (
         // the fix pointers (I2c): where the violation lives + when it arrived,
         // on the row itself — the evidence page has the full offender list
-        <tr className={open ? "rowlink" : ""} onClick={open}>
+        <tr
+          className={open ? "rowlink" : ""}
+          onClick={open}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") open?.();
+          }}
+        >
           <td colSpan={cols} className="pointer-row" style={{ fontSize: 12.5 }}>
-            {(row.pointers ?? []).map((p, i) => (
-              <span key={i} className="mono pointer">
+            {(row.pointers ?? []).map((p) => (
+              <span key={describePointer(p)} className="mono pointer">
                 {describePointer(p)}
               </span>
             ))}
@@ -687,14 +701,14 @@ function ProposeForm({ row, done }: { row: RegisterRecord; done: () => void }) {
         onChange={(e) => setJustification(e.target.value)}
       />
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-        <button
+        <button type="button"
           className="btn primary"
           disabled={busy || justification.trim().length === 0}
           onClick={submit}
         >
           file proposal
         </button>
-        <button className="btn" onClick={done}>
+        <button type="button" className="btn" onClick={done}>
           cancel
         </button>
       </div>

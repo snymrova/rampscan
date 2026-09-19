@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { csvFilename, downloadText, scopingCsv } from "../../lib/export";
 import { getPb, useCollection } from "../../lib/pb";
@@ -151,13 +151,13 @@ function DecisionView({ row }: { row: ScopingRegisterRow }) {
         >
           {row.decision === "approved" ? "scoped out" : row.decision}
         </span>{" "}
-        <span className="mono">{row.recipeId}</span>{" "}
-        <span className="muted">on {row.repo}</span>{" "}
+        <EntityLink kind="check" recipe={row.recipeId} repo={row.repo} />{" "}
+        <span className="muted">
+          on <RepoName repo={row.repo} />
+        </span>{" "}
         {signature && <span className={`pill ${signature.pill}`}>{signature.label}</span>}{" "}
         {row.digest && (
-          <Link className="mono faint" href={`/evidence/${row.digest}`}>
-            {row.digest.slice(0, 16)}…
-          </Link>
+          <EntityLink kind="evidence" digest={row.digest} className="mono faint" />
         )}
       </div>
       <div style={{ margin: "6px 0" }}>“{row.justification}”</div>
@@ -179,24 +179,10 @@ function DecisionView({ row }: { row: ScopingRegisterRow }) {
               ? "kept in scope:"
               : "would remove from scope:"}{" "}
           {row.ksiIds.map((k) => (
-            <Link
-              key={k}
-              className="mono"
-              href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`}
-              style={{ marginRight: 8 }}
-            >
-              {k}
-            </Link>
+            <EntityLink key={k} kind="ksi" id={k} repo={row.repo} style={{ marginRight: 8 }} />
           ))}
           {row.controlIds.map((c) => (
-            <Link
-              key={c}
-              className="mono"
-              href={`/controls?reg=controls&id=${encodeURIComponent(c)}`}
-              style={{ marginRight: 8 }}
-            >
-              {c}
-            </Link>
+            <EntityLink key={c} kind="control" id={c} style={{ marginRight: 8 }} />
           ))}
         </div>
       )}

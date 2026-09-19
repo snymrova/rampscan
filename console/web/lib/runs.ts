@@ -1,3 +1,4 @@
+import { runHref } from "./links";
 import type { CollectorRunRecord, ScanRunRecord, ToolResolutionRecord } from "./types";
 
 // The run view (plan J2): pure derivations over the projected `scan_runs`
@@ -145,14 +146,13 @@ export function runHop(row: {
   // nothing to point at: no run produced it and the catalog names no collector
   if (!row.run_id && !row.collector) return null;
 
-  const q = new URLSearchParams();
-  if (row.run_id) q.set("scan", row.run_id);
-  else q.set("repo", row.repo);
-  if (row.collector) q.set("collector", row.collector);
-
   const unevidenced = !row.run_id;
   return {
-    href: `/runs?${q.toString()}`,
+    href: runHref(
+      row.run_id
+        ? { scan: row.run_id, collector: row.collector }
+        : { repo: row.repo, collector: row.collector },
+    ),
     label: unevidenced ? "why is this empty?" : "how was this produced?",
     title: unevidenced
       ? row.collector

@@ -10,6 +10,7 @@ import {
   ksiHref,
   repoLabel,
   runHref,
+  withScope,
 } from "../lib/links";
 import { useRepoScope } from "../lib/scope";
 
@@ -23,7 +24,8 @@ import { useRepoScope } from "../lib/scope";
 // one navigation for two.
 
 export type Entity =
-  | { kind: "ksi"; id: string }
+  /** `repo`, when the mention belongs to one repo (a proposal, a clock row), opens the board there */
+  | { kind: "ksi"; id: string; repo?: string }
   | { kind: "check"; recipe: string; repo: string }
   | { kind: "evidence"; digest: string }
   | { kind: "artifact"; digest: string }
@@ -36,7 +38,11 @@ const short = (digest: string) => (digest.length > 16 ? `${digest.slice(0, 12)}â
 function target(entity: Entity, scoped: (href: string) => string): { href: string | null; text: string; title: string } {
   switch (entity.kind) {
     case "ksi":
-      return { href: scoped(ksiHref(entity.id)), text: entity.id, title: `open ${entity.id} on the board` };
+      return {
+        href: entity.repo ? withScope(ksiHref(entity.id), entity.repo) : scoped(ksiHref(entity.id)),
+        text: entity.id,
+        title: `open ${entity.id} on the board`,
+      };
     case "check":
       return {
         href: checkHref(entity.recipe, entity.repo),
@@ -69,10 +75,12 @@ export function EntityLink({
   children,
   className = "mono",
   style,
+  title,
   ...entity
-}: Entity & { children?: ReactNode; className?: string; style?: CSSProperties }) {
+}: Entity & { children?: ReactNode; className?: string; style?: CSSProperties; title?: string }) {
   const { scoped } = useRepoScope();
   const t = target(entity as Entity, scoped);
+  if (title !== undefined) t.title = title;
   // a commit with no known scan is the one entity with nowhere to go; it is
   // still marked, so the walk knows it was considered and not forgotten
   if (t.href === null) {

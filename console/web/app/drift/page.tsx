@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
+import { useRepoScope } from "../../lib/scope";
 import type { DriftRecord, VulnerabilityRecord } from "../../lib/types";
 
 // The drift view (SPEC §8.3): what died since the last window and why —
@@ -32,10 +33,16 @@ function describe(event: DriftRecord): string {
 }
 
 function Drift() {
-  const { records, loading } = useCollection<DriftRecord>("drift", { sort: "-at" });
-  const { records: vulnerabilities } = useCollection<VulnerabilityRecord>("vulnerabilities", {
+  const drift = useCollection<DriftRecord>("drift", { sort: "-at" });
+  const vulns = useCollection<VulnerabilityRecord>("vulnerabilities", {
     sort: "-detected_at",
   });
+  // the console's repo scope (U-R5); a row names its repo only under "all"
+  const { repo: scope } = useRepoScope();
+  const inScope = (r: { repo: string }) => scope === null || r.repo === scope;
+  const records = drift.records.filter(inScope);
+  const vulnerabilities = vulns.records.filter(inScope);
+  const loading = drift.loading;
 
   const byDay = new Map<string, DriftRecord[]>();
   for (const event of records) {
@@ -66,13 +73,20 @@ function Drift() {
             {open.map((v) => (
               <div className="drift-event" key={v.id}>
                 <span className="drift-kind verdict-flipped">open</span>
-                <span className="mono">
-                  <Link href={`/evidence/${v.bundle_digest}`}>{v.recipe_id}</Link>
-                </span>
+                <EntityLink kind="check" recipe={v.recipe_id} repo={v.repo} />
                 <span className="muted">
-                  {v.ksi_ids.join(" ")} — detected {new Date(v.detected_at).toLocaleString()}
+                  {v.ksi_ids.map((k) => (
+                    <EntityLink key={k} kind="ksi" id={k} repo={v.repo} style={{ marginRight: 6 }} />
+                  ))}
+                  — detected{" "}
+                  <EntityLink kind="evidence" digest={v.bundle_digest} className="">
+                    {new Date(v.detected_at).toLocaleString()}
+                  </EntityLink>
                 </span>
-                <span className="faint mono">at {v.commit_sha.slice(0, 12)}</span>
+                <span className="faint">
+                  at <EntityLink kind="commit" sha={v.commit_sha} />
+                </span>
+                {scope === null && <RepoName repo={v.repo} className="faint" />}
                 <span className="nav-spacer" />
               </div>
             ))}
@@ -94,15 +108,19 @@ function Drift() {
             {events.map((event) => (
               <div className="drift-event" key={event.id}>
                 <span className={`drift-kind ${event.kind}`}>{event.kind.replace("-", " ")}</span>
-                <span className="mono">
-                  <Link href={`/evidence/${event.bundle_digest}`}>{event.recipe_id}</Link>
-                </span>
+                <EntityLink kind="check" recipe={event.recipe_id} repo={event.repo} />
                 <span className="muted">{describe(event)}</span>
                 {event.killing_commit && (
-                  <span className="faint mono">by {event.killing_commit.slice(0, 12)}</span>
+                  <span className="faint">
+                    by <EntityLink kind="commit" sha={event.killing_commit} />
+                  </span>
                 )}
+                {scope === null && <RepoName repo={event.repo} className="faint" />}
                 <span className="nav-spacer" />
-                <span className="faint">{new Date(event.at).toLocaleTimeString()}</span>
+                {/* the bundle this movement is about, one level down */}
+                <EntityLink kind="evidence" digest={event.bundle_digest} className="faint">
+                  {new Date(event.at).toLocaleTimeString()}
+                </EntityLink>
               </div>
             ))}
           </div>

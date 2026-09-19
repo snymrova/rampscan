@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
+import { useRepoScope } from "../../lib/scope";
 import { formatDuration, windowClockState, windowLabel } from "../../lib/mvx";
 import type { GapRecord, MetaRecord, MethodRegisterRecord } from "../../lib/types";
 
@@ -30,10 +31,24 @@ export default function ClockPage() {
 }
 
 function Clock() {
-  const { records } = useCollection<MethodRegisterRecord>("method_registers", {
+  const all = useCollection<MethodRegisterRecord>("method_registers", {
     sort: "repo,ksi",
   });
-  const gaps = useCollection<GapRecord>("gaps", { sort: "repo,recipe_id,gap_start" });
+  const allGaps = useCollection<GapRecord>("gaps", { sort: "repo,recipe_id,gap_start" });
+  // the console's repo scope (U-R5): under one repo the column goes away
+  const { repo: scope } = useRepoScope();
+  const records = useMemo(
+    () => (scope === null ? all.records : all.records.filter((r) => r.repo === scope)),
+    [all.records, scope],
+  );
+  const gaps = useMemo(
+    () => ({
+      ...allGaps,
+      records: scope === null ? allGaps.records : allGaps.records.filter((g) => g.repo === scope),
+    }),
+    [allGaps, scope],
+  );
+  const showRepo = scope === null;
   const meta = useCollection<MetaRecord>("meta");
   const [now, setNow] = useState(() => Date.now());
 
@@ -90,7 +105,7 @@ function Clock() {
               <th style={{ width: 180 }}>Window</th>
               <th>KSI</th>
               <th>Method</th>
-              <th>Repo</th>
+              {showRepo && <th>Repo</th>}
               <th>State</th>
               <th>Fresh as of</th>
             </tr>
@@ -111,26 +126,40 @@ function Clock() {
                     {windowLabel(cell.window!)} · {cell.clock}
                   </div>
                 </td>
-                <td className="mono">{ksi}</td>
+                <td>
+                  <EntityLink kind="ksi" id={ksi} repo={repo} />
+                </td>
                 <td className="mono">
-                  {cell.bundleDigest ? (
-                    <Link href={`/evidence/${cell.bundleDigest}`}>
-                      {cell.recipeId ?? cell.methodId}
-                    </Link>
+                  {/* the method is its recipe's cell on this repo (L3); the
+                      evidence that started its clock is in the last column */}
+                  {cell.recipeId ? (
+                    <EntityLink kind="check" recipe={cell.recipeId} repo={repo} />
                   ) : (
-                    (cell.recipeId ?? cell.methodId)
+                    cell.methodId
                   )}
                 </td>
-                <td className="muted">{repo}</td>
+                {showRepo && (
+                  <td className="muted">
+                    <RepoName repo={repo} />
+                  </td>
+                )}
                 <td>
                   <span className={`pill ${cell.state}`}>{cell.state}</span>
                 </td>
-                <td className="muted">{new Date(cell.freshAsOf!).toLocaleString()}</td>
+                <td className="muted">
+                  {cell.bundleDigest ? (
+                    <EntityLink kind="evidence" digest={cell.bundleDigest} className="">
+                      {new Date(cell.freshAsOf!).toLocaleString()}
+                    </EntityLink>
+                  ) : (
+                    new Date(cell.freshAsOf!).toLocaleString()
+                  )}
+                </td>
               </tr>
             ))}
             {live.length === 0 && (
               <tr>
-                <td colSpan={7} className="empty">
+                <td colSpan={showRepo ? 7 : 6} className="empty">
                   no live evidence yet — scan something
                 </td>
               </tr>
@@ -144,6 +173,7 @@ function Clock() {
         loading={gaps.loading}
         error={gaps.error}
         projectedAt={meta.records[0]?.projected_at}
+        showRepo={showRepo}
       />
     </>
   );
@@ -161,11 +191,13 @@ function GapTimeline({
   loading,
   error,
   projectedAt,
+  showRepo,
 }: {
   gaps: GapRecord[];
   loading: boolean;
   error: string | null;
   projectedAt: string | undefined;
+  showRepo: boolean;
 }) {
   const cells = useMemo(() => {
     const map = new Map<string, GapRecord[]>();
@@ -230,7 +262,7 @@ function GapTimeline({
               <thead>
                 <tr>
                   <th>Recipe</th>
-                  <th>Repo</th>
+                  {showRepo && <th>Repo</th>}
                   <th>Lapses</th>
                   <th>Lapsed total</th>
                   <th style={{ width: "38%" }}>Timeline</th>
@@ -243,8 +275,14 @@ function GapTimeline({
                   const cellOngoing = cellGaps.some((g) => g.ongoing);
                   return (
                     <tr key={key}>
-                      <td className="mono">{first.recipe_id}</td>
-                      <td className="muted">{first.repo}</td>
+                      <td>
+                        <EntityLink kind="check" recipe={first.recipe_id} repo={first.repo} />
+                      </td>
+                      {showRepo && (
+                        <td className="muted">
+                          <RepoName repo={first.repo} />
+                        </td>
+                      )}
                       <td>
                         {cellGaps.length}
                         {cellOngoing && <span className="pill violated" style={{ marginLeft: 8 }}>ongoing</span>}
@@ -261,9 +299,10 @@ function GapTimeline({
                                   domain.span) *
                                 100;
                               return (
-                                <Link
+                                <EntityLink
                                   key={gap.id}
-                                  href={`/evidence/${gap.bundle_digest}`}
+                                  kind="evidence"
+                                  digest={gap.bundle_digest}
                                   className={`gapseg${gap.ongoing ? " ongoing" : ""}`}
                                   style={{ left: `${left}%`, width: `${Math.max(width, 0.75)}%` }}
                                   title={`${new Date(gap.gap_start).toLocaleString()} → ${
@@ -271,7 +310,9 @@ function GapTimeline({
                                       ? "ongoing"
                                       : new Date(gap.gap_end).toLocaleString()
                                   } · lapsed ${formatDuration(gap.duration_ms)} — the bundle whose window closed`}
-                                />
+                                >
+                                  {""}
+                                </EntityLink>
                               );
                             })}
                         </div>
@@ -279,11 +320,11 @@ function GapTimeline({
                           {cellGaps.map((gap, i) => (
                             <span key={gap.id}>
                               {i > 0 && " · "}
-                              <Link href={`/evidence/${gap.bundle_digest}`}>
+                              <EntityLink kind="evidence" digest={gap.bundle_digest} className="">
                                 {new Date(gap.gap_start).toLocaleDateString()}{" "}
                                 {formatDuration(gap.duration_ms)}
                                 {gap.ongoing ? " (ongoing)" : ""}
-                              </Link>
+                              </EntityLink>
                             </span>
                           ))}
                         </div>

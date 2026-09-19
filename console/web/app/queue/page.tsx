@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { useCollection } from "../../lib/pb";
+import { useRepoScope } from "../../lib/scope";
 import { formatAge } from "../../lib/mvx";
 import { deriveActionQueue } from "../../lib/queue";
 import type { QueueItem, QueueKind } from "../../lib/queue";
@@ -53,6 +54,9 @@ function Queue() {
   }, []);
 
   const certClass = meta.records[0]?.settings?.certClass ?? "b";
+  // the console's repo scope (U-R5): the queue is derived whole, then read
+  // through the scope, so its ranking never depends on what is filtered
+  const { repo: scope } = useRepoScope();
   const items = useMemo(
     () =>
       deriveActionQueue({
@@ -64,7 +68,7 @@ function Queue() {
         now,
       }),
     [registers.records, drift.records, events.records, runs.records, certClass, now],
-  );
+  ).filter((i) => scope === null || i.repo === scope);
   const loading = registers.loading || drift.loading || events.loading || runs.loading;
   const count = (kind: QueueKind) => items.filter((i) => i.kind === kind).length;
 
@@ -96,18 +100,23 @@ function Queue() {
             <tr>
               <th>Priority</th>
               <th>What</th>
-              <th>Repo</th>
+              {scope === null && <th>Repo</th>}
               <th>Since</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, i) => (
-              <QueueRow key={`${item.kind} ${item.repo} ${item.recipeIds.join(",")} ${i}`} item={item} now={now} />
+              <QueueRow
+                key={`${item.kind} ${item.repo} ${item.recipeIds.join(",")} ${i}`}
+                item={item}
+                now={now}
+                showRepo={scope === null}
+              />
             ))}
             {!loading && items.length === 0 && (
               <tr>
-                <td colSpan={5} className="empty">
+                <td colSpan={scope === null ? 5 : 4} className="empty">
                   nothing to act on — the board is fresh, verified, and quiet
                 </td>
               </tr>
@@ -119,8 +128,7 @@ function Queue() {
   );
 }
 
-function QueueRow({ item, now }: { item: QueueItem; now: number }) {
-  const recipes = item.recipeIds.join(" ");
+function QueueRow({ item, now, showRepo }: { item: QueueItem; now: number; showRepo: boolean }) {
   return (
     <tr>
       <td>
@@ -128,17 +136,26 @@ function QueueRow({ item, now }: { item: QueueItem; now: number }) {
       </td>
       <td>
         <div>{item.title}</div>
-        <div className="mono faint">
-          {item.bundleDigest ? (
-            <Link href={`/evidence/${item.bundleDigest}`}>{recipes}</Link>
-          ) : (
-            recipes
-          )}
+        <div className="faint">
+          {item.recipeIds.map((r) => (
+            <EntityLink key={r} kind="check" recipe={r} repo={item.repo} style={{ marginRight: 8 }} />
+          ))}
         </div>
       </td>
-      <td className="muted">{item.repo}</td>
+      {showRepo && (
+        <td className="muted">
+          <RepoName repo={item.repo} />
+        </td>
+      )}
       <td className="muted" title={new Date(item.at).toLocaleString()}>
-        {formatAge(item.at, now)} ago
+        {/* the bundle the item stands on, when there is one: one level down */}
+        {item.bundleDigest ? (
+          <EntityLink kind="evidence" digest={item.bundleDigest} className="">
+            {formatAge(item.at, now)} ago
+          </EntityLink>
+        ) : (
+          <>{formatAge(item.at, now)} ago</>
+        )}
       </td>
       <td>
         {item.detail && <div className="muted" style={{ fontSize: 12.5 }}>{item.detail}</div>}
