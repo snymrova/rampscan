@@ -124,16 +124,16 @@ function Registers() {
 
       <div className="filters">
         <div className="tabs">
-          <button className={reg === "controls" ? "active" : ""} onClick={() => setReg("controls")}>
+          <button type="button" className={reg === "controls" ? "active" : ""} onClick={() => setReg("controls")}>
             Controls<span className="count">{regCount(controlRows)}</span>
           </button>
-          <button className={reg === "ksis" ? "active" : ""} onClick={() => setReg("ksis")}>
+          <button type="button" className={reg === "ksis" ? "active" : ""} onClick={() => setReg("ksis")}>
             KSIs<span className="count">{regCount(ksiRows)}</span>
           </button>
         </div>
         <div className="tabs">
           {STATES.map((s) => (
-            <button
+            <button type="button"
               key={s.key}
               className={state === s.key ? "active" : ""}
               onClick={() => setState(s.key)}
@@ -143,7 +143,7 @@ function Registers() {
             </button>
           ))}
         </div>
-        <button
+        <button type="button"
           className={`btn${historical ? " primary" : ""}`}
           onClick={() => setAsOf(historical ? null : new Date().toISOString())}
         >
@@ -175,7 +175,7 @@ function Registers() {
             )}
           </>
         )}
-        <button
+        <button type="button"
           className="btn"
           title="the rollup rows on screen, filters and as-of instant included"
           disabled={filtered.length === 0}
@@ -394,7 +394,7 @@ function RecipeSubRow({
           "no bundle"
         )}
       </td>
-      <td onClick={(e) => e.stopPropagation()}>
+      <td onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         {/* the same hop the board carries (J3) — an unevidenced recipe under a
             control is exactly the row whose "why" the auditor asks about */}
         {register && <RunHopLink row={register} historical={historical} />}

@@ -108,6 +108,7 @@ function Queue() {
           <tbody>
             {items.map((item, i) => (
               <QueueRow
+                // biome-ignore lint/suspicious/noArrayIndexKey: two items may share kind, repo and recipes; the rank order is the identity
                 key={`${item.kind} ${item.repo} ${item.recipeIds.join(",")} ${i}`}
                 item={item}
                 now={now}

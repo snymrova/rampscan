@@ -225,10 +225,10 @@ function AttestationProposalView({
       </div>
       {canDecide && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          <button className="btn primary" disabled={busy} onClick={() => decide("approve")}>
+          <button type="button" className="btn primary" disabled={busy} onClick={() => decide("approve")}>
             {busy ? "signing…" : "approve & sign"}
           </button>
-          <button className="btn danger" disabled={busy} onClick={() => decide("reject")}>
+          <button type="button" className="btn danger" disabled={busy} onClick={() => decide("reject")}>
             reject
           </button>
         </div>
@@ -287,10 +287,10 @@ function JudgmentProposalView({
       </div>
       {canDecide && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          <button className="btn primary" disabled={busy} onClick={() => decide("approve")}>
+          <button type="button" className="btn primary" disabled={busy} onClick={() => decide("approve")}>
             {busy ? "signing…" : "approve & sign"}
           </button>
-          <button className="btn danger" disabled={busy} onClick={() => decide("reject")}>
+          <button type="button" className="btn danger" disabled={busy} onClick={() => decide("reject")}>
             reject
           </button>
         </div>
@@ -348,10 +348,10 @@ function ProposalView({
       </div>
       {canDecide && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          <button className="btn primary" disabled={busy} onClick={() => decide("approve")}>
+          <button type="button" className="btn primary" disabled={busy} onClick={() => decide("approve")}>
             {busy ? "signing…" : "approve & sign"}
           </button>
-          <button className="btn danger" disabled={busy} onClick={() => decide("reject")}>
+          <button type="button" className="btn danger" disabled={busy} onClick={() => decide("reject")}>
             reject
           </button>
         </div>

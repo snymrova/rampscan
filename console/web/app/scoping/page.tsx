@@ -56,6 +56,7 @@ function Scoping() {
   const meta = useCollection<MetaRecord>("meta");
   const projectedAt = meta.records[0]?.projected_at;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: both are refetch triggers — a decision or a re-projection moves the register
   useEffect(() => {
     let cancelled = false;
     fetch("/api/scoping/register", {
@@ -90,7 +91,7 @@ function Scoping() {
       <div className="filters">
         <div className="tabs">
           {DECISIONS.map((d) => (
-            <button
+            <button type="button"
               key={d.key}
               className={filter === d.key ? "active" : ""}
               onClick={() => setFilter(d.key)}
@@ -102,7 +103,7 @@ function Scoping() {
             </button>
           ))}
         </div>
-        <button
+        <button type="button"
           className="btn"
           title="the decisions on screen, this filter included"
           disabled={filtered.length === 0}

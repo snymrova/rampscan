@@ -82,6 +82,7 @@ function CallPath({ path, marks }: { path: string; marks?: Array<"exact" | "infe
   return (
     <div className="callpath mono">
       {hops.map((h, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: a call path's hops are positional and never reorder
         <span key={i}>
           {i > 0 && (
             <span
@@ -607,6 +608,7 @@ function Evidence({ digest }: { digest: string }) {
                 runsLoaded: runCount !== null,
                 runCount: runCount ?? 0,
               }).map((hop, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: the chain's hops are positional and never reorder
                 <li key={i} className={`chain-hop${hop.missing ? " chain-missing" : ""}`}>
                   <span className="chain-kind faint">{hop.kind}</span>
                   <span className="chain-label mono">
@@ -635,6 +637,7 @@ function Evidence({ digest }: { digest: string }) {
             <table className="reg">
               <tbody>
                 {assertions.map((a, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: assertions are the signed predicate's own order
                   <tr key={i}>
                     <td style={{ width: 40 }} className={a.passed ? "assertion-pass" : "assertion-fail"}>
                       {a.passed ? "PASS" : "FAIL"}
@@ -661,6 +664,7 @@ function Evidence({ digest }: { digest: string }) {
                         // pointer, bounded — the count says what was cut
                         <>
                           {a.offenders.map((o, j) => (
+                            // biome-ignore lint/suspicious/noArrayIndexKey: offenders are the signed predicate's own order
                             <div key={j} className="mono" style={{ marginTop: 4 }}>
                               {describePointer(o)}
                               {/* describePointer falls back to the call path only when the
@@ -680,7 +684,7 @@ function Evidence({ digest }: { digest: string }) {
                         </>
                       ) : (
                         // pre-I2c bundle: the example row in the prose is all it carries
-                        callPathsIn(a.detail).map((p, j) => <CallPath key={j} path={p} />)
+                        callPathsIn(a.detail).map((p) => <CallPath key={p} path={p} />)
                       )}
                     </td>
                   </tr>
@@ -708,10 +712,10 @@ function Evidence({ digest }: { digest: string }) {
             </tr>
           </thead>
           <tbody>
-            {bundle.statement.subject.map((s, i) => {
+            {bundle.statement.subject.map((s) => {
               const isAnchor = anchorPaths.has(s.name);
               return (
-                <tr key={i}>
+                <tr key={`${s.name} ${s.digest["sha256"] ?? ""}`}>
                   <td className="mono">{s.name}</td>
                   <td className="faint">{isAnchor ? "anchor — drift here kills this evidence" : "artifact"}</td>
                   <td className="mono faint">{s.digest["sha256"]}</td>
