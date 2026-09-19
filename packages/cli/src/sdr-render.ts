@@ -154,6 +154,9 @@ export function renderSdrMarkdown(document: Obj, jsonSha256: string): string {
     }
   }
 
+  // ---- historical metrics (R3.3) ------------------------------------------
+  out.push(...renderMetrics(obj(x["metrics"]), ksis));
+
   // ---- rules ----------------------------------------------------------------
   out.push("## FedRAMP rules (SDR-CSO-FRR)", "");
   out.push("### Declared by the offering", "");
@@ -197,4 +200,57 @@ export function renderSdrMarkdown(document: Obj, jsonSha256: string): string {
     "",
   );
   return out.join("\n");
+}
+
+/** one window's cell: covered days, days per status, and the last status */
+function windowCell(w: Obj): string {
+  const covered = Number(w["daysCovered"] ?? 0);
+  const total = Number(w["daysInWindow"] ?? 0);
+  if (covered === 0) return `0 of ${total} days covered | — | —`;
+  const d = obj(w["statusDays"]);
+  return `${covered} of ${total} | ${Number(d["Implemented"] ?? 0)} / ${Number(d["Partially Implemented"] ?? 0)} / ${Number(d["Not Implemented"] ?? 0)} | ${cell(str(w["lastStatus"], "—"))}`;
+}
+
+/**
+ * SDR-CSX-KMT's summaries as one table. The daily data stays in the JSON; a
+ * year of it per KSI is for a machine, and the table says where it is.
+ */
+function renderMetrics(m: Obj, ksis: readonly Obj[]): string[] {
+  const out: string[] = ["## Historical metrics (SDR-CSX-KMT)", ""];
+  if (Object.keys(m).length === 0) {
+    out.push("*None: this record carries no historical metrics.*", "");
+    return out;
+  }
+  const perKsi = obj(m["ksis"]);
+  out.push(
+    `${str(m["divergence"])}`,
+    "",
+    `${str(m["basis"])}`,
+    "",
+    `The series reaches from ${str(m["from"], "?")} to ${str(m["to"], "?")} (${Number(m["reachDays"] ?? 0)} days; ${str(m["dayBoundary"])}). ${
+      str(m["coveredFrom"]) !== ""
+        ? `The first covered day is ${str(m["coveredFrom"])}.`
+        : "**No day is covered:** the ledger holds no scan of this offering in reach."
+    } ${
+      m["dailyIncluded"] === true
+        ? "Every covered day's data is in the JSON under `x-rampscan.metrics.ksis.<id>.daily`, as runs of days with identical metrics."
+        : "The daily data is not included at this class."
+    }`,
+    "",
+    "Days per status are Implemented / Partially Implemented / Not Implemented.",
+    "",
+    "| KSI | Past 30 days: covered | Days per status | Last | Past year: covered | Days per status | Last |",
+    "|---|---|---|---|---|---|---|",
+  );
+  for (const k of ksis) {
+    const id = str(k["ksiId"]);
+    const row = obj(perKsi[id]);
+    if (Object.keys(row).length === 0) {
+      out.push(`| ${id} | *not computed* | | | | | |`);
+      continue;
+    }
+    out.push(`| ${id} | ${windowCell(obj(row["past30Days"]))} | ${windowCell(obj(row["pastYear"]))} |`);
+  }
+  out.push("");
+  return out;
 }

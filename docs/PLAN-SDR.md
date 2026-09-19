@@ -144,7 +144,7 @@ The schema has no *verification* slot, while `SDR-CSX-KSI` items 3–4 and `SDR-
 - `unaddressedRules` and `optionalKsis`
 - the conformance stamp
 
-Historical metrics are **not** in R2. They land in R3.3 (#108) in this same block, with the divergence stated and FedRAMP/schemas#10 cited.
+Historical metrics are **not** in R2. They land in R3.3 (#108) in this same block, with the divergence stated and FedRAMP/schemas#10 cited. *As built (2026-09-18): landed as `x-rampscan.metrics`; see `docs/PLAN-HISTORY.md`.*
 
 ### Field map
 

@@ -11,6 +11,7 @@ import {
 } from "@rampscan/dataset";
 import { OfferingConfig } from "@rampscan/schema";
 import { buildSecurityDecisionRecord, type SdrBuildInput } from "../src/sdr-build.js";
+import { completedDays, metricsBlock, type KsiDayMetric, type SdrMetrics } from "../src/sdr-metrics.js";
 
 // Shared by the SDR's builder and renderer tests (R2.1, R2.2): one synthetic
 // offering, one register row per KSI on request, and the pinned catalog and
@@ -160,3 +161,34 @@ export const ksiRow = (doc: Record<string, unknown>, id: string) =>
 export const ruleRow = (doc: Record<string, unknown>, id: string) =>
   (doc["fedRampRequirements"] as Record<string, unknown>[]).find((r) => r["frrID"] === id);
 
+
+/**
+ * A metrics block (R3.3) over the catalog's KSIs: a year of days ending
+ * before AT, covered for the last `coveredDays`, every KSI Partially
+ * Implemented except that the last five days are Implemented. Built through
+ * the real `metricsBlock`, so the fixture cannot drift from the shape.
+ */
+export async function metricsFixture(cls = "b", coveredDays = 40): Promise<SdrMetrics> {
+  const { catalog } = await sources();
+  const days = completedDays(AT, 365);
+  const day = (status: KsiDayMetric["status"]): KsiDayMetric => ({
+    status,
+    methodsInScope: 1,
+    methodsPassing: 1,
+    violatedMethods: 0,
+    staleMethods: status === "Implemented" ? 0 : 1,
+    automatedWithEvidence: 1,
+    artifactsPresent: 5,
+  });
+  const metrics = days.map((_, i) =>
+    i < days.length - coveredDays ? undefined : day(i >= days.length - 5 ? "Implemented" : "Partially Implemented"),
+  );
+  return metricsBlock(
+    {
+      days,
+      ...(coveredDays > 0 ? { coveredFrom: days[days.length - coveredDays]! } : {}),
+      byKsi: new Map(catalog.ksis.map((k) => [k.id, metrics])),
+    },
+    cls,
+  );
+}

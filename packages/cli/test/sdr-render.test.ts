@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { optionalKsis } from "@rampscan/dataset";
 import { SDR_DIGEST_LINE, renderSdrMarkdown } from "../src/sdr-render.js";
-import { artifacts, built, hex, input, offering, row, sources } from "./sdr-fixture.js";
+import { artifacts, built, hex, input, metricsFixture, offering, row, sources } from "./sdr-fixture.js";
 
 // R2.2 (#103, docs/PLAN-SDR.md D3). The human-readable half is a function of
 // the JSON object alone, so these tests hand it a document, not a projection.
@@ -113,9 +113,26 @@ describe("sdr markdown — an empty slot stays empty", () => {
   });
 });
 
+describe("sdr markdown — historical metrics (R3.3)", () => {
+  it("has a metrics row for exactly the JSON's KSI rows", async () => {
+    const doc = await written({ metrics: await metricsFixture("b") });
+    const md = renderSdrMarkdown(doc, DIGEST);
+    const section = md.slice(md.indexOf("## Historical metrics"), md.indexOf("## FedRAMP rules"));
+    const ids = section.split("\n").filter((l) => /^\| KSI-/.test(l)).map((l) => l.split("|")[1]!.trim());
+    expect(ids).toEqual((doc["keySecurityIndicators"] as Record<string, unknown>[]).map((k) => k["ksiId"]));
+    expect(section).toContain("| 30 of 30 | 5 / 25 / 0 | Implemented | 40 of 365 | 5 / 35 / 0 | Implemented |");
+  });
+
+  it("says there are none rather than printing an empty table", async () => {
+    const md = renderSdrMarkdown(await written(), DIGEST);
+    expect(md).toContain("*None: this record carries no historical metrics.*");
+  });
+});
+
 describe("sdr markdown — the golden reading", () => {
   it("matches the reviewed rendering of the fixture", async () => {
     const doc = await written({
+      metrics: await metricsFixture("b"),
       offering: offering({ ruleCoverage: coverage }),
       methodRegisters: await obligedRows({ ksi: "KSI-SVC-SIN", present: [2, 3, 4, 5] }),
     });

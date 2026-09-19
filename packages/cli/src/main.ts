@@ -38,6 +38,7 @@ import {
   probeTrustCenter,
 } from "./trust-center-probe.js";
 import { readSdrCoverage, type SdrCoverage } from "./sdr.js";
+import { daySeries, metricsBlock, reachDays } from "./sdr-metrics.js";
 import { renderSdr, writeSecurityDecisionRecord } from "./sdr-run.js";
 import { loadOffering } from "./offering.js";
 import { mintComputedArtifact } from "./artifacts.js";
@@ -155,7 +156,10 @@ function usage(): never {
       "                    per KSI the class obliges, carrying its signed artifact bodies, its",
       "                    derived tests and its live evidence, and one row per FedRAMP rule the",
       "                    offering's ruleCoverage declares. An undeclared rule gets no row and is",
-      "                    named. Needs offering.report.certificationPackageOverviewUri. Lands in",
+      "                    named. Historical metrics (R3, SDR-CSX-KMT) ride x-rampscan.metrics: the",
+      "                    30-day and one-year summaries, and at class c/d the daily data, each",
+      "                    day refolded from the ledger. Needs",
+      "                    offering.report.certificationPackageOverviewUri. Lands in",
       "                    <out>/exports/fedramp/; --as-of folds at a past instant for identical",
       "                    bytes. Exits 1 on a nonconforming document (FRC-CSO-JSN)",
       "  conformance [path]  the package conformance check (plan Q5.2 — G10, FRC-CSO-JSN):",
@@ -993,7 +997,9 @@ async function main(): Promise<void> {
       const sdrRules = await loadRuleRegister(rulesFile, datasetPin);
       const sdrRecipes = await loadRecipes(recipesDir);
       const sdrLedger = createLocalLedger(ledgerDir);
-      const sdrProjection = await createProjector({
+      // one set of fold options for the record's projection AND its day folds
+      // (R3), so the history is computed by the same rule as the current row
+      const sdrFold = {
         recipes: sdrRecipes,
         methods: deriveCatalogMethods(
           sdrRecipes,
@@ -1004,6 +1010,9 @@ async function main(): Promise<void> {
         historyFloorMonths: sdrCatalog.historyFloors[sdrClass].months,
         machineWindow: sdrCatalog.windows[sdrClass],
         nonMachineWindow: sdrCatalog.nonMachineWindow,
+      };
+      const sdrProjection = await createProjector({
+        ...sdrFold,
         ...(sdrAsOfIso !== undefined ? { asOf: sdrAsOfIso, now: () => new Date(sdrAsOfIso) } : {}),
       }).fold(sdrLedger);
       const sdrRepos = [...new Set(sdrProjection.methodRegisters.map((r) => r.repo))].sort();
@@ -1014,8 +1023,9 @@ async function main(): Promise<void> {
         process.exit(1);
       }
       const sdrRepo = values.repo ?? sdrRepos[0];
+      const sdrEntries = await sdrLedger.list();
       // the newest statement the fold read, so the record names its ledger state
-      const sdrHead = (await sdrLedger.list())
+      const sdrHead = sdrEntries
         .filter((e) => sdrAsOfIso === undefined || e.bundle.predicate.timestamp <= sdrAsOfIso)
         .reduce<{ digest: string; at: string } | undefined>(
           (best, e) =>
@@ -1024,6 +1034,21 @@ async function main(): Promise<void> {
               : best,
           undefined,
         );
+      // SDR-CSX-KMT (R3, docs/PLAN-HISTORY.md): one refold per completed day
+      const sdrMetrics =
+        sdrRepo === undefined
+          ? undefined
+          : metricsBlock(
+              daySeries({
+                entries: sdrEntries,
+                fold: sdrFold,
+                repo: sdrRepo,
+                ksiIds: sdrFold.ksiIds,
+                asOf: sdrProjection.projectedAt,
+                reachDays: reachDays(sdrProjection.projectedAt, sdrFold.historyFloorMonths),
+              }),
+              sdrClass,
+            );
       const sdrResult = await writeSecurityDecisionRecord({
         schemaRoot: REPO_ROOT,
         exportsDir: join(values.out ?? "./rampscan-out", "exports", "fedramp"),
@@ -1041,6 +1066,7 @@ async function main(): Promise<void> {
           (r) => sdrRepo === undefined || r.repo === sdrRepo,
         ),
         ruleRegister: sdrRules,
+        ...(sdrMetrics !== undefined ? { metrics: sdrMetrics } : {}),
       });
       if (values.json) console.log(JSON.stringify(sdrResult, null, 2));
       else console.log(renderSdr(sdrResult));

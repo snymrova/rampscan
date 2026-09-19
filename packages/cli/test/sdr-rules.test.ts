@@ -9,7 +9,7 @@ import { SDR_SCHEMA } from "../src/fedramp-schemas.js";
 import { renderSdrMarkdown } from "../src/sdr-render.js";
 import { checkSdrRules, rulesMet, type SdrRuleInput } from "../src/sdr-rules.js";
 import { omittedRules } from "../src/sdr.js";
-import { built, input, root, sources } from "./sdr-fixture.js";
+import { built, input, metricsFixture, root, sources } from "./sdr-fixture.js";
 
 // R2.3 (#104, docs/PLAN-SDR.md §5). The rule verdict beside the schema verdict.
 // What these pin:
@@ -137,6 +137,21 @@ describe("sdr rules — KMT by class", () => {
     expect(atC?.verdict).toBe("unmet");
     expect(atC?.detail).toContain("FedRAMP/schemas#10");
     expect(verdictOf(checkSdrRules(await base({ document: doc, offeringClass: "a" })), "SDR-CSX-KMT", "historical metrics")).toBeUndefined();
+  });
+
+  it("stays unmet when carried, and says what is carried and what is missing (R3.3)", async () => {
+    const { catalog } = await sources();
+    const doc = built(
+      await input({ offeringClass: "c", optionalKsis: optionalKsis(catalog, "c"), metrics: await metricsFixture("c") }),
+    ).document;
+    const full = verdictOf(checkSdrRules(await base({ document: doc, offeringClass: "c" })), "SDR-CSX-KMT", "historical metrics");
+    expect(full?.verdict).toBe("unmet");
+    expect(full?.detail).toMatch(/the daily data for (\d+) of \1/);
+    expect(full?.detail).not.toContain("Missing for");
+    const ksis = ((doc["x-rampscan"] as Record<string, unknown>)["metrics"] as Record<string, Record<string, Record<string, unknown>>>)["ksis"]!;
+    delete ksis["KSI-SVC-SIN"]!["daily"];
+    const short = verdictOf(checkSdrRules(await base({ document: doc, offeringClass: "c" })), "SDR-CSX-KMT", "historical metrics");
+    expect(short?.detail).toContain("Missing for: KSI-SVC-SIN");
   });
 
   it("marks every per-class check unmeasured when no class is known", async () => {

@@ -272,3 +272,57 @@ export function expandRuns(runs: readonly KsiMetricRun[]): { day: string; metric
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// R3.3 — the block the record carries under x-rampscan.metrics (H6)
+// ---------------------------------------------------------------------------
+
+export interface KsiMetricsCarried extends KsiMetrics {
+  /** every covered day in reach, as runs; present at class c and d only */
+  daily?: KsiMetricRun[];
+}
+
+export interface SdrMetrics {
+  basis: string;
+  divergence: string;
+  dayBoundary: string;
+  /** the first and last day the series reaches, covered or not */
+  from: string;
+  to: string;
+  reachDays: number;
+  /** the first day with a status; absent when the ledger never scanned the offering in reach */
+  coveredFrom?: string;
+  dailyIncluded: boolean;
+  ksis: Record<string, KsiMetricsCarried>;
+}
+
+export const METRICS_BASIS =
+  "No FedRAMP rule defines a metric (FedRAMP/schemas#10, question 3). FRC-CSX-MOT names one, status from persistent validation, so a KSI's metric for a day is the ksiImplementationStatus rampscan would have computed at that day's end, plus the counts it was computed from (the statusBasis fields of the same names). Each day is refolded from the ledger, never accumulated, so the same ledger at the same instant yields the same bytes. A day before the offering's first scan is absent: it is counted in daysAbsent and given no status, never a zero.";
+
+export const METRICS_DIVERGENCE =
+  "SDR-CSX-KMT asks for these in the Security Decision Record, and the pinned schema has no field for them (FedRAMP/schemas#10). They are carried here, outside the schema, until FedRAMP names a place.";
+
+/** the block, from a series, at a class (H4–H6) */
+export function metricsBlock(series: KsiDaySeries, offeringClass: string): SdrMetrics {
+  const daily = dailyOwed(offeringClass);
+  const summaries = metricSummaries(series);
+  const ksis: Record<string, KsiMetricsCarried> = {};
+  for (const [ksi, metrics] of series.byKsi) {
+    ksis[ksi] = {
+      ...summaries[ksi]!,
+      ...(daily ? { daily: dailyRuns(series.days, metrics) } : {}),
+    };
+  }
+  const block: SdrMetrics = {
+    basis: METRICS_BASIS,
+    divergence: METRICS_DIVERGENCE,
+    dayBoundary: "UTC days; a day's metric is folded at its last millisecond, and only days that ended at or before the record's instant are included",
+    from: series.days[0]!,
+    to: series.days[series.days.length - 1]!,
+    reachDays: series.days.length,
+    dailyIncluded: daily,
+    ksis,
+  };
+  if (series.coveredFrom !== undefined) block.coveredFrom = series.coveredFrom;
+  return block;
+}
