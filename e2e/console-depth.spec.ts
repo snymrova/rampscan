@@ -138,9 +138,11 @@ test("U0: a signed-out deep link survives the sign-in", async ({ page }) => {
 
 // §6, the exit gate for the whole plan: the flagship violation's verify
 // command in four clicks from the posture block, and back up by breadcrumbs
-// alone. The posture block (U2), the KSI page (U1), the check page (U3) and
-// the breadcrumbs (U4) do not exist yet, so this fails today by design —
-// each phase makes more of it true, and U4 removes the marker.
+// alone. The posture block and its theme strata now exist (they landed with
+// the Depth Axis restyle); the KSI page (U1), the check page (U3) and the
+// breadcrumbs (U4) do not yet, so this fails today by design — each phase
+// makes more of it true, and U4 removes the marker. The steps not yet built
+// wait briefly, so the expected failure is quick, not a test timeout.
 test.fail("rabbit-hole: posture → theme → KSI → check → verify in four clicks, and back up", async ({ page }) => {
   await signIn(page);
   await scopeSelect(page).selectOption(FIXTURE_REPO);
@@ -149,8 +151,8 @@ test.fail("rabbit-hole: posture → theme → KSI → check → verify in four c
 
   await posture.getByRole("link", { name: /SCR/ }).first().click(); // 1: theme
   await page.getByRole("link", { name: "KSI-SCR-MON" }).click(); // 2: KSI
-  await page.getByRole("link", { name: FLAGSHIP }).first().click(); // 3: check
-  await page.getByRole("link", { name: /current bundle/ }).click(); // 4: bundle
+  await page.getByRole("link", { name: FLAGSHIP }).first().click({ timeout: 15_000 }); // 3: check
+  await page.getByRole("link", { name: /current bundle/ }).click({ timeout: 15_000 }); // 4: bundle
   await expect(page.locator(".verify-cmd")).toBeInViewport();
 
   for (const crumb of [FLAGSHIP, "KSI-SCR-MON", "SCR", "posture"]) {

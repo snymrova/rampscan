@@ -6,52 +6,61 @@ import { repoLabel } from "../lib/links";
 import { useAuth } from "../lib/pb";
 import { ALL_REPOS, useRepoScope } from "../lib/scope";
 
-const LINKS = [
-  { href: "/", label: "Board" },
-  { href: "/recipes", label: "Recipes" },
-  { href: "/queue", label: "Queue" },
-  { href: "/controls", label: "Controls" },
-  { href: "/scoping", label: "Scoping" },
-  { href: "/clock", label: "Clock" },
-  { href: "/drift", label: "Drift" },
-  { href: "/runs", label: "Runs" },
-  { href: "/approvals", label: "Approvals" },
+// The top bar: the repo scope first (it governs every page), then the
+// lenses in their groups (Plan U, D1). The levels themselves live on the
+// depth rail; the board keeps a link here because it is where work starts.
+const GROUPS: Array<{ label: string; links: Array<{ href: string; label: string }> }> = [
+  { label: "", links: [{ href: "/", label: "Board" }] },
+  {
+    label: "Work",
+    links: [
+      { href: "/queue", label: "Queue" },
+      { href: "/approvals", label: "Approvals" },
+    ],
+  },
+  {
+    label: "Time",
+    links: [
+      { href: "/clock", label: "Clock" },
+      { href: "/drift", label: "Drift" },
+    ],
+  },
+  {
+    label: "Record",
+    links: [
+      { href: "/recipes", label: "Recipes" },
+      { href: "/runs", label: "Runs" },
+      { href: "/scoping", label: "Scoping" },
+    ],
+  },
+  { label: "Audit", links: [{ href: "/controls", label: "Controls" }] },
 ];
 
 export function Nav() {
   const pathname = usePathname();
-  const { user, ready, signOut } = useAuth();
+  const { user, ready } = useAuth();
   const { scoped } = useRepoScope();
 
   return (
-    <nav className="nav">
-      <Link href={scoped("/")} className="nav-brand">
-        ramp<span>scan</span>
-      </Link>
-      {LINKS.map((link) => (
-        <Link
-          key={link.href}
-          href={scoped(link.href)}
-          className={`nav-link ${pathname === link.href ? "active" : ""}`}
-        >
-          {link.label}
-        </Link>
-      ))}
-      <div className="nav-spacer" />
+    <nav className="nav" aria-label="console">
       {ready && user && <RepoScopeSelect />}
-      {ready && user && (
-        <span className="nav-user">
-          <b>{user.email}</b> · {user.role || "no role"} ·{" "}
-          <a href="/login" onClick={signOut}>
-            sign out
-          </a>
-        </span>
-      )}
-      {ready && !user && (
-        <span className="nav-user">
-          <Link href="/login">sign in</Link>
-        </span>
-      )}
+      <div className="nav-groups">
+        {GROUPS.map((group) => (
+          <div key={group.label || "home"} className="nav-group">
+            {group.label && <span className="nav-group-label">{group.label}</span>}
+            {group.links.map((link) => (
+              <Link
+                key={link.href}
+                href={scoped(link.href)}
+                className={`nav-link ${pathname === link.href ? "active" : ""}`}
+                aria-current={pathname === link.href ? "page" : undefined}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </div>
     </nav>
   );
 }
@@ -66,6 +75,7 @@ function RepoScopeSelect() {
   if (repos.length === 0) return null;
   return (
     <label className="nav-scope" title={`repo scope: ${repo ?? "every scanned repo"}`}>
+      <span className="nav-scope-label">repo</span>
       <select
         aria-label="repo scope"
         value={repo ?? ALL_REPOS}

@@ -1,14 +1,17 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { CollectEvidence } from "../components/CollectEvidence";
 import { EntityLink, RepoName } from "../components/EntityLink";
+import { PostureBlock } from "../components/PostureBlock";
 import { RequireAuth } from "../components/guard";
 import { Term } from "../components/Term";
+import { themeHref } from "../lib/links";
 import { formatAge } from "../lib/mvx";
 import { getPb, useAuth, useCollection } from "../lib/pb";
+import { foldPosture } from "../lib/posture";
 import { useRepoScope } from "../lib/scope";
 import type {
   ArtifactCellRecord,
@@ -60,8 +63,12 @@ function KsiBoard() {
   const scope = useRepoScope();
   const repo = scope.repo ?? scope.fallback;
   // ?ksi= opens and scrolls to one row (U0) — until U1 gives a KSI its own page
-  const linkedKsi = useSearchParams().get("ksi");
-  const [themeFilter, setThemeFilter] = useState("all");
+  const params = useSearchParams();
+  const linkedKsi = params.get("ksi");
+  // ?theme= is L1: one stratum of the posture block, opened as the register
+  const router = useRouter();
+  const themeFilter = params.get("theme") ?? "all";
+  const setThemeFilter = (t: string) => router.push(scope.scoped(t === "all" ? "/" : themeHref(t)));
 
   const byKsi = useMemo(
     () => new Map(registers.records.filter((r) => r.repo === repo).map((r) => [r.ksi, r])),
@@ -89,6 +96,7 @@ function KsiBoard() {
   const optional = catalog.records.filter(isOptional);
   const obliged = catalog.records.filter((k) => !isOptional(k));
   const all = obliged.map((k) => byKsi.get(k.ksi));
+  const posture = foldPosture(catalog.records, byKsi, isOptional);
   const summary = {
     total: obliged.length,
     floorMet: all.filter((r) => r?.floor_met === true).length,
@@ -107,6 +115,15 @@ function KsiBoard() {
       </p>
 
       <DaemonStrip />
+
+      {catalog.records.length > 0 && (
+        <PostureBlock
+          posture={posture}
+          repo={repo}
+          certClass={certClass === "c" ? "c" : "b"}
+          focusTheme={themeFilter === "all" ? null : themeFilter}
+        />
+      )}
 
       <div className="filters">
         {catalog.records.length > 0 && (

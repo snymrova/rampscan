@@ -29,6 +29,15 @@ importers:
 
   console/web:
     dependencies:
+      '@fontsource-variable/big-shoulders':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource-variable/geist':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource-variable/martian-mono':
+        specifier: 5.3.0
+        version: 5.3.0
       '@rampscan/cli':
         specifier: workspace:*
         version: link:../../packages/cli
@@ -424,6 +433,15 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource-variable/big-shoulders@5.3.0':
+    resolution: {integrity: sha512-b6JtGj6cqvOO5RLuzqLOoiG1ojTHhM8hNDmqbwQXmWCcQumP0gzHXgYviAooZZWLtEvOoX/EHboa+6/Nx2n9ng==}
+
+  '@fontsource-variable/geist@5.3.0':
+    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
+
+  '@fontsource-variable/martian-mono@5.3.0':
+    resolution: {integrity: sha512-0wVODx9ILwNnaYC4XCuSaFRYtj1Prd89MRVaSuv2ng6zLiQkS4SepaWEPefs7vqCZS8sbEOA8jb/4F5KNMnGdg==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1261,6 +1279,12 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource-variable/big-shoulders@5.3.0': {}
+
+  '@fontsource-variable/geist@5.3.0': {}
+
+  '@fontsource-variable/martian-mono@5.3.0': {}
 
   '@img/colour@1.1.0':
     optional: true
