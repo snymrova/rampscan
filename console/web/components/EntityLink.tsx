@@ -31,7 +31,8 @@ export type Entity =
   | { kind: "artifact"; digest: string }
   | { kind: "run"; scan: string; collector?: string }
   | { kind: "commit"; sha: string; scan?: string }
-  | { kind: "control"; id: string };
+  /** `repo`, as for a KSI: the mention belongs to one repo's register */
+  | { kind: "control"; id: string; repo?: string };
 
 const short = (digest: string) => (digest.length > 16 ? `${digest.slice(0, 12)}…` : digest);
 
@@ -67,7 +68,11 @@ function target(entity: Entity, scoped: (href: string) => string): { href: strin
         title: entity.scan ? `commit ${entity.sha}, scanned by ${entity.scan}` : `commit ${entity.sha}`,
       };
     case "control":
-      return { href: controlHref(entity.id), text: entity.id, title: `open control ${entity.id}` };
+      return {
+        href: entity.repo ? withScope(controlHref(entity.id), entity.repo) : scoped(controlHref(entity.id)),
+        text: entity.id,
+        title: `open control ${entity.id}`,
+      };
   }
 }
 

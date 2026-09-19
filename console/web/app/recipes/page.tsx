@@ -547,7 +547,7 @@ function RegisterRowView({
         </td>
         <td className="mono faint">
           {row.control_ids.map((c) => (
-            <EntityLink key={c} kind="control" id={c} className="" style={{ marginRight: 8 }} />
+            <EntityLink key={c} kind="control" id={c} repo={row.repo} className="" style={{ marginRight: 8 }} />
           ))}
         </td>
         <td className="muted">

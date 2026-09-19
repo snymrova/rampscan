@@ -79,7 +79,7 @@ function Drift() {
                     <EntityLink key={k} kind="ksi" id={k} repo={v.repo} style={{ marginRight: 6 }} />
                   ))}
                   — detected{" "}
-                  <EntityLink kind="evidence" digest={v.bundle_digest} className="">
+                  <EntityLink kind="evidence" digest={v.bundle_digest} className="quiet">
                     {new Date(v.detected_at).toLocaleString()}
                   </EntityLink>
                 </span>
@@ -118,7 +118,7 @@ function Drift() {
                 {scope === null && <RepoName repo={event.repo} className="faint" />}
                 <span className="nav-spacer" />
                 {/* the bundle this movement is about, one level down */}
-                <EntityLink kind="evidence" digest={event.bundle_digest} className="faint">
+                <EntityLink kind="evidence" digest={event.bundle_digest} className="quiet faint">
                   {new Date(event.at).toLocaleTimeString()}
                 </EntityLink>
               </div>

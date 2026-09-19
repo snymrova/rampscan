@@ -399,7 +399,10 @@ function Evidence({ digest }: { digest: string }) {
         {isScanRun && <span className="pill">scan run · {p["trigger"]}</span>}{" "}
         {coverage && <span className={`pill ${coverage.state}`}>{coverage.state}</span>}
       </h1>
-      <p className="subtitle mono">{digest}</p>
+      {/* this bundle's own digest: the page IS the entity */}
+      <p className="subtitle mono" data-entity="evidence">
+        {digest}
+      </p>
       <p className="subtitle" style={{ marginTop: -14 }}>
         {/* what the bundle already carries (I3b), surfaced where an auditor
             lands — every value below is the signed predicate's own claim */}
@@ -466,7 +469,7 @@ function Evidence({ digest }: { digest: string }) {
               <dt>controls</dt>
               <dd className="mono">
                 {((p["control_ids"] as string[]) ?? []).map((c) => (
-                  <EntityLink key={c} kind="control" id={c} className="" style={{ marginRight: 10 }} />
+                  <EntityLink key={c} kind="control" id={c} repo={String(p["repo"])} className="" style={{ marginRight: 10 }} />
                 ))}
               </dd>
             </>
@@ -718,7 +721,10 @@ function Evidence({ digest }: { digest: string }) {
                 <tr key={`${s.name} ${s.digest["sha256"] ?? ""}`}>
                   <td className="mono">{s.name}</td>
                   <td className="faint">{isAnchor ? "anchor — drift here kills this evidence" : "artifact"}</td>
-                  <td className="mono faint">{s.digest["sha256"]}</td>
+                  {/* a subject's content hash; its bytes open inline in this row */}
+                  <td className="mono faint" data-entity="digest">
+                    {s.digest["sha256"]}
+                  </td>
                   <td>
                     {/* An anchor is the client's own source at the scanned
                         commit — this system does not serve it, and offering a
@@ -755,7 +761,10 @@ function Evidence({ digest }: { digest: string }) {
           {bundle.envelope && (
             <>
               <dt>key id</dt>
-              <dd className="mono">{bundle.envelope.signatures[0]?.keyid}</dd>
+              {/* the signer's key id: fetched with the public key below, no page of its own */}
+              <dd className="mono" data-entity="key">
+                {bundle.envelope.signatures[0]?.keyid}
+              </dd>
               <dt>signature</dt>
               <dd className="mono faint">{bundle.envelope.signatures[0]?.sig.slice(0, 64)}…</dd>
             </>

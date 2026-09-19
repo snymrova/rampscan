@@ -88,7 +88,7 @@ Each phase is a stacked PR, tested red first where it adds behaviour, with the P
   - `/?ksi=` scrolls to and opens a row, until U1 replaces it.
   - `/recipes?repo=&recipe=` highlights and opens a row.
   - `/login?next=` returns the reader where they were.
-- The global repo scope (U-R5), with the default being the repo with the newest scan. This fixes the fixture board opening on `bare-app`.
+- The global repo scope (U-R5), with the default being the repo with the newest scan. *Corrected while building U0:* on the smoke fixtures this still opens on `bare-app`, because the smoke scans it second, so it is the newest. The rule is right; the claim that it changes the fixture board was not.
 - Every existing bare id is turned into an `EntityLink`: `/approvals` entirely, the `/clock` KSI and method columns, CloudRuns, the drift feed, the `/evidence` run field and commit, and the "Runs page" text in `CollectEvidence`.
 - Shorter repo display: the basename, with the full path in `title` and in print.
 

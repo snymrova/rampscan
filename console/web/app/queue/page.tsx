@@ -129,6 +129,20 @@ function Queue() {
   );
 }
 
+/** the computed sentence, with the commit it names rendered as the entity it is (U-R2) */
+function Detail({ text, commit }: { text: string; commit?: string }) {
+  const short = commit?.slice(0, 12);
+  if (!commit || !short || !text.includes(short)) return <>{text}</>;
+  const [before, ...after] = text.split(short);
+  return (
+    <>
+      {before}
+      <EntityLink kind="commit" sha={commit} />
+      {after.join(short)}
+    </>
+  );
+}
+
 function QueueRow({ item, now, showRepo }: { item: QueueItem; now: number; showRepo: boolean }) {
   return (
     <tr>
@@ -151,7 +165,7 @@ function QueueRow({ item, now, showRepo }: { item: QueueItem; now: number; showR
       <td className="muted" title={new Date(item.at).toLocaleString()}>
         {/* the bundle the item stands on, when there is one: one level down */}
         {item.bundleDigest ? (
-          <EntityLink kind="evidence" digest={item.bundleDigest} className="">
+          <EntityLink kind="evidence" digest={item.bundleDigest} className="quiet">
             {formatAge(item.at, now)} ago
           </EntityLink>
         ) : (
@@ -159,7 +173,11 @@ function QueueRow({ item, now, showRepo }: { item: QueueItem; now: number; showR
         )}
       </td>
       <td>
-        {item.detail && <div className="muted" style={{ fontSize: 12.5 }}>{item.detail}</div>}
+        {item.detail && (
+          <div className="muted" style={{ fontSize: 12.5 }}>
+            <Detail text={item.detail} commit={item.commit} />
+          </div>
+        )}
         <div style={{ fontSize: 12.5 }}>{item.action}</div>
         {/* the recipe's own "what fixing it looks like" (K1) — authored prose
             about the check, kept visually separate from the computed detail

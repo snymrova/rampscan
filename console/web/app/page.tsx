@@ -120,9 +120,14 @@ function KsiBoard() {
               covering all {summary.total} — a row with nothing to say is still a row
             </span>
             {summary.optional.length > 0 && (
-              <span className="muted" title={summary.optional.join(", ")}>
-                {summary.optional.length} optional at class {certClass}, outside every
-                meter — {summary.optional.join(", ")}
+              <span className="muted">
+                {summary.optional.length} optional at class {certClass}, outside every meter —{" "}
+                {summary.optional.map((k, i) => (
+                  <span key={k}>
+                    {i > 0 && ", "}
+                    <EntityLink kind="ksi" id={k} className="" />
+                  </span>
+                ))}
               </span>
             )}
           </>
@@ -220,7 +225,10 @@ function KsiRowView({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        <td className="mono">{entry.ksi}</td>
+        {/* the row IS this KSI: its id names it, the row's click opens it */}
+        <td className="mono" data-entity="ksi">
+          {entry.ksi}
+        </td>
         <td className="muted">
           {entry.name}
           {optional === true && <span className="muted"> · optional at this class</span>}
@@ -333,7 +341,7 @@ function KsiRowView({
             <p className="faint" style={{ margin: "4px 0" }}>
               <Term name="control">controls crosswalk</Term>:{" "}
               {entry.controls.map((c) => (
-                <EntityLink key={c} kind="control" id={c} style={{ marginRight: 8 }} />
+                <EntityLink key={c} kind="control" id={c} repo={register?.repo} style={{ marginRight: 8 }} />
               ))}
             </p>
           </td>

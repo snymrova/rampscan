@@ -48,8 +48,12 @@ code, .mono { font-family: var(--mono); font-size: 12.5px; }
 .nav-spacer { flex: 1; }
 .nav-user { color: var(--text-dim); font-size: 12.5px; white-space: nowrap; }
 .nav-user b { color: var(--text); font-weight: 600; }
-.nav-scope { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
-.nav-scope select { max-width: 220px; }
+.nav-scope select { max-width: 200px; font-size: 12.5px; }
+
+/* a link whose text is a time or an age, not an id (U0): it goes one level
+   down to the bundle, but it must not outshout the ids beside it */
+a.quiet { color: inherit; }
+a.quiet:hover { color: var(--accent); }
 
 /* ---- generic ---- */
 h1 { font-size: 19px; margin: 0 0 4px; }

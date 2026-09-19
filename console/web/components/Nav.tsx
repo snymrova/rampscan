@@ -65,8 +65,7 @@ function RepoScopeSelect() {
   const { repo, explicit, repos, fallback, setRepo } = useRepoScope();
   if (repos.length === 0) return null;
   return (
-    <label className="nav-scope" title={repo ?? "every scanned repo"}>
-      <span className="faint">repo</span>
+    <label className="nav-scope" title={`repo scope: ${repo ?? "every scanned repo"}`}>
       <select
         aria-label="repo scope"
         value={repo ?? ALL_REPOS}

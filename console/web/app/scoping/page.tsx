@@ -183,7 +183,7 @@ function DecisionView({ row }: { row: ScopingRegisterRow }) {
             <EntityLink key={k} kind="ksi" id={k} repo={row.repo} style={{ marginRight: 8 }} />
           ))}
           {row.controlIds.map((c) => (
-            <EntityLink key={c} kind="control" id={c} style={{ marginRight: 8 }} />
+            <EntityLink key={c} kind="control" id={c} repo={row.repo} style={{ marginRight: 8 }} />
           ))}
         </div>
       )}

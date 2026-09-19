@@ -148,7 +148,7 @@ function Clock() {
                 </td>
                 <td className="muted">
                   {cell.bundleDigest ? (
-                    <EntityLink kind="evidence" digest={cell.bundleDigest} className="">
+                    <EntityLink kind="evidence" digest={cell.bundleDigest} className="quiet">
                       {new Date(cell.freshAsOf!).toLocaleString()}
                     </EntityLink>
                   ) : (
@@ -320,7 +320,7 @@ function GapTimeline({
                           {cellGaps.map((gap, i) => (
                             <span key={gap.id}>
                               {i > 0 && " · "}
-                              <EntityLink kind="evidence" digest={gap.bundle_digest} className="">
+                              <EntityLink kind="evidence" digest={gap.bundle_digest} className="quiet">
                                 {new Date(gap.gap_start).toLocaleDateString()}{" "}
                                 {formatDuration(gap.duration_ms)}
                                 {gap.ongoing ? " (ongoing)" : ""}
