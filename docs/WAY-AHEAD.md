@@ -17,7 +17,7 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 | Version | `v0.1.0-beta`, public on GitHub since 2026-08-18. 0 stars, 0 forks, 2 views in the first fourteen days. Nobody outside this machine has read it yet. |
 | Suite | 1,138 tests across 91 files, 0 expected failures (at PR #151; 1,127 at PR #150; 1,121 at `c0a4d0a`). `pnpm typecheck` clean. CI: `check`, `test`, `console-smoke`. |
 | Plan of record | **`docs/PLAN-SOUNDNESS.md`, phases S0–S4.** Adopted 2026-09-13 (#123). Milestones S0–S4 on GitHub. |
-| Paused | R3–R5 (`docs/PLAN-ARTIFACT-PLANE.md`, #106–#115). **R2 was unpaused by the owner on 2026-09-18** and is being built from `docs/PLAN-SDR.md`. The pause had been tied to the S3 exit, and the owner has parked the S3 sends, so that exit could not arrive. S3 keeps its own exit gate, and #72 keeps its 2026-10-09 deadline. |
+| Paused | R4–R5 (`docs/PLAN-ARTIFACT-PLANE.md`, #109–#115). **R2 was unpaused by the owner on 2026-09-18** and merged the same day (#226–#228); **R3 was unpaused by the owner on 2026-09-18** and is being built. The pause had been tied to the S3 exit, and the owner has parked the S3 sends, so that exit could not arrive. S3 keeps its own exit gate, and #72 keeps its 2026-10-09 deadline. |
 | Adopted 2026-09-15 | `docs/PLAN-CLOUD-RUNNER.md`, phases T0–T5 (PR #146; milestones T0–T5, #165–#187). Building now; #72 still takes precedence. |
 
 **Why the roadmap was reordered.** On 2026-09-13 the reachability gate was found to sign `not_affected` OpenVEX statements for any advisory in a package the code did not import directly, because "no node in the graph" was treated as proof of unreachability. That is the `SECURITY.md` class (a check that reports `evidenced` without the evidence). It is recorded in `docs/FINDING-VACUOUS-NOT-AFFECTED.md` and published as **GHSA-7jff-6v53-r56x**. Feature work stopped until soundness is restored and one stranger has looked.
@@ -40,33 +40,13 @@ The appliance holds no AWS credential and makes no AWS call. That boundary is de
 
 ## 3. What is next, in order
 
-1. **P1–P4**, chosen by the owner 2026-09-17 ahead of R2/SDR, after the field went from empty to crowded in four weeks (upstream published rules 2026.09.13.02; Prowler merged CR26 KSI frameworks for AWS/Azure/GCP; `RootCawsLLC/ksi-harness` appeared as a direct OSS rival). Opened as issues #210–#213 under the milestone *P1–P4 — the crowded-field response*; there is no separate plan document, this item is the plan. **P1 (#210, the re-pin) landed 2026-09-18** — see §8. **P2 (#211)** is in progress — the rejection linter from community #167, researched in `docs/RESEARCH-REJECTION-LINTER.md`: P2-0, P2-2, P2-3 and P2-4 landed 2026-09-18 (PR #215). **P2-1 was then re-scoped and built the same day**: the reviewed `outside` set was cancelled as the wrong artifact and replaced by an SDR coverage reader — see the note's §9 and §8 below. **P2 closed 2026-09-18** with PR #216; #211 is closed. **P3 (#212) is in progress**, ingesting Prowler's 20x KSI output — researched in `docs/RESEARCH-PROWLER-INGEST.md`, with the two design calls taken (AWS only inside `aws-ingested`, no schema change; rampscan evaluates its own assertion rather than trusting Prowler's PASS/FAIL). Its §9 unknowns were closed on 2026-09-18 in the note's **§10** before any P3
-code: the scan's arguments are **not** recoverable from Prowler's output, which
-added P3-3a (the mapped-check coverage measure) and corrected three things the
-note had wrong. **P3-0 landed 2026-09-18** — the fifth pin, on the bytes and the
-commit, with the both-ways golden test and the reviewed uncovered set; §2a was
-corrected again in the same change and the two catalogs turn out to share every
-control edge, not just the ids (see §8). **P3-1 landed 2026-09-18** — the OCSF
-reader, which sets the `MANUAL` row aside by making the indicator *absent*
-from the grouping rather than present and empty, and corrected §10a on two
-counts. **P3-2 landed 2026-09-18** — the soundness test, before the adapter:
-the hazard shown real against the shared evaluator, and the adapter's
-obligations under `it.fails` against a declared contract (see §8). **P3-3,
-P3-3a, P3-4 and P3-5 landed 2026-09-18** on one stacked branch — the adapter,
-the coverage measure, the muting call (a mute waives nothing — the owner's to
-reverse) with the provider guard, and the register e2e; all four obligations
-unwrapped. **P3 is code-complete**; #212 closes when the stack merges. **P4
-(#213) landed 2026-09-18**, stacked on P3: `rampscan probe` and
-`submission --trust-center-probe`, researched and built in one change in
-`docs/RESEARCH-TRUST-CENTER-PROBE.md`, with three calls marked for the owner
-(the fetch boundary, the two kinds of gate, and whether P2's declared-auth
-row overreaches). All three were settled 2026-09-18 against the rule text:
-the first two kept, and P2's row corrected (see §8). **P1–P4 are code-complete**, and the stack is #221 → #222 →
-#223 → P4, waiting to merge bottom-up.
-2. **R2, the Security Decision Record** (#102–#104), unpaused by the owner 2026-09-18 and built from `docs/PLAN-SDR.md`: R2.0 → R2.1 (#102) → R2.2 (#103) → R2.3 (#104), stacked. **Code-complete 2026-09-18**, on branches `r2-1-sdr-json` → `r2-2-sdr-markdown` → `r2-3-sdr-rules`, waiting to merge bottom-up. The owner took D6 as recommended: `ksiImplementationStatus` is computed, and it may understate but never overstate. #105 is re-scoped to one filing plus a comment on FedRAMP/schemas#10, and stays parked with the S3 sends.
+1. **R3, historical metrics** (#106–#108), unpaused by the owner 2026-09-18 once R2 merged. Built from `docs/PLAN-ARTIFACT-PLANE.md` §5-R3: the 30-day and up-to-a-year summaries (R3.1), the class-C daily series and the `FRC-CSX-MOT` floor (R3.2), and carriage under `x-rampscan` with the divergence stated (R3.3). Stacked, coding straight through; see §8 for where it stands.
+2. **#72, the RFC-0033 comment, due 2026-10-09.** Drafted in `docs/RESEARCH-RFC-0033-COMMENT.md` and refreshed 2026-09-18 against rules 2026.09.13.02 and the thread (three comments, none on the automation floor). Waiting on the owner for the go and for the ordering call in its §4.3. The recommendation is to send the S3-2 emails first and post seven days later, which only fits if the sends go out this week.
 3. **S3** sends, with #72 by 2026-10-09 — S4 closed 2026-09-15 by the owner's call to finish the software first. S3-2 (#138) is researched and drafted in `docs/RESEARCH-S3-2-OUTREACH.md` (channels, a second public package, the sequence, the three drafts); its §4 corrections landed 2026-09-15 (the "only package" claim, the Filevine register §3b), so the sends wait only on the owner for addresses and the go; then S3-3 (#72) and S3-4 (#105).
 4. **T** — T0–T4 code complete 2026-09-16. What is left is the owner's: (a) a **sandbox AWS account** for the T3/T4 exit gates — `rampscan-runner init`, `rampscan runner register`, `rampscan runner policy` → attach, `rampscan serve --repo <the repo>`, click *Collect evidence* on `KSI-IAM-APM`; then remove `iam:GetCredentialReport` and click again for the `failed(denied)` row; (b) two upstream filings in S3-4's channel — the credential-report assertions spell `TRUE` where AWS prints `true` (every principal fails as published), and the `where`-alignment limit of labeled assertions (SPEC §14.4a); (c) whether T5 (scheduled requests, ECS/Lambda packaging) is wanted for the first release. Dependabot #194–#196 (react, zod, next 16 — issue #30's Turbopack risk) are open and untouched.
 5. **Owner call, not blocking:** whether #147 gets a published advisory like GHSA-7jff-6v53-r56x. Same class, but the path had only ever run on the fixture; S0-1's argument for filing (the advisory is an asset) applies, and so does the counter-argument that an advisory for a never-shipped path is noise.
+
+**Done and merged 2026-09-18:** P1–P4 (#221–#225; milestone *P1–P4 — the crowded-field response*, #210–#213 closed) and R2, the Security Decision Record (#226–#228; #102–#104). The build history of both is in §8.
 
 ## 4. The decisions already made — do not re-open
 
@@ -230,3 +210,4 @@ Do not: start R3–R5 work, start T code before S1 closes, add a `not_affected` 
   - Assessor content: counted as `awaiting`.
 
   The class comes from `--class`, else from the record. The rule verdict exits 1 only under `--require-rules`. A complete record at class a is shown to meet every rule, so `met` is reachable. CI now runs `sdr` beside `exports`; the schema verdict is gated and the rule verdict only printed. On this repo: schema ✓, rules ✗ (3 met, 3 unmet, 1 awaiting). Suite 1,475 across 126 files. **R2 is code-complete.** Next: merge the stack bottom-up. Then #105 waits on the owner's go with the S3 sends, and R3 (historical metrics) is paused until the owner calls it.
+- **2026-09-18 (merged; R3 unpaused)** — The P1–P4 stack (#221–#225) and the R2 stack (#226–#228) are merged, so `main` = `eb7257b` carries both. §3 was rewritten to match. The owner unpaused R3. #72's draft was refreshed: every cited fact was re-checked against 2026.09.13.02 and still holds, and one sentence was added from the Prowler research (`MANUAL` rows make "no FAIL rows" pass on the 13 KSIs a scanner cannot see). The draft and the S3-2 outreach notes were sent to the owner for review. Next item: R3.1 (#106).
