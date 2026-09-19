@@ -131,6 +131,9 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
   const recipes = await loadRecipes(options.recipesDir);
   const windowMs = options.windowMs?.[options.certClass] ?? windowMsFor(options.certClass);
   const projector = createProjector({ recipes, windowMs });
+  // one ledger for the daemon's life (#142): every assessment after the first
+  // reads only what was appended since
+  const ledger = createLocalLedger(options.ledgerDir);
   const repoSource = createLocalRepoSource();
 
   const scanAtFraction = options.scanAtFraction ?? DEFAULT_SCAN_AT_FRACTION;
@@ -159,7 +162,7 @@ export async function startDaemon(options: DaemonOptions): Promise<DaemonHandle>
   };
 
   async function assess(): Promise<SchedulerAssessment> {
-    const projection = await projector.fold(createLocalLedger(options.ledgerDir));
+    const projection = await projector.fold(ledger);
     const live = projection.registers.filter(
       (row) =>
         row.repo === repoPath &&
