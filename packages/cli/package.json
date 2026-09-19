@@ -20,7 +20,7 @@
     "@rampscan/schema": "workspace:*",
     "@rampscan/signer": "workspace:*",
     "yaml": "^2.6.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@types/jmespath": "0.15.2",
