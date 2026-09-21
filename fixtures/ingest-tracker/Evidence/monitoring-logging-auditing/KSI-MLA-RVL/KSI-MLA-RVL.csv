@@ -1,0 +1,4 @@
+log_source,reviewed_at,reviewer,anomalies
+cloudtrail (all regions),2026-09-12T08:00:00Z,soc-analyst-2@synthetic-csp.example,0
+vpc flow logs,2026-09-12T08:20:00Z,soc-analyst-2@synthetic-csp.example,1
+application audit log,2026-09-11T17:00:00Z,soc-analyst-1@synthetic-csp.example,0

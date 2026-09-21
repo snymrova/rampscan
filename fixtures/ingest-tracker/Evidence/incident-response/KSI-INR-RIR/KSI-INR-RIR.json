@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "procedure": "IRP-01 triage and severity",
+      "reviewed_at": "2026-07-02T10:00:00Z",
+      "reviewer": "ir-lead@synthetic-csp.example",
+      "outcome": "confirmed"
+    },
+    {
+      "procedure": "IRP-02 containment and evidence capture",
+      "reviewed_at": "2026-08-14T15:30:00Z",
+      "reviewer": "ir-lead@synthetic-csp.example",
+      "outcome": "revised"
+    },
+    {
+      "procedure": "IRP-03 customer and agency notification",
+      "reviewed_at": "2026-08-14T15:30:00Z",
+      "reviewer": "ciso@synthetic-csp.example",
+      "outcome": "confirmed"
+    }
+  ]
+}

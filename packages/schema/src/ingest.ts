@@ -188,6 +188,8 @@ export const IngestManifestEntry = z.strictObject({
    * passed over the rows makes it `evidenced`.
    */
   assertions: z.array(RecipeAssertion).optional(),
+  /** per-entry override of the manifest's `automated` (N4-4) */
+  automated: z.boolean().optional(),
 });
 export type IngestManifestEntry = z.infer<typeof IngestManifestEntry>;
 
@@ -196,6 +198,17 @@ export const IngestManifest = z.strictObject({
   signer_identity: z.string().min(1),
   evidence_class: EvidenceClass,
   cadence: Cadence,
+  /**
+   * Did a MACHINE produce and validate these rows (docs/PLAN-REACH.md N4-4)?
+   * Absent reads true — the value every tree before this field had, a
+   * client-run script over an account. A tracker export a person assembled,
+   * or a review schedule a person keeps, declares `false`: the rows are real
+   * and the assertion is evaluated over them, but the method lands outside
+   * the FRC-CSX-VVK numerator and on VDR-TFR-NMV's clock, because nothing
+   * validated them on a machine's cadence. `true` is owed only when the
+   * tracker's own API produced the rows on a clock.
+   */
+  automated: z.boolean().optional(),
   entries: z.array(IngestManifestEntry).min(1),
 });
 export type IngestManifest = z.infer<typeof IngestManifest>;

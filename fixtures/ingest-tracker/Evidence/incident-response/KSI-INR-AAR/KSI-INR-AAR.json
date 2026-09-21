@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "incident_id": "INC-2026-0041",
+      "severity": "S3",
+      "closed_at": "2026-08-21T16:10:00Z",
+      "after_action_report": "https://tracker.synthetic-csp.example/aar/INC-2026-0041",
+      "lessons_learned_ticket": "OPS-1187"
+    },
+    {
+      "incident_id": "INC-2026-0047",
+      "severity": "S2",
+      "closed_at": "2026-09-03T11:45:00Z",
+      "after_action_report": "https://tracker.synthetic-csp.example/aar/INC-2026-0047",
+      "lessons_learned_ticket": "OPS-1203"
+    }
+  ]
+}

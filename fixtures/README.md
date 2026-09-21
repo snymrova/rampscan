@@ -87,3 +87,21 @@ N2-2), each written by the tool named in its `tool.driver`, not by hand:
 Neither tool writes `invocations[].endTimeUtc`, so an ingest of either
 declares `--timestamp`. Regenerate with the commands above when the pinned
 tool versions move, and re-read `recipes/crosswalks/sarif-*` against the diff.
+
+## ingest-tracker
+
+A synthetic incident-tracker export for the reviewing KSIs (docs/PLAN-REACH.md
+N4-4), in the evidence-tree shape the tree adapter already reads: four
+entries — `KSI-INR-AAR` (closed incidents with their after-action reports and
+lessons-learned tickets), `KSI-INR-RIR` (procedure reviews), `KSI-INR-RPI`
+(the quarterly past-incident pattern review) and `KSI-MLA-RVL` (the log-review
+schedule) — each with rampscan's assertions over the exported rows (`exists`,
+`in`, `gte`, `max_age_days` against the export's own timestamp).
+
+What the manifest says that the evidence-tree fixture does not: **`automated:
+false`**. A person assembled this export and a person keeps these schedules,
+so the four methods count as methods (the rows end G1) and never toward the
+FRC-CSX-VVK numerator, on VDR-TFR-NMV's three-month clock. A tracker whose
+own API produced the rows on a clock declares `true`, per entry or for the
+whole manifest; absent reads `true`, which is what every tree before the field
+meant. Every identity, ticket and URL is synthetic.

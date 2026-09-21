@@ -1,0 +1,2 @@
+review_id,period,reviewed_at,incidents_reviewed,findings
+PIR-2026-Q3,2026-06-01/2026-08-31,2026-09-05T13:00:00Z,9,two S3 incidents shared a root cause in the deploy pipeline's secret rotation; ticket OPS-1210 opened

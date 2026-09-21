@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "log_source": "cloudtrail (all regions)",
+      "reviewed_at": "2026-09-12T08:00:00Z",
+      "reviewer": "soc-analyst-2@synthetic-csp.example",
+      "anomalies": 0
+    },
+    {
+      "log_source": "vpc flow logs",
+      "reviewed_at": "2026-09-12T08:20:00Z",
+      "reviewer": "soc-analyst-2@synthetic-csp.example",
+      "anomalies": 1
+    },
+    {
+      "log_source": "application audit log",
+      "reviewed_at": "2026-09-11T17:00:00Z",
+      "reviewer": "soc-analyst-1@synthetic-csp.example",
+      "anomalies": 0
+    }
+  ]
+}
