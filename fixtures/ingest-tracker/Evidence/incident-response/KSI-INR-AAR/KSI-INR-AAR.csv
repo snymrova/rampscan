@@ -1,0 +1,3 @@
+incident_id,severity,closed_at,after_action_report,lessons_learned_ticket
+INC-2026-0041,S3,2026-08-21T16:10:00Z,https://tracker.synthetic-csp.example/aar/INC-2026-0041,OPS-1187
+INC-2026-0047,S2,2026-09-03T11:45:00Z,https://tracker.synthetic-csp.example/aar/INC-2026-0047,OPS-1203

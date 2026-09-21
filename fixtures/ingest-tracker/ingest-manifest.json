@@ -1,0 +1,89 @@
+{
+  "_type": "https://rampscan.dev/ingest-manifest/v1",
+  "signer_identity": "security-ops@synthetic-csp.example",
+  "evidence_class": "point-in-time",
+  "cadence": "monthly",
+  "automated": false,
+  "entries": [
+    {
+      "ksi": "KSI-INR-AAR",
+      "script": "tracker-export/incidents-closed",
+      "exit_code": 0,
+      "timestamp": "2026-09-15T09:00:00Z",
+      "assertions": [
+        {
+          "field": "after_action_report",
+          "op": "exists",
+          "description": "Every incident the tracker closed in the export window carries a linked after-action report."
+        },
+        {
+          "field": "lessons_learned_ticket",
+          "op": "exists",
+          "description": "Every after-action report opened at least one lessons-learned ticket \u2014 incorporation is a ticket, not a sentence."
+        }
+      ]
+    },
+    {
+      "ksi": "KSI-INR-RIR",
+      "script": "tracker-export/procedure-reviews",
+      "exit_code": 0,
+      "timestamp": "2026-09-15T09:00:00Z",
+      "assertions": [
+        {
+          "field": "reviewed_at",
+          "op": "max_age_days",
+          "value": 90,
+          "description": "Every documented incident response procedure was reviewed within the last quarter, dated by the tracker."
+        },
+        {
+          "field": "outcome",
+          "op": "in",
+          "value": [
+            "confirmed",
+            "revised"
+          ],
+          "description": "Each review recorded an outcome \u2014 the procedure confirmed or revised \u2014 never left open."
+        }
+      ]
+    },
+    {
+      "ksi": "KSI-INR-RPI",
+      "script": "tracker-export/pattern-reviews",
+      "exit_code": 0,
+      "timestamp": "2026-09-15T09:00:00Z",
+      "assertions": [
+        {
+          "field": "reviewed_at",
+          "op": "max_age_days",
+          "value": 90,
+          "description": "The past-incident pattern review ran within the last quarter."
+        },
+        {
+          "field": "incidents_reviewed",
+          "op": "gte",
+          "value": 1,
+          "description": "Each review read at least one past incident \u2014 a review over none is not a review."
+        }
+      ]
+    },
+    {
+      "ksi": "KSI-MLA-RVL",
+      "script": "tracker-export/log-review-schedule",
+      "exit_code": 0,
+      "timestamp": "2026-09-15T09:00:00Z",
+      "assertions": [
+        {
+          "field": "reviewed_at",
+          "op": "max_age_days",
+          "value": 7,
+          "description": "Every log source on the review schedule was reviewed within the last week, dated by the tracker."
+        },
+        {
+          "field": "reviewer",
+          "op": "exists",
+          "description": "Each review names the person who did it."
+        }
+      ]
+    }
+  ]
+}

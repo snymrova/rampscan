@@ -263,6 +263,7 @@ async function entryToSubmission(
   // account as the script saw it, not as of the day someone ingested the tree
   const assertions = evaluateAssertions(declared, rows, new Date(entry.timestamp));
 
+  const automated = entry.automated ?? manifest.automated;
   return {
     _type: "https://rampscan.dev/ingest-submission/v1",
     recipe_id: entry.script,
@@ -273,6 +274,10 @@ async function entryToSubmission(
     assertions,
     timestamp: entry.timestamp,
     signer_identity: manifest.signer_identity,
+    // the manifest's word on whether a machine produced these rows (N4-4):
+    // copied only when declared, so an undeclared tree mints the bytes it
+    // always did and the method reads absent as true (S3-1)
+    ...(automated !== undefined ? { automated } : {}),
     reproduce: `${entry.script} <profile> <region> <output_dir> <output_csv>`,
   };
 }
