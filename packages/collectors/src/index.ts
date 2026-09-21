@@ -61,7 +61,14 @@ export type {
   AuthoredArtifactProblem,
   AuthoredArtifactScan,
 } from "./documents.js";
-export { checkov, CHECKOV_RESULTS_ARTIFACT, matchIacFiles } from "./checkov.js";
+export {
+  checkov,
+  CHECKOV_DERIVED_RECIPES,
+  CHECKOV_RESULTS_ARTIFACT,
+  derivedObservations,
+  matchIacFiles,
+} from "./checkov.js";
+export type { FailedCheck } from "./checkov.js";
 export { spectral, SPECTRAL_RESULTS_ARTIFACT, matchSpecFiles } from "./spectral.js";
 
 /**

@@ -12,6 +12,7 @@ import type {
   MethodSource,
   MethodStanding,
   OffenderPointer,
+  PipelineRecipe,
   PlainLanguage,
   ScanRunTrigger,
   ToolInvocation,
@@ -153,6 +154,14 @@ export interface CollectContext {
   /** artifacts produced by earlier collectors this run: name → absolute path */
   inputs: ReadonlyMap<string, string>;
   runId: string;
+  /**
+   * The catalog recipes this collector answers for, when the runner was
+   * handed a catalog (N2-1). A collector whose observation keys are derived
+   * from a crosswalk reads the rule sets it was given here rather than
+   * opening a file of its own; absent (a unit test, an older caller) it
+   * answers its hand-written recipes only.
+   */
+  recipes?: readonly PipelineRecipe[];
 }
 
 export interface CollectOutput {
@@ -369,6 +378,23 @@ export interface MethodCell {
    * read?" without a second lookup. Absent for non-pipeline sources today.
    */
   scope?: MethodScope;
+  /**
+   * For a crosswalk-derived pipeline method (N2-1): the recipe whose artifact
+   * it reads. Two cells sharing a `derivedFrom` are one observation counted
+   * twice, which is how the reach ladder treats them toward the floor.
+   */
+  derivedFrom?: string;
+  /** what a pass of this method proves, when the recipe says (N2-1): declared state, not account state */
+  proves?: "declared-state";
+  /**
+   * What this method's evidence observed (N2-2): the checkout, an account,
+   * or a person's statement. Derived per source and echoed here so the reach
+   * ladder counts planes: a client's SARIF (`aws-ingested` by mechanism,
+   * `commit` by plane) beside the pipeline is one plane, not two. Optional
+   * because projections written before it carry none; a reader derives the
+   * same answer from `source` (`planeOfCell`).
+   */
+  plane?: "commit" | "cloud" | "human";
   state: RegisterState;
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601

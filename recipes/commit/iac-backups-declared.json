@@ -1,0 +1,88 @@
+{
+  "id": "iac-backups-declared",
+  "ksi_ids": [
+    "KSI-RPL-ABO"
+  ],
+  "control_ids": [
+    "cp-9",
+    "cp-10"
+  ],
+  "evidence": "The committed infrastructure definitions declare backups, point-in-time recovery, retention, versioning, deletion protection and failover on every data store whose definition carries them, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-RPL-ABO: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_18",
+            "CKV2_AWS_50",
+            "CKV2_AWS_58",
+            "CKV2_AWS_8",
+            "CKV2_AWS_9",
+            "CKV_AWS_133",
+            "CKV_AWS_134",
+            "CKV_AWS_139",
+            "CKV_AWS_150",
+            "CKV_AWS_157",
+            "CKV_AWS_165",
+            "CKV_AWS_21",
+            "CKV_AWS_28",
+            "CKV_AWS_293",
+            "CKV_AWS_343",
+            "CKV_AWS_360",
+            "CKV_AWS_361"
+          ]
+        }
+      ],
+      "controls": [
+        "cp-9",
+        "cp-10"
+      ],
+      "description": "Zero failed checks among the 17 checkov rule(s) the crosswalk maps to KSI-RPL-ABO — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only, and the objectives are not read: this shows backups exist as defined, not that they align with a stated recovery point or time. Restore testing is the cloud plane's and the plan's. Corroborates; does not replace.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 17 of its rules filed under KSI-RPL-ABO with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 17 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed infrastructure for every data store — databases, caches, tables, volumes, file systems, buckets — and counts the ones defined without a backup, without point-in-time recovery, with too short a retention, or without the deletion protection and standby that a recovery objective depends on.",
+    "violation": "A store is defined in a way that cannot meet a recovery objective: nothing backs it up, the backup does not reach back far enough, or one call can delete it. It is the declared arrangement; whether a backup was ever restored is a different question this check does not answer.",
+    "fix": "Add the store to a backup plan or enable its backup setting, lengthen retention to the objective, and turn on deletion protection and failover. Each failed check names the resource; the objectives themselves live in the recovery plan, not here."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_18",
+      "CKV2_AWS_50",
+      "CKV2_AWS_58",
+      "CKV2_AWS_8",
+      "CKV2_AWS_9",
+      "CKV_AWS_133",
+      "CKV_AWS_134",
+      "CKV_AWS_139",
+      "CKV_AWS_150",
+      "CKV_AWS_157",
+      "CKV_AWS_165",
+      "CKV_AWS_21",
+      "CKV_AWS_28",
+      "CKV_AWS_293",
+      "CKV_AWS_343",
+      "CKV_AWS_360",
+      "CKV_AWS_361"
+    ]
+  },
+  "anchor": "commit"
+}

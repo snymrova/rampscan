@@ -85,6 +85,20 @@ export const PipelineProvenance = z.strictObject({
   /** the collector whose manifest declares the recipe — and the scope */
   collector: z.string().min(1),
   scope: MethodScope,
+  /**
+   * For a crosswalk-derived recipe (N2-1): the recipe whose artifact this
+   * method reads, the crosswalk, and what a pass proves. Carried so the
+   * register can print `declared` beside the method and the reach ladder can
+   * count rows sharing one artifact as one observation. Absent on every
+   * hand-written recipe's method.
+   */
+  derived_from: z
+    .strictObject({
+      recipe: z.string().min(1),
+      crosswalk: z.string().min(1),
+      proves: z.literal("declared-state"),
+    })
+    .optional(),
 });
 export type PipelineProvenance = z.infer<typeof PipelineProvenance>;
 
@@ -93,6 +107,15 @@ export const AwsIngestedProvenance = z.strictObject({
   recipe_id: z.string().min(1),
   signer_identity: z.string().min(1),
   ingest_digest: z.string().min(1),
+  /**
+   * What the submitted run observed (N2-2): `commit` for a client's SARIF
+   * over the checkout, `cloud` for an account. Absent on every method
+   * derived from a bundle minted before it, and absent reads cloud. The
+   * SOURCE stays `aws-ingested` — it names the mechanism the bytes came in
+   * by; the plane names what they are about — and renaming the source is a
+   * reviewed schema change this field deliberately does not make.
+   */
+  plane: z.enum(["commit", "cloud"]).optional(),
 });
 export type AwsIngestedProvenance = z.infer<typeof AwsIngestedProvenance>;
 
@@ -195,6 +218,15 @@ export function methodsOfRecipe(recipe: PipelineRecipe, scope: MethodScope): Pip
       recipe_id: recipe.id,
       collector: recipe.collection.collector,
       scope,
+      ...(recipe.derived_from === undefined
+        ? {}
+        : {
+            derived_from: {
+              recipe: recipe.derived_from.recipe,
+              crosswalk: recipe.derived_from.crosswalk,
+              proves: recipe.derived_from.proves,
+            },
+          }),
     },
   }));
 }
@@ -223,7 +255,12 @@ export function methodOfIngestedBundle(predicate: {
   recipe_id: string;
   ksi_ids: string[];
   ingest?:
-    | { signer_identity: string; ingest_digest: string; automated?: boolean | undefined }
+    | {
+        signer_identity: string;
+        ingest_digest: string;
+        automated?: boolean | undefined;
+        plane?: "commit" | "cloud" | undefined;
+      }
     | undefined;
 }): AwsIngestedMethod {
   if (predicate.ingest === undefined) {
@@ -251,6 +288,7 @@ export function methodOfIngestedBundle(predicate: {
       recipe_id: predicate.recipe_id,
       signer_identity: predicate.ingest.signer_identity,
       ingest_digest: predicate.ingest.ingest_digest,
+      ...(predicate.ingest.plane !== undefined ? { plane: predicate.ingest.plane } : {}),
     },
   };
 }

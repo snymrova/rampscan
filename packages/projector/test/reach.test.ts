@@ -172,7 +172,7 @@ describe("the reach ladder (N0-1): one KSI per rung", () => {
   it("floor: the floor is met from one plane, and the sentence names it", () => {
     const reach = rowOf(projection, KSI.floor).reach!;
     expect(reach.rung).toBe("floor");
-    expect(reach.next).toContain("one plane (pipeline)");
+    expect(reach.next).toContain("one plane (commit)");
     expect(reach.distinctPlanes).toBe(1);
   });
 

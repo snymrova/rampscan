@@ -171,11 +171,15 @@ describe("ingest package adapter — an assessed package becomes ledger citizens
     const row = (fold: typeof after, ksi: string) =>
       fold.methodRegisters.find((r) => r.repo === base.repo && r.ksi === ksi);
 
-    // KSI-CNA-RNT gained three methods and zero automated ones
+    // KSI-CNA-RNT gained three methods and zero automated ones. Its automated
+    // count is whatever the CATALOG derives for it — since N2-1 that is the
+    // checkov-derived `iac-traffic-restricted-declared` — and the package must
+    // leave that number exactly where it found it.
     const cna = row(after, "KSI-CNA-RNT")!;
     const cnaBefore = row(before, "KSI-CNA-RNT");
-    expect(cna.methods.length).toBe((cnaBefore?.methods.length ?? 0) + 3);
-    expect(cna.automatedMethods).toBe(cnaBefore?.automatedMethods ?? 0);
+    const pipelineForCna = methods.filter((m) => m.ksi === "KSI-CNA-RNT").length;
+    expect(cna.methods.length).toBe((cnaBefore?.methods.length ?? pipelineForCna) + 3);
+    expect(cna.automatedMethods).toBe(cnaBefore?.automatedMethods ?? pipelineForCna);
     const ingested = cna.methods.filter((m) => m.source === "aws-ingested");
     expect(ingested).toHaveLength(3);
     for (const cell of ingested) {

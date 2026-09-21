@@ -1,0 +1,27 @@
+{
+  "_type": "https://rampscan.dev/sarif-crosswalk/v1",
+  "tool": "Semgrep OSS",
+  "version": "1.173.0",
+  "to": "2026.09.13.02",
+  "reviewed": "2026-09-21",
+  "plane": "commit",
+  "reproduce": "cd packages/collectors && semgrep --config semgrep-rules.yaml --sarif --metrics=off <checkout>   # semgrep/semgrep:1.173.0, the image tools.json pins",
+  "rule": "A SARIF log is a client's own run over the CHECKOUT, so every row it mints observes the commit plane — the plane rampscan's pipeline already observes — and the reach ladder counts it beside the pipeline as one plane, never as the second an account observation would be (docs/PLAN-REACH.md ground rule 3). The assertion is rampscan's over the tool's rows: `count_eq 0` where `level = error`; the tool's `level` and `kind` are data, a suppressed result is counted and never waived (the Prowler mute rule), a run whose invocation did not succeed or whose declared exit code is non-zero is skipped and named, and a rule the log neither reported nor declared in `tool.driver.rules` gets no submission and is named — a zero-result rule is clean only when the tool states it ran. There is no graph behind a client's log, so reachability is UNKNOWN and every finding counts; the submission says so. One entry per rule id, filed under exactly one KSI with the reviewer's reason; a rule id the log carries that this file does not refuses the whole batch. This crosswalk exists so rampscan's own SAST output round-trips through the adapter: the same rules the `sast-reachability` collector evaluates with a graph behind them, evaluated here without one.",
+  "entries": [
+    {
+      "rule": "dangerous-eval",
+      "ksi": "KSI-PIY-RSD",
+      "basis": "eval()/new Function() over constructed strings is code injection waiting for an input to reach it; the recipe no-reachable-dangerous-code files the same rule under secure development (KSI-PIY-RSD), and a client's log lands where rampscan's own run does — without the graph, every hit counts"
+    },
+    {
+      "rule": "child-process-non-literal",
+      "ksi": "KSI-PIY-RSD",
+      "basis": "a shell spawned with a non-literal command is command injection by construction; the same rule, the same indicator, the same secure-development claim as rampscan's own SAST recipe"
+    },
+    {
+      "rule": "weak-hash-algorithm",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "MD5/SHA-1 in code is information secured by a hash that no longer secures it; filed under Securing Information rather than secure development because the finding is about the protection applied, not the practice — a WARNING-level rule, so it counts toward the population and never fails the error-level assertion"
+    }
+  ]
+}

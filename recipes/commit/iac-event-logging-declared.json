@@ -1,0 +1,108 @@
+{
+  "id": "iac-event-logging-declared",
+  "ksi_ids": [
+    "KSI-MLA-LET"
+  ],
+  "control_ids": [
+    "au-2",
+    "au-12"
+  ],
+  "evidence": "The committed infrastructure definitions enable logging on every resource whose definition carries a logging switch — buckets, gateways, load balancers, clusters, VPCs, firewalls and databases — at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-MLA-LET: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_11",
+            "CKV2_AWS_31",
+            "CKV2_AWS_39",
+            "CKV2_AWS_4",
+            "CKV2_AWS_63",
+            "CKV_AWS_101",
+            "CKV_AWS_113",
+            "CKV_AWS_176",
+            "CKV_AWS_18",
+            "CKV_AWS_193",
+            "CKV_AWS_197",
+            "CKV_AWS_223",
+            "CKV_AWS_285",
+            "CKV_AWS_314",
+            "CKV_AWS_317",
+            "CKV_AWS_324",
+            "CKV_AWS_325",
+            "CKV_AWS_37",
+            "CKV_AWS_48",
+            "CKV_AWS_71",
+            "CKV_AWS_75",
+            "CKV_AWS_76",
+            "CKV_AWS_80",
+            "CKV_AWS_84",
+            "CKV_AWS_85",
+            "CKV_AWS_86",
+            "CKV_AWS_91"
+          ]
+        }
+      ],
+      "controls": [
+        "au-2",
+        "au-12"
+      ],
+      "description": "Zero failed checks among the 27 checkov rule(s) the crosswalk maps to KSI-MLA-LET — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only, and only for resources whose definition carries a logging switch. Application-level events and anything enabled outside the definitions are not seen. Corroborates the cloud plane; does not replace it.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 27 of its rules filed under KSI-MLA-LET with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 27 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed infrastructure for every resource whose definition has a logging switch — storage buckets, API gateways, load balancers, clusters, VPC flow logs, firewalls, databases — and counts the ones where it is off.",
+    "violation": "A resource is defined with its logging disabled, so the events it would produce never exist to be listed, monitored or audited. It is the definition that is silent; whether a running resource was later switched on by hand is not visible here.",
+    "fix": "Turn the logging setting on in the definition and point it at the destination the rest of the logs use. Each failed check names the resource and the setting; a resource whose logs are genuinely not wanted belongs in a recorded decision."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_11",
+      "CKV2_AWS_31",
+      "CKV2_AWS_39",
+      "CKV2_AWS_4",
+      "CKV2_AWS_63",
+      "CKV_AWS_101",
+      "CKV_AWS_113",
+      "CKV_AWS_176",
+      "CKV_AWS_18",
+      "CKV_AWS_193",
+      "CKV_AWS_197",
+      "CKV_AWS_223",
+      "CKV_AWS_285",
+      "CKV_AWS_314",
+      "CKV_AWS_317",
+      "CKV_AWS_324",
+      "CKV_AWS_325",
+      "CKV_AWS_37",
+      "CKV_AWS_48",
+      "CKV_AWS_71",
+      "CKV_AWS_75",
+      "CKV_AWS_76",
+      "CKV_AWS_80",
+      "CKV_AWS_84",
+      "CKV_AWS_85",
+      "CKV_AWS_86",
+      "CKV_AWS_91"
+    ]
+  },
+  "anchor": "commit"
+}

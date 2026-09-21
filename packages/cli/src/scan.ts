@@ -264,6 +264,7 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
       artifactDir,
       inputs,
       runId,
+      recipes,
     }),
     // paths this run owns: argv tokens under them are safe to record verbatim
     // in a permanent statement; everything else must earn its way past the
@@ -278,7 +279,14 @@ export async function scan(options: ScanOptions): Promise<ScanOutcome> {
     // the pinned tools.json content and the vendored semgrep ruleset salt
     // every key: re-pinning an image or editing a rule invalidates the cache
     // even though the manifest still says resolved-at-run
-    const keySalt = await cacheKeySalt();
+    // …and so does every crosswalk-derived rule set (N2-1): a derived
+    // recipe's observation set is a function of the rules it carries, so a
+    // crosswalk edit must miss the cache the way a semgrep rule edit does
+    const keySalt = createHash("sha256")
+      .update(await cacheKeySalt())
+      .update("\n")
+      .update(JSON.stringify(recipes.filter((r) => r.derived_from !== undefined).map((r) => [r.id, r.derived_from])))
+      .digest("hex");
     runner = createCachingRunner(localRunner, {
       dir: options.cache.dir,
       mode: options.cache.mode,

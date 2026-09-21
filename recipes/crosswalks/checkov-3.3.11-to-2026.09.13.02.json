@@ -1,0 +1,1456 @@
+{
+  "_type": "https://rampscan.dev/checkov-crosswalk/v1",
+  "tool": "checkov",
+  "version": "3.3.11",
+  "to": "2026.09.13.02",
+  "reviewed": "2026-09-21",
+  "derived_from": "iac-baseline-clean",
+  "rule": "A checkov pass proves DECLARED state — what the committed infrastructure definitions say the system will be — never account state. Each entry admits one checkov rule id from the pinned image and files it under exactly one KSI with the reviewer's reason; a rule the crosswalk does not carry is not judged, and a rule that moves between checkov versions fails checkov-crosswalk.test.ts against the vendored rule list. Every derived recipe evaluates the same checkov-results.json as iac-baseline-clean and asserts `count_eq 0` over the failed checks whose id it carries; a run in which none of a recipe's rules was evaluated gets no observation for that recipe and stays unevidenced (Guard), because an empty result over rules that never applied is not a clean result. The rows carry `proves: declared-state` and the register prints `declared` beside them so an assessor sees what kind of claim it is. Distinctness (docs/PLAN-REACH.md ground rule 3): declared state and account state are two planes, so a checkov row beside a runner or Prowler row on one KSI is two planes; two derived rows over the same checkov-results.json are one observation, and the reach ladder counts them as one toward the floor. Not a rename table and not exhaustive: the pinned image carries 1,179 rules over these three frameworks and this file admits the ones whose subject is the KSI's; adding a rule is a reviewed change with its basis written out.",
+  "rows": [
+    {
+      "ksi": "KSI-CNA-RNT",
+      "recipe": "iac-traffic-restricted-declared",
+      "controls": [
+        "sc-7.5",
+        "cm-7.1"
+      ],
+      "evidence": "The committed infrastructure definitions declare no security group, network ACL, peering route or container port that admits unrestricted inbound or outbound traffic, at the scanned commit",
+      "plain": {
+        "checks": "Reads the network rules written into the committed infrastructure — security groups, network ACLs, peering routes and container images — and counts the ones that open a port to the whole internet or let everything out.",
+        "violation": "Some definition admits the internet to an administrative or web port, lets any destination out, or peers two networks without limit. It is what the code says the network will be, before anything is deployed; a running account may differ, and this check cannot see that.",
+        "fix": "Narrow the offending rule to the sources and ports the service needs, or remove it. Each failed check names the file, the resource and the rule, so the change is one line in one definition; a rule that must stay open belongs in a recorded decision."
+      },
+      "caveats": "Declared state only: what the committed Terraform, Dockerfiles and workflows say, never what the account runs. A rule added by hand in the console, or a definition never applied, is invisible here. Corroborates the cloud plane; does not replace it."
+    },
+    {
+      "ksi": "KSI-CNA-MAT",
+      "recipe": "iac-attack-surface-declared",
+      "controls": [
+        "sc-7.3",
+        "sc-7.4"
+      ],
+      "evidence": "The committed infrastructure definitions declare no publicly reachable data store, function or snapshot, no default public addressing, no root container user, and no injectable or over-permissioned workflow, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for anything that widens what an attacker can reach: resources exposed to the internet, subnets that hand out public addresses, containers that run as root, and workflow steps that can be injected or that hold write-all permissions.",
+        "violation": "Something in the definitions is reachable, writable or privileged beyond what its job needs, and a compromise of it has somewhere to go next. It is the declared shape of the system, not a measurement of the running one.",
+        "fix": "Make the resource private, give the container a user, scope the workflow token, or fix the interpolated step. Every failed check names the file and the setting; exposure that is intended belongs in a recorded decision, not a silenced rule."
+      },
+      "caveats": "Declared state only. Public exposure created outside the committed definitions, and lateral-movement paths through data rather than configuration, are not seen. Corroborates the cloud plane; does not replace it."
+    },
+    {
+      "ksi": "KSI-CNA-ULN",
+      "recipe": "iac-logical-networking-declared",
+      "controls": [
+        "sc-7"
+      ],
+      "evidence": "The committed infrastructure definitions place workloads inside VPCs, attach every security group and network ACL to something, avoid platform defaults, and describe every rule, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for whether the logical network is actually used: whether functions, clusters and databases sit inside a VPC, whether the security groups and ACLs written down are attached to anything, and whether default networks and undescribed rules are avoided.",
+        "violation": "A workload sits outside the network's controls, a control exists but guards nothing, or the platform's defaults stand in for a design. The flow controls the definitions were meant to enforce are not enforcing anything for that resource.",
+        "fix": "Move the resource into the VPC, attach the orphaned group or ACL, replace the default with a defined network, or add the description the review needs. Each failed check names the resource; the change is in that definition."
+      },
+      "caveats": "Declared state only: the network as written, not as routed. Whether traffic actually flows the way the definitions intend is the cloud plane's question."
+    },
+    {
+      "ksi": "KSI-IAM-SNU",
+      "recipe": "iac-service-auth-declared",
+      "controls": [
+        "ia-3"
+      ],
+      "evidence": "The committed infrastructure definitions authenticate databases through IAM, give instances a role rather than a key, and grant no policy that exposes credentials, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for how services prove who they are to each other: databases that accept IAM identities instead of passwords, instances that carry a role instead of a key, and policies that would let a service read or mint another's credentials.",
+        "violation": "A service authenticates with a shared secret where an identity-based method was available, or a policy lets one service reach into another's credentials. It is the declared arrangement; a secret rotated by hand outside the definitions is not visible here.",
+        "fix": "Enable IAM authentication on the store, attach a role to the instance, and cut the credential-exposing actions from the policy. Each failed check names the resource; a service that genuinely needs a static secret belongs in a recorded decision with its rotation stated."
+      },
+      "caveats": "Declared state only, and narrow: the rules cover databases, instances and IAM policies, not every service-to-service path. Corroborates the cloud plane and the secrets checks; does not replace either."
+    },
+    {
+      "ksi": "KSI-MLA-LET",
+      "recipe": "iac-event-logging-declared",
+      "controls": [
+        "au-2",
+        "au-12"
+      ],
+      "evidence": "The committed infrastructure definitions enable logging on every resource whose definition carries a logging switch — buckets, gateways, load balancers, clusters, VPCs, firewalls and databases — at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for every resource whose definition has a logging switch — storage buckets, API gateways, load balancers, clusters, VPC flow logs, firewalls, databases — and counts the ones where it is off.",
+        "violation": "A resource is defined with its logging disabled, so the events it would produce never exist to be listed, monitored or audited. It is the definition that is silent; whether a running resource was later switched on by hand is not visible here.",
+        "fix": "Turn the logging setting on in the definition and point it at the destination the rest of the logs use. Each failed check names the resource and the setting; a resource whose logs are genuinely not wanted belongs in a recorded decision."
+      },
+      "caveats": "Declared state only, and only for resources whose definition carries a logging switch. Application-level events and anything enabled outside the definitions are not seen. Corroborates the cloud plane; does not replace it."
+    },
+    {
+      "ksi": "KSI-MLA-OSM",
+      "recipe": "iac-central-logging-declared",
+      "controls": [
+        "au-9",
+        "au-11"
+      ],
+      "evidence": "The committed infrastructure definitions declare an enabled, all-region, validated and encrypted CloudTrail delivered to CloudWatch Logs, with log groups retained for at least a year, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for the central audit feed: whether an account-wide trail is defined, whether it covers every region and delivers to a central log store, whether its files are validated and encrypted, and whether log groups keep records long enough.",
+        "violation": "The central feed is missing, partial, unencrypted, unvalidated or short-lived in the definitions, so the record a security team would search is either not being written centrally or could be altered without notice. It is what the code declares, not what the account is doing today.",
+        "fix": "Define the trail with all regions, log file validation, a customer-managed key and a CloudWatch Logs destination, and set retention on the log groups. Each failed check names the resource and the missing setting."
+      },
+      "caveats": "Declared state only. A trail created outside the definitions, and the SIEM itself, are not seen — this is the feed's declaration, not the system that reads it. Corroborates the cloud plane; does not replace it."
+    },
+    {
+      "ksi": "KSI-RPL-ABO",
+      "recipe": "iac-backups-declared",
+      "controls": [
+        "cp-9",
+        "cp-10"
+      ],
+      "evidence": "The committed infrastructure definitions declare backups, point-in-time recovery, retention, versioning, deletion protection and failover on every data store whose definition carries them, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for every data store — databases, caches, tables, volumes, file systems, buckets — and counts the ones defined without a backup, without point-in-time recovery, with too short a retention, or without the deletion protection and standby that a recovery objective depends on.",
+        "violation": "A store is defined in a way that cannot meet a recovery objective: nothing backs it up, the backup does not reach back far enough, or one call can delete it. It is the declared arrangement; whether a backup was ever restored is a different question this check does not answer.",
+        "fix": "Add the store to a backup plan or enable its backup setting, lengthen retention to the objective, and turn on deletion protection and failover. Each failed check names the resource; the objectives themselves live in the recovery plan, not here."
+      },
+      "caveats": "Declared state only, and the objectives are not read: this shows backups exist as defined, not that they align with a stated recovery point or time. Restore testing is the cloud plane's and the plan's. Corroborates; does not replace."
+    },
+    {
+      "ksi": "KSI-SVC-SIN",
+      "recipe": "iac-encryption-declared",
+      "controls": [
+        "sc-28",
+        "sc-8",
+        "sc-13"
+      ],
+      "evidence": "The committed infrastructure definitions encrypt every store, volume, queue, stream and secret at rest, accept only TLS on every listener and endpoint, and keep their keys enabled and scoped, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed infrastructure for encryption in both directions: whether each store, volume, queue, stream and secret is defined with encryption at rest, whether each listener, distribution and endpoint refuses plaintext and old TLS, and whether the keys behind them are enabled and not open to every principal.",
+        "violation": "Some definition holds or moves information without encryption, or rests on a key whose control has been given away. It is what the code declares; encryption switched on later by hand, or data outside these resources, is not seen.",
+        "fix": "Enable encryption at rest on the resource, require TLS on the listener, raise the TLS policy, and tighten the key policy. Each failed check names the resource and the setting; where a customer-managed key is asked for and a platform key is deliberate, record the decision."
+      },
+      "caveats": "Declared state only. Whether the key material is managed well, and whether data in transit inside a private network is protected, are beyond these rules. Corroborates the cloud plane; does not replace it."
+    },
+    {
+      "ksi": "KSI-SVC-VCM",
+      "recipe": "iac-tls-validation-declared",
+      "controls": [
+        "sc-23",
+        "si-7.1"
+      ],
+      "evidence": "The committed container images disable certificate validation for no download, package manager or language runtime, at the scanned commit",
+      "plain": {
+        "checks": "Reads the committed container image definitions for build steps that switch off certificate checking — for curl and wget, for pip, npm, yarn and git, for the package managers, and through the environment variables the runtimes honour.",
+        "violation": "A build step will accept any server as the one it meant to reach, so whatever it downloads could have come from anywhere on the path. The image is built that way every time; it is the declared build, not a measurement of a running container.",
+        "fix": "Remove the flag or variable that disables validation and install the certificate the build actually needs. Each failed check names the file and the instruction; a private authority belongs in the image's trust store, not in a switch that trusts everyone."
+      },
+      "caveats": "Declared state only, and container images only: validation disabled at runtime, or in application code, is not seen here. Corroborates the cloud plane's session-authenticity checks; does not replace them."
+    }
+  ],
+  "entries": [
+    {
+      "check": "CKV_AWS_24",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22 — an ingress rule open to 0.0.0.0/0 on this port is inbound traffic the definition does not limit — the indicator asks that inbound traffic be appropriately limited, and a security group that admits the internet to an administrative or web port declares the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_25",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389 — an ingress rule open to 0.0.0.0/0 on this port is inbound traffic the definition does not limit — the indicator asks that inbound traffic be appropriately limited, and a security group that admits the internet to an administrative or web port declares the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_260",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80 — an ingress rule open to 0.0.0.0/0 on this port is inbound traffic the definition does not limit — the indicator asks that inbound traffic be appropriately limited, and a security group that admits the internet to an administrative or web port declares the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_277",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no security groups allow ingress from 0.0.0.0:0 to port -1 — an ingress rule open to 0.0.0.0/0 on this port is inbound traffic the definition does not limit — the indicator asks that inbound traffic be appropriately limited, and a security group that admits the internet to an administrative or web port declares the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_38",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0 — an ingress rule open to 0.0.0.0/0 on this port is inbound traffic the definition does not limit — the indicator asks that inbound traffic be appropriately limited, and a security group that admits the internet to an administrative or web port declares the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_100",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure AWS EKS node group does not have implicit SSH access from 0.0.0.0/0 — an ingress rule open to 0.0.0.0/0 on this port is inbound traffic the definition does not limit — the indicator asks that inbound traffic be appropriately limited, and a security group that admits the internet to an administrative or web port declares the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_382",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1 — an egress rule open to every destination on every port is outbound traffic the definition does not limit; the indicator names outbound as well as inbound",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_12",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure the default security group of every VPC restricts all traffic — a VPC's default security group that admits traffic is a limit the definition failed to set; restricting it is the declared baseline every resource inherits",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_229",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 21 — a network ACL admitting 0.0.0.0/0 to a management or file-transfer port, or to every port, is a subnet-wide limit the definition does not enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_230",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 20 — a network ACL admitting 0.0.0.0/0 to a management or file-transfer port, or to every port, is a subnet-wide limit the definition does not enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_231",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 3389 — a network ACL admitting 0.0.0.0/0 to a management or file-transfer port, or to every port, is a subnet-wide limit the definition does not enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_232",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 22 — a network ACL admitting 0.0.0.0/0 to a management or file-transfer port, or to every port, is a subnet-wide limit the definition does not enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_352",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure NACL ingress does not allow all Ports — a network ACL admitting 0.0.0.0/0 to a management or file-transfer port, or to every port, is a subnet-wide limit the definition does not enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_44",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure AWS route table with VPC peering does not contain routes overly permissive to all traffic — a peering route to all traffic is a limit between networks the definition does not draw",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_DOCKER_1",
+      "framework": "dockerfile",
+      "ksi": "KSI-CNA-RNT",
+      "basis": "Ensure port 22 is not exposed — an image that exposes port 22 declares an inbound administrative path on every container built from it",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_17",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure all data stored in RDS is not publicly accessible — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_301",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure that AWS Lambda function is not publicly accessible — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_302",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure DB Snapshots are not Public — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_303",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure SSM documents are not Public — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_32",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure ECR policy is not set to public — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_164",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure Transfer Server is not exposed publicly. — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_102",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure Neptune Cluster instance is not publicly available — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_66",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure MWAA environment is not publicly accessible — a data store, function, snapshot or document reachable from the internet is attack surface the definition adds; the indicator asks that surface be minimal, and public exposure of a resource that does not need it is the opposite",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_130",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure VPC subnets do not assign public IP by default — a subnet, task or launch configuration that hands out public IP addresses by default puts every instance on the internet without a decision being made per instance",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_333",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure ECS services do not have public IP addresses assigned to them automatically — a subnet, task or launch configuration that hands out public IP addresses by default puts every instance on the internet without a decision being made per instance",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_389",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure AWS Auto Scaling group launch configuration doesn't have public IP address assignment enabled — a subnet, task or launch configuration that hands out public IP addresses by default puts every instance on the internet without a decision being made per instance",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_6",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure that S3 bucket has a Public Access block — a bucket without a public access block, or with a public-read ACL, is stored data on the attack surface",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_20",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "S3 Bucket has an ACL defined which allows public READ access. — a bucket without a public access block, or with a public-read ACL, is stored data on the attack surface",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_79",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure Instance Metadata Service Version 1 is not enabled — IMDSv1 lets a server-side request forgery read instance credentials — the lateral-movement path the indicator names; requiring v2 removes it from the declaration",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_336",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure ECS containers are limited to read-only access to root filesystems — a container whose root filesystem is writable gives a compromised process a place to persist; read-only is the minimal surface",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_DOCKER_3",
+      "framework": "dockerfile",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure that a user for the container has been created — a container that runs as root, or that can escalate with sudo, gives a compromised process the whole host to move into; a dedicated non-root user is the declared minimum",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_DOCKER_8",
+      "framework": "dockerfile",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure the last USER is not root — a container that runs as root, or that can escalate with sudo, gives a compromised process the whole host to move into; a dedicated non-root user is the declared minimum",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_1",
+      "framework": "dockerfile",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure that sudo isn't used — a container that runs as root, or that can escalate with sudo, gives a compromised process the whole host to move into; a dedicated non-root user is the declared minimum",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_GHA_2",
+      "framework": "github_actions",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure run commands are not vulnerable to shell injection — a workflow step that interpolates untrusted input into a shell, or that enables the deprecated unsecure commands, is a code-execution surface on the build system",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_GHA_1",
+      "framework": "github_actions",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure ACTIONS_ALLOW_UNSECURE_COMMANDS isn't true on environment variables — a workflow step that interpolates untrusted input into a shell, or that enables the deprecated unsecure commands, is a code-execution surface on the build system",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_GHA_1",
+      "framework": "github_actions",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "Ensure top-level permissions are not set to write-all — a workflow whose token holds write-all permissions lets one compromised job move into every part of the repository; scoped permissions bound the movement",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_5",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure that Security Groups are attached to another resource — a security group or network ACL that is defined but attached to nothing is a flow control that exists on paper; the indicator asks that logical networking be used to enforce flow, and attachment is the use",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_1",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure that all NACL are attached to subnets — a security group or network ACL that is defined but attached to nothing is a flow control that exists on paper; the indicator asks that logical networking be used to enforce flow, and attachment is the use",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_117",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure that AWS Lambda function is configured inside a VPC — a function, domain, cluster or notebook placed inside a VPC is under the logical network's flow controls; one outside it is reachable by paths those controls never see",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_137",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure that Elasticsearch is configured inside a VPC — a function, domain, cluster or notebook placed inside a VPC is under the logical network's flow controls; one outside it is reachable by paths those controls never see",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_154",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure Redshift is not deployed outside of a VPC — a function, domain, cluster or notebook placed inside a VPC is under the logical network's flow controls; one outside it is reachable by paths those controls never see",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_306",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure SageMaker notebook instances should be launched into a custom VPC — a function, domain, cluster or notebook placed inside a VPC is under the logical network's flow controls; one outside it is reachable by paths those controls never see",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_148",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure no default VPC is planned to be provisioned — a default VPC, default subnet group or default security group carries no flow control anyone designed; provisioning them is logical networking left to the platform's defaults",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_323",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure ElastiCache clusters do not use the default subnet group — a default VPC, default subnet group or default security group carries no flow control anyone designed; provisioning them is logical networking left to the platform's defaults",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_248",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure that Elasticsearch is not using the default Security Group — a default VPC, default subnet group or default security group carries no flow control anyone designed; provisioning them is logical networking left to the platform's defaults",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_7",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure that Amazon EMR clusters' security groups are not open to the world — a cluster security group open to the world, or a warehouse routed outside the VPC, bypasses the flow controls the logical network was built to enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_321",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure Redshift clusters use enhanced VPC routing — a cluster security group open to the world, or a warehouse routed outside the VPC, bypasses the flow controls the logical network was built to enforce",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_23",
+      "framework": "terraform",
+      "ksi": "KSI-CNA-ULN",
+      "basis": "Ensure every security group and rule has a description — a security group rule without a description cannot be reviewed against an intent; the indicator asks that flow controls be persistently reviewed, and the description is what a review reads",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_161",
+      "framework": "terraform",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "Ensure RDS database has IAM authentication enabled — a database that authenticates its callers through IAM instead of a shared password is a service-to-service method with rotation and identity behind it — the appropriately secure method the indicator asks for non-user accounts",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_162",
+      "framework": "terraform",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "Ensure RDS cluster has IAM authentication enabled — a database that authenticates its callers through IAM instead of a shared password is a service-to-service method with rotation and identity behind it — the appropriately secure method the indicator asks for non-user accounts",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_359",
+      "framework": "terraform",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "Neptune DB clusters should have IAM database authentication enabled — a database that authenticates its callers through IAM instead of a shared password is a service-to-service method with rotation and identity behind it — the appropriately secure method the indicator asks for non-user accounts",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_41",
+      "framework": "terraform",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "Ensure an IAM role is attached to EC2 instance — an instance with a role attached authenticates as itself; one without a role is a workload that will carry a long-lived key somewhere in its configuration",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_107",
+      "framework": "terraform",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "Ensure IAM policies does not allow credentials exposure — a policy that lets a principal mint or read credentials it does not own turns any service holding it into a path to every other service's authentication",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_287",
+      "framework": "terraform",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "Ensure IAM policies does not allow credentials exposure — a policy that lets a principal mint or read credentials it does not own turns any service holding it into a path to every other service's authentication",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_18",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure the S3 bucket has access logging enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_76",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure API Gateway has Access Logging enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_91",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure the ELBv2 (Application/Network) has access logging enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_86",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure CloudFront distribution has Access Logging enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_37",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Amazon EKS control plane logging is enabled for all log types — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_11",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure VPC flow logging is enabled in all VPCs — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_176",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Logging is enabled for WAF Web Access Control Lists — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_31",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure WAF2 has a Logging Configuration — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_84",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Elasticsearch Domain Logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_317",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Elasticsearch Domain Audit Logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_71",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Redshift Cluster logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_80",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure MSK Cluster logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_85",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure DocumentDB Logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_101",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Neptune logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_193",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure AppSync has Logging enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_223",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure ECS Cluster enables logging of ECS Exec — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_314",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure CodeBuild project environments have a logging configuration — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_324",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure that RDS Cluster log capture is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_325",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure that RDS Cluster audit logging is enabled for MySQL engine — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_4",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure API Gateway stage have logging level defined as appropriate — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_63",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Network firewall has logging configuration defined — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_39",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Domain Name System (DNS) query logging is enabled for Amazon Route 53 hosted zones — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_48",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure MQ Broker logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_197",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure MQ Broker Audit logging is enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_285",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure State Machine has execution history logging enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_75",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Global Accelerator accelerator has flow logs enabled — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_113",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-LET",
+      "basis": "Ensure Session Manager logs are enabled and encrypted — a resource whose logging is switched off in its definition will produce no events for the list the indicator asks to be maintained; the definition is where the event type is enabled or not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_251",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail logging is enabled — a trail that is enabled, covers every region and delivers to CloudWatch Logs is the centralized feed a SIEM reads; a definition without it declares that the account's API activity goes nowhere central",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_67",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail is enabled in all Regions — a trail that is enabled, covers every region and delivers to CloudWatch Logs is the centralized feed a SIEM reads; a definition without it declares that the account's API activity goes nowhere central",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_10",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail trails are integrated with CloudWatch Logs — a trail that is enabled, covers every region and delivers to CloudWatch Logs is the centralized feed a SIEM reads; a definition without it declares that the account's API activity goes nowhere central",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_252",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail defines an SNS Topic — a trail that is enabled, covers every region and delivers to CloudWatch Logs is the centralized feed a SIEM reads; a definition without it declares that the account's API activity goes nowhere central",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_36",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail log file validation is enabled — log file validation and customer-managed encryption of the trail and its log groups are the tamper-resistance the indicator names; a log that can be altered silently is not one a SIEM can trust",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_35",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail logs are encrypted at rest using KMS CMKs — log file validation and customer-managed encryption of the trail and its log groups are the tamper-resistance the indicator names; a log that can be altered silently is not one a SIEM can trust",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_158",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure that CloudWatch Log Group is encrypted by KMS — log file validation and customer-managed encryption of the trail and its log groups are the tamper-resistance the indicator names; a log that can be altered silently is not one a SIEM can trust",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_294",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudTrail Event Data Store uses CMK — log file validation and customer-managed encryption of the trail and its log groups are the tamper-resistance the indicator names; a log that can be altered silently is not one a SIEM can trust",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_66",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure that CloudWatch Log Group specifies retention days — a log group without a retention period, or with less than a year, discards the record before an investigation can reach it",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_338",
+      "framework": "terraform",
+      "ksi": "KSI-MLA-OSM",
+      "basis": "Ensure CloudWatch log groups retains logs for at least 1 year — a log group without a retention period, or with less than a year, discards the record before an investigation can reach it",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_133",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that RDS instances has backup policy — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_134",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that Amazon ElastiCache Redis clusters have automatic backup turned on — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_8",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that RDS clusters has backup plan of AWS Backup — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_9",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that EBS are added in the backup plans of AWS Backup — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_18",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that Elastic File System (Amazon EFS) file systems are added in the backup plans of AWS Backup — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_28",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure DynamoDB point in time recovery (backup) is enabled — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_165",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure DynamoDB point in time recovery (backup) is enabled for global tables — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_343",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure Amazon Redshift clusters should have automatic snapshots enabled — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_361",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that Neptune DB cluster has automated backups enabled with adequate retention — a data store with no backup policy, no backup plan or no point-in-time recovery has no backup to align with any recovery objective; the definition is where the backup exists or does not",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_360",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure DocumentDB has an adequate backup retention period — a retention period shorter than an objective, or a bucket without versioning, is a backup that cannot reach the recovery point the objective names",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_21",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure all data stored in the S3 bucket have versioning enabled — a retention period shorter than an objective, or a bucket without versioning, is a backup that cannot reach the recovery point the objective names",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_139",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that RDS clusters have deletion protection enabled — deletion protection and multi-AZ failover are the declared guards on the recovery time objective — a store that can be dropped by one call, or that has no standby, cannot meet one",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_293",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that AWS database instances have deletion protection enabled — deletion protection and multi-AZ failover are the declared guards on the recovery time objective — a store that can be dropped by one call, or that has no standby, cannot meet one",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_58",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure AWS Neptune cluster deletion protection is enabled — deletion protection and multi-AZ failover are the declared guards on the recovery time objective — a store that can be dropped by one call, or that has no standby, cannot meet one",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_150",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that Load Balancer has deletion protection enabled — deletion protection and multi-AZ failover are the declared guards on the recovery time objective — a store that can be dropped by one call, or that has no standby, cannot meet one",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_157",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure that RDS instances have Multi-AZ enabled — deletion protection and multi-AZ failover are the declared guards on the recovery time objective — a store that can be dropped by one call, or that has no standby, cannot meet one",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_50",
+      "framework": "terraform",
+      "ksi": "KSI-RPL-ABO",
+      "basis": "Ensure AWS ElastiCache Redis cluster with Multi-AZ Automatic Failover feature set to enabled — deletion protection and multi-AZ failover are the declared guards on the recovery time objective — a store that can be dropped by one call, or that has no standby, cannot meet one",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_19",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the S3 bucket is securely encrypted at rest — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_145",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that S3 buckets are encrypted with KMS by default — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_3",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the EBS is securely encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_189",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK) — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_106",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure EBS default encryption is enabled — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_2",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that only encrypted EBS volumes are attached to EC2 instances — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_8",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the Launch configuration or instance Elastic Blocks Store is securely encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_16",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the RDS is securely encrypted at rest — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_96",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in Aurora is securely encrypted at rest — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_327",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure RDS Clusters are encrypted using KMS CMKs — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_140",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that RDS global clusters are encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_119",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure DynamoDB Tables are encrypted using a KMS Customer Managed CMK — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_27",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the SQS queue is encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_26",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the SNS topic is encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_42",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure EFS is securely encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_64",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the Redshift cluster is securely encrypted at rest — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_142",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that Redshift cluster is encrypted by KMS — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_5",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the Elasticsearch is securely encrypted at rest — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_43",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Kinesis Stream is securely encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_240",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Kinesis Firehose delivery stream is encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_136",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that ECR repositories are encrypted using KMS — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_173",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Check encryption settings for Lambda environmental variable — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_149",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that Secrets Manager secret is encrypted using KMS CMK — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_337",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure SSM parameters are using KMS CMK — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_34",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "AWS SSM Parameter should be Encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_58",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure EKS Cluster has Secrets Encryption Enabled — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_166",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Backup Vault is encrypted at rest using KMS CMK — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_74",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure DocumentDB is encrypted at rest (default is unencrypted) — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_44",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Neptune storage is securely encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_47",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure DAX is encrypted at rest (default is unencrypted) — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_22",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure SageMaker Notebook is encrypted at rest using KMS CMK — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_98",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the Sagemaker Endpoint is securely encrypted at rest — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_201",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure MemoryDB is encrypted at rest using KMS CMKs — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_204",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AMIs are encrypted using KMS CMKs — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_235",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that copied AMIs are encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_77",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Athena Database is encrypted at rest (default is unencrypted) — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_94",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Glue Data Catalog Encryption is enabled — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_159",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that Athena Workgroup is encrypted — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_81",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure MSK Cluster encryption in rest and transit is enabled — a store, volume, queue, topic, stream or secret declared without encryption at rest holds information secured by nothing the definition can show; the indicator asks that information be encrypted, and this is the at-rest half",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_2",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure ALB protocol is HTTPS — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_20",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that ALB redirects HTTP requests into HTTPS ones — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_103",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that load balancer is using at least TLS 1.2 — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_376",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AWS Elastic Load Balancer listener uses TLS/SSL — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_127",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that Elastic Load Balancer(s) uses SSL certificates provided by AWS Certificate Manager — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_34",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure CloudFront distribution ViewerProtocolPolicy is set to HTTPS — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_174",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Verify CloudFront Distribution Viewer Certificate is using TLS v1.2 or higher — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_54",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AWS CloudFront distribution is using secure SSL protocols for HTTPS communication — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_72",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AWS CloudFront origin protocol policy enforces HTTPS-only — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_83",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Elasticsearch Domain enforces HTTPS — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_6",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all Elasticsearch has node-to-node encryption enabled — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_30",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the ElastiCache Replication Group is securely encrypted at transit — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_31",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure all data stored in the ElastiCache Replication Group is securely encrypted at transit and has auth token — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_105",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Redshift uses SSL — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_90",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure DocumentDB TLS is not disabled — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_97",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Encryption in transit is enabled for EFS volumes in ECS Task definitions — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_112",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure Session Manager data is encrypted in transit — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_202",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure MemoryDB data is encrypted in transit — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_215",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AppSync API Cache is encrypted in transit — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_239",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure DAX cluster endpoint is using TLS — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_365",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure SES Configuration Set enforces TLS usage — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_69",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AWS RDS database instance configured with encryption in transit — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_49",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure AWS Database Migration Service endpoints have SSL configured — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_228",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Verify Elasticsearch domain is using an up to date TLS policy — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_218",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that CloudSearch is using latest TLS — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_220",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure that CloudSearch is using https — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_351",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure EMR Cluster security configuration encrypts InTransit — a listener, distribution, endpoint or cluster link that accepts plaintext, or a TLS policy below 1.2, moves information unencrypted; this is the in-transit half of the indicator",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_227",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure KMS key is enabled — a key that is disabled, or whose policy admits every principal or defines nothing, is encryption whose control has been given away; the cryptographic protection the indicator relies on rests on the key",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV_AWS_33",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure KMS key policy does not contain wildcard (*) principal — a key that is disabled, or whose policy admits every principal or defines nothing, is encryption whose control has been given away; the cryptographic protection the indicator relies on rests on the key",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_AWS_64",
+      "framework": "terraform",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "Ensure KMS key Policy is defined — a key that is disabled, or whose policy admits every principal or defines nothing, is encryption whose control has been given away; the cryptographic protection the indicator relies on rests on the key",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_2",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled with curl — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_3",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled with wget — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_4",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled with the pip '--trusted-host' option — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_5",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled with the PYTHONHTTPSVERIFY environment variable — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_6",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled with the NODE_TLS_REJECT_UNAUTHORIZED environment variable — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_12",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled for npm via the 'NPM_CONFIG_STRICT_SSL' environment variable — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_13",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled for npm or yarn by setting the option strict-ssl to false — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_14",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled for git by setting the environment variable 'GIT_SSL_NO_VERIFY' to any value — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_15",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that the yum and dnf package managers are not configured to disable SSL certificate validation via the 'sslverify' configuration option — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    },
+    {
+      "check": "CKV2_DOCKER_16",
+      "framework": "dockerfile",
+      "ksi": "KSI-SVC-VCM",
+      "basis": "Ensure that certificate validation isn't disabled with pip via the 'PIP_TRUSTED_HOST' environment variable — a build step that disables certificate validation for a download, a package manager or a language runtime accepts any peer as the one it meant to talk to; validating communications is exactly what such a step declares it will not do",
+      "proves": "declared-state"
+    }
+  ]
+}

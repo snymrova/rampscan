@@ -4,6 +4,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import { Finding } from "@rampscan/schema";
+import type { PipelineRecipe } from "@rampscan/schema";
 import type {
   Collector,
   RepoSource,
@@ -34,6 +35,14 @@ export function createLocalRunner(options: {
   /** artifacts from earlier collectors in the run: name → absolute path */
   inputs?: Map<string, string>;
   runId: string;
+  /**
+   * The catalog (N2-1). Each collector is handed the recipes that name it,
+   * so one deriving its observation keys from a crosswalk reads the rule
+   * sets it was given rather than a file of its own. Optional: a caller
+   * with no catalog in hand (a unit test) gets collectors that answer their
+   * hand-written recipes only.
+   */
+  recipes?: readonly PipelineRecipe[];
 }): Runner {
   const byName = new Map(options.collectors.map((c) => [c.manifest.name, c]));
   const inputs = options.inputs ?? new Map<string, string>();
@@ -52,6 +61,9 @@ export function createLocalRunner(options: {
         artifactDir,
         inputs,
         runId: options.runId,
+        ...(options.recipes === undefined
+          ? {}
+          : { recipes: options.recipes.filter((r) => r.collection.collector === manifest.name) }),
       });
 
       const findings = out.findings.map((f) => Finding.parse(f));

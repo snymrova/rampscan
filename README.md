@@ -7,11 +7,11 @@ The open-source **KSI gap engine** for FedRAMP 20x: an appliance deployed **insi
 
 One row per KSI, always — the 41 that class b obliges, and the 5 it makes optional printed dimmed beneath their own label rather than dropped. Each carries automated methods against the class floor (`FRC-CSX-VVK`), evidence age against its owed window (MVX — Persistent Machine Verification and Validation: 7 days class b, 3 days class c), the five owed artifacts, and the worst gap class computed for that row. A KSI nothing validates is a `G1 coverage` row, never an absent one — the absence is the finding.
 
-The evidence under those rows is signed and commit-anchored. `scan` produces it from a checkout; `ingest` accepts a client-run AWS result the appliance never executed, or an assessed package, signing what was handed over and no verdict it did not evaluate; an attestation covers what neither can reach. Out of scope, deliberately: executing ramprules' AWS evidence recipes (the client runs those directly — they're copy-pasteable by design), and any SaaS control plane that would move code or evidence out of the client's boundary.
+The evidence under those rows is signed and commit-anchored. `scan` produces it from a checkout; `ingest` accepts a client-run AWS result the appliance never executed, an assessed package, or a SARIF log from the client's own tool joined through a reviewed per-tool crosswalk, signing what was handed over and no verdict it did not evaluate; an attestation covers what neither can reach. Out of scope, deliberately: executing ramprules' AWS evidence recipes (the client runs those directly — they're copy-pasteable by design), and any SaaS control plane that would move code or evidence out of the client's boundary.
 
 ## Status
 
-**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,527 tests across 130 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
+**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty-nine recipes in [`recipes/commit/`](recipes/commit/) (twenty hand-written, nine derived from the checkov crosswalk), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,571 tests across 136 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
@@ -25,18 +25,20 @@ $ pnpm rampscan frontier
 rampscan frontier — the KSI register
 class b · dataset 2026.09.13.02 · frontier overlay 0.13.0 · evidence: .
 
-  KSI              methods    freshest         artifacts   worst gap      reach
-  KSI-CED-RAT      0/1        —                0/5         G1 coverage    unreachable
-  KSI-CMT-RVP      1/1 ok     39d / 7d         0/5         G3 freshness   run
-  KSI-CMT-VTD      4/1 ok     39d / 7d         0/5         G3 freshness   run
-  KSI-CNA-EIS      0/1        —                0/5         G1 coverage    wired  optional at class b
+  KSI              methods            freshest         artifacts   worst gap      reach
+  KSI-CED-RAT      0/1                —                0/5         G1 coverage    unreachable
+  KSI-CMT-RVP      1/1 ok             39d / 7d         0/5         G3 freshness   run
+  KSI-CMT-VTD      4/1 ok             39d / 7d         0/5         G3 freshness   run
+  KSI-CNA-EIS      0/1                —                0/5         G1 coverage    wired  optional at class b
+  KSI-CNA-MAT      1/1 ok 1 declared  —                0/5         G3 freshness   wired
   …
+  N declared beside a methods cell: automated methods that prove DECLARED state — the committed infrastructure definitions, read by a crosswalk (recipes/crosswalks/) — not the account's state; counted toward the floor, and one observation per artifact on the reach ladder
 
-  floor met on 13 of 41 KSIs · at least one automated method on 13 · no method on 28
+  floor met on 20 of 41 KSIs · at least one automated method on 20 · no method on 21
   covering all 41 — a row that says "nothing evidences this from a pipeline" is a row
   fresh: 0 of 41 — the north star
   reach: unreachable 3 · reachable 4 · wired 26 · run 8 · fresh 0 · floor 0 · distinct 0 — each row's highest rung; wired is the most a recipe or adapter confers by existing, run and above come from the ledger
-  5 optional at class b, outside every meter above — KSI-CNA-EIS, KSI-MLA-ALA, KSI-SVC-PRR, KSI-SVC-RUD, KSI-SVC-VCM (0 evidenced anyway)
+  5 optional at class b, outside every meter above — KSI-CNA-EIS, KSI-MLA-ALA, KSI-SVC-PRR, KSI-SVC-RUD, KSI-SVC-VCM (1 evidenced anyway)
   clocks: 0 of 41 KSIs hold every method inside its owed window — VDR-TFR-MVX (MUST)
   history: no floor at class b — FRC-CSX-MOT (SHOULD, unquantified)
   artifacts: 0 of 41 KSIs hold all five owed artifacts — default_artifacts.KSI (2, 5 computed · 1, 3, 4 two-key judged)
@@ -46,18 +48,18 @@ class b · dataset 2026.09.13.02 · frontier overlay 0.13.0 · evidence: .
     AC-07        AC  lev 8  KSI-IAM-JIT KSI-IAM-SUS
     …
 
-  legacy view: --by-controls   (23 of 209 controls · 32 reachable at this pin)
+  legacy view: --by-controls   (38 of 209 controls · 47 reachable at this pin)
 ```
 
-**13 of 41 KSIs meet the class-b method floor, and 28 have no pipeline method at all.** Read cold that looks like an unfinished tool, so read it the other way: the second number is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed all 41 from a checkout would be claiming it can see things that leave no trace in one. That is what `ingest` and the attestation clock exist for: a method the appliance did not execute can still be counted, once something signed says so.
+**20 of 41 KSIs meet the class-b method floor, and 21 have no pipeline method at all.** Read cold that looks like an unfinished tool, so read it the other way: the second number is the honest statement of what a *repository* can never answer, and it is the more useful of the two. Most FedRAMP controls are about acts performed on or by people — training delivered, screening completed, an agreement signed — and the document a repository could hold is evidence *about* the act, not the act. A tool that claimed all 41 from a checkout would be claiming it can see things that leave no trace in one. That is what `ingest` and the attestation clock exist for: a method the appliance did not execute can still be counted, once something signed says so.
 
 **Every zero above is a different gap, and the tool says which.** `0/1` methods is `G1 coverage`; a method past its window is `G3 freshness`; the clocks, history, artifact and evidence-class lines are `G3`, `G4`, `G5` and `G6` measured separately, each against the rule that owes it. `rampscan gaps` prints them as a register — every row a (KSI, gap class, rule ID, evidence digest) tuple. A single blended percentage would have hidden which one you can actually fix this week.
 
-`frontier` also names what nobody has decided yet: **71 controls unreviewed**, printed as a question rather than as a gap. `--by-controls` keeps the pre-pivot denominator printable — 23 of 209 controls covered against a ceiling of 32 — because a project that changes how it counts should be able to show both numbers, not just the flattering one. Both of those moved on the 2026.09.13.02 re-pin and in the direction that costs this plane something: nine controls left upstream's frontier because upstream answered them, so the ceiling a commit can reach fell from 38 to 32, and the unreviewed queue grew because upstream also put five new controls onto it. The nine are retired in [`recipes/adjudications/`](recipes/adjudications/) with the concession written out rather than deleted.
+`frontier` also names what nobody has decided yet: **71 controls unreviewed**, printed as a question rather than as a gap. `--by-controls` keeps the pre-pivot denominator printable — 38 of 209 controls covered against a ceiling of 47 — because a project that changes how it counts should be able to show both numbers, not just the flattering one. Both of those have moved twice. On the 2026.09.13.02 re-pin they moved in the direction that costs this plane something: nine controls left upstream's frontier because upstream answered them, so the ceiling a commit can reach fell from 38 to 32, and the unreviewed queue grew because upstream also put five new controls onto it. Then the checkov crosswalk ([`recipes/crosswalks/`](recipes/crosswalks/)) derived nine recipes over the one artifact `iac-baseline-clean` already reads, one per KSI its rules speak to, and those claimed fifteen more controls — 23 → 38 covered, 32 → 47 reachable. Every one of those rows proves *declared* state, what the committed definitions say, and the register prints `declared` beside it so nobody reads a Terraform file as an account. The nine are retired in [`recipes/adjudications/`](recipes/adjudications/) with the concession written out rather than deleted.
 
 ## What it does
 
-`rampscan scan <path>` runs the collectors over a checkout — repo-facts, gitleaks, graph, syft, osv-scanner, reachability, grype, semgrep, checkov, spectral, documents, contract — joins their output against the twenty recipes in [`recipes/commit/`](recipes/commit/), and records each evidenced/violated row as a signed, commit-anchored bundle in an append-only content-addressed ledger. Re-scans keep unchanged evidence alive under its original signature; when an anchoring file changes, the projector marks that evidence `dead(anchor-drift)` and names the killing commit.
+`rampscan scan <path>` runs the collectors over a checkout — repo-facts, gitleaks, graph, syft, osv-scanner, reachability, grype, semgrep, checkov, spectral, documents, contract — joins their output against the twenty-nine recipes in [`recipes/commit/`](recipes/commit/), and records each evidenced/violated row as a signed, commit-anchored bundle in an append-only content-addressed ledger. Re-scans keep unchanged evidence alive under its original signature; when an anchoring file changes, the projector marks that evidence `dead(anchor-drift)` and names the killing commit.
 
 The reachability tier is what separates a verdict from a count. The `graph` collector builds `graph.db` for the snapshot (TypeScript/JavaScript import + call graph, exact vs inferred marked per edge; entry points detected over every application root — package.json `main`/`bin`/`exports`, files named on `scripts` command lines, Next.js and PocketBase file conventions — overridable via `graph.entrypoints`, with what the override left out recorded beside it), and the `reachability` collector joins `osv-results.json × graph.db × sbom.cdx.json`: a reachable advisory is `violated` with the call path as the artifact, a provably unreachable one becomes a **signed not-affected OpenVEX** (justification `vulnerable_code_not_in_execute_path`, exported to `out/exports/openvex.json`, digest-pinned as a subject of the signed bundle). The SBOM's `dependsOn` edges continue the walk forward from any package the code graph reached, with those hops marked `sbom` — they can prove a transitive dependency present and never prove one absent, because the manifest graph is partial. No graph, or no detectable entry points, degrades to the honest posture — every advisory counts, marked `unknown`; so does a package with no graph node and no chain to it. And a not-affected claim is only signed at the width of the whole tree: every statement carries the entry-point set and the application roots the walk entered as structured fields, and where the tree declares a package root no entry point covers, or `graph.entrypoints` left out an entry point detection found and the walk never reached, `not_affected` is refused for that run and the reason is recorded — a negative scoped to half a repository is not a negative, and a config is honoured as an instruction, not as a proof.
 
@@ -103,7 +105,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 1,527 tests across 130 files; the ones wanting a tool or PocketBase skip by name
+pnpm test               # 1,571 tests across 136 files; the ones wanting a tool or PocketBase skip by name
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard

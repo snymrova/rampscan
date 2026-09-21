@@ -1,0 +1,84 @@
+{
+  "id": "iac-traffic-restricted-declared",
+  "ksi_ids": [
+    "KSI-CNA-RNT"
+  ],
+  "control_ids": [
+    "sc-7.5",
+    "cm-7.1"
+  ],
+  "evidence": "The committed infrastructure definitions declare no security group, network ACL, peering route or container port that admits unrestricted inbound or outbound traffic, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-CNA-RNT: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_12",
+            "CKV2_AWS_44",
+            "CKV_AWS_100",
+            "CKV_AWS_229",
+            "CKV_AWS_230",
+            "CKV_AWS_231",
+            "CKV_AWS_232",
+            "CKV_AWS_24",
+            "CKV_AWS_25",
+            "CKV_AWS_260",
+            "CKV_AWS_277",
+            "CKV_AWS_352",
+            "CKV_AWS_38",
+            "CKV_AWS_382",
+            "CKV_DOCKER_1"
+          ]
+        }
+      ],
+      "controls": [
+        "sc-7.5",
+        "cm-7.1"
+      ],
+      "description": "Zero failed checks among the 15 checkov rule(s) the crosswalk maps to KSI-CNA-RNT — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only: what the committed Terraform, Dockerfiles and workflows say, never what the account runs. A rule added by hand in the console, or a definition never applied, is invisible here. Corroborates the cloud plane; does not replace it.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 15 of its rules filed under KSI-CNA-RNT with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 15 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the network rules written into the committed infrastructure — security groups, network ACLs, peering routes and container images — and counts the ones that open a port to the whole internet or let everything out.",
+    "violation": "Some definition admits the internet to an administrative or web port, lets any destination out, or peers two networks without limit. It is what the code says the network will be, before anything is deployed; a running account may differ, and this check cannot see that.",
+    "fix": "Narrow the offending rule to the sources and ports the service needs, or remove it. Each failed check names the file, the resource and the rule, so the change is one line in one definition; a rule that must stay open belongs in a recorded decision."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_12",
+      "CKV2_AWS_44",
+      "CKV_AWS_100",
+      "CKV_AWS_229",
+      "CKV_AWS_230",
+      "CKV_AWS_231",
+      "CKV_AWS_232",
+      "CKV_AWS_24",
+      "CKV_AWS_25",
+      "CKV_AWS_260",
+      "CKV_AWS_277",
+      "CKV_AWS_352",
+      "CKV_AWS_38",
+      "CKV_AWS_382",
+      "CKV_DOCKER_1"
+    ]
+  },
+  "anchor": "commit"
+}

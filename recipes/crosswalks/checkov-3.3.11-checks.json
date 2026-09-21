@@ -1,0 +1,5911 @@
+{
+  "_type": "https://rampscan.dev/tool-rule-list/v1",
+  "tool": "checkov",
+  "version": "3.3.11",
+  "image": "bridgecrew/checkov:3.3.11",
+  "frameworks": [
+    "dockerfile",
+    "github_actions",
+    "terraform"
+  ],
+  "generated_by": "docker run --rm bridgecrew/checkov:3.3.11 --list --framework dockerfile github_actions terraform  (one row per (id, framework); resource-level duplicates collapsed)",
+  "generated": "2026-09-21",
+  "rule": "The rule ids the pinned checkov image can emit for the frameworks the collector scans. A crosswalk entry naming an id absent here fails checkov-crosswalk.test.ts; when tools.json re-pins checkov, regenerate this file with the command above and re-read the crosswalk against the diff. Framework names are lower-cased to the `check_type` the collector reads off checkov's report.",
+  "checks": [
+    {
+      "id": "CKV2_DOCKER_1",
+      "framework": "dockerfile",
+      "name": "Ensure that sudo isn't used"
+    },
+    {
+      "id": "CKV2_DOCKER_10",
+      "framework": "dockerfile",
+      "name": "Ensure that packages with untrusted or missing signatures are not used by rpm via the '--nodigest', '--nosignature', '--noverify', or '--nofiledigest' options"
+    },
+    {
+      "id": "CKV2_DOCKER_11",
+      "framework": "dockerfile",
+      "name": "Ensure that the '--force-yes' option is not used, as it disables signature validation and allows packages to be downgraded which can leave the system in a broken or inconsistent state"
+    },
+    {
+      "id": "CKV2_DOCKER_12",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled for npm via the 'NPM_CONFIG_STRICT_SSL' environment variable"
+    },
+    {
+      "id": "CKV2_DOCKER_13",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled for npm or yarn by setting the option strict-ssl to false"
+    },
+    {
+      "id": "CKV2_DOCKER_14",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled for git by setting the environment variable 'GIT_SSL_NO_VERIFY' to any value"
+    },
+    {
+      "id": "CKV2_DOCKER_15",
+      "framework": "dockerfile",
+      "name": "Ensure that the yum and dnf package managers are not configured to disable SSL certificate validation via the 'sslverify' configuration option"
+    },
+    {
+      "id": "CKV2_DOCKER_16",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled with pip via the 'PIP_TRUSTED_HOST' environment variable"
+    },
+    {
+      "id": "CKV2_DOCKER_17",
+      "framework": "dockerfile",
+      "name": "Ensure that 'chpasswd' is not used to set or remove passwords"
+    },
+    {
+      "id": "CKV2_DOCKER_2",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled with curl"
+    },
+    {
+      "id": "CKV2_DOCKER_3",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled with wget"
+    },
+    {
+      "id": "CKV2_DOCKER_4",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled with the pip '--trusted-host' option"
+    },
+    {
+      "id": "CKV2_DOCKER_5",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled with the PYTHONHTTPSVERIFY environment variable"
+    },
+    {
+      "id": "CKV2_DOCKER_6",
+      "framework": "dockerfile",
+      "name": "Ensure that certificate validation isn't disabled with the NODE_TLS_REJECT_UNAUTHORIZED environment variable"
+    },
+    {
+      "id": "CKV2_DOCKER_7",
+      "framework": "dockerfile",
+      "name": "Ensure that packages with untrusted or missing signatures are not used by apk via the '--allow-untrusted' option"
+    },
+    {
+      "id": "CKV2_DOCKER_8",
+      "framework": "dockerfile",
+      "name": "Ensure that packages with untrusted or missing signatures are not used by apt-get via the '--allow-unauthenticated' option"
+    },
+    {
+      "id": "CKV2_DOCKER_9",
+      "framework": "dockerfile",
+      "name": "Ensure that packages with untrusted or missing GPG signatures are not used by dnf, tdnf, or yum via the '--nogpgcheck' option"
+    },
+    {
+      "id": "CKV_DOCKER_1",
+      "framework": "dockerfile",
+      "name": "Ensure port 22 is not exposed"
+    },
+    {
+      "id": "CKV_DOCKER_10",
+      "framework": "dockerfile",
+      "name": "Ensure that WORKDIR values are absolute paths"
+    },
+    {
+      "id": "CKV_DOCKER_11",
+      "framework": "dockerfile",
+      "name": "Ensure From Alias are unique for multistage builds."
+    },
+    {
+      "id": "CKV_DOCKER_2",
+      "framework": "dockerfile",
+      "name": "Ensure that HEALTHCHECK instructions have been added to container images"
+    },
+    {
+      "id": "CKV_DOCKER_3",
+      "framework": "dockerfile",
+      "name": "Ensure that a user for the container has been created"
+    },
+    {
+      "id": "CKV_DOCKER_4",
+      "framework": "dockerfile",
+      "name": "Ensure that COPY is used instead of ADD in Dockerfiles"
+    },
+    {
+      "id": "CKV_DOCKER_5",
+      "framework": "dockerfile",
+      "name": "Ensure update instructions are not use alone in the Dockerfile"
+    },
+    {
+      "id": "CKV_DOCKER_6",
+      "framework": "dockerfile",
+      "name": "Ensure that LABEL maintainer is used instead of MAINTAINER (deprecated)"
+    },
+    {
+      "id": "CKV_DOCKER_7",
+      "framework": "dockerfile",
+      "name": "Ensure the base image uses a non latest version tag"
+    },
+    {
+      "id": "CKV_DOCKER_8",
+      "framework": "dockerfile",
+      "name": "Ensure the last USER is not root"
+    },
+    {
+      "id": "CKV_DOCKER_9",
+      "framework": "dockerfile",
+      "name": "Ensure that APT isn't used"
+    },
+    {
+      "id": "CKV2_GHA_1",
+      "framework": "github_actions",
+      "name": "Ensure top-level permissions are not set to write-all"
+    },
+    {
+      "id": "CKV_GHA_1",
+      "framework": "github_actions",
+      "name": "Ensure ACTIONS_ALLOW_UNSECURE_COMMANDS isn't true on environment variables"
+    },
+    {
+      "id": "CKV_GHA_2",
+      "framework": "github_actions",
+      "name": "Ensure run commands are not vulnerable to shell injection"
+    },
+    {
+      "id": "CKV_GHA_3",
+      "framework": "github_actions",
+      "name": "Suspicious use of curl with secrets"
+    },
+    {
+      "id": "CKV_GHA_4",
+      "framework": "github_actions",
+      "name": "Suspicious use of netcat with IP address"
+    },
+    {
+      "id": "CKV_GHA_5",
+      "framework": "github_actions",
+      "name": "Found artifact build without evidence of cosign sign execution in pipeline"
+    },
+    {
+      "id": "CKV_GHA_6",
+      "framework": "github_actions",
+      "name": "Found artifact build without evidence of cosign sbom attestation in pipeline"
+    },
+    {
+      "id": "CKV_GHA_7",
+      "framework": "github_actions",
+      "name": "The build output cannot be affected by user parameters other than the build entry point and the top-level source location. GitHub Actions workflow_dispatch inputs MUST be empty."
+    },
+    {
+      "id": "CKV2_ADO_1",
+      "framework": "terraform",
+      "name": "Ensure at least two approving reviews for PRs"
+    },
+    {
+      "id": "CKV2_AWS_1",
+      "framework": "terraform",
+      "name": "Ensure that all NACL are attached to subnets"
+    },
+    {
+      "id": "CKV2_AWS_10",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail trails are integrated with CloudWatch Logs"
+    },
+    {
+      "id": "CKV2_AWS_11",
+      "framework": "terraform",
+      "name": "Ensure VPC flow logging is enabled in all VPCs"
+    },
+    {
+      "id": "CKV2_AWS_12",
+      "framework": "terraform",
+      "name": "Ensure the default security group of every VPC restricts all traffic"
+    },
+    {
+      "id": "CKV2_AWS_14",
+      "framework": "terraform",
+      "name": "Ensure that IAM groups includes at least one IAM user"
+    },
+    {
+      "id": "CKV2_AWS_15",
+      "framework": "terraform",
+      "name": "Ensure that auto Scaling groups that are associated with a load balancer are using Elastic Load Balancing health checks."
+    },
+    {
+      "id": "CKV2_AWS_16",
+      "framework": "terraform",
+      "name": "Ensure that Auto Scaling is enabled on your DynamoDB tables"
+    },
+    {
+      "id": "CKV2_AWS_18",
+      "framework": "terraform",
+      "name": "Ensure that Elastic File System (Amazon EFS) file systems are added in the backup plans of AWS Backup"
+    },
+    {
+      "id": "CKV2_AWS_19",
+      "framework": "terraform",
+      "name": "Ensure that all EIP addresses allocated to a VPC are attached to EC2 instances"
+    },
+    {
+      "id": "CKV2_AWS_2",
+      "framework": "terraform",
+      "name": "Ensure that only encrypted EBS volumes are attached to EC2 instances"
+    },
+    {
+      "id": "CKV2_AWS_20",
+      "framework": "terraform",
+      "name": "Ensure that ALB redirects HTTP requests into HTTPS ones"
+    },
+    {
+      "id": "CKV2_AWS_21",
+      "framework": "terraform",
+      "name": "Ensure that all IAM users are members of at least one IAM group."
+    },
+    {
+      "id": "CKV2_AWS_22",
+      "framework": "terraform",
+      "name": "Ensure an IAM User does not have access to the console"
+    },
+    {
+      "id": "CKV2_AWS_23",
+      "framework": "terraform",
+      "name": "Route53 A Record has Attached Resource"
+    },
+    {
+      "id": "CKV2_AWS_27",
+      "framework": "terraform",
+      "name": "Ensure Postgres RDS as aws_rds_cluster has Query Logging enabled"
+    },
+    {
+      "id": "CKV2_AWS_28",
+      "framework": "terraform",
+      "name": "Ensure public facing ALB are protected by WAF"
+    },
+    {
+      "id": "CKV2_AWS_29",
+      "framework": "terraform",
+      "name": "Ensure public API gateway are protected by WAF"
+    },
+    {
+      "id": "CKV2_AWS_3",
+      "framework": "terraform",
+      "name": "Ensure GuardDuty is enabled to specific org/region"
+    },
+    {
+      "id": "CKV2_AWS_30",
+      "framework": "terraform",
+      "name": "Ensure Postgres RDS as aws_db_instance has Query Logging enabled"
+    },
+    {
+      "id": "CKV2_AWS_31",
+      "framework": "terraform",
+      "name": "Ensure WAF2 has a Logging Configuration"
+    },
+    {
+      "id": "CKV2_AWS_32",
+      "framework": "terraform",
+      "name": "Ensure CloudFront distribution has a response headers policy attached"
+    },
+    {
+      "id": "CKV2_AWS_33",
+      "framework": "terraform",
+      "name": "Ensure AppSync is protected by WAF"
+    },
+    {
+      "id": "CKV2_AWS_34",
+      "framework": "terraform",
+      "name": "AWS SSM Parameter should be Encrypted"
+    },
+    {
+      "id": "CKV2_AWS_35",
+      "framework": "terraform",
+      "name": "AWS NAT Gateways should be utilized for the default route"
+    },
+    {
+      "id": "CKV2_AWS_36",
+      "framework": "terraform",
+      "name": "Ensure terraform is not sending SSM secrets to untrusted domains over HTTP"
+    },
+    {
+      "id": "CKV2_AWS_37",
+      "framework": "terraform",
+      "name": "Ensure CodeCommit associates an approval rule"
+    },
+    {
+      "id": "CKV2_AWS_38",
+      "framework": "terraform",
+      "name": "Ensure Domain Name System Security Extensions (DNSSEC) signing is enabled for Amazon Route 53 public hosted zones"
+    },
+    {
+      "id": "CKV2_AWS_39",
+      "framework": "terraform",
+      "name": "Ensure Domain Name System (DNS) query logging is enabled for Amazon Route 53 hosted zones"
+    },
+    {
+      "id": "CKV2_AWS_4",
+      "framework": "terraform",
+      "name": "Ensure API Gateway stage have logging level defined as appropriate"
+    },
+    {
+      "id": "CKV2_AWS_40",
+      "framework": "terraform",
+      "name": "Ensure AWS IAM policy does not allow full IAM privileges"
+    },
+    {
+      "id": "CKV2_AWS_41",
+      "framework": "terraform",
+      "name": "Ensure an IAM role is attached to EC2 instance"
+    },
+    {
+      "id": "CKV2_AWS_42",
+      "framework": "terraform",
+      "name": "Ensure AWS CloudFront distribution uses custom SSL certificate"
+    },
+    {
+      "id": "CKV2_AWS_43",
+      "framework": "terraform",
+      "name": "Ensure S3 Bucket does not allow access to all Authenticated users"
+    },
+    {
+      "id": "CKV2_AWS_44",
+      "framework": "terraform",
+      "name": "Ensure AWS route table with VPC peering does not contain routes overly permissive to all traffic"
+    },
+    {
+      "id": "CKV2_AWS_45",
+      "framework": "terraform",
+      "name": "Ensure AWS Config recorder is enabled to record all supported resources"
+    },
+    {
+      "id": "CKV2_AWS_46",
+      "framework": "terraform",
+      "name": "Ensure AWS CloudFront Distribution with S3 have Origin Access set to enabled"
+    },
+    {
+      "id": "CKV2_AWS_47",
+      "framework": "terraform",
+      "name": "Ensure AWS CloudFront attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability"
+    },
+    {
+      "id": "CKV2_AWS_48",
+      "framework": "terraform",
+      "name": "Ensure AWS Config must record all possible resources"
+    },
+    {
+      "id": "CKV2_AWS_49",
+      "framework": "terraform",
+      "name": "Ensure AWS Database Migration Service endpoints have SSL configured"
+    },
+    {
+      "id": "CKV2_AWS_5",
+      "framework": "terraform",
+      "name": "Ensure that Security Groups are attached to another resource"
+    },
+    {
+      "id": "CKV2_AWS_50",
+      "framework": "terraform",
+      "name": "Ensure AWS ElastiCache Redis cluster with Multi-AZ Automatic Failover feature set to enabled"
+    },
+    {
+      "id": "CKV2_AWS_51",
+      "framework": "terraform",
+      "name": "Ensure AWS API Gateway endpoints uses client certificate authentication"
+    },
+    {
+      "id": "CKV2_AWS_52",
+      "framework": "terraform",
+      "name": "Ensure AWS ElasticSearch/OpenSearch Fine-grained access control is enabled"
+    },
+    {
+      "id": "CKV2_AWS_53",
+      "framework": "terraform",
+      "name": "Ensure AWS API gateway request is validated"
+    },
+    {
+      "id": "CKV2_AWS_54",
+      "framework": "terraform",
+      "name": "Ensure AWS CloudFront distribution is using secure SSL protocols for HTTPS communication"
+    },
+    {
+      "id": "CKV2_AWS_55",
+      "framework": "terraform",
+      "name": "Ensure AWS EMR cluster is configured with security configuration"
+    },
+    {
+      "id": "CKV2_AWS_56",
+      "framework": "terraform",
+      "name": "Ensure AWS Managed IAMFullAccess IAM policy is not used."
+    },
+    {
+      "id": "CKV2_AWS_57",
+      "framework": "terraform",
+      "name": "Ensure Secrets Manager secrets should have automatic rotation enabled"
+    },
+    {
+      "id": "CKV2_AWS_58",
+      "framework": "terraform",
+      "name": "Ensure AWS Neptune cluster deletion protection is enabled"
+    },
+    {
+      "id": "CKV2_AWS_59",
+      "framework": "terraform",
+      "name": "Ensure ElasticSearch/OpenSearch has dedicated master node enabled"
+    },
+    {
+      "id": "CKV2_AWS_6",
+      "framework": "terraform",
+      "name": "Ensure that S3 bucket has a Public Access block"
+    },
+    {
+      "id": "CKV2_AWS_60",
+      "framework": "terraform",
+      "name": "Ensure RDS instance with copy tags to snapshots is enabled"
+    },
+    {
+      "id": "CKV2_AWS_61",
+      "framework": "terraform",
+      "name": "Ensure that an S3 bucket has a lifecycle configuration"
+    },
+    {
+      "id": "CKV2_AWS_62",
+      "framework": "terraform",
+      "name": "Ensure S3 buckets should have event notifications enabled"
+    },
+    {
+      "id": "CKV2_AWS_63",
+      "framework": "terraform",
+      "name": "Ensure Network firewall has logging configuration defined"
+    },
+    {
+      "id": "CKV2_AWS_64",
+      "framework": "terraform",
+      "name": "Ensure KMS key Policy is defined"
+    },
+    {
+      "id": "CKV2_AWS_65",
+      "framework": "terraform",
+      "name": "Ensure access control lists for S3 buckets are disabled"
+    },
+    {
+      "id": "CKV2_AWS_66",
+      "framework": "terraform",
+      "name": "Ensure MWAA environment is not publicly accessible"
+    },
+    {
+      "id": "CKV2_AWS_68",
+      "framework": "terraform",
+      "name": "Ensure SageMaker notebook instance IAM policy is not overly permissive"
+    },
+    {
+      "id": "CKV2_AWS_69",
+      "framework": "terraform",
+      "name": "Ensure AWS RDS database instance configured with encryption in transit"
+    },
+    {
+      "id": "CKV2_AWS_7",
+      "framework": "terraform",
+      "name": "Ensure that Amazon EMR clusters' security groups are not open to the world"
+    },
+    {
+      "id": "CKV2_AWS_70",
+      "framework": "terraform",
+      "name": "Ensure API gateway method has authorization or API key set"
+    },
+    {
+      "id": "CKV2_AWS_71",
+      "framework": "terraform",
+      "name": "Ensure AWS ACM Certificate domain name does not include wildcards"
+    },
+    {
+      "id": "CKV2_AWS_72",
+      "framework": "terraform",
+      "name": "Ensure AWS CloudFront origin protocol policy enforces HTTPS-only"
+    },
+    {
+      "id": "CKV2_AWS_73",
+      "framework": "terraform",
+      "name": "Ensure AWS SQS uses CMK not AWS default keys for encryption"
+    },
+    {
+      "id": "CKV2_AWS_74",
+      "framework": "terraform",
+      "name": "Ensure AWS Load Balancers use strong ciphers"
+    },
+    {
+      "id": "CKV2_AWS_75",
+      "framework": "terraform",
+      "name": "Ensure no open CORS policy"
+    },
+    {
+      "id": "CKV2_AWS_76",
+      "framework": "terraform",
+      "name": "Ensure AWS ALB attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability"
+    },
+    {
+      "id": "CKV2_AWS_77",
+      "framework": "terraform",
+      "name": "Ensure AWS API Gateway Rest API attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability"
+    },
+    {
+      "id": "CKV2_AWS_78",
+      "framework": "terraform",
+      "name": "Ensure AWS AppSync attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability"
+    },
+    {
+      "id": "CKV2_AWS_8",
+      "framework": "terraform",
+      "name": "Ensure that RDS clusters has backup plan of AWS Backup"
+    },
+    {
+      "id": "CKV2_AWS_9",
+      "framework": "terraform",
+      "name": "Ensure that EBS are added in the backup plans of AWS Backup"
+    },
+    {
+      "id": "CKV2_AZURE_1",
+      "framework": "terraform",
+      "name": "Ensure storage for critical data are encrypted with Customer Managed Key"
+    },
+    {
+      "id": "CKV2_AZURE_10",
+      "framework": "terraform",
+      "name": "Ensure that Microsoft Antimalware is configured to automatically updates for Virtual Machines"
+    },
+    {
+      "id": "CKV2_AZURE_11",
+      "framework": "terraform",
+      "name": "Ensure that Azure Data Explorer encryption at rest uses a customer-managed key"
+    },
+    {
+      "id": "CKV2_AZURE_12",
+      "framework": "terraform",
+      "name": "Ensure that virtual machines are backed up using Azure Backup"
+    },
+    {
+      "id": "CKV2_AZURE_13",
+      "framework": "terraform",
+      "name": "Ensure that sql servers enables data security policy"
+    },
+    {
+      "id": "CKV2_AZURE_14",
+      "framework": "terraform",
+      "name": "Ensure that Unattached disks are encrypted"
+    },
+    {
+      "id": "CKV2_AZURE_15",
+      "framework": "terraform",
+      "name": "Ensure that Azure data factories are encrypted with a customer-managed key"
+    },
+    {
+      "id": "CKV2_AZURE_16",
+      "framework": "terraform",
+      "name": "Ensure that MySQL server enables customer-managed key for encryption"
+    },
+    {
+      "id": "CKV2_AZURE_17",
+      "framework": "terraform",
+      "name": "Ensure that PostgreSQL server enables customer-managed key for encryption"
+    },
+    {
+      "id": "CKV2_AZURE_19",
+      "framework": "terraform",
+      "name": "Ensure that Azure Synapse workspaces have no IP firewall rules attached"
+    },
+    {
+      "id": "CKV2_AZURE_2",
+      "framework": "terraform",
+      "name": "Ensure that Vulnerability Assessment (VA) is enabled on a SQL server by setting a Storage Account"
+    },
+    {
+      "id": "CKV2_AZURE_20",
+      "framework": "terraform",
+      "name": "Ensure Storage logging is enabled for Table service for read requests"
+    },
+    {
+      "id": "CKV2_AZURE_21",
+      "framework": "terraform",
+      "name": "Ensure Storage logging is enabled for Blob service for read requests"
+    },
+    {
+      "id": "CKV2_AZURE_22",
+      "framework": "terraform",
+      "name": "Ensure that Cognitive Services enables customer-managed key for encryption"
+    },
+    {
+      "id": "CKV2_AZURE_23",
+      "framework": "terraform",
+      "name": "Ensure Azure spring cloud is configured with Virtual network (Vnet)"
+    },
+    {
+      "id": "CKV2_AZURE_24",
+      "framework": "terraform",
+      "name": "Ensure Azure automation account does NOT have overly permissive network access"
+    },
+    {
+      "id": "CKV2_AZURE_25",
+      "framework": "terraform",
+      "name": "Ensure Azure SQL database Transparent Data Encryption (TDE) is enabled"
+    },
+    {
+      "id": "CKV2_AZURE_26",
+      "framework": "terraform",
+      "name": "Ensure Azure PostgreSQL Flexible server is not configured with overly permissive network access"
+    },
+    {
+      "id": "CKV2_AZURE_27",
+      "framework": "terraform",
+      "name": "Ensure Azure AD authentication is enabled for Azure SQL (MSSQL)"
+    },
+    {
+      "id": "CKV2_AZURE_28",
+      "framework": "terraform",
+      "name": "Ensure Container Instance is configured with managed identity"
+    },
+    {
+      "id": "CKV2_AZURE_29",
+      "framework": "terraform",
+      "name": "Ensure AKS cluster has Azure CNI networking enabled"
+    },
+    {
+      "id": "CKV2_AZURE_3",
+      "framework": "terraform",
+      "name": "Ensure that VA setting Periodic Recurring Scans is enabled on a SQL server"
+    },
+    {
+      "id": "CKV2_AZURE_30",
+      "framework": "terraform",
+      "name": "Ensure Azure Container Registry (ACR) has HTTPS enabled for webhook"
+    },
+    {
+      "id": "CKV2_AZURE_31",
+      "framework": "terraform",
+      "name": "Ensure VNET subnet is configured with a Network Security Group (NSG)"
+    },
+    {
+      "id": "CKV2_AZURE_32",
+      "framework": "terraform",
+      "name": "Ensure private endpoint is configured to key vault"
+    },
+    {
+      "id": "CKV2_AZURE_33",
+      "framework": "terraform",
+      "name": "Ensure storage account is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_34",
+      "framework": "terraform",
+      "name": "Ensure Azure SQL server firewall is not overly permissive"
+    },
+    {
+      "id": "CKV2_AZURE_35",
+      "framework": "terraform",
+      "name": "Ensure Azure recovery services vault is configured with managed identity"
+    },
+    {
+      "id": "CKV2_AZURE_36",
+      "framework": "terraform",
+      "name": "Ensure Azure automation account is configured with managed identity"
+    },
+    {
+      "id": "CKV2_AZURE_37",
+      "framework": "terraform",
+      "name": "Ensure Azure MariaDB server is using latest TLS (1.2)"
+    },
+    {
+      "id": "CKV2_AZURE_38",
+      "framework": "terraform",
+      "name": "Ensure soft-delete is enabled on Azure storage account"
+    },
+    {
+      "id": "CKV2_AZURE_39",
+      "framework": "terraform",
+      "name": "Ensure Azure VM is not configured with public IP and serial console access"
+    },
+    {
+      "id": "CKV2_AZURE_4",
+      "framework": "terraform",
+      "name": "Ensure Azure SQL server ADS VA Send scan reports to is configured"
+    },
+    {
+      "id": "CKV2_AZURE_40",
+      "framework": "terraform",
+      "name": "Ensure storage account is not configured with Shared Key authorization"
+    },
+    {
+      "id": "CKV2_AZURE_41",
+      "framework": "terraform",
+      "name": "Ensure storage account is configured with SAS expiration policy"
+    },
+    {
+      "id": "CKV2_AZURE_42",
+      "framework": "terraform",
+      "name": "Ensure Azure PostgreSQL server is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_43",
+      "framework": "terraform",
+      "name": "Ensure Azure MariaDB server is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_44",
+      "framework": "terraform",
+      "name": "Ensure Azure MySQL server is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_45",
+      "framework": "terraform",
+      "name": "Ensure Microsoft SQL server is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_46",
+      "framework": "terraform",
+      "name": "Ensure that Azure Synapse Workspace vulnerability assessment is enabled"
+    },
+    {
+      "id": "CKV2_AZURE_47",
+      "framework": "terraform",
+      "name": "Ensure storage account is configured without blob anonymous access"
+    },
+    {
+      "id": "CKV2_AZURE_48",
+      "framework": "terraform",
+      "name": "Ensure that Databricks Workspaces enables customer-managed key for root DBFS encryption"
+    },
+    {
+      "id": "CKV2_AZURE_49",
+      "framework": "terraform",
+      "name": "Ensure that Azure Machine learning workspace is not configured with overly permissive network access"
+    },
+    {
+      "id": "CKV2_AZURE_5",
+      "framework": "terraform",
+      "name": "Ensure that VA setting 'Also send email notifications to admins and subscription owners' is set for a SQL server"
+    },
+    {
+      "id": "CKV2_AZURE_50",
+      "framework": "terraform",
+      "name": "Ensure Azure Storage Account storing Machine Learning workspace high business impact data is not publicly accessible"
+    },
+    {
+      "id": "CKV2_AZURE_51",
+      "framework": "terraform",
+      "name": "Ensure Synapse SQL Pool has a security alert policy"
+    },
+    {
+      "id": "CKV2_AZURE_52",
+      "framework": "terraform",
+      "name": "Ensure Synapse SQL Pool has vulnerability assessment attached"
+    },
+    {
+      "id": "CKV2_AZURE_53",
+      "framework": "terraform",
+      "name": "Ensure Azure Synapse Workspace has extended audit logs"
+    },
+    {
+      "id": "CKV2_AZURE_54",
+      "framework": "terraform",
+      "name": "Ensure log monitoring is enabled for Synapse SQL Pool"
+    },
+    {
+      "id": "CKV2_AZURE_55",
+      "framework": "terraform",
+      "name": "Ensure Azure Spring Cloud app end-to-end TLS is enabled"
+    },
+    {
+      "id": "CKV2_AZURE_56",
+      "framework": "terraform",
+      "name": "Ensure Azure MySQL Flexible Server is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_57",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL Flexible Server is configured with private endpoint"
+    },
+    {
+      "id": "CKV2_AZURE_6",
+      "framework": "terraform",
+      "name": "Ensure 'Allow access to Azure services' for PostgreSQL Database Server is disabled"
+    },
+    {
+      "id": "CKV2_AZURE_7",
+      "framework": "terraform",
+      "name": "Ensure that Azure Active Directory Admin is configured"
+    },
+    {
+      "id": "CKV2_AZURE_8",
+      "framework": "terraform",
+      "name": "Ensure the storage container storing the activity logs is not publicly accessible"
+    },
+    {
+      "id": "CKV2_AZURE_9",
+      "framework": "terraform",
+      "name": "Ensure Virtual Machines are utilizing Managed Disks"
+    },
+    {
+      "id": "CKV2_GCP_1",
+      "framework": "terraform",
+      "name": "Ensure GKE clusters are not running using the Compute Engine default service account"
+    },
+    {
+      "id": "CKV2_GCP_10",
+      "framework": "terraform",
+      "name": "Ensure GCP Cloud Function HTTP trigger is secured"
+    },
+    {
+      "id": "CKV2_GCP_11",
+      "framework": "terraform",
+      "name": "Ensure GCP GCR Container Vulnerability Scanning is enabled"
+    },
+    {
+      "id": "CKV2_GCP_12",
+      "framework": "terraform",
+      "name": "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+    },
+    {
+      "id": "CKV2_GCP_13",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database flag 'log_duration' is set to 'on'"
+    },
+    {
+      "id": "CKV2_GCP_14",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database flag 'log_executor_stats' is set to 'off'"
+    },
+    {
+      "id": "CKV2_GCP_15",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database flag 'log_parser_stats' is set to 'off'"
+    },
+    {
+      "id": "CKV2_GCP_16",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database flag 'log_planner_stats' is set to 'off'"
+    },
+    {
+      "id": "CKV2_GCP_17",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database flag 'log_statement_stats' is set to 'off'"
+    },
+    {
+      "id": "CKV2_GCP_18",
+      "framework": "terraform",
+      "name": "Ensure GCP network defines a firewall and does not use the default firewall"
+    },
+    {
+      "id": "CKV2_GCP_19",
+      "framework": "terraform",
+      "name": "Ensure GCP Kubernetes engine clusters have 'alpha cluster' feature disabled"
+    },
+    {
+      "id": "CKV2_GCP_2",
+      "framework": "terraform",
+      "name": "Ensure legacy networks do not exist for a project"
+    },
+    {
+      "id": "CKV2_GCP_20",
+      "framework": "terraform",
+      "name": "Ensure MySQL DB instance has point-in-time recovery backup configured"
+    },
+    {
+      "id": "CKV2_GCP_21",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI instance disks are encrypted with a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_22",
+      "framework": "terraform",
+      "name": "Ensure Document AI Processors are encrypted with a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_23",
+      "framework": "terraform",
+      "name": "Ensure Document AI Warehouse Location is configured to use a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_24",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI endpoint uses a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_25",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI featurestore uses a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_26",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI tensorboard uses a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_27",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI workbench instance disks are encrypted with a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_28",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI workbench instances are private"
+    },
+    {
+      "id": "CKV2_GCP_29",
+      "framework": "terraform",
+      "name": "Ensure logging is enabled for Dialogflow agents"
+    },
+    {
+      "id": "CKV2_GCP_3",
+      "framework": "terraform",
+      "name": "Ensure that there are only GCP-managed service account keys for each service account"
+    },
+    {
+      "id": "CKV2_GCP_30",
+      "framework": "terraform",
+      "name": "Ensure logging is enabled for Dialogflow CX agents"
+    },
+    {
+      "id": "CKV2_GCP_31",
+      "framework": "terraform",
+      "name": "Ensure logging is enabled for Dialogflow CX webhooks"
+    },
+    {
+      "id": "CKV2_GCP_32",
+      "framework": "terraform",
+      "name": "Ensure TPU v2 is private"
+    },
+    {
+      "id": "CKV2_GCP_33",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI endpoint is private"
+    },
+    {
+      "id": "CKV2_GCP_34",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI index endpoint is private"
+    },
+    {
+      "id": "CKV2_GCP_35",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI runtime is encrypted with a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV2_GCP_36",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI runtime is private"
+    },
+    {
+      "id": "CKV2_GCP_37",
+      "framework": "terraform",
+      "name": "Ensure GCP compute regional forwarding rule does not use HTTP proxies with EXTERNAL load balancing scheme"
+    },
+    {
+      "id": "CKV2_GCP_38",
+      "framework": "terraform",
+      "name": "Ensure GCP compute global forwarding rule does not use HTTP proxies with EXTERNAL load balancing scheme"
+    },
+    {
+      "id": "CKV2_GCP_4",
+      "framework": "terraform",
+      "name": "Ensure that retention policies on log buckets are configured using Bucket Lock"
+    },
+    {
+      "id": "CKV2_GCP_5",
+      "framework": "terraform",
+      "name": "Ensure that Cloud Audit Logging is configured properly across all services and all users from a project"
+    },
+    {
+      "id": "CKV2_GCP_6",
+      "framework": "terraform",
+      "name": "Ensure that Cloud KMS cryptokeys are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV2_GCP_7",
+      "framework": "terraform",
+      "name": "Ensure that a MySQL database instance does not allow anyone to connect with administrative privileges"
+    },
+    {
+      "id": "CKV2_GCP_8",
+      "framework": "terraform",
+      "name": "Ensure that Cloud KMS Key Rings are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV2_GCP_9",
+      "framework": "terraform",
+      "name": "Ensure that Container Registry repositories are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV2_GIT_1",
+      "framework": "terraform",
+      "name": "Ensure each Repository has branch protection associated"
+    },
+    {
+      "id": "CKV2_IBM_1",
+      "framework": "terraform",
+      "name": "Ensure load balancer for VPC is private (disable public access)"
+    },
+    {
+      "id": "CKV2_IBM_2",
+      "framework": "terraform",
+      "name": "Ensure VPC classic access is disabled"
+    },
+    {
+      "id": "CKV2_IBM_3",
+      "framework": "terraform",
+      "name": "Ensure API key creation is restricted in account settings"
+    },
+    {
+      "id": "CKV2_IBM_4",
+      "framework": "terraform",
+      "name": "Ensure Multi-Factor Authentication (MFA) is enabled at the account level"
+    },
+    {
+      "id": "CKV2_IBM_5",
+      "framework": "terraform",
+      "name": "Ensure Service ID creation is restricted in account settings"
+    },
+    {
+      "id": "CKV2_IBM_7",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes clusters are accessible by using private endpoint and NOT public endpoint"
+    },
+    {
+      "id": "CKV2_OCI_1",
+      "framework": "terraform",
+      "name": "Ensure administrator users are not associated with API keys"
+    },
+    {
+      "id": "CKV2_OCI_2",
+      "framework": "terraform",
+      "name": "Ensure NSG does not allow all traffic on RDP port (3389)"
+    },
+    {
+      "id": "CKV2_OCI_3",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes engine cluster is configured with NSG(s)"
+    },
+    {
+      "id": "CKV2_OCI_4",
+      "framework": "terraform",
+      "name": "Ensure File Storage File System access is restricted to root users"
+    },
+    {
+      "id": "CKV2_OCI_5",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes Engine Cluster boot volume is configured with in-transit data encryption"
+    },
+    {
+      "id": "CKV2_OCI_6",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes Engine Cluster pod security policy is enforced"
+    },
+    {
+      "id": "CKV_ALI_1",
+      "framework": "terraform",
+      "name": "Alibaba Cloud OSS bucket accessible to public"
+    },
+    {
+      "id": "CKV_ALI_10",
+      "framework": "terraform",
+      "name": "Ensure OSS bucket has versioning enabled"
+    },
+    {
+      "id": "CKV_ALI_11",
+      "framework": "terraform",
+      "name": "Ensure OSS bucket has transfer Acceleration enabled"
+    },
+    {
+      "id": "CKV_ALI_12",
+      "framework": "terraform",
+      "name": "Ensure the OSS bucket has access logging enabled"
+    },
+    {
+      "id": "CKV_ALI_13",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy requires minimum length of 14 or greater"
+    },
+    {
+      "id": "CKV_ALI_14",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy requires at least one number"
+    },
+    {
+      "id": "CKV_ALI_15",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy requires at least one symbol"
+    },
+    {
+      "id": "CKV_ALI_16",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy expires passwords within 90 days or less"
+    },
+    {
+      "id": "CKV_ALI_17",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy requires at least one lowercase letter"
+    },
+    {
+      "id": "CKV_ALI_18",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy prevents password reuse"
+    },
+    {
+      "id": "CKV_ALI_19",
+      "framework": "terraform",
+      "name": "Ensure RAM password policy requires at least one uppercase letter"
+    },
+    {
+      "id": "CKV_ALI_2",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22"
+    },
+    {
+      "id": "CKV_ALI_20",
+      "framework": "terraform",
+      "name": "Ensure RDS instance uses SSL"
+    },
+    {
+      "id": "CKV_ALI_21",
+      "framework": "terraform",
+      "name": "Ensure API Gateway API Protocol HTTPS"
+    },
+    {
+      "id": "CKV_ALI_22",
+      "framework": "terraform",
+      "name": "Ensure Transparent Data Encryption is Enabled on instance"
+    },
+    {
+      "id": "CKV_ALI_23",
+      "framework": "terraform",
+      "name": "Ensure Ram Account Password Policy Max Login Attempts not > 5"
+    },
+    {
+      "id": "CKV_ALI_24",
+      "framework": "terraform",
+      "name": "Ensure RAM enforces MFA"
+    },
+    {
+      "id": "CKV_ALI_25",
+      "framework": "terraform",
+      "name": "Ensure RDS Instance SQL Collector Retention Period should be greater than 180"
+    },
+    {
+      "id": "CKV_ALI_26",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes installs plugin Terway or Flannel to support standard policies"
+    },
+    {
+      "id": "CKV_ALI_27",
+      "framework": "terraform",
+      "name": "Ensure KMS Key Rotation is enabled"
+    },
+    {
+      "id": "CKV_ALI_28",
+      "framework": "terraform",
+      "name": "Ensure KMS Keys are enabled"
+    },
+    {
+      "id": "CKV_ALI_29",
+      "framework": "terraform",
+      "name": "Alibaba ALB ACL does not restrict Access"
+    },
+    {
+      "id": "CKV_ALI_3",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389"
+    },
+    {
+      "id": "CKV_ALI_30",
+      "framework": "terraform",
+      "name": "Ensure RDS instance auto upgrades for minor versions"
+    },
+    {
+      "id": "CKV_ALI_31",
+      "framework": "terraform",
+      "name": "Ensure K8s nodepools are set to auto repair"
+    },
+    {
+      "id": "CKV_ALI_32",
+      "framework": "terraform",
+      "name": "Ensure launch template data disks are encrypted"
+    },
+    {
+      "id": "CKV_ALI_33",
+      "framework": "terraform",
+      "name": "Alibaba Cloud Cypher Policy are secure"
+    },
+    {
+      "id": "CKV_ALI_35",
+      "framework": "terraform",
+      "name": "Ensure RDS instance has log_duration enabled"
+    },
+    {
+      "id": "CKV_ALI_36",
+      "framework": "terraform",
+      "name": "Ensure RDS instance has log_disconnections enabled"
+    },
+    {
+      "id": "CKV_ALI_37",
+      "framework": "terraform",
+      "name": "Ensure RDS instance has log_connections enabled"
+    },
+    {
+      "id": "CKV_ALI_38",
+      "framework": "terraform",
+      "name": "Ensure log audit is enabled for RDS"
+    },
+    {
+      "id": "CKV_ALI_4",
+      "framework": "terraform",
+      "name": "Ensure Action Trail Logging for all regions"
+    },
+    {
+      "id": "CKV_ALI_41",
+      "framework": "terraform",
+      "name": "Ensure MongoDB is deployed inside a VPC"
+    },
+    {
+      "id": "CKV_ALI_42",
+      "framework": "terraform",
+      "name": "Ensure Mongodb instance uses SSL"
+    },
+    {
+      "id": "CKV_ALI_43",
+      "framework": "terraform",
+      "name": "Ensure MongoDB instance is not public"
+    },
+    {
+      "id": "CKV_ALI_44",
+      "framework": "terraform",
+      "name": "Ensure MongoDB has Transparent Data Encryption Enabled"
+    },
+    {
+      "id": "CKV_ALI_5",
+      "framework": "terraform",
+      "name": "Ensure Action Trail Logging for all events"
+    },
+    {
+      "id": "CKV_ALI_6",
+      "framework": "terraform",
+      "name": "Ensure OSS bucket is encrypted with Customer Master Key"
+    },
+    {
+      "id": "CKV_ALI_7",
+      "framework": "terraform",
+      "name": "Ensure disk is encrypted"
+    },
+    {
+      "id": "CKV_ALI_8",
+      "framework": "terraform",
+      "name": "Ensure Disk is encrypted with Customer Master Key"
+    },
+    {
+      "id": "CKV_ALI_9",
+      "framework": "terraform",
+      "name": "Ensure database instance is not public"
+    },
+    {
+      "id": "CKV_AWS_1",
+      "framework": "terraform",
+      "name": "Ensure IAM policies that allow full \"*-*\" administrative privileges are not created"
+    },
+    {
+      "id": "CKV_AWS_10",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy requires minimum length of 14 or greater"
+    },
+    {
+      "id": "CKV_AWS_100",
+      "framework": "terraform",
+      "name": "Ensure AWS EKS node group does not have implicit SSH access from 0.0.0.0/0"
+    },
+    {
+      "id": "CKV_AWS_101",
+      "framework": "terraform",
+      "name": "Ensure Neptune logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_102",
+      "framework": "terraform",
+      "name": "Ensure Neptune Cluster instance is not publicly available"
+    },
+    {
+      "id": "CKV_AWS_103",
+      "framework": "terraform",
+      "name": "Ensure that load balancer is using at least TLS 1.2"
+    },
+    {
+      "id": "CKV_AWS_104",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB has audit logs enabled"
+    },
+    {
+      "id": "CKV_AWS_105",
+      "framework": "terraform",
+      "name": "Ensure Redshift uses SSL"
+    },
+    {
+      "id": "CKV_AWS_106",
+      "framework": "terraform",
+      "name": "Ensure EBS default encryption is enabled"
+    },
+    {
+      "id": "CKV_AWS_107",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow credentials exposure"
+    },
+    {
+      "id": "CKV_AWS_108",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow data exfiltration"
+    },
+    {
+      "id": "CKV_AWS_109",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow permissions management / resource exposure without constraints"
+    },
+    {
+      "id": "CKV_AWS_11",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy requires at least one lowercase letter"
+    },
+    {
+      "id": "CKV_AWS_110",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow privilege escalation"
+    },
+    {
+      "id": "CKV_AWS_111",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow write access without constraints"
+    },
+    {
+      "id": "CKV_AWS_112",
+      "framework": "terraform",
+      "name": "Ensure Session Manager data is encrypted in transit"
+    },
+    {
+      "id": "CKV_AWS_113",
+      "framework": "terraform",
+      "name": "Ensure Session Manager logs are enabled and encrypted"
+    },
+    {
+      "id": "CKV_AWS_114",
+      "framework": "terraform",
+      "name": "Ensure that EMR clusters with Kerberos have Kerberos Realm set"
+    },
+    {
+      "id": "CKV_AWS_115",
+      "framework": "terraform",
+      "name": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit"
+    },
+    {
+      "id": "CKV_AWS_116",
+      "framework": "terraform",
+      "name": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
+    },
+    {
+      "id": "CKV_AWS_117",
+      "framework": "terraform",
+      "name": "Ensure that AWS Lambda function is configured inside a VPC"
+    },
+    {
+      "id": "CKV_AWS_118",
+      "framework": "terraform",
+      "name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances"
+    },
+    {
+      "id": "CKV_AWS_119",
+      "framework": "terraform",
+      "name": "Ensure DynamoDB Tables are encrypted using a KMS Customer Managed CMK"
+    },
+    {
+      "id": "CKV_AWS_12",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy requires at least one number"
+    },
+    {
+      "id": "CKV_AWS_120",
+      "framework": "terraform",
+      "name": "Ensure API Gateway caching is enabled"
+    },
+    {
+      "id": "CKV_AWS_121",
+      "framework": "terraform",
+      "name": "Ensure AWS Config is enabled in all regions"
+    },
+    {
+      "id": "CKV_AWS_122",
+      "framework": "terraform",
+      "name": "Ensure that direct internet access is disabled for an Amazon SageMaker Notebook Instance"
+    },
+    {
+      "id": "CKV_AWS_123",
+      "framework": "terraform",
+      "name": "Ensure that VPC Endpoint Service is configured for Manual Acceptance"
+    },
+    {
+      "id": "CKV_AWS_124",
+      "framework": "terraform",
+      "name": "Ensure that CloudFormation stacks are sending event notifications to an SNS topic"
+    },
+    {
+      "id": "CKV_AWS_126",
+      "framework": "terraform",
+      "name": "Ensure that detailed monitoring is enabled for EC2 instances"
+    },
+    {
+      "id": "CKV_AWS_127",
+      "framework": "terraform",
+      "name": "Ensure that Elastic Load Balancer(s) uses SSL certificates provided by AWS Certificate Manager"
+    },
+    {
+      "id": "CKV_AWS_129",
+      "framework": "terraform",
+      "name": "Ensure that respective logs of Amazon Relational Database Service (Amazon RDS) are enabled"
+    },
+    {
+      "id": "CKV_AWS_13",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy prevents password reuse"
+    },
+    {
+      "id": "CKV_AWS_130",
+      "framework": "terraform",
+      "name": "Ensure VPC subnets do not assign public IP by default"
+    },
+    {
+      "id": "CKV_AWS_131",
+      "framework": "terraform",
+      "name": "Ensure that ALB drops HTTP headers"
+    },
+    {
+      "id": "CKV_AWS_133",
+      "framework": "terraform",
+      "name": "Ensure that RDS instances has backup policy"
+    },
+    {
+      "id": "CKV_AWS_134",
+      "framework": "terraform",
+      "name": "Ensure that Amazon ElastiCache Redis clusters have automatic backup turned on"
+    },
+    {
+      "id": "CKV_AWS_135",
+      "framework": "terraform",
+      "name": "Ensure that EC2 is EBS optimized"
+    },
+    {
+      "id": "CKV_AWS_136",
+      "framework": "terraform",
+      "name": "Ensure that ECR repositories are encrypted using KMS"
+    },
+    {
+      "id": "CKV_AWS_137",
+      "framework": "terraform",
+      "name": "Ensure that Elasticsearch is configured inside a VPC"
+    },
+    {
+      "id": "CKV_AWS_138",
+      "framework": "terraform",
+      "name": "Ensure that ELB is cross-zone-load-balancing enabled"
+    },
+    {
+      "id": "CKV_AWS_139",
+      "framework": "terraform",
+      "name": "Ensure that RDS clusters have deletion protection enabled"
+    },
+    {
+      "id": "CKV_AWS_14",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy requires at least one symbol"
+    },
+    {
+      "id": "CKV_AWS_140",
+      "framework": "terraform",
+      "name": "Ensure that RDS global clusters are encrypted"
+    },
+    {
+      "id": "CKV_AWS_141",
+      "framework": "terraform",
+      "name": "Ensured that Redshift cluster allowing version upgrade by default"
+    },
+    {
+      "id": "CKV_AWS_142",
+      "framework": "terraform",
+      "name": "Ensure that Redshift cluster is encrypted by KMS"
+    },
+    {
+      "id": "CKV_AWS_143",
+      "framework": "terraform",
+      "name": "Ensure that S3 bucket has lock configuration enabled by default"
+    },
+    {
+      "id": "CKV_AWS_144",
+      "framework": "terraform",
+      "name": "Ensure that S3 bucket has cross-region replication enabled"
+    },
+    {
+      "id": "CKV_AWS_145",
+      "framework": "terraform",
+      "name": "Ensure that S3 buckets are encrypted with KMS by default"
+    },
+    {
+      "id": "CKV_AWS_146",
+      "framework": "terraform",
+      "name": "Ensure that RDS database cluster snapshot is encrypted"
+    },
+    {
+      "id": "CKV_AWS_147",
+      "framework": "terraform",
+      "name": "Ensure that CodeBuild projects are encrypted using CMK"
+    },
+    {
+      "id": "CKV_AWS_148",
+      "framework": "terraform",
+      "name": "Ensure no default VPC is planned to be provisioned"
+    },
+    {
+      "id": "CKV_AWS_149",
+      "framework": "terraform",
+      "name": "Ensure that Secrets Manager secret is encrypted using KMS CMK"
+    },
+    {
+      "id": "CKV_AWS_15",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy requires at least one uppercase letter"
+    },
+    {
+      "id": "CKV_AWS_150",
+      "framework": "terraform",
+      "name": "Ensure that Load Balancer has deletion protection enabled"
+    },
+    {
+      "id": "CKV_AWS_152",
+      "framework": "terraform",
+      "name": "Ensure that Load Balancer (Network/Gateway) has cross-zone load balancing enabled"
+    },
+    {
+      "id": "CKV_AWS_153",
+      "framework": "terraform",
+      "name": "Autoscaling groups should supply tags to launch configurations"
+    },
+    {
+      "id": "CKV_AWS_154",
+      "framework": "terraform",
+      "name": "Ensure Redshift is not deployed outside of a VPC"
+    },
+    {
+      "id": "CKV_AWS_155",
+      "framework": "terraform",
+      "name": "Ensure that Workspace user volumes are encrypted"
+    },
+    {
+      "id": "CKV_AWS_156",
+      "framework": "terraform",
+      "name": "Ensure that Workspace root volumes are encrypted"
+    },
+    {
+      "id": "CKV_AWS_157",
+      "framework": "terraform",
+      "name": "Ensure that RDS instances have Multi-AZ enabled"
+    },
+    {
+      "id": "CKV_AWS_158",
+      "framework": "terraform",
+      "name": "Ensure that CloudWatch Log Group is encrypted by KMS"
+    },
+    {
+      "id": "CKV_AWS_159",
+      "framework": "terraform",
+      "name": "Ensure that Athena Workgroup is encrypted"
+    },
+    {
+      "id": "CKV_AWS_16",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the RDS is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_160",
+      "framework": "terraform",
+      "name": "Ensure that Timestream database is encrypted with KMS CMK"
+    },
+    {
+      "id": "CKV_AWS_161",
+      "framework": "terraform",
+      "name": "Ensure RDS database has IAM authentication enabled"
+    },
+    {
+      "id": "CKV_AWS_162",
+      "framework": "terraform",
+      "name": "Ensure RDS cluster has IAM authentication enabled"
+    },
+    {
+      "id": "CKV_AWS_163",
+      "framework": "terraform",
+      "name": "Ensure ECR image scanning on push is enabled"
+    },
+    {
+      "id": "CKV_AWS_164",
+      "framework": "terraform",
+      "name": "Ensure Transfer Server is not exposed publicly."
+    },
+    {
+      "id": "CKV_AWS_165",
+      "framework": "terraform",
+      "name": "Ensure DynamoDB point in time recovery (backup) is enabled for global tables"
+    },
+    {
+      "id": "CKV_AWS_166",
+      "framework": "terraform",
+      "name": "Ensure Backup Vault is encrypted at rest using KMS CMK"
+    },
+    {
+      "id": "CKV_AWS_167",
+      "framework": "terraform",
+      "name": "Ensure Glacier Vault access policy is not public by only allowing specific services or principals to access it"
+    },
+    {
+      "id": "CKV_AWS_168",
+      "framework": "terraform",
+      "name": "Ensure SQS queue policy is not public by only allowing specific services or principals to access it"
+    },
+    {
+      "id": "CKV_AWS_169",
+      "framework": "terraform",
+      "name": "Ensure SNS topic policy is not public by only allowing specific services or principals to access it"
+    },
+    {
+      "id": "CKV_AWS_17",
+      "framework": "terraform",
+      "name": "Ensure all data stored in RDS is not publicly accessible"
+    },
+    {
+      "id": "CKV_AWS_170",
+      "framework": "terraform",
+      "name": "Ensure QLDB ledger permissions mode is set to STANDARD"
+    },
+    {
+      "id": "CKV_AWS_171",
+      "framework": "terraform",
+      "name": "Ensure EMR Cluster security configuration encryption is using SSE-KMS"
+    },
+    {
+      "id": "CKV_AWS_172",
+      "framework": "terraform",
+      "name": "Ensure QLDB ledger has deletion protection enabled"
+    },
+    {
+      "id": "CKV_AWS_173",
+      "framework": "terraform",
+      "name": "Check encryption settings for Lambda environmental variable"
+    },
+    {
+      "id": "CKV_AWS_174",
+      "framework": "terraform",
+      "name": "Verify CloudFront Distribution Viewer Certificate is using TLS v1.2 or higher"
+    },
+    {
+      "id": "CKV_AWS_175",
+      "framework": "terraform",
+      "name": "Ensure WAF has associated rules"
+    },
+    {
+      "id": "CKV_AWS_176",
+      "framework": "terraform",
+      "name": "Ensure Logging is enabled for WAF Web Access Control Lists"
+    },
+    {
+      "id": "CKV_AWS_177",
+      "framework": "terraform",
+      "name": "Ensure Kinesis Video Stream is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_178",
+      "framework": "terraform",
+      "name": "Ensure fx ontap file system is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_179",
+      "framework": "terraform",
+      "name": "Ensure FSX Windows filesystem is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_18",
+      "framework": "terraform",
+      "name": "Ensure the S3 bucket has access logging enabled"
+    },
+    {
+      "id": "CKV_AWS_180",
+      "framework": "terraform",
+      "name": "Ensure Image Builder component is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_181",
+      "framework": "terraform",
+      "name": "Ensure S3 Object Copy is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_182",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_183",
+      "framework": "terraform",
+      "name": "Ensure EBS Snapshot Copy is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_184",
+      "framework": "terraform",
+      "name": "Ensure resource is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_185",
+      "framework": "terraform",
+      "name": "Ensure Kinesis Stream is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_186",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket Object is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_187",
+      "framework": "terraform",
+      "name": "Ensure Sagemaker domain and notebook instance are encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_189",
+      "framework": "terraform",
+      "name": "Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_19",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the S3 bucket is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_190",
+      "framework": "terraform",
+      "name": "Ensure lustre file systems is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_191",
+      "framework": "terraform",
+      "name": "Ensure ElastiCache replication group is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_192",
+      "framework": "terraform",
+      "name": "Ensure WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"
+    },
+    {
+      "id": "CKV_AWS_193",
+      "framework": "terraform",
+      "name": "Ensure AppSync has Logging enabled"
+    },
+    {
+      "id": "CKV_AWS_194",
+      "framework": "terraform",
+      "name": "Ensure AppSync has Field-Level logs enabled"
+    },
+    {
+      "id": "CKV_AWS_195",
+      "framework": "terraform",
+      "name": "Ensure Glue component has a security configuration associated"
+    },
+    {
+      "id": "CKV_AWS_196",
+      "framework": "terraform",
+      "name": "Ensure no aws_elasticache_security_group resources exist"
+    },
+    {
+      "id": "CKV_AWS_197",
+      "framework": "terraform",
+      "name": "Ensure MQ Broker Audit logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_198",
+      "framework": "terraform",
+      "name": "Ensure no aws_db_security_group resources exist"
+    },
+    {
+      "id": "CKV_AWS_199",
+      "framework": "terraform",
+      "name": "Ensure Image Builder Distribution Configuration encrypts AMI's using KMS - a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_2",
+      "framework": "terraform",
+      "name": "Ensure ALB protocol is HTTPS"
+    },
+    {
+      "id": "CKV_AWS_20",
+      "framework": "terraform",
+      "name": "S3 Bucket has an ACL defined which allows public READ access."
+    },
+    {
+      "id": "CKV_AWS_200",
+      "framework": "terraform",
+      "name": "Ensure that Image Recipe EBS Disk are encrypted with CMK"
+    },
+    {
+      "id": "CKV_AWS_201",
+      "framework": "terraform",
+      "name": "Ensure MemoryDB is encrypted at rest using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_202",
+      "framework": "terraform",
+      "name": "Ensure MemoryDB data is encrypted in transit"
+    },
+    {
+      "id": "CKV_AWS_203",
+      "framework": "terraform",
+      "name": "Ensure resource is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_204",
+      "framework": "terraform",
+      "name": "Ensure AMIs are encrypted using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_205",
+      "framework": "terraform",
+      "name": "Ensure to Limit AMI launch Permissions"
+    },
+    {
+      "id": "CKV_AWS_206",
+      "framework": "terraform",
+      "name": "Ensure API Gateway Domain uses a modern security Policy"
+    },
+    {
+      "id": "CKV_AWS_207",
+      "framework": "terraform",
+      "name": "Ensure MQ Broker minor version updates are enabled"
+    },
+    {
+      "id": "CKV_AWS_208",
+      "framework": "terraform",
+      "name": "Ensure MQ Broker version is current"
+    },
+    {
+      "id": "CKV_AWS_209",
+      "framework": "terraform",
+      "name": "Ensure MQ broker encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_21",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the S3 bucket have versioning enabled"
+    },
+    {
+      "id": "CKV_AWS_210",
+      "framework": "terraform",
+      "name": "Batch job does not define a privileged container"
+    },
+    {
+      "id": "CKV_AWS_211",
+      "framework": "terraform",
+      "name": "Ensure RDS uses a modern CaCert"
+    },
+    {
+      "id": "CKV_AWS_212",
+      "framework": "terraform",
+      "name": "Ensure DMS replication instance is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_213",
+      "framework": "terraform",
+      "name": "Ensure ELB Policy uses only secure protocols"
+    },
+    {
+      "id": "CKV_AWS_214",
+      "framework": "terraform",
+      "name": "Ensure AppSync API Cache is encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_215",
+      "framework": "terraform",
+      "name": "Ensure AppSync API Cache is encrypted in transit"
+    },
+    {
+      "id": "CKV_AWS_216",
+      "framework": "terraform",
+      "name": "Ensure CloudFront distribution is enabled"
+    },
+    {
+      "id": "CKV_AWS_217",
+      "framework": "terraform",
+      "name": "Ensure Create before destroy for API deployments"
+    },
+    {
+      "id": "CKV_AWS_218",
+      "framework": "terraform",
+      "name": "Ensure that CloudSearch is using latest TLS"
+    },
+    {
+      "id": "CKV_AWS_219",
+      "framework": "terraform",
+      "name": "Ensure CodePipeline Artifact store is using a KMS CMK"
+    },
+    {
+      "id": "CKV_AWS_22",
+      "framework": "terraform",
+      "name": "Ensure SageMaker Notebook is encrypted at rest using KMS CMK"
+    },
+    {
+      "id": "CKV_AWS_220",
+      "framework": "terraform",
+      "name": "Ensure that CloudSearch is using https"
+    },
+    {
+      "id": "CKV_AWS_221",
+      "framework": "terraform",
+      "name": "Ensure CodeArtifact Domain is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_222",
+      "framework": "terraform",
+      "name": "Ensure DMS replication instance gets all minor upgrade automatically"
+    },
+    {
+      "id": "CKV_AWS_223",
+      "framework": "terraform",
+      "name": "Ensure ECS Cluster enables logging of ECS Exec"
+    },
+    {
+      "id": "CKV_AWS_224",
+      "framework": "terraform",
+      "name": "Ensure ECS Cluster logging is enabled and client to container communication uses CMK"
+    },
+    {
+      "id": "CKV_AWS_225",
+      "framework": "terraform",
+      "name": "Ensure API Gateway method setting caching is enabled"
+    },
+    {
+      "id": "CKV_AWS_226",
+      "framework": "terraform",
+      "name": "Ensure DB instance gets all minor upgrades automatically"
+    },
+    {
+      "id": "CKV_AWS_227",
+      "framework": "terraform",
+      "name": "Ensure KMS key is enabled"
+    },
+    {
+      "id": "CKV_AWS_228",
+      "framework": "terraform",
+      "name": "Verify Elasticsearch domain is using an up to date TLS policy"
+    },
+    {
+      "id": "CKV_AWS_229",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 21"
+    },
+    {
+      "id": "CKV_AWS_23",
+      "framework": "terraform",
+      "name": "Ensure every security group and rule has a description"
+    },
+    {
+      "id": "CKV_AWS_230",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 20"
+    },
+    {
+      "id": "CKV_AWS_231",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 3389"
+    },
+    {
+      "id": "CKV_AWS_232",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow ingress from 0.0.0.0:0 to port 22"
+    },
+    {
+      "id": "CKV_AWS_233",
+      "framework": "terraform",
+      "name": "Ensure Create before destroy for ACM certificates"
+    },
+    {
+      "id": "CKV_AWS_234",
+      "framework": "terraform",
+      "name": "Verify logging preference for ACM certificates"
+    },
+    {
+      "id": "CKV_AWS_235",
+      "framework": "terraform",
+      "name": "Ensure that copied AMIs are encrypted"
+    },
+    {
+      "id": "CKV_AWS_236",
+      "framework": "terraform",
+      "name": "Ensure AMI copying uses a CMK"
+    },
+    {
+      "id": "CKV_AWS_237",
+      "framework": "terraform",
+      "name": "Ensure Create before destroy for API Gateway"
+    },
+    {
+      "id": "CKV_AWS_238",
+      "framework": "terraform",
+      "name": "Ensure that GuardDuty detector is enabled"
+    },
+    {
+      "id": "CKV_AWS_239",
+      "framework": "terraform",
+      "name": "Ensure DAX cluster endpoint is using TLS"
+    },
+    {
+      "id": "CKV_AWS_24",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22"
+    },
+    {
+      "id": "CKV_AWS_240",
+      "framework": "terraform",
+      "name": "Ensure Kinesis Firehose delivery stream is encrypted"
+    },
+    {
+      "id": "CKV_AWS_241",
+      "framework": "terraform",
+      "name": "Ensure that Kinesis Firehose Delivery Streams are encrypted with CMK"
+    },
+    {
+      "id": "CKV_AWS_242",
+      "framework": "terraform",
+      "name": "Ensure MWAA environment has scheduler logs enabled"
+    },
+    {
+      "id": "CKV_AWS_243",
+      "framework": "terraform",
+      "name": "Ensure MWAA environment has worker logs enabled"
+    },
+    {
+      "id": "CKV_AWS_244",
+      "framework": "terraform",
+      "name": "Ensure MWAA environment has webserver logs enabled"
+    },
+    {
+      "id": "CKV_AWS_245",
+      "framework": "terraform",
+      "name": "Ensure replicated backups are encrypted at rest using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_246",
+      "framework": "terraform",
+      "name": "Ensure RDS Cluster activity streams are encrypted using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_247",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the Elasticsearch is encrypted with a CMK"
+    },
+    {
+      "id": "CKV_AWS_248",
+      "framework": "terraform",
+      "name": "Ensure that Elasticsearch is not using the default Security Group"
+    },
+    {
+      "id": "CKV_AWS_249",
+      "framework": "terraform",
+      "name": "Ensure that the Execution Role ARN and the Task Role ARN are different in ECS Task definitions"
+    },
+    {
+      "id": "CKV_AWS_25",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389"
+    },
+    {
+      "id": "CKV_AWS_250",
+      "framework": "terraform",
+      "name": "Ensure that RDS PostgreSQL instances use a non vulnerable version with the log_fdw extension (https://aws.amazon.com/security/security-bulletins/AWS-2022-004/)"
+    },
+    {
+      "id": "CKV_AWS_251",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_252",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail defines an SNS Topic"
+    },
+    {
+      "id": "CKV_AWS_253",
+      "framework": "terraform",
+      "name": "Ensure DLM cross region events are encrypted"
+    },
+    {
+      "id": "CKV_AWS_254",
+      "framework": "terraform",
+      "name": "Ensure DLM cross region events are encrypted with Customer Managed Key"
+    },
+    {
+      "id": "CKV_AWS_255",
+      "framework": "terraform",
+      "name": "Ensure DLM cross region schedules are encrypted"
+    },
+    {
+      "id": "CKV_AWS_256",
+      "framework": "terraform",
+      "name": "Ensure DLM cross region schedules are encrypted using a Customer Managed Key"
+    },
+    {
+      "id": "CKV_AWS_257",
+      "framework": "terraform",
+      "name": "Ensure CodeCommit branch changes have at least 2 approvals"
+    },
+    {
+      "id": "CKV_AWS_258",
+      "framework": "terraform",
+      "name": "Ensure that Lambda function URLs AuthType is not None"
+    },
+    {
+      "id": "CKV_AWS_259",
+      "framework": "terraform",
+      "name": "Ensure CloudFront response header policy enforces Strict Transport Security"
+    },
+    {
+      "id": "CKV_AWS_26",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the SNS topic is encrypted"
+    },
+    {
+      "id": "CKV_AWS_260",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80"
+    },
+    {
+      "id": "CKV_AWS_261",
+      "framework": "terraform",
+      "name": "Ensure HTTP HTTPS Target group defines Healthcheck"
+    },
+    {
+      "id": "CKV_AWS_262",
+      "framework": "terraform",
+      "name": "Ensure Kendra index Server side encryption uses CMK"
+    },
+    {
+      "id": "CKV_AWS_263",
+      "framework": "terraform",
+      "name": "Ensure AppFlow flow uses CMK"
+    },
+    {
+      "id": "CKV_AWS_264",
+      "framework": "terraform",
+      "name": "Ensure AppFlow connector profile uses CMK"
+    },
+    {
+      "id": "CKV_AWS_265",
+      "framework": "terraform",
+      "name": "Ensure Keyspaces Table uses CMK"
+    },
+    {
+      "id": "CKV_AWS_266",
+      "framework": "terraform",
+      "name": "Ensure DB Snapshot copy uses CMK"
+    },
+    {
+      "id": "CKV_AWS_267",
+      "framework": "terraform",
+      "name": "Ensure that Comprehend Entity Recognizer's model is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_268",
+      "framework": "terraform",
+      "name": "Ensure that Comprehend Entity Recognizer's volume is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_269",
+      "framework": "terraform",
+      "name": "Ensure Connect Instance Kinesis Video Stream Storage Config uses CMK"
+    },
+    {
+      "id": "CKV_AWS_27",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the SQS queue is encrypted"
+    },
+    {
+      "id": "CKV_AWS_270",
+      "framework": "terraform",
+      "name": "Ensure Connect Instance S3 Storage Config uses CMK"
+    },
+    {
+      "id": "CKV_AWS_271",
+      "framework": "terraform",
+      "name": "Ensure DynamoDB table replica KMS encryption uses CMK"
+    },
+    {
+      "id": "CKV_AWS_272",
+      "framework": "terraform",
+      "name": "Ensure AWS Lambda function is configured to validate code-signing"
+    },
+    {
+      "id": "CKV_AWS_273",
+      "framework": "terraform",
+      "name": "Ensure access is controlled through SSO and not AWS IAM defined users"
+    },
+    {
+      "id": "CKV_AWS_274",
+      "framework": "terraform",
+      "name": "Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy"
+    },
+    {
+      "id": "CKV_AWS_275",
+      "framework": "terraform",
+      "name": "Disallow policies from using the AWS AdministratorAccess policy"
+    },
+    {
+      "id": "CKV_AWS_276",
+      "framework": "terraform",
+      "name": "Ensure Data Trace is not enabled in API Gateway Method Settings"
+    },
+    {
+      "id": "CKV_AWS_277",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port -1"
+    },
+    {
+      "id": "CKV_AWS_278",
+      "framework": "terraform",
+      "name": "Ensure MemoryDB snapshot is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_279",
+      "framework": "terraform",
+      "name": "Ensure Neptune snapshot is securely encrypted"
+    },
+    {
+      "id": "CKV_AWS_28",
+      "framework": "terraform",
+      "name": "Ensure DynamoDB point in time recovery (backup) is enabled"
+    },
+    {
+      "id": "CKV_AWS_280",
+      "framework": "terraform",
+      "name": "Ensure Neptune snapshot is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_281",
+      "framework": "terraform",
+      "name": "Ensure RedShift snapshot copy is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_282",
+      "framework": "terraform",
+      "name": "Ensure that Redshift Serverless namespace is encrypted by KMS using a customer managed key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_283",
+      "framework": "terraform",
+      "name": "Ensure no IAM policies documents allow ALL or any AWS principal permissions to the resource"
+    },
+    {
+      "id": "CKV_AWS_284",
+      "framework": "terraform",
+      "name": "Ensure State Machine has X-Ray tracing enabled"
+    },
+    {
+      "id": "CKV_AWS_285",
+      "framework": "terraform",
+      "name": "Ensure State Machine has execution history logging enabled"
+    },
+    {
+      "id": "CKV_AWS_286",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow privilege escalation"
+    },
+    {
+      "id": "CKV_AWS_287",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow credentials exposure"
+    },
+    {
+      "id": "CKV_AWS_288",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow data exfiltration"
+    },
+    {
+      "id": "CKV_AWS_289",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow permissions management / resource exposure without constraints"
+    },
+    {
+      "id": "CKV_AWS_29",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the ElastiCache Replication Group is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_290",
+      "framework": "terraform",
+      "name": "Ensure IAM policies does not allow write access without constraints"
+    },
+    {
+      "id": "CKV_AWS_291",
+      "framework": "terraform",
+      "name": "Ensure MSK nodes are private"
+    },
+    {
+      "id": "CKV_AWS_292",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB Global Cluster is encrypted at rest (default is unencrypted)"
+    },
+    {
+      "id": "CKV_AWS_293",
+      "framework": "terraform",
+      "name": "Ensure that AWS database instances have deletion protection enabled"
+    },
+    {
+      "id": "CKV_AWS_294",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail Event Data Store uses CMK"
+    },
+    {
+      "id": "CKV_AWS_295",
+      "framework": "terraform",
+      "name": "Ensure DataSync Location Object Storage doesn't expose secrets"
+    },
+    {
+      "id": "CKV_AWS_296",
+      "framework": "terraform",
+      "name": "Ensure DMS endpoint uses Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_297",
+      "framework": "terraform",
+      "name": "Ensure EventBridge Scheduler Schedule uses Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_298",
+      "framework": "terraform",
+      "name": "Ensure DMS S3 uses Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_3",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the EBS is securely encrypted"
+    },
+    {
+      "id": "CKV_AWS_30",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the ElastiCache Replication Group is securely encrypted at transit"
+    },
+    {
+      "id": "CKV_AWS_300",
+      "framework": "terraform",
+      "name": "Ensure S3 lifecycle configuration sets period for aborting failed uploads"
+    },
+    {
+      "id": "CKV_AWS_301",
+      "framework": "terraform",
+      "name": "Ensure that AWS Lambda function is not publicly accessible"
+    },
+    {
+      "id": "CKV_AWS_302",
+      "framework": "terraform",
+      "name": "Ensure DB Snapshots are not Public"
+    },
+    {
+      "id": "CKV_AWS_303",
+      "framework": "terraform",
+      "name": "Ensure SSM documents are not Public"
+    },
+    {
+      "id": "CKV_AWS_304",
+      "framework": "terraform",
+      "name": "Ensure Secrets Manager secrets should be rotated within 90 days"
+    },
+    {
+      "id": "CKV_AWS_305",
+      "framework": "terraform",
+      "name": "Ensure CloudFront distribution has a default root object configured"
+    },
+    {
+      "id": "CKV_AWS_306",
+      "framework": "terraform",
+      "name": "Ensure SageMaker notebook instances should be launched into a custom VPC"
+    },
+    {
+      "id": "CKV_AWS_307",
+      "framework": "terraform",
+      "name": "Ensure SageMaker Users should not have root access to SageMaker notebook instances"
+    },
+    {
+      "id": "CKV_AWS_308",
+      "framework": "terraform",
+      "name": "Ensure API Gateway method setting caching is set to encrypted"
+    },
+    {
+      "id": "CKV_AWS_309",
+      "framework": "terraform",
+      "name": "Ensure API GatewayV2 routes specify an authorization type"
+    },
+    {
+      "id": "CKV_AWS_31",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the ElastiCache Replication Group is securely encrypted at transit and has auth token"
+    },
+    {
+      "id": "CKV_AWS_310",
+      "framework": "terraform",
+      "name": "Ensure CloudFront distributions should have origin failover configured"
+    },
+    {
+      "id": "CKV_AWS_311",
+      "framework": "terraform",
+      "name": "Ensure that CodeBuild S3 logs are encrypted"
+    },
+    {
+      "id": "CKV_AWS_312",
+      "framework": "terraform",
+      "name": "Ensure Elastic Beanstalk environments have enhanced health reporting enabled"
+    },
+    {
+      "id": "CKV_AWS_313",
+      "framework": "terraform",
+      "name": "Ensure RDS cluster configured to copy tags to snapshots"
+    },
+    {
+      "id": "CKV_AWS_314",
+      "framework": "terraform",
+      "name": "Ensure CodeBuild project environments have a logging configuration"
+    },
+    {
+      "id": "CKV_AWS_315",
+      "framework": "terraform",
+      "name": "Ensure EC2 Auto Scaling groups use EC2 launch templates"
+    },
+    {
+      "id": "CKV_AWS_316",
+      "framework": "terraform",
+      "name": "Ensure CodeBuild project environments do not have privileged mode enabled"
+    },
+    {
+      "id": "CKV_AWS_317",
+      "framework": "terraform",
+      "name": "Ensure Elasticsearch Domain Audit Logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_318",
+      "framework": "terraform",
+      "name": "Ensure Elasticsearch domains are configured with at least three dedicated master nodes for HA"
+    },
+    {
+      "id": "CKV_AWS_319",
+      "framework": "terraform",
+      "name": "Ensure that CloudWatch alarm actions are enabled"
+    },
+    {
+      "id": "CKV_AWS_32",
+      "framework": "terraform",
+      "name": "Ensure ECR policy is not set to public"
+    },
+    {
+      "id": "CKV_AWS_320",
+      "framework": "terraform",
+      "name": "Ensure Redshift clusters do not use the default database name"
+    },
+    {
+      "id": "CKV_AWS_321",
+      "framework": "terraform",
+      "name": "Ensure Redshift clusters use enhanced VPC routing"
+    },
+    {
+      "id": "CKV_AWS_322",
+      "framework": "terraform",
+      "name": "Ensure ElastiCache for Redis cache clusters have auto minor version upgrades enabled"
+    },
+    {
+      "id": "CKV_AWS_323",
+      "framework": "terraform",
+      "name": "Ensure ElastiCache clusters do not use the default subnet group"
+    },
+    {
+      "id": "CKV_AWS_324",
+      "framework": "terraform",
+      "name": "Ensure that RDS Cluster log capture is enabled"
+    },
+    {
+      "id": "CKV_AWS_325",
+      "framework": "terraform",
+      "name": "Ensure that RDS Cluster audit logging is enabled for MySQL engine"
+    },
+    {
+      "id": "CKV_AWS_326",
+      "framework": "terraform",
+      "name": "Ensure that RDS Aurora Clusters have backtracking enabled"
+    },
+    {
+      "id": "CKV_AWS_327",
+      "framework": "terraform",
+      "name": "Ensure RDS Clusters are encrypted using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_328",
+      "framework": "terraform",
+      "name": "Ensure that ALB is configured with defensive or strictest desync mitigation mode"
+    },
+    {
+      "id": "CKV_AWS_329",
+      "framework": "terraform",
+      "name": "EFS access points should enforce a root directory"
+    },
+    {
+      "id": "CKV_AWS_33",
+      "framework": "terraform",
+      "name": "Ensure KMS key policy does not contain wildcard (*) principal"
+    },
+    {
+      "id": "CKV_AWS_330",
+      "framework": "terraform",
+      "name": "EFS access points should enforce a user identity"
+    },
+    {
+      "id": "CKV_AWS_331",
+      "framework": "terraform",
+      "name": "Ensure Transit Gateways do not automatically accept VPC attachment requests"
+    },
+    {
+      "id": "CKV_AWS_332",
+      "framework": "terraform",
+      "name": "Ensure ECS Fargate services run on the latest Fargate platform version"
+    },
+    {
+      "id": "CKV_AWS_333",
+      "framework": "terraform",
+      "name": "Ensure ECS services do not have public IP addresses assigned to them automatically"
+    },
+    {
+      "id": "CKV_AWS_334",
+      "framework": "terraform",
+      "name": "Ensure ECS containers should run as non-privileged"
+    },
+    {
+      "id": "CKV_AWS_335",
+      "framework": "terraform",
+      "name": "Ensure ECS task definitions should not share the host's process namespace"
+    },
+    {
+      "id": "CKV_AWS_336",
+      "framework": "terraform",
+      "name": "Ensure ECS containers are limited to read-only access to root filesystems"
+    },
+    {
+      "id": "CKV_AWS_337",
+      "framework": "terraform",
+      "name": "Ensure SSM parameters are using KMS CMK"
+    },
+    {
+      "id": "CKV_AWS_338",
+      "framework": "terraform",
+      "name": "Ensure CloudWatch log groups retains logs for at least 1 year"
+    },
+    {
+      "id": "CKV_AWS_339",
+      "framework": "terraform",
+      "name": "Ensure EKS clusters run on a supported Kubernetes version"
+    },
+    {
+      "id": "CKV_AWS_34",
+      "framework": "terraform",
+      "name": "Ensure CloudFront distribution ViewerProtocolPolicy is set to HTTPS"
+    },
+    {
+      "id": "CKV_AWS_340",
+      "framework": "terraform",
+      "name": "Ensure Elastic Beanstalk managed platform updates are enabled"
+    },
+    {
+      "id": "CKV_AWS_341",
+      "framework": "terraform",
+      "name": "Ensure Launch template should not have a metadata response hop limit greater than 1"
+    },
+    {
+      "id": "CKV_AWS_342",
+      "framework": "terraform",
+      "name": "Ensure WAF rule has any actions"
+    },
+    {
+      "id": "CKV_AWS_343",
+      "framework": "terraform",
+      "name": "Ensure Amazon Redshift clusters should have automatic snapshots enabled"
+    },
+    {
+      "id": "CKV_AWS_344",
+      "framework": "terraform",
+      "name": "Ensure that Network firewalls have deletion protection enabled"
+    },
+    {
+      "id": "CKV_AWS_345",
+      "framework": "terraform",
+      "name": "Ensure that Network firewall encryption is via a CMK"
+    },
+    {
+      "id": "CKV_AWS_346",
+      "framework": "terraform",
+      "name": "Ensure Network Firewall Policy defines an encryption configuration that uses a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_347",
+      "framework": "terraform",
+      "name": "Ensure Neptune is encrypted by KMS using a customer managed Key (CMK)"
+    },
+    {
+      "id": "CKV_AWS_348",
+      "framework": "terraform",
+      "name": "Ensure IAM root user does not have Access keys"
+    },
+    {
+      "id": "CKV_AWS_349",
+      "framework": "terraform",
+      "name": "Ensure EMR Cluster security configuration encrypts local disks"
+    },
+    {
+      "id": "CKV_AWS_35",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_350",
+      "framework": "terraform",
+      "name": "Ensure EMR Cluster security configuration encrypts EBS disks"
+    },
+    {
+      "id": "CKV_AWS_351",
+      "framework": "terraform",
+      "name": "Ensure EMR Cluster security configuration encrypts InTransit"
+    },
+    {
+      "id": "CKV_AWS_352",
+      "framework": "terraform",
+      "name": "Ensure NACL ingress does not allow all Ports"
+    },
+    {
+      "id": "CKV_AWS_353",
+      "framework": "terraform",
+      "name": "Ensure that RDS instances have performance insights enabled"
+    },
+    {
+      "id": "CKV_AWS_354",
+      "framework": "terraform",
+      "name": "Ensure RDS Performance Insights are encrypted using KMS CMKs"
+    },
+    {
+      "id": "CKV_AWS_355",
+      "framework": "terraform",
+      "name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions"
+    },
+    {
+      "id": "CKV_AWS_356",
+      "framework": "terraform",
+      "name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions"
+    },
+    {
+      "id": "CKV_AWS_357",
+      "framework": "terraform",
+      "name": "Ensure Transfer Server allows only secure protocols"
+    },
+    {
+      "id": "CKV_AWS_358",
+      "framework": "terraform",
+      "name": "Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order"
+    },
+    {
+      "id": "CKV_AWS_359",
+      "framework": "terraform",
+      "name": "Neptune DB clusters should have IAM database authentication enabled"
+    },
+    {
+      "id": "CKV_AWS_36",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail log file validation is enabled"
+    },
+    {
+      "id": "CKV_AWS_360",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB has an adequate backup retention period"
+    },
+    {
+      "id": "CKV_AWS_361",
+      "framework": "terraform",
+      "name": "Ensure that Neptune DB cluster has automated backups enabled with adequate retention"
+    },
+    {
+      "id": "CKV_AWS_362",
+      "framework": "terraform",
+      "name": "Neptune DB clusters should be configured to copy tags to snapshots"
+    },
+    {
+      "id": "CKV_AWS_363",
+      "framework": "terraform",
+      "name": "Ensure Lambda Runtime is not deprecated"
+    },
+    {
+      "id": "CKV_AWS_364",
+      "framework": "terraform",
+      "name": "Ensure that AWS Lambda function permissions delegated to AWS services are limited by SourceArn or SourceAccount"
+    },
+    {
+      "id": "CKV_AWS_365",
+      "framework": "terraform",
+      "name": "Ensure SES Configuration Set enforces TLS usage"
+    },
+    {
+      "id": "CKV_AWS_366",
+      "framework": "terraform",
+      "name": "Ensure AWS Cognito identity pool does not allow unauthenticated guest access"
+    },
+    {
+      "id": "CKV_AWS_367",
+      "framework": "terraform",
+      "name": "Ensure Amazon Sagemaker Data Quality Job uses KMS to encrypt model artifacts"
+    },
+    {
+      "id": "CKV_AWS_368",
+      "framework": "terraform",
+      "name": "Ensure Amazon Sagemaker Data Quality Job uses KMS to encrypt data on attached storage volume"
+    },
+    {
+      "id": "CKV_AWS_369",
+      "framework": "terraform",
+      "name": "Ensure Amazon Sagemaker Data Quality Job encrypts all communications between instances used for monitoring jobs"
+    },
+    {
+      "id": "CKV_AWS_37",
+      "framework": "terraform",
+      "name": "Ensure Amazon EKS control plane logging is enabled for all log types"
+    },
+    {
+      "id": "CKV_AWS_370",
+      "framework": "terraform",
+      "name": "Ensure Amazon SageMaker model uses network isolation"
+    },
+    {
+      "id": "CKV_AWS_371",
+      "framework": "terraform",
+      "name": "Ensure Amazon SageMaker Notebook Instance only allows for IMDSv2"
+    },
+    {
+      "id": "CKV_AWS_372",
+      "framework": "terraform",
+      "name": "Ensure Amazon SageMaker Flow Definition uses KMS for output configurations"
+    },
+    {
+      "id": "CKV_AWS_373",
+      "framework": "terraform",
+      "name": "Ensure Bedrock Agent is encrypted with a CMK"
+    },
+    {
+      "id": "CKV_AWS_374",
+      "framework": "terraform",
+      "name": "Ensure AWS CloudFront web distribution has geo restriction enabled"
+    },
+    {
+      "id": "CKV_AWS_375",
+      "framework": "terraform",
+      "name": "Ensure AWS S3 bucket does not have global view ACL permissions enabled"
+    },
+    {
+      "id": "CKV_AWS_376",
+      "framework": "terraform",
+      "name": "Ensure AWS Elastic Load Balancer listener uses TLS/SSL"
+    },
+    {
+      "id": "CKV_AWS_377",
+      "framework": "terraform",
+      "name": "Ensure Route 53 domains have transfer lock protection"
+    },
+    {
+      "id": "CKV_AWS_378",
+      "framework": "terraform",
+      "name": "Ensure AWS Load Balancer doesn't use HTTP protocol"
+    },
+    {
+      "id": "CKV_AWS_379",
+      "framework": "terraform",
+      "name": "Ensure AWS S3 bucket is configured with secure data transport policy"
+    },
+    {
+      "id": "CKV_AWS_38",
+      "framework": "terraform",
+      "name": "Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0"
+    },
+    {
+      "id": "CKV_AWS_380",
+      "framework": "terraform",
+      "name": "Ensure AWS Transfer Server uses latest Security Policy"
+    },
+    {
+      "id": "CKV_AWS_381",
+      "framework": "terraform",
+      "name": "Make sure that aws_codegurureviewer_repository_association has a CMK"
+    },
+    {
+      "id": "CKV_AWS_382",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1"
+    },
+    {
+      "id": "CKV_AWS_383",
+      "framework": "terraform",
+      "name": "Ensure AWS Bedrock agent is associated with Bedrock guardrails"
+    },
+    {
+      "id": "CKV_AWS_385",
+      "framework": "terraform",
+      "name": "Ensure AWS SNS topic policies do not allow cross-account access"
+    },
+    {
+      "id": "CKV_AWS_386",
+      "framework": "terraform",
+      "name": "Reduce potential for WhoAMI cloud image name confusion attack"
+    },
+    {
+      "id": "CKV_AWS_387",
+      "framework": "terraform",
+      "name": "Ensure SQS policy does not allow public access through wildcards"
+    },
+    {
+      "id": "CKV_AWS_388",
+      "framework": "terraform",
+      "name": "Ensure AWS Aurora PostgreSQL is not exposed to local file read vulnerability"
+    },
+    {
+      "id": "CKV_AWS_389",
+      "framework": "terraform",
+      "name": "Ensure AWS Auto Scaling group launch configuration doesn't have public IP address assignment enabled"
+    },
+    {
+      "id": "CKV_AWS_39",
+      "framework": "terraform",
+      "name": "Ensure Amazon EKS public endpoint disabled"
+    },
+    {
+      "id": "CKV_AWS_390",
+      "framework": "terraform",
+      "name": "Ensure AWS EMR block public access setting is enabled"
+    },
+    {
+      "id": "CKV_AWS_391",
+      "framework": "terraform",
+      "name": "Avoid AWS Redshift cluster with commonly used master username and public access setting enabled"
+    },
+    {
+      "id": "CKV_AWS_392",
+      "framework": "terraform",
+      "name": "Ensure AWS S3 access point block public access setting is enabled"
+    },
+    {
+      "id": "CKV_AWS_393",
+      "framework": "terraform",
+      "name": "Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role"
+    },
+    {
+      "id": "CKV_AWS_40",
+      "framework": "terraform",
+      "name": "Ensure IAM policies are attached only to groups or roles (Reducing access management complexity may in-turn reduce opportunity for a principal to inadvertently receive or retain excessive privileges.)"
+    },
+    {
+      "id": "CKV_AWS_41",
+      "framework": "terraform",
+      "name": "Ensure no hard coded AWS access key and secret key exists in provider"
+    },
+    {
+      "id": "CKV_AWS_42",
+      "framework": "terraform",
+      "name": "Ensure EFS is securely encrypted"
+    },
+    {
+      "id": "CKV_AWS_43",
+      "framework": "terraform",
+      "name": "Ensure Kinesis Stream is securely encrypted"
+    },
+    {
+      "id": "CKV_AWS_44",
+      "framework": "terraform",
+      "name": "Ensure Neptune storage is securely encrypted"
+    },
+    {
+      "id": "CKV_AWS_45",
+      "framework": "terraform",
+      "name": "Ensure no hard-coded secrets exist in lambda environment"
+    },
+    {
+      "id": "CKV_AWS_46",
+      "framework": "terraform",
+      "name": "Ensure no hard-coded secrets exist in EC2 user data"
+    },
+    {
+      "id": "CKV_AWS_47",
+      "framework": "terraform",
+      "name": "Ensure DAX is encrypted at rest (default is unencrypted)"
+    },
+    {
+      "id": "CKV_AWS_48",
+      "framework": "terraform",
+      "name": "Ensure MQ Broker logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_49",
+      "framework": "terraform",
+      "name": "Ensure no IAM policies documents allow \"*\" as a statement's actions"
+    },
+    {
+      "id": "CKV_AWS_5",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the Elasticsearch is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_50",
+      "framework": "terraform",
+      "name": "X-Ray tracing is enabled for Lambda"
+    },
+    {
+      "id": "CKV_AWS_51",
+      "framework": "terraform",
+      "name": "Ensure ECR Image Tags are immutable"
+    },
+    {
+      "id": "CKV_AWS_53",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket has block public ACLS enabled"
+    },
+    {
+      "id": "CKV_AWS_54",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket has block public policy enabled"
+    },
+    {
+      "id": "CKV_AWS_55",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket has ignore public ACLs enabled"
+    },
+    {
+      "id": "CKV_AWS_56",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket has 'restrict_public_buckets' enabled"
+    },
+    {
+      "id": "CKV_AWS_57",
+      "framework": "terraform",
+      "name": "S3 Bucket has an ACL defined which allows public WRITE access."
+    },
+    {
+      "id": "CKV_AWS_58",
+      "framework": "terraform",
+      "name": "Ensure EKS Cluster has Secrets Encryption Enabled"
+    },
+    {
+      "id": "CKV_AWS_59",
+      "framework": "terraform",
+      "name": "Ensure there is no open access to back-end resources through API"
+    },
+    {
+      "id": "CKV_AWS_6",
+      "framework": "terraform",
+      "name": "Ensure all Elasticsearch has node-to-node encryption enabled"
+    },
+    {
+      "id": "CKV_AWS_60",
+      "framework": "terraform",
+      "name": "Ensure IAM role allows only specific services or principals to assume it"
+    },
+    {
+      "id": "CKV_AWS_61",
+      "framework": "terraform",
+      "name": "Ensure AWS IAM policy does not allow assume role permission across all services"
+    },
+    {
+      "id": "CKV_AWS_62",
+      "framework": "terraform",
+      "name": "Ensure IAM policies that allow full \"*-*\" administrative privileges are not created"
+    },
+    {
+      "id": "CKV_AWS_63",
+      "framework": "terraform",
+      "name": "Ensure no IAM policies documents allow \"*\" as a statement's actions"
+    },
+    {
+      "id": "CKV_AWS_64",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the Redshift cluster is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_65",
+      "framework": "terraform",
+      "name": "Ensure container insights are enabled on ECS cluster"
+    },
+    {
+      "id": "CKV_AWS_66",
+      "framework": "terraform",
+      "name": "Ensure that CloudWatch Log Group specifies retention days"
+    },
+    {
+      "id": "CKV_AWS_67",
+      "framework": "terraform",
+      "name": "Ensure CloudTrail is enabled in all Regions"
+    },
+    {
+      "id": "CKV_AWS_68",
+      "framework": "terraform",
+      "name": "CloudFront Distribution should have WAF enabled"
+    },
+    {
+      "id": "CKV_AWS_69",
+      "framework": "terraform",
+      "name": "Ensure MQ Broker is not publicly exposed"
+    },
+    {
+      "id": "CKV_AWS_7",
+      "framework": "terraform",
+      "name": "Ensure rotation for customer created CMKs is enabled"
+    },
+    {
+      "id": "CKV_AWS_70",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket does not allow an action with any Principal"
+    },
+    {
+      "id": "CKV_AWS_71",
+      "framework": "terraform",
+      "name": "Ensure Redshift Cluster logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_72",
+      "framework": "terraform",
+      "name": "Ensure SQS policy does not allow ALL (*) actions."
+    },
+    {
+      "id": "CKV_AWS_73",
+      "framework": "terraform",
+      "name": "Ensure API Gateway has X-Ray Tracing enabled"
+    },
+    {
+      "id": "CKV_AWS_74",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB is encrypted at rest (default is unencrypted)"
+    },
+    {
+      "id": "CKV_AWS_75",
+      "framework": "terraform",
+      "name": "Ensure Global Accelerator accelerator has flow logs enabled"
+    },
+    {
+      "id": "CKV_AWS_76",
+      "framework": "terraform",
+      "name": "Ensure API Gateway has Access Logging enabled"
+    },
+    {
+      "id": "CKV_AWS_77",
+      "framework": "terraform",
+      "name": "Ensure Athena Database is encrypted at rest (default is unencrypted)"
+    },
+    {
+      "id": "CKV_AWS_78",
+      "framework": "terraform",
+      "name": "Ensure that CodeBuild Project encryption is not disabled"
+    },
+    {
+      "id": "CKV_AWS_79",
+      "framework": "terraform",
+      "name": "Ensure Instance Metadata Service Version 1 is not enabled"
+    },
+    {
+      "id": "CKV_AWS_8",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the Launch configuration or instance Elastic Blocks Store is securely encrypted"
+    },
+    {
+      "id": "CKV_AWS_80",
+      "framework": "terraform",
+      "name": "Ensure MSK Cluster logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_81",
+      "framework": "terraform",
+      "name": "Ensure MSK Cluster encryption in rest and transit is enabled"
+    },
+    {
+      "id": "CKV_AWS_82",
+      "framework": "terraform",
+      "name": "Ensure Athena Workgroup should enforce configuration to prevent client disabling encryption"
+    },
+    {
+      "id": "CKV_AWS_83",
+      "framework": "terraform",
+      "name": "Ensure Elasticsearch Domain enforces HTTPS"
+    },
+    {
+      "id": "CKV_AWS_84",
+      "framework": "terraform",
+      "name": "Ensure Elasticsearch Domain Logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_85",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB Logging is enabled"
+    },
+    {
+      "id": "CKV_AWS_86",
+      "framework": "terraform",
+      "name": "Ensure CloudFront distribution has Access Logging enabled"
+    },
+    {
+      "id": "CKV_AWS_87",
+      "framework": "terraform",
+      "name": "Redshift cluster should not be publicly accessible"
+    },
+    {
+      "id": "CKV_AWS_88",
+      "framework": "terraform",
+      "name": "EC2 instance should not have public IP."
+    },
+    {
+      "id": "CKV_AWS_89",
+      "framework": "terraform",
+      "name": "DMS replication instance should not be publicly accessible"
+    },
+    {
+      "id": "CKV_AWS_9",
+      "framework": "terraform",
+      "name": "Ensure IAM password policy expires passwords within 90 days or less"
+    },
+    {
+      "id": "CKV_AWS_90",
+      "framework": "terraform",
+      "name": "Ensure DocumentDB TLS is not disabled"
+    },
+    {
+      "id": "CKV_AWS_91",
+      "framework": "terraform",
+      "name": "Ensure the ELBv2 (Application/Network) has access logging enabled"
+    },
+    {
+      "id": "CKV_AWS_92",
+      "framework": "terraform",
+      "name": "Ensure the ELB has access logging enabled"
+    },
+    {
+      "id": "CKV_AWS_93",
+      "framework": "terraform",
+      "name": "Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)"
+    },
+    {
+      "id": "CKV_AWS_94",
+      "framework": "terraform",
+      "name": "Ensure Glue Data Catalog Encryption is enabled"
+    },
+    {
+      "id": "CKV_AWS_96",
+      "framework": "terraform",
+      "name": "Ensure all data stored in Aurora is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_97",
+      "framework": "terraform",
+      "name": "Ensure Encryption in transit is enabled for EFS volumes in ECS Task definitions"
+    },
+    {
+      "id": "CKV_AWS_98",
+      "framework": "terraform",
+      "name": "Ensure all data stored in the Sagemaker Endpoint is securely encrypted at rest"
+    },
+    {
+      "id": "CKV_AWS_99",
+      "framework": "terraform",
+      "name": "Ensure Glue Security Configuration Encryption is enabled"
+    },
+    {
+      "id": "CKV_AZURE_1",
+      "framework": "terraform",
+      "name": "Ensure Azure Instance does not use basic authentication(Use SSH Key Instead)"
+    },
+    {
+      "id": "CKV_AZURE_10",
+      "framework": "terraform",
+      "name": "Ensure that SSH access is restricted from the internet"
+    },
+    {
+      "id": "CKV_AZURE_100",
+      "framework": "terraform",
+      "name": "Ensure that Cosmos DB accounts have customer-managed keys to encrypt data at rest"
+    },
+    {
+      "id": "CKV_AZURE_101",
+      "framework": "terraform",
+      "name": "Ensure that Azure Cosmos DB disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_102",
+      "framework": "terraform",
+      "name": "Ensure that PostgreSQL server enables geo-redundant backups"
+    },
+    {
+      "id": "CKV_AZURE_103",
+      "framework": "terraform",
+      "name": "Ensure that Azure Data Factory uses Git repository for source control"
+    },
+    {
+      "id": "CKV_AZURE_104",
+      "framework": "terraform",
+      "name": "Ensure that Azure Data factory public network access is disabled"
+    },
+    {
+      "id": "CKV_AZURE_105",
+      "framework": "terraform",
+      "name": "Ensure that Data Lake Store accounts enables encryption"
+    },
+    {
+      "id": "CKV_AZURE_106",
+      "framework": "terraform",
+      "name": "Ensure that Azure Event Grid Domain public network access is disabled"
+    },
+    {
+      "id": "CKV_AZURE_107",
+      "framework": "terraform",
+      "name": "Ensure that API management services use virtual networks"
+    },
+    {
+      "id": "CKV_AZURE_108",
+      "framework": "terraform",
+      "name": "Ensure that Azure IoT Hub disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_109",
+      "framework": "terraform",
+      "name": "Ensure that key vault allows firewall rules settings"
+    },
+    {
+      "id": "CKV_AZURE_11",
+      "framework": "terraform",
+      "name": "Ensure no SQL Databases allow ingress from 0.0.0.0/0 (ANY IP)"
+    },
+    {
+      "id": "CKV_AZURE_110",
+      "framework": "terraform",
+      "name": "Ensure that key vault enables purge protection"
+    },
+    {
+      "id": "CKV_AZURE_111",
+      "framework": "terraform",
+      "name": "Ensure that key vault enables soft delete"
+    },
+    {
+      "id": "CKV_AZURE_112",
+      "framework": "terraform",
+      "name": "Ensure that key vault key is backed by HSM"
+    },
+    {
+      "id": "CKV_AZURE_113",
+      "framework": "terraform",
+      "name": "Ensure that SQL server disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_114",
+      "framework": "terraform",
+      "name": "Ensure that key vault secrets have \"content_type\" set"
+    },
+    {
+      "id": "CKV_AZURE_115",
+      "framework": "terraform",
+      "name": "Ensure that AKS enables private clusters"
+    },
+    {
+      "id": "CKV_AZURE_116",
+      "framework": "terraform",
+      "name": "Ensure that AKS uses Azure Policies Add-on"
+    },
+    {
+      "id": "CKV_AZURE_117",
+      "framework": "terraform",
+      "name": "Ensure that AKS uses disk encryption set"
+    },
+    {
+      "id": "CKV_AZURE_118",
+      "framework": "terraform",
+      "name": "Ensure that Network Interfaces disable IP forwarding"
+    },
+    {
+      "id": "CKV_AZURE_119",
+      "framework": "terraform",
+      "name": "Ensure that Network Interfaces don't use public IPs"
+    },
+    {
+      "id": "CKV_AZURE_12",
+      "framework": "terraform",
+      "name": "Ensure that Network Security Group Flow Log retention period is 'greater than 90 days'"
+    },
+    {
+      "id": "CKV_AZURE_120",
+      "framework": "terraform",
+      "name": "Ensure that Application Gateway enables WAF"
+    },
+    {
+      "id": "CKV_AZURE_121",
+      "framework": "terraform",
+      "name": "Ensure that Azure Front Door enables WAF"
+    },
+    {
+      "id": "CKV_AZURE_122",
+      "framework": "terraform",
+      "name": "Ensure that Application Gateway uses WAF in \"Detection\" or \"Prevention\" modes"
+    },
+    {
+      "id": "CKV_AZURE_123",
+      "framework": "terraform",
+      "name": "Ensure that Azure Front Door uses WAF in \"Detection\" or \"Prevention\" modes"
+    },
+    {
+      "id": "CKV_AZURE_124",
+      "framework": "terraform",
+      "name": "Ensure that Azure Cognitive Search disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_125",
+      "framework": "terraform",
+      "name": "Ensures that Service Fabric use three levels of protection available"
+    },
+    {
+      "id": "CKV_AZURE_126",
+      "framework": "terraform",
+      "name": "Ensures that Active Directory is used for authentication for Service Fabric"
+    },
+    {
+      "id": "CKV_AZURE_127",
+      "framework": "terraform",
+      "name": "Ensure that My SQL server enables Threat detection policy"
+    },
+    {
+      "id": "CKV_AZURE_128",
+      "framework": "terraform",
+      "name": "Ensure that PostgreSQL server enables Threat detection policy"
+    },
+    {
+      "id": "CKV_AZURE_129",
+      "framework": "terraform",
+      "name": "Ensure that MariaDB server enables geo-redundant backups"
+    },
+    {
+      "id": "CKV_AZURE_13",
+      "framework": "terraform",
+      "name": "Ensure App Service Authentication is set on Azure App Service"
+    },
+    {
+      "id": "CKV_AZURE_130",
+      "framework": "terraform",
+      "name": "Ensure that PostgreSQL server enables infrastructure encryption"
+    },
+    {
+      "id": "CKV_AZURE_131",
+      "framework": "terraform",
+      "name": "Ensure that 'Security contact emails' is set"
+    },
+    {
+      "id": "CKV_AZURE_132",
+      "framework": "terraform",
+      "name": "Ensure cosmosdb does not allow privileged escalation by restricting management plane changes"
+    },
+    {
+      "id": "CKV_AZURE_133",
+      "framework": "terraform",
+      "name": "Ensure Front Door WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"
+    },
+    {
+      "id": "CKV_AZURE_134",
+      "framework": "terraform",
+      "name": "Ensure that Cognitive Services accounts disable public network access"
+    },
+    {
+      "id": "CKV_AZURE_135",
+      "framework": "terraform",
+      "name": "Ensure Application Gateway WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"
+    },
+    {
+      "id": "CKV_AZURE_136",
+      "framework": "terraform",
+      "name": "Ensure that PostgreSQL Flexible server enables geo-redundant backups"
+    },
+    {
+      "id": "CKV_AZURE_137",
+      "framework": "terraform",
+      "name": "Ensure ACR admin account is disabled"
+    },
+    {
+      "id": "CKV_AZURE_138",
+      "framework": "terraform",
+      "name": "Ensures that ACR disables anonymous pulling of images"
+    },
+    {
+      "id": "CKV_AZURE_139",
+      "framework": "terraform",
+      "name": "Ensure ACR set to disable public networking"
+    },
+    {
+      "id": "CKV_AZURE_14",
+      "framework": "terraform",
+      "name": "Ensure web app redirects all HTTP traffic to HTTPS in Azure App Service"
+    },
+    {
+      "id": "CKV_AZURE_140",
+      "framework": "terraform",
+      "name": "Ensure that Local Authentication is disabled on CosmosDB"
+    },
+    {
+      "id": "CKV_AZURE_141",
+      "framework": "terraform",
+      "name": "Ensure AKS local admin account is disabled"
+    },
+    {
+      "id": "CKV_AZURE_142",
+      "framework": "terraform",
+      "name": "Ensure Machine Learning Compute Cluster Local Authentication is disabled"
+    },
+    {
+      "id": "CKV_AZURE_143",
+      "framework": "terraform",
+      "name": "Ensure AKS cluster nodes do not have public IP addresses"
+    },
+    {
+      "id": "CKV_AZURE_144",
+      "framework": "terraform",
+      "name": "Ensure that Public Access is disabled for Machine Learning Workspace"
+    },
+    {
+      "id": "CKV_AZURE_145",
+      "framework": "terraform",
+      "name": "Ensure Function app is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_146",
+      "framework": "terraform",
+      "name": "Ensure server parameter 'log_retention' is set to 'ON' for PostgreSQL Database Server"
+    },
+    {
+      "id": "CKV_AZURE_147",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_148",
+      "framework": "terraform",
+      "name": "Ensure Redis Cache is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_149",
+      "framework": "terraform",
+      "name": "Ensure that Virtual machine does not enable password authentication"
+    },
+    {
+      "id": "CKV_AZURE_15",
+      "framework": "terraform",
+      "name": "Ensure web app is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_150",
+      "framework": "terraform",
+      "name": "Ensure Machine Learning Compute Cluster Minimum Nodes Set To 0"
+    },
+    {
+      "id": "CKV_AZURE_151",
+      "framework": "terraform",
+      "name": "Ensure Windows VM enables encryption"
+    },
+    {
+      "id": "CKV_AZURE_152",
+      "framework": "terraform",
+      "name": "Ensure Client Certificates are enforced for API management"
+    },
+    {
+      "id": "CKV_AZURE_153",
+      "framework": "terraform",
+      "name": "Ensure web app redirects all HTTP traffic to HTTPS in Azure App Service Slot"
+    },
+    {
+      "id": "CKV_AZURE_154",
+      "framework": "terraform",
+      "name": "Ensure the App service slot is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_155",
+      "framework": "terraform",
+      "name": "Ensure debugging is disabled for the App service slot"
+    },
+    {
+      "id": "CKV_AZURE_156",
+      "framework": "terraform",
+      "name": "Ensure default Auditing policy for a SQL Server is configured to capture and retain the activity logs"
+    },
+    {
+      "id": "CKV_AZURE_157",
+      "framework": "terraform",
+      "name": "Ensure that Synapse workspace has data_exfiltration_protection_enabled"
+    },
+    {
+      "id": "CKV_AZURE_158",
+      "framework": "terraform",
+      "name": "Ensure Databricks Workspace data plane to control plane communication happens over private link"
+    },
+    {
+      "id": "CKV_AZURE_159",
+      "framework": "terraform",
+      "name": "Ensure function app builtin logging is enabled"
+    },
+    {
+      "id": "CKV_AZURE_16",
+      "framework": "terraform",
+      "name": "Ensure that Register with Azure Active Directory is enabled on App Service"
+    },
+    {
+      "id": "CKV_AZURE_160",
+      "framework": "terraform",
+      "name": "Ensure that HTTP (port 80) access is restricted from the internet"
+    },
+    {
+      "id": "CKV_AZURE_161",
+      "framework": "terraform",
+      "name": "Ensures Spring Cloud API Portal is enabled on for HTTPS"
+    },
+    {
+      "id": "CKV_AZURE_162",
+      "framework": "terraform",
+      "name": "Ensures Spring Cloud API Portal Public Access Is Disabled"
+    },
+    {
+      "id": "CKV_AZURE_163",
+      "framework": "terraform",
+      "name": "Enable vulnerability scanning for container images."
+    },
+    {
+      "id": "CKV_AZURE_164",
+      "framework": "terraform",
+      "name": "Ensures that ACR uses signed/trusted images"
+    },
+    {
+      "id": "CKV_AZURE_165",
+      "framework": "terraform",
+      "name": "Ensure geo-replicated container registries to match multi-region container deployments."
+    },
+    {
+      "id": "CKV_AZURE_166",
+      "framework": "terraform",
+      "name": "Ensure container image quarantine, scan, and mark images verified"
+    },
+    {
+      "id": "CKV_AZURE_167",
+      "framework": "terraform",
+      "name": "Ensure a retention policy is set to cleanup untagged manifests."
+    },
+    {
+      "id": "CKV_AZURE_168",
+      "framework": "terraform",
+      "name": "Ensure Azure Kubernetes Cluster (AKS) nodes should use a minimum number of 50 pods."
+    },
+    {
+      "id": "CKV_AZURE_169",
+      "framework": "terraform",
+      "name": "Ensure Azure Kubernetes Cluster (AKS) nodes use scale sets"
+    },
+    {
+      "id": "CKV_AZURE_17",
+      "framework": "terraform",
+      "name": "Ensure the web app has 'Client Certificates (Incoming client certificates)' set"
+    },
+    {
+      "id": "CKV_AZURE_170",
+      "framework": "terraform",
+      "name": "Ensure that AKS use the Paid Sku for its SLA"
+    },
+    {
+      "id": "CKV_AZURE_171",
+      "framework": "terraform",
+      "name": "Ensure AKS cluster upgrade channel is chosen"
+    },
+    {
+      "id": "CKV_AZURE_172",
+      "framework": "terraform",
+      "name": "Ensure autorotation of Secrets Store CSI Driver secrets for AKS clusters"
+    },
+    {
+      "id": "CKV_AZURE_173",
+      "framework": "terraform",
+      "name": "Ensure API management uses at least TLS 1.2"
+    },
+    {
+      "id": "CKV_AZURE_174",
+      "framework": "terraform",
+      "name": "Ensure API management public access is disabled"
+    },
+    {
+      "id": "CKV_AZURE_175",
+      "framework": "terraform",
+      "name": "Ensure Web PubSub uses a SKU with an SLA"
+    },
+    {
+      "id": "CKV_AZURE_176",
+      "framework": "terraform",
+      "name": "Ensure Web PubSub uses managed identities to access Azure resources"
+    },
+    {
+      "id": "CKV_AZURE_177",
+      "framework": "terraform",
+      "name": "Ensure Windows VM enables automatic updates"
+    },
+    {
+      "id": "CKV_AZURE_178",
+      "framework": "terraform",
+      "name": "Ensure linux VM enables SSH with keys for secure communication"
+    },
+    {
+      "id": "CKV_AZURE_179",
+      "framework": "terraform",
+      "name": "Ensure VM agent is installed"
+    },
+    {
+      "id": "CKV_AZURE_18",
+      "framework": "terraform",
+      "name": "Ensure that 'HTTP Version' is the latest if used to run the web app"
+    },
+    {
+      "id": "CKV_AZURE_180",
+      "framework": "terraform",
+      "name": "Ensure that data explorer uses Sku with an SLA"
+    },
+    {
+      "id": "CKV_AZURE_181",
+      "framework": "terraform",
+      "name": "Ensure that data explorer/Kusto uses managed identities to access Azure resources securely."
+    },
+    {
+      "id": "CKV_AZURE_182",
+      "framework": "terraform",
+      "name": "Ensure that VNET has at least 2 connected DNS Endpoints"
+    },
+    {
+      "id": "CKV_AZURE_183",
+      "framework": "terraform",
+      "name": "Ensure that VNET uses local DNS addresses"
+    },
+    {
+      "id": "CKV_AZURE_184",
+      "framework": "terraform",
+      "name": "Ensure 'local_auth_enabled' is set to 'False'"
+    },
+    {
+      "id": "CKV_AZURE_185",
+      "framework": "terraform",
+      "name": "Ensure 'Public Access' is not Enabled for App configuration"
+    },
+    {
+      "id": "CKV_AZURE_186",
+      "framework": "terraform",
+      "name": "Ensure App configuration encryption block is set."
+    },
+    {
+      "id": "CKV_AZURE_187",
+      "framework": "terraform",
+      "name": "Ensure App configuration purge protection is enabled"
+    },
+    {
+      "id": "CKV_AZURE_188",
+      "framework": "terraform",
+      "name": "Ensure App configuration Sku is standard"
+    },
+    {
+      "id": "CKV_AZURE_189",
+      "framework": "terraform",
+      "name": "Ensure that Azure Key Vault disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_19",
+      "framework": "terraform",
+      "name": "Ensure that standard pricing tier is selected"
+    },
+    {
+      "id": "CKV_AZURE_190",
+      "framework": "terraform",
+      "name": "Ensure that Storage blobs restrict public access"
+    },
+    {
+      "id": "CKV_AZURE_191",
+      "framework": "terraform",
+      "name": "Ensure that Managed identity provider is enabled for Azure Event Grid Topic"
+    },
+    {
+      "id": "CKV_AZURE_192",
+      "framework": "terraform",
+      "name": "Ensure that Azure Event Grid Topic local Authentication is disabled"
+    },
+    {
+      "id": "CKV_AZURE_193",
+      "framework": "terraform",
+      "name": "Ensure public network access is disabled for Azure Event Grid Topic"
+    },
+    {
+      "id": "CKV_AZURE_194",
+      "framework": "terraform",
+      "name": "Ensure that Managed identity provider is enabled for Azure Event Grid Domain"
+    },
+    {
+      "id": "CKV_AZURE_195",
+      "framework": "terraform",
+      "name": "Ensure that Azure Event Grid Domain local Authentication is disabled"
+    },
+    {
+      "id": "CKV_AZURE_196",
+      "framework": "terraform",
+      "name": "Ensure that SignalR uses a Paid Sku for its SLA"
+    },
+    {
+      "id": "CKV_AZURE_197",
+      "framework": "terraform",
+      "name": "Ensure the Azure CDN disables the HTTP endpoint"
+    },
+    {
+      "id": "CKV_AZURE_198",
+      "framework": "terraform",
+      "name": "Ensure the Azure CDN enables the HTTPS endpoint"
+    },
+    {
+      "id": "CKV_AZURE_199",
+      "framework": "terraform",
+      "name": "Ensure that Azure Service Bus uses double encryption"
+    },
+    {
+      "id": "CKV_AZURE_2",
+      "framework": "terraform",
+      "name": "Ensure Azure managed disk has encryption enabled"
+    },
+    {
+      "id": "CKV_AZURE_20",
+      "framework": "terraform",
+      "name": "Ensure that security contact 'Phone number' is set"
+    },
+    {
+      "id": "CKV_AZURE_200",
+      "framework": "terraform",
+      "name": "Ensure the Azure CDN endpoint is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_201",
+      "framework": "terraform",
+      "name": "Ensure that Azure Service Bus uses a customer-managed key to encrypt data"
+    },
+    {
+      "id": "CKV_AZURE_202",
+      "framework": "terraform",
+      "name": "Ensure that Managed identity provider is enabled for Azure Service Bus"
+    },
+    {
+      "id": "CKV_AZURE_203",
+      "framework": "terraform",
+      "name": "Ensure Azure Service Bus Local Authentication is disabled"
+    },
+    {
+      "id": "CKV_AZURE_204",
+      "framework": "terraform",
+      "name": "Ensure 'public network access enabled' is set to 'False' for Azure Service Bus"
+    },
+    {
+      "id": "CKV_AZURE_205",
+      "framework": "terraform",
+      "name": "Ensure Azure Service Bus is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_206",
+      "framework": "terraform",
+      "name": "Ensure that Storage Accounts use replication"
+    },
+    {
+      "id": "CKV_AZURE_207",
+      "framework": "terraform",
+      "name": "Ensure Azure Cognitive Search service uses managed identities to access Azure resources"
+    },
+    {
+      "id": "CKV_AZURE_208",
+      "framework": "terraform",
+      "name": "Ensure that Azure Cognitive Search maintains SLA for index updates"
+    },
+    {
+      "id": "CKV_AZURE_209",
+      "framework": "terraform",
+      "name": "Ensure that Azure Cognitive Search maintains SLA for search index queries"
+    },
+    {
+      "id": "CKV_AZURE_21",
+      "framework": "terraform",
+      "name": "Ensure that 'Send email notification for high severity alerts' is set to 'On'"
+    },
+    {
+      "id": "CKV_AZURE_210",
+      "framework": "terraform",
+      "name": "Ensure Azure Cognitive Search service allowed IPS does not give public Access"
+    },
+    {
+      "id": "CKV_AZURE_211",
+      "framework": "terraform",
+      "name": "Ensure App Service plan suitable for production use"
+    },
+    {
+      "id": "CKV_AZURE_212",
+      "framework": "terraform",
+      "name": "Ensure App Service has a minimum number of instances for failover"
+    },
+    {
+      "id": "CKV_AZURE_213",
+      "framework": "terraform",
+      "name": "Ensure that App Service configures health check"
+    },
+    {
+      "id": "CKV_AZURE_214",
+      "framework": "terraform",
+      "name": "Ensure App Service is set to be always on"
+    },
+    {
+      "id": "CKV_AZURE_215",
+      "framework": "terraform",
+      "name": "Ensure API management backend uses https"
+    },
+    {
+      "id": "CKV_AZURE_216",
+      "framework": "terraform",
+      "name": "Ensure DenyIntelMode is set to Deny for Azure Firewalls"
+    },
+    {
+      "id": "CKV_AZURE_217",
+      "framework": "terraform",
+      "name": "Ensure Azure Application gateways listener that allow connection requests over HTTP"
+    },
+    {
+      "id": "CKV_AZURE_218",
+      "framework": "terraform",
+      "name": "Ensure Application Gateway defines secure protocols for in transit communication"
+    },
+    {
+      "id": "CKV_AZURE_219",
+      "framework": "terraform",
+      "name": "Ensure Firewall defines a firewall policy"
+    },
+    {
+      "id": "CKV_AZURE_22",
+      "framework": "terraform",
+      "name": "Ensure that 'Send email notification for high severity alerts' is set to 'On'"
+    },
+    {
+      "id": "CKV_AZURE_220",
+      "framework": "terraform",
+      "name": "Ensure Firewall policy has IDPS mode as deny"
+    },
+    {
+      "id": "CKV_AZURE_221",
+      "framework": "terraform",
+      "name": "Ensure that Azure Function App public network access is disabled"
+    },
+    {
+      "id": "CKV_AZURE_222",
+      "framework": "terraform",
+      "name": "Ensure that Azure Web App public network access is disabled"
+    },
+    {
+      "id": "CKV_AZURE_223",
+      "framework": "terraform",
+      "name": "Ensure Event Hub Namespace uses at least TLS 1.2"
+    },
+    {
+      "id": "CKV_AZURE_224",
+      "framework": "terraform",
+      "name": "Ensure that the Ledger feature is enabled on database that requires cryptographic proof and nonrepudiation of data integrity"
+    },
+    {
+      "id": "CKV_AZURE_225",
+      "framework": "terraform",
+      "name": "Ensure the App Service Plan is zone redundant"
+    },
+    {
+      "id": "CKV_AZURE_226",
+      "framework": "terraform",
+      "name": "Ensure ephemeral disks are used for OS disks"
+    },
+    {
+      "id": "CKV_AZURE_227",
+      "framework": "terraform",
+      "name": "Ensure that the AKS cluster encrypt temp disks, caches, and data flows between Compute and Storage resources"
+    },
+    {
+      "id": "CKV_AZURE_228",
+      "framework": "terraform",
+      "name": "Ensure the Azure Event Hub Namespace is zone redundant"
+    },
+    {
+      "id": "CKV_AZURE_229",
+      "framework": "terraform",
+      "name": "Ensure the Azure SQL Database Namespace is zone redundant"
+    },
+    {
+      "id": "CKV_AZURE_23",
+      "framework": "terraform",
+      "name": "Ensure that 'Auditing' is set to 'On' for SQL servers"
+    },
+    {
+      "id": "CKV_AZURE_230",
+      "framework": "terraform",
+      "name": "Standard Replication should be enabled"
+    },
+    {
+      "id": "CKV_AZURE_231",
+      "framework": "terraform",
+      "name": "Ensure App Service Environment is zone redundant"
+    },
+    {
+      "id": "CKV_AZURE_232",
+      "framework": "terraform",
+      "name": "Ensure that only critical system pods run on system nodes"
+    },
+    {
+      "id": "CKV_AZURE_233",
+      "framework": "terraform",
+      "name": "Ensure Azure Container Registry (ACR) is zone redundant"
+    },
+    {
+      "id": "CKV_AZURE_234",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender for cloud is set to On for Resource Manager"
+    },
+    {
+      "id": "CKV_AZURE_235",
+      "framework": "terraform",
+      "name": "Ensure that Azure container environment variables are configured with secure values only"
+    },
+    {
+      "id": "CKV_AZURE_236",
+      "framework": "terraform",
+      "name": "Ensure that Cognitive Services accounts disable local authentication"
+    },
+    {
+      "id": "CKV_AZURE_237",
+      "framework": "terraform",
+      "name": "Ensure dedicated data endpoints are enabled."
+    },
+    {
+      "id": "CKV_AZURE_238",
+      "framework": "terraform",
+      "name": "Ensure that all Azure Cognitive Services accounts are configured with a managed identity"
+    },
+    {
+      "id": "CKV_AZURE_239",
+      "framework": "terraform",
+      "name": "Ensure Azure Synapse Workspace administrator login password is not exposed"
+    },
+    {
+      "id": "CKV_AZURE_24",
+      "framework": "terraform",
+      "name": "Ensure that 'Auditing' Retention is 'greater than 90 days' for SQL servers"
+    },
+    {
+      "id": "CKV_AZURE_240",
+      "framework": "terraform",
+      "name": "Ensure Azure Synapse Workspace is encrypted with a CMK"
+    },
+    {
+      "id": "CKV_AZURE_241",
+      "framework": "terraform",
+      "name": "Ensure Synapse SQL pools are encrypted"
+    },
+    {
+      "id": "CKV_AZURE_242",
+      "framework": "terraform",
+      "name": "Ensure isolated compute is enabled for Synapse Spark pools"
+    },
+    {
+      "id": "CKV_AZURE_244",
+      "framework": "terraform",
+      "name": "Avoid the use of local users for Azure Storage unless necessary"
+    },
+    {
+      "id": "CKV_AZURE_245",
+      "framework": "terraform",
+      "name": "Ensure that Azure Container group is deployed into virtual network"
+    },
+    {
+      "id": "CKV_AZURE_246",
+      "framework": "terraform",
+      "name": "Ensure Azure AKS cluster HTTP application routing is disabled"
+    },
+    {
+      "id": "CKV_AZURE_247",
+      "framework": "terraform",
+      "name": "Ensure that Azure Cognitive Services account hosted with OpenAI is configured with data loss prevention"
+    },
+    {
+      "id": "CKV_AZURE_248",
+      "framework": "terraform",
+      "name": "Ensure that if Azure Batch account public network access in case 'enabled' then its account access must be 'deny'"
+    },
+    {
+      "id": "CKV_AZURE_249",
+      "framework": "terraform",
+      "name": "Ensure Azure GitHub Actions OIDC trust policy is configured securely"
+    },
+    {
+      "id": "CKV_AZURE_25",
+      "framework": "terraform",
+      "name": "Ensure that 'Threat Detection types' is set to 'All'"
+    },
+    {
+      "id": "CKV_AZURE_250",
+      "framework": "terraform",
+      "name": "Ensure Storage Sync Service is not configured with overly permissive network access"
+    },
+    {
+      "id": "CKV_AZURE_251",
+      "framework": "terraform",
+      "name": "Ensure Azure Virtual Machine disks are configured without public network access"
+    },
+    {
+      "id": "CKV_AZURE_26",
+      "framework": "terraform",
+      "name": "Ensure that 'Send Alerts To' is enabled for MSSQL servers"
+    },
+    {
+      "id": "CKV_AZURE_27",
+      "framework": "terraform",
+      "name": "Ensure that 'Email service and co-administrators' is 'Enabled' for MSSQL servers"
+    },
+    {
+      "id": "CKV_AZURE_28",
+      "framework": "terraform",
+      "name": "Ensure 'Enforce SSL connection' is set to 'ENABLED' for MySQL Database Server"
+    },
+    {
+      "id": "CKV_AZURE_29",
+      "framework": "terraform",
+      "name": "Ensure 'Enforce SSL connection' is set to 'ENABLED' for PostgreSQL Database Server"
+    },
+    {
+      "id": "CKV_AZURE_3",
+      "framework": "terraform",
+      "name": "Ensure that 'enable_https_traffic_only' is enabled"
+    },
+    {
+      "id": "CKV_AZURE_30",
+      "framework": "terraform",
+      "name": "Ensure server parameter 'log_checkpoints' is set to 'ON' for PostgreSQL Database Server"
+    },
+    {
+      "id": "CKV_AZURE_31",
+      "framework": "terraform",
+      "name": "Ensure server parameter 'log_connections' is set to 'ON' for PostgreSQL Database Server"
+    },
+    {
+      "id": "CKV_AZURE_32",
+      "framework": "terraform",
+      "name": "Ensure server parameter 'connection_throttling' is set to 'ON' for PostgreSQL Database Server"
+    },
+    {
+      "id": "CKV_AZURE_33",
+      "framework": "terraform",
+      "name": "Ensure Storage logging is enabled for Queue service for read, write and delete requests"
+    },
+    {
+      "id": "CKV_AZURE_34",
+      "framework": "terraform",
+      "name": "Ensure that 'Public access level' is set to Private for blob containers"
+    },
+    {
+      "id": "CKV_AZURE_35",
+      "framework": "terraform",
+      "name": "Ensure default network access rule for Storage Accounts is set to deny"
+    },
+    {
+      "id": "CKV_AZURE_36",
+      "framework": "terraform",
+      "name": "Ensure 'Trusted Microsoft Services' is enabled for Storage Account access"
+    },
+    {
+      "id": "CKV_AZURE_37",
+      "framework": "terraform",
+      "name": "Ensure that Activity Log Retention is set 365 days or greater"
+    },
+    {
+      "id": "CKV_AZURE_38",
+      "framework": "terraform",
+      "name": "Ensure audit profile captures all the activities"
+    },
+    {
+      "id": "CKV_AZURE_39",
+      "framework": "terraform",
+      "name": "Ensure that no custom subscription owner roles are created"
+    },
+    {
+      "id": "CKV_AZURE_4",
+      "framework": "terraform",
+      "name": "Ensure AKS logging to Azure Monitoring is Configured"
+    },
+    {
+      "id": "CKV_AZURE_40",
+      "framework": "terraform",
+      "name": "Ensure that the expiration date is set on all keys"
+    },
+    {
+      "id": "CKV_AZURE_41",
+      "framework": "terraform",
+      "name": "Ensure that the expiration date is set on all secrets"
+    },
+    {
+      "id": "CKV_AZURE_42",
+      "framework": "terraform",
+      "name": "Ensure the key vault is recoverable"
+    },
+    {
+      "id": "CKV_AZURE_43",
+      "framework": "terraform",
+      "name": "Ensure Storage Accounts adhere to the naming rules"
+    },
+    {
+      "id": "CKV_AZURE_44",
+      "framework": "terraform",
+      "name": "Ensure Storage Account is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_45",
+      "framework": "terraform",
+      "name": "Ensure that no sensitive credentials are exposed in VM custom_data"
+    },
+    {
+      "id": "CKV_AZURE_47",
+      "framework": "terraform",
+      "name": "Ensure 'Enforce SSL connection' is set to 'ENABLED' for MariaDB servers"
+    },
+    {
+      "id": "CKV_AZURE_48",
+      "framework": "terraform",
+      "name": "Ensure 'public network access enabled' is set to 'False' for MariaDB servers"
+    },
+    {
+      "id": "CKV_AZURE_49",
+      "framework": "terraform",
+      "name": "Ensure Azure linux scale set does not use basic authentication(Use SSH Key Instead)"
+    },
+    {
+      "id": "CKV_AZURE_5",
+      "framework": "terraform",
+      "name": "Ensure RBAC is enabled on AKS clusters"
+    },
+    {
+      "id": "CKV_AZURE_50",
+      "framework": "terraform",
+      "name": "Ensure Virtual Machine Extensions are not Installed"
+    },
+    {
+      "id": "CKV_AZURE_52",
+      "framework": "terraform",
+      "name": "Ensure MSSQL is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_53",
+      "framework": "terraform",
+      "name": "Ensure 'public network access enabled' is set to 'False' for mySQL servers"
+    },
+    {
+      "id": "CKV_AZURE_54",
+      "framework": "terraform",
+      "name": "Ensure MySQL is using the latest version of TLS encryption"
+    },
+    {
+      "id": "CKV_AZURE_55",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for Servers"
+    },
+    {
+      "id": "CKV_AZURE_56",
+      "framework": "terraform",
+      "name": "Ensure that function apps enables Authentication"
+    },
+    {
+      "id": "CKV_AZURE_57",
+      "framework": "terraform",
+      "name": "Ensure that CORS disallows every resource to access app services"
+    },
+    {
+      "id": "CKV_AZURE_58",
+      "framework": "terraform",
+      "name": "Ensure that Azure Synapse workspaces enables managed virtual networks"
+    },
+    {
+      "id": "CKV_AZURE_59",
+      "framework": "terraform",
+      "name": "Ensure that Storage accounts disallow public access"
+    },
+    {
+      "id": "CKV_AZURE_6",
+      "framework": "terraform",
+      "name": "Ensure AKS has an API Server Authorized IP Ranges enabled"
+    },
+    {
+      "id": "CKV_AZURE_61",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for App Service"
+    },
+    {
+      "id": "CKV_AZURE_62",
+      "framework": "terraform",
+      "name": "Ensure function apps are not accessible from all regions"
+    },
+    {
+      "id": "CKV_AZURE_63",
+      "framework": "terraform",
+      "name": "Ensure that App service enables HTTP logging"
+    },
+    {
+      "id": "CKV_AZURE_64",
+      "framework": "terraform",
+      "name": "Ensure that Azure File Sync disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_65",
+      "framework": "terraform",
+      "name": "Ensure that App service enables detailed error messages"
+    },
+    {
+      "id": "CKV_AZURE_66",
+      "framework": "terraform",
+      "name": "Ensure that App service enables failed request tracing"
+    },
+    {
+      "id": "CKV_AZURE_67",
+      "framework": "terraform",
+      "name": "Ensure that 'HTTP Version' is the latest, if used to run the Function app"
+    },
+    {
+      "id": "CKV_AZURE_68",
+      "framework": "terraform",
+      "name": "Ensure that PostgreSQL server disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_69",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for Azure SQL database servers"
+    },
+    {
+      "id": "CKV_AZURE_7",
+      "framework": "terraform",
+      "name": "Ensure AKS cluster has Network Policy configured"
+    },
+    {
+      "id": "CKV_AZURE_70",
+      "framework": "terraform",
+      "name": "Ensure that Function apps is only accessible over HTTPS"
+    },
+    {
+      "id": "CKV_AZURE_71",
+      "framework": "terraform",
+      "name": "Ensure that Managed identity provider is enabled for app services"
+    },
+    {
+      "id": "CKV_AZURE_72",
+      "framework": "terraform",
+      "name": "Ensure that remote debugging is not enabled for app services"
+    },
+    {
+      "id": "CKV_AZURE_73",
+      "framework": "terraform",
+      "name": "Ensure that Automation account variables are encrypted"
+    },
+    {
+      "id": "CKV_AZURE_74",
+      "framework": "terraform",
+      "name": "Ensure that Azure Data Explorer (Kusto) uses disk encryption"
+    },
+    {
+      "id": "CKV_AZURE_75",
+      "framework": "terraform",
+      "name": "Ensure that Azure Data Explorer uses double encryption"
+    },
+    {
+      "id": "CKV_AZURE_76",
+      "framework": "terraform",
+      "name": "Ensure that Azure Batch account uses key vault to encrypt data"
+    },
+    {
+      "id": "CKV_AZURE_77",
+      "framework": "terraform",
+      "name": "Ensure that UDP Services are restricted from the Internet"
+    },
+    {
+      "id": "CKV_AZURE_78",
+      "framework": "terraform",
+      "name": "Ensure FTP deployments are disabled"
+    },
+    {
+      "id": "CKV_AZURE_79",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for SQL servers on machines"
+    },
+    {
+      "id": "CKV_AZURE_8",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes Dashboard is disabled"
+    },
+    {
+      "id": "CKV_AZURE_80",
+      "framework": "terraform",
+      "name": "Ensure that 'Net Framework' version is the latest, if used as a part of the web app"
+    },
+    {
+      "id": "CKV_AZURE_81",
+      "framework": "terraform",
+      "name": "Ensure that 'PHP version' is the latest, if used to run the web app"
+    },
+    {
+      "id": "CKV_AZURE_82",
+      "framework": "terraform",
+      "name": "Ensure that 'Python version' is the latest, if used to run the web app"
+    },
+    {
+      "id": "CKV_AZURE_83",
+      "framework": "terraform",
+      "name": "Ensure that 'Java version' is the latest, if used to run the web app"
+    },
+    {
+      "id": "CKV_AZURE_84",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for Storage"
+    },
+    {
+      "id": "CKV_AZURE_85",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for Kubernetes"
+    },
+    {
+      "id": "CKV_AZURE_86",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for Container Registries"
+    },
+    {
+      "id": "CKV_AZURE_87",
+      "framework": "terraform",
+      "name": "Ensure that Azure Defender is set to On for Key Vault"
+    },
+    {
+      "id": "CKV_AZURE_88",
+      "framework": "terraform",
+      "name": "Ensure that app services use Azure Files"
+    },
+    {
+      "id": "CKV_AZURE_89",
+      "framework": "terraform",
+      "name": "Ensure that Azure Cache for Redis disables public network access"
+    },
+    {
+      "id": "CKV_AZURE_9",
+      "framework": "terraform",
+      "name": "Ensure that RDP access is restricted from the internet"
+    },
+    {
+      "id": "CKV_AZURE_91",
+      "framework": "terraform",
+      "name": "Ensure that only SSL are enabled for Cache for Redis"
+    },
+    {
+      "id": "CKV_AZURE_92",
+      "framework": "terraform",
+      "name": "Ensure that Virtual Machines use managed disks"
+    },
+    {
+      "id": "CKV_AZURE_93",
+      "framework": "terraform",
+      "name": "Ensure that managed disks use a specific set of disk encryption sets for the customer-managed key encryption"
+    },
+    {
+      "id": "CKV_AZURE_94",
+      "framework": "terraform",
+      "name": "Ensure that My SQL server enables geo-redundant backups"
+    },
+    {
+      "id": "CKV_AZURE_95",
+      "framework": "terraform",
+      "name": "Ensure that automatic OS image patching is enabled for Virtual Machine Scale Sets"
+    },
+    {
+      "id": "CKV_AZURE_96",
+      "framework": "terraform",
+      "name": "Ensure that MySQL server enables infrastructure encryption"
+    },
+    {
+      "id": "CKV_AZURE_97",
+      "framework": "terraform",
+      "name": "Ensure that Virtual machine scale sets have encryption at host enabled"
+    },
+    {
+      "id": "CKV_AZURE_98",
+      "framework": "terraform",
+      "name": "Ensure that Azure Container group is deployed into virtual network"
+    },
+    {
+      "id": "CKV_AZURE_99",
+      "framework": "terraform",
+      "name": "Ensure Cosmos DB accounts have restricted access"
+    },
+    {
+      "id": "CKV_BCW_1",
+      "framework": "terraform",
+      "name": "Ensure no hard coded API token exist in the provider"
+    },
+    {
+      "id": "CKV_DIO_1",
+      "framework": "terraform",
+      "name": "Ensure the Spaces bucket has versioning enabled"
+    },
+    {
+      "id": "CKV_DIO_2",
+      "framework": "terraform",
+      "name": "Ensure the droplet specifies an SSH key"
+    },
+    {
+      "id": "CKV_DIO_3",
+      "framework": "terraform",
+      "name": "Ensure the Spaces bucket is private"
+    },
+    {
+      "id": "CKV_DIO_4",
+      "framework": "terraform",
+      "name": "Ensure the firewall ingress is not wide open"
+    },
+    {
+      "id": "CKV_GCP_1",
+      "framework": "terraform",
+      "name": "Ensure Stackdriver Logging is set to Enabled on Kubernetes Engine Clusters"
+    },
+    {
+      "id": "CKV_GCP_10",
+      "framework": "terraform",
+      "name": "Ensure 'Automatic node upgrade' is enabled for Kubernetes Clusters"
+    },
+    {
+      "id": "CKV_GCP_100",
+      "framework": "terraform",
+      "name": "Ensure that BigQuery Tables are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GCP_101",
+      "framework": "terraform",
+      "name": "Ensure that Artifact Registry repositories are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GCP_102",
+      "framework": "terraform",
+      "name": "Ensure that GCP Cloud Run services are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GCP_103",
+      "framework": "terraform",
+      "name": "Ensure Dataproc Clusters do not have public IPs"
+    },
+    {
+      "id": "CKV_GCP_104",
+      "framework": "terraform",
+      "name": "Ensure Datafusion has stack driver logging enabled"
+    },
+    {
+      "id": "CKV_GCP_105",
+      "framework": "terraform",
+      "name": "Ensure Datafusion has stack driver monitoring enabled"
+    },
+    {
+      "id": "CKV_GCP_106",
+      "framework": "terraform",
+      "name": "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+    },
+    {
+      "id": "CKV_GCP_107",
+      "framework": "terraform",
+      "name": "Cloud functions should not be public"
+    },
+    {
+      "id": "CKV_GCP_108",
+      "framework": "terraform",
+      "name": "Ensure hostnames are logged for GCP PostgreSQL databases"
+    },
+    {
+      "id": "CKV_GCP_109",
+      "framework": "terraform",
+      "name": "Ensure the GCP PostgreSQL database log levels are set to ERROR or lower"
+    },
+    {
+      "id": "CKV_GCP_11",
+      "framework": "terraform",
+      "name": "Ensure that Cloud SQL database Instances are not open to the world"
+    },
+    {
+      "id": "CKV_GCP_110",
+      "framework": "terraform",
+      "name": "Ensure pgAudit is enabled for your GCP PostgreSQL database"
+    },
+    {
+      "id": "CKV_GCP_111",
+      "framework": "terraform",
+      "name": "Ensure GCP PostgreSQL logs SQL statements"
+    },
+    {
+      "id": "CKV_GCP_112",
+      "framework": "terraform",
+      "name": "Ensure KMS policy should not allow public access"
+    },
+    {
+      "id": "CKV_GCP_113",
+      "framework": "terraform",
+      "name": "Ensure IAM policy should not define public access"
+    },
+    {
+      "id": "CKV_GCP_114",
+      "framework": "terraform",
+      "name": "Ensure public access prevention is enforced on Cloud Storage bucket"
+    },
+    {
+      "id": "CKV_GCP_115",
+      "framework": "terraform",
+      "name": "Ensure basic roles are not used at organization level."
+    },
+    {
+      "id": "CKV_GCP_116",
+      "framework": "terraform",
+      "name": "Ensure basic roles are not used at folder level."
+    },
+    {
+      "id": "CKV_GCP_117",
+      "framework": "terraform",
+      "name": "Ensure basic roles are not used at project level."
+    },
+    {
+      "id": "CKV_GCP_118",
+      "framework": "terraform",
+      "name": "Ensure IAM workload identity pool provider is restricted"
+    },
+    {
+      "id": "CKV_GCP_119",
+      "framework": "terraform",
+      "name": "Ensure Spanner Database has deletion protection enabled"
+    },
+    {
+      "id": "CKV_GCP_12",
+      "framework": "terraform",
+      "name": "Ensure Network Policy is enabled on Kubernetes Engine Clusters"
+    },
+    {
+      "id": "CKV_GCP_120",
+      "framework": "terraform",
+      "name": "Ensure Spanner Database has drop protection enabled"
+    },
+    {
+      "id": "CKV_GCP_121",
+      "framework": "terraform",
+      "name": "Ensure BigQuery tables have deletion protection enabled"
+    },
+    {
+      "id": "CKV_GCP_122",
+      "framework": "terraform",
+      "name": "Ensure Big Table Instances have deletion protection enabled"
+    },
+    {
+      "id": "CKV_GCP_123",
+      "framework": "terraform",
+      "name": "GKE Don't Use NodePools in the Cluster configuration"
+    },
+    {
+      "id": "CKV_GCP_124",
+      "framework": "terraform",
+      "name": "Ensure GCP Cloud Function is not configured with overly permissive Ingress setting"
+    },
+    {
+      "id": "CKV_GCP_125",
+      "framework": "terraform",
+      "name": "Ensure GCP GitHub Actions OIDC trust policy is configured securely"
+    },
+    {
+      "id": "CKV_GCP_126",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI Notebook instances are launched with Shielded VM enabled"
+    },
+    {
+      "id": "CKV_GCP_127",
+      "framework": "terraform",
+      "name": "Ensure Integrity Monitoring for Shielded Vertex AI Notebook Instances is Enabled"
+    },
+    {
+      "id": "CKV_GCP_13",
+      "framework": "terraform",
+      "name": "Ensure client certificate authentication to Kubernetes Engine Clusters is disabled"
+    },
+    {
+      "id": "CKV_GCP_14",
+      "framework": "terraform",
+      "name": "Ensure all Cloud SQL database instance have backup configuration enabled"
+    },
+    {
+      "id": "CKV_GCP_15",
+      "framework": "terraform",
+      "name": "Ensure that BigQuery datasets are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GCP_16",
+      "framework": "terraform",
+      "name": "Ensure that DNSSEC is enabled for Cloud DNS"
+    },
+    {
+      "id": "CKV_GCP_17",
+      "framework": "terraform",
+      "name": "Ensure that RSASHA1 is not used for the zone-signing and key-signing keys in Cloud DNS DNSSEC"
+    },
+    {
+      "id": "CKV_GCP_18",
+      "framework": "terraform",
+      "name": "Ensure GKE Control Plane is not public"
+    },
+    {
+      "id": "CKV_GCP_2",
+      "framework": "terraform",
+      "name": "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+    },
+    {
+      "id": "CKV_GCP_20",
+      "framework": "terraform",
+      "name": "Ensure master authorized networks is set to enabled in GKE clusters"
+    },
+    {
+      "id": "CKV_GCP_21",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes Clusters are configured with Labels"
+    },
+    {
+      "id": "CKV_GCP_22",
+      "framework": "terraform",
+      "name": "Ensure Container-Optimized OS (cos) is used for Kubernetes Engine Clusters Node image"
+    },
+    {
+      "id": "CKV_GCP_23",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes Cluster is created with Alias IP ranges enabled"
+    },
+    {
+      "id": "CKV_GCP_24",
+      "framework": "terraform",
+      "name": "Ensure PodSecurityPolicy controller is enabled on the Kubernetes Engine Clusters"
+    },
+    {
+      "id": "CKV_GCP_25",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes Cluster is created with Private cluster enabled"
+    },
+    {
+      "id": "CKV_GCP_26",
+      "framework": "terraform",
+      "name": "Ensure that VPC Flow Logs is enabled for every subnet in a VPC Network"
+    },
+    {
+      "id": "CKV_GCP_27",
+      "framework": "terraform",
+      "name": "Ensure that the default network does not exist in a project"
+    },
+    {
+      "id": "CKV_GCP_28",
+      "framework": "terraform",
+      "name": "Ensure that Cloud Storage bucket is not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GCP_29",
+      "framework": "terraform",
+      "name": "Ensure that Cloud Storage buckets have uniform bucket-level access enabled"
+    },
+    {
+      "id": "CKV_GCP_3",
+      "framework": "terraform",
+      "name": "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+    },
+    {
+      "id": "CKV_GCP_30",
+      "framework": "terraform",
+      "name": "Ensure that instances are not configured to use the default service account"
+    },
+    {
+      "id": "CKV_GCP_31",
+      "framework": "terraform",
+      "name": "Ensure that instances are not configured to use the default service account with full access to all Cloud APIs"
+    },
+    {
+      "id": "CKV_GCP_32",
+      "framework": "terraform",
+      "name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances"
+    },
+    {
+      "id": "CKV_GCP_33",
+      "framework": "terraform",
+      "name": "Ensure oslogin is enabled for a Project"
+    },
+    {
+      "id": "CKV_GCP_34",
+      "framework": "terraform",
+      "name": "Ensure that no instance in the project overrides the project setting for enabling OSLogin(OSLogin needs to be enabled in project metadata for all instances)"
+    },
+    {
+      "id": "CKV_GCP_35",
+      "framework": "terraform",
+      "name": "Ensure 'Enable connecting to serial ports' is not enabled for VM Instance"
+    },
+    {
+      "id": "CKV_GCP_36",
+      "framework": "terraform",
+      "name": "Ensure that IP forwarding is not enabled on Instances"
+    },
+    {
+      "id": "CKV_GCP_37",
+      "framework": "terraform",
+      "name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_38",
+      "framework": "terraform",
+      "name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_39",
+      "framework": "terraform",
+      "name": "Ensure Compute instances are launched with Shielded VM enabled"
+    },
+    {
+      "id": "CKV_GCP_4",
+      "framework": "terraform",
+      "name": "Ensure no HTTPS or SSL proxy load balancers permit SSL policies with weak cipher suites"
+    },
+    {
+      "id": "CKV_GCP_40",
+      "framework": "terraform",
+      "name": "Ensure that Compute instances do not have public IP addresses"
+    },
+    {
+      "id": "CKV_GCP_41",
+      "framework": "terraform",
+      "name": "Ensure that IAM users are not assigned the Service Account User or Service Account Token Creator roles at project level"
+    },
+    {
+      "id": "CKV_GCP_42",
+      "framework": "terraform",
+      "name": "Ensure that Service Account has no Admin privileges"
+    },
+    {
+      "id": "CKV_GCP_43",
+      "framework": "terraform",
+      "name": "Ensure KMS encryption keys are rotated within a period of 90 days"
+    },
+    {
+      "id": "CKV_GCP_44",
+      "framework": "terraform",
+      "name": "Ensure no roles that enable to impersonate and manage all service accounts are used at a folder level"
+    },
+    {
+      "id": "CKV_GCP_45",
+      "framework": "terraform",
+      "name": "Ensure no roles that enable to impersonate and manage all service accounts are used at an organization level"
+    },
+    {
+      "id": "CKV_GCP_46",
+      "framework": "terraform",
+      "name": "Ensure Default Service account is not used at a project level"
+    },
+    {
+      "id": "CKV_GCP_47",
+      "framework": "terraform",
+      "name": "Ensure default service account is not used at an organization level"
+    },
+    {
+      "id": "CKV_GCP_48",
+      "framework": "terraform",
+      "name": "Ensure Default Service account is not used at a folder level"
+    },
+    {
+      "id": "CKV_GCP_49",
+      "framework": "terraform",
+      "name": "Ensure roles do not impersonate or manage Service Accounts used at project level"
+    },
+    {
+      "id": "CKV_GCP_50",
+      "framework": "terraform",
+      "name": "Ensure MySQL database 'local_infile' flag is set to 'off'"
+    },
+    {
+      "id": "CKV_GCP_51",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_checkpoints' flag is set to 'on'"
+    },
+    {
+      "id": "CKV_GCP_52",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_connections' flag is set to 'on'"
+    },
+    {
+      "id": "CKV_GCP_53",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_disconnections' flag is set to 'on'"
+    },
+    {
+      "id": "CKV_GCP_54",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_lock_waits' flag is set to 'on'"
+    },
+    {
+      "id": "CKV_GCP_55",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_min_messages' flag is set to a valid value"
+    },
+    {
+      "id": "CKV_GCP_56",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_temp_files flag is set to '0'"
+    },
+    {
+      "id": "CKV_GCP_57",
+      "framework": "terraform",
+      "name": "Ensure PostgreSQL database 'log_min_duration_statement' flag is set to '-1'"
+    },
+    {
+      "id": "CKV_GCP_58",
+      "framework": "terraform",
+      "name": "Ensure SQL database 'cross db ownership chaining' flag is set to 'off'"
+    },
+    {
+      "id": "CKV_GCP_59",
+      "framework": "terraform",
+      "name": "Ensure SQL database 'contained database authentication' flag is set to 'off'"
+    },
+    {
+      "id": "CKV_GCP_6",
+      "framework": "terraform",
+      "name": "Ensure all Cloud SQL database instance requires all incoming connections to use SSL"
+    },
+    {
+      "id": "CKV_GCP_60",
+      "framework": "terraform",
+      "name": "Ensure Cloud SQL database does not have public IP"
+    },
+    {
+      "id": "CKV_GCP_61",
+      "framework": "terraform",
+      "name": "Enable VPC Flow Logs and Intranode Visibility"
+    },
+    {
+      "id": "CKV_GCP_62",
+      "framework": "terraform",
+      "name": "Bucket should log access"
+    },
+    {
+      "id": "CKV_GCP_63",
+      "framework": "terraform",
+      "name": "Bucket should not log to itself"
+    },
+    {
+      "id": "CKV_GCP_64",
+      "framework": "terraform",
+      "name": "Ensure clusters are created with Private Nodes"
+    },
+    {
+      "id": "CKV_GCP_65",
+      "framework": "terraform",
+      "name": "Manage Kubernetes RBAC users with Google Groups for GKE"
+    },
+    {
+      "id": "CKV_GCP_66",
+      "framework": "terraform",
+      "name": "Ensure use of Binary Authorization"
+    },
+    {
+      "id": "CKV_GCP_68",
+      "framework": "terraform",
+      "name": "Ensure Secure Boot for Shielded GKE Nodes is Enabled"
+    },
+    {
+      "id": "CKV_GCP_69",
+      "framework": "terraform",
+      "name": "Ensure the GKE Metadata Server is Enabled"
+    },
+    {
+      "id": "CKV_GCP_7",
+      "framework": "terraform",
+      "name": "Ensure Legacy Authorization is set to Disabled on Kubernetes Engine Clusters"
+    },
+    {
+      "id": "CKV_GCP_70",
+      "framework": "terraform",
+      "name": "Ensure the GKE Release Channel is set"
+    },
+    {
+      "id": "CKV_GCP_71",
+      "framework": "terraform",
+      "name": "Ensure Shielded GKE Nodes are Enabled"
+    },
+    {
+      "id": "CKV_GCP_72",
+      "framework": "terraform",
+      "name": "Ensure Integrity Monitoring for Shielded GKE Nodes is Enabled"
+    },
+    {
+      "id": "CKV_GCP_73",
+      "framework": "terraform",
+      "name": "Ensure Cloud Armor prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"
+    },
+    {
+      "id": "CKV_GCP_74",
+      "framework": "terraform",
+      "name": "Ensure that private_ip_google_access is enabled for Subnet"
+    },
+    {
+      "id": "CKV_GCP_75",
+      "framework": "terraform",
+      "name": "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+    },
+    {
+      "id": "CKV_GCP_76",
+      "framework": "terraform",
+      "name": "Ensure that Private google access is enabled for IPV6"
+    },
+    {
+      "id": "CKV_GCP_77",
+      "framework": "terraform",
+      "name": "Ensure Google compute firewall ingress does not allow on ftp port"
+    },
+    {
+      "id": "CKV_GCP_78",
+      "framework": "terraform",
+      "name": "Ensure Cloud storage has versioning enabled"
+    },
+    {
+      "id": "CKV_GCP_79",
+      "framework": "terraform",
+      "name": "Ensure SQL database is using latest Major version"
+    },
+    {
+      "id": "CKV_GCP_8",
+      "framework": "terraform",
+      "name": "Ensure Stackdriver Monitoring is set to Enabled on Kubernetes Engine Clusters"
+    },
+    {
+      "id": "CKV_GCP_80",
+      "framework": "terraform",
+      "name": "Ensure Big Query Tables are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_81",
+      "framework": "terraform",
+      "name": "Ensure Big Query Datasets are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_82",
+      "framework": "terraform",
+      "name": "Ensure KMS keys are protected from deletion"
+    },
+    {
+      "id": "CKV_GCP_83",
+      "framework": "terraform",
+      "name": "Ensure PubSub Topics are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_84",
+      "framework": "terraform",
+      "name": "Ensure Artifact Registry Repositories are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_85",
+      "framework": "terraform",
+      "name": "Ensure Big Table Instances are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_86",
+      "framework": "terraform",
+      "name": "Ensure Cloud build workers are private"
+    },
+    {
+      "id": "CKV_GCP_87",
+      "framework": "terraform",
+      "name": "Ensure Data fusion instances are private"
+    },
+    {
+      "id": "CKV_GCP_88",
+      "framework": "terraform",
+      "name": "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+    },
+    {
+      "id": "CKV_GCP_89",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI instances are private"
+    },
+    {
+      "id": "CKV_GCP_9",
+      "framework": "terraform",
+      "name": "Ensure 'Automatic node repair' is enabled for Kubernetes Clusters"
+    },
+    {
+      "id": "CKV_GCP_90",
+      "framework": "terraform",
+      "name": "Ensure data flow jobs are encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_91",
+      "framework": "terraform",
+      "name": "Ensure Dataproc cluster is encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_92",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI datasets uses a CMK (Customer Managed Key)"
+    },
+    {
+      "id": "CKV_GCP_93",
+      "framework": "terraform",
+      "name": "Ensure Spanner Database is encrypted with Customer Supplied Encryption Keys (CSEK)"
+    },
+    {
+      "id": "CKV_GCP_94",
+      "framework": "terraform",
+      "name": "Ensure Dataflow jobs are private"
+    },
+    {
+      "id": "CKV_GCP_95",
+      "framework": "terraform",
+      "name": "Ensure Memorystore for Redis has AUTH enabled"
+    },
+    {
+      "id": "CKV_GCP_96",
+      "framework": "terraform",
+      "name": "Ensure Vertex AI Metadata Store uses a CMK (Customer Managed Key)"
+    },
+    {
+      "id": "CKV_GCP_97",
+      "framework": "terraform",
+      "name": "Ensure Memorystore for Redis uses intransit encryption"
+    },
+    {
+      "id": "CKV_GCP_98",
+      "framework": "terraform",
+      "name": "Ensure that Dataproc clusters are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GCP_99",
+      "framework": "terraform",
+      "name": "Ensure that Pub/Sub Topics are not anonymously or publicly accessible"
+    },
+    {
+      "id": "CKV_GIT_1",
+      "framework": "terraform",
+      "name": "Ensure GitHub repository is Private"
+    },
+    {
+      "id": "CKV_GIT_2",
+      "framework": "terraform",
+      "name": "Ensure GitHub repository webhooks are using HTTPS"
+    },
+    {
+      "id": "CKV_GIT_3",
+      "framework": "terraform",
+      "name": "Ensure GitHub repository has vulnerability alerts enabled"
+    },
+    {
+      "id": "CKV_GIT_4",
+      "framework": "terraform",
+      "name": "Ensure GitHub Actions secrets are encrypted"
+    },
+    {
+      "id": "CKV_GIT_5",
+      "framework": "terraform",
+      "name": "GitHub pull requests should require at least 2 approvals"
+    },
+    {
+      "id": "CKV_GIT_6",
+      "framework": "terraform",
+      "name": "Ensure GitHub branch protection rules requires signed commits"
+    },
+    {
+      "id": "CKV_GLB_1",
+      "framework": "terraform",
+      "name": "Ensure at least two approving reviews are required to merge a GitLab MR"
+    },
+    {
+      "id": "CKV_GLB_2",
+      "framework": "terraform",
+      "name": "Ensure GitLab branch protection rules does not allow force pushes"
+    },
+    {
+      "id": "CKV_GLB_3",
+      "framework": "terraform",
+      "name": "Ensure GitLab prevent secrets is enabled"
+    },
+    {
+      "id": "CKV_GLB_4",
+      "framework": "terraform",
+      "name": "Ensure GitLab commits are signed"
+    },
+    {
+      "id": "CKV_K8S_1",
+      "framework": "terraform",
+      "name": "Do not admit containers wishing to share the host process ID namespace"
+    },
+    {
+      "id": "CKV_K8S_10",
+      "framework": "terraform",
+      "name": "CPU requests should be set"
+    },
+    {
+      "id": "CKV_K8S_11",
+      "framework": "terraform",
+      "name": "CPU Limits should be set"
+    },
+    {
+      "id": "CKV_K8S_12",
+      "framework": "terraform",
+      "name": "Memory Limits should be set"
+    },
+    {
+      "id": "CKV_K8S_13",
+      "framework": "terraform",
+      "name": "Memory requests should be set"
+    },
+    {
+      "id": "CKV_K8S_14",
+      "framework": "terraform",
+      "name": "Image Tag should be fixed - not latest or blank"
+    },
+    {
+      "id": "CKV_K8S_15",
+      "framework": "terraform",
+      "name": "Image Pull Policy should be Always"
+    },
+    {
+      "id": "CKV_K8S_159",
+      "framework": "terraform",
+      "name": "Do not admit privileged containers"
+    },
+    {
+      "id": "CKV_K8S_16",
+      "framework": "terraform",
+      "name": "Do not admit privileged containers"
+    },
+    {
+      "id": "CKV_K8S_17",
+      "framework": "terraform",
+      "name": "Do not admit containers wishing to share the host process ID namespace"
+    },
+    {
+      "id": "CKV_K8S_18",
+      "framework": "terraform",
+      "name": "Do not admit containers wishing to share the host IPC namespace"
+    },
+    {
+      "id": "CKV_K8S_19",
+      "framework": "terraform",
+      "name": "Do not admit containers wishing to share the host network namespace"
+    },
+    {
+      "id": "CKV_K8S_2",
+      "framework": "terraform",
+      "name": "Do not admit privileged containers"
+    },
+    {
+      "id": "CKV_K8S_20",
+      "framework": "terraform",
+      "name": "Containers should not run with allowPrivilegeEscalation"
+    },
+    {
+      "id": "CKV_K8S_21",
+      "framework": "terraform",
+      "name": "The default namespace should not be used"
+    },
+    {
+      "id": "CKV_K8S_22",
+      "framework": "terraform",
+      "name": "Use read-only filesystem for containers where possible"
+    },
+    {
+      "id": "CKV_K8S_24",
+      "framework": "terraform",
+      "name": "Do not allow containers with added capability"
+    },
+    {
+      "id": "CKV_K8S_25",
+      "framework": "terraform",
+      "name": "Minimize the admission of containers with added capability"
+    },
+    {
+      "id": "CKV_K8S_26",
+      "framework": "terraform",
+      "name": "Do not specify hostPort unless absolutely necessary"
+    },
+    {
+      "id": "CKV_K8S_27",
+      "framework": "terraform",
+      "name": "Do not expose the docker daemon socket to containers"
+    },
+    {
+      "id": "CKV_K8S_28",
+      "framework": "terraform",
+      "name": "Minimize the admission of containers with the NET_RAW capability"
+    },
+    {
+      "id": "CKV_K8S_29",
+      "framework": "terraform",
+      "name": "Apply security context to your pods, deployments and daemon_sets"
+    },
+    {
+      "id": "CKV_K8S_3",
+      "framework": "terraform",
+      "name": "Do not admit containers wishing to share the host IPC namespace"
+    },
+    {
+      "id": "CKV_K8S_30",
+      "framework": "terraform",
+      "name": "Apply security context to your pods and containers"
+    },
+    {
+      "id": "CKV_K8S_32",
+      "framework": "terraform",
+      "name": "Ensure default seccomp profile set to docker/default or runtime/default"
+    },
+    {
+      "id": "CKV_K8S_34",
+      "framework": "terraform",
+      "name": "Ensure that Tiller (Helm v2) is not deployed"
+    },
+    {
+      "id": "CKV_K8S_35",
+      "framework": "terraform",
+      "name": "Prefer using secrets as files over secrets as environment variables"
+    },
+    {
+      "id": "CKV_K8S_36",
+      "framework": "terraform",
+      "name": "Minimise the admission of containers with capabilities assigned"
+    },
+    {
+      "id": "CKV_K8S_37",
+      "framework": "terraform",
+      "name": "Minimise the admission of containers with capabilities assigned"
+    },
+    {
+      "id": "CKV_K8S_39",
+      "framework": "terraform",
+      "name": "Do not use the CAP_SYS_ADMIN linux capability"
+    },
+    {
+      "id": "CKV_K8S_4",
+      "framework": "terraform",
+      "name": "Do not admit containers wishing to share the host network namespace"
+    },
+    {
+      "id": "CKV_K8S_41",
+      "framework": "terraform",
+      "name": "Ensure that default service accounts are not actively used"
+    },
+    {
+      "id": "CKV_K8S_42",
+      "framework": "terraform",
+      "name": "Ensure that default service accounts are not actively used"
+    },
+    {
+      "id": "CKV_K8S_43",
+      "framework": "terraform",
+      "name": "Image should use digest"
+    },
+    {
+      "id": "CKV_K8S_44",
+      "framework": "terraform",
+      "name": "Ensure that the Tiller Service (Helm v2) is deleted"
+    },
+    {
+      "id": "CKV_K8S_49",
+      "framework": "terraform",
+      "name": "Minimize wildcard use in Roles and ClusterRoles"
+    },
+    {
+      "id": "CKV_K8S_5",
+      "framework": "terraform",
+      "name": "Containers should not run with allowPrivilegeEscalation"
+    },
+    {
+      "id": "CKV_K8S_6",
+      "framework": "terraform",
+      "name": "Do not admit root containers"
+    },
+    {
+      "id": "CKV_K8S_7",
+      "framework": "terraform",
+      "name": "Do not admit containers with the NET_RAW capability"
+    },
+    {
+      "id": "CKV_K8S_8",
+      "framework": "terraform",
+      "name": "Liveness Probe Should be Configured"
+    },
+    {
+      "id": "CKV_K8S_9",
+      "framework": "terraform",
+      "name": "Readiness Probe Should be Configured"
+    },
+    {
+      "id": "CKV_LIN_1",
+      "framework": "terraform",
+      "name": "Ensure no hard coded Linode tokens exist in provider"
+    },
+    {
+      "id": "CKV_LIN_2",
+      "framework": "terraform",
+      "name": "Ensure SSH key set in authorized_keys"
+    },
+    {
+      "id": "CKV_LIN_3",
+      "framework": "terraform",
+      "name": "Ensure email is set"
+    },
+    {
+      "id": "CKV_LIN_4",
+      "framework": "terraform",
+      "name": "Ensure username is set"
+    },
+    {
+      "id": "CKV_LIN_5",
+      "framework": "terraform",
+      "name": "Ensure Inbound Firewall Policy is not set to ACCEPT"
+    },
+    {
+      "id": "CKV_LIN_6",
+      "framework": "terraform",
+      "name": "Ensure Outbound Firewall Policy is not set to ACCEPT"
+    },
+    {
+      "id": "CKV_NCP_1",
+      "framework": "terraform",
+      "name": "Ensure HTTP HTTPS Target group defines Healthcheck"
+    },
+    {
+      "id": "CKV_NCP_10",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow inbound from 0.0.0.0:0 to port 22"
+    },
+    {
+      "id": "CKV_NCP_11",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow inbound from 0.0.0.0:0 to port 3389"
+    },
+    {
+      "id": "CKV_NCP_12",
+      "framework": "terraform",
+      "name": "An inbound Network ACL rule should not allow ALL ports."
+    },
+    {
+      "id": "CKV_NCP_13",
+      "framework": "terraform",
+      "name": "Ensure LB Listener uses only secure protocols"
+    },
+    {
+      "id": "CKV_NCP_14",
+      "framework": "terraform",
+      "name": "Ensure NAS is securely encrypted"
+    },
+    {
+      "id": "CKV_NCP_15",
+      "framework": "terraform",
+      "name": "Ensure Load Balancer Target Group is not using HTTP"
+    },
+    {
+      "id": "CKV_NCP_16",
+      "framework": "terraform",
+      "name": "Ensure Load Balancer isn't exposed to the internet"
+    },
+    {
+      "id": "CKV_NCP_18",
+      "framework": "terraform",
+      "name": "Ensure that auto Scaling groups that are associated with a load balancer, are using Load Balancing health checks."
+    },
+    {
+      "id": "CKV_NCP_19",
+      "framework": "terraform",
+      "name": "Ensure Naver Kubernetes Service public endpoint disabled"
+    },
+    {
+      "id": "CKV_NCP_2",
+      "framework": "terraform",
+      "name": "Ensure every access control groups rule has a description"
+    },
+    {
+      "id": "CKV_NCP_20",
+      "framework": "terraform",
+      "name": "Ensure Routing Table associated with Web tier subnet have the default route (0.0.0.0/0) defined to allow connectivity"
+    },
+    {
+      "id": "CKV_NCP_22",
+      "framework": "terraform",
+      "name": "Ensure NKS control plane logging enabled for all log types"
+    },
+    {
+      "id": "CKV_NCP_23",
+      "framework": "terraform",
+      "name": "Ensure Server instance should not have public IP."
+    },
+    {
+      "id": "CKV_NCP_24",
+      "framework": "terraform",
+      "name": "Ensure Load Balancer Listener Using HTTPS"
+    },
+    {
+      "id": "CKV_NCP_25",
+      "framework": "terraform",
+      "name": "Ensure no access control groups allow inbound from 0.0.0.0:0 to port 80"
+    },
+    {
+      "id": "CKV_NCP_26",
+      "framework": "terraform",
+      "name": "Ensure Access Control Group has Access Control Group Rule attached"
+    },
+    {
+      "id": "CKV_NCP_3",
+      "framework": "terraform",
+      "name": "Ensure no security group rules allow outbound traffic to 0.0.0.0/0"
+    },
+    {
+      "id": "CKV_NCP_4",
+      "framework": "terraform",
+      "name": "Ensure no access control groups allow inbound from 0.0.0.0:0 to port 22"
+    },
+    {
+      "id": "CKV_NCP_5",
+      "framework": "terraform",
+      "name": "Ensure no access control groups allow inbound from 0.0.0.0:0 to port 3389"
+    },
+    {
+      "id": "CKV_NCP_6",
+      "framework": "terraform",
+      "name": "Ensure Server instance is encrypted."
+    },
+    {
+      "id": "CKV_NCP_7",
+      "framework": "terraform",
+      "name": "Ensure Basic Block storage is encrypted."
+    },
+    {
+      "id": "CKV_NCP_8",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow inbound from 0.0.0.0:0 to port 20"
+    },
+    {
+      "id": "CKV_NCP_9",
+      "framework": "terraform",
+      "name": "Ensure no NACL allow inbound from 0.0.0.0:0 to port 21"
+    },
+    {
+      "id": "CKV_OCI_1",
+      "framework": "terraform",
+      "name": "Ensure no hard coded OCI private key in provider"
+    },
+    {
+      "id": "CKV_OCI_10",
+      "framework": "terraform",
+      "name": "Ensure OCI Object Storage is not Public"
+    },
+    {
+      "id": "CKV_OCI_11",
+      "framework": "terraform",
+      "name": "OCI IAM password policy - must contain lower case"
+    },
+    {
+      "id": "CKV_OCI_12",
+      "framework": "terraform",
+      "name": "OCI IAM password policy - must contain Numeric characters"
+    },
+    {
+      "id": "CKV_OCI_13",
+      "framework": "terraform",
+      "name": "OCI IAM password policy - must contain Special characters"
+    },
+    {
+      "id": "CKV_OCI_14",
+      "framework": "terraform",
+      "name": "OCI IAM password policy - must contain Uppercase characters"
+    },
+    {
+      "id": "CKV_OCI_15",
+      "framework": "terraform",
+      "name": "Ensure OCI File System is Encrypted with a customer Managed Key"
+    },
+    {
+      "id": "CKV_OCI_16",
+      "framework": "terraform",
+      "name": "Ensure VCN has an inbound security list"
+    },
+    {
+      "id": "CKV_OCI_17",
+      "framework": "terraform",
+      "name": "Ensure VCN inbound security lists are stateless"
+    },
+    {
+      "id": "CKV_OCI_18",
+      "framework": "terraform",
+      "name": "OCI IAM password policy for local (non-federated) users has a minimum length of 14 characters"
+    },
+    {
+      "id": "CKV_OCI_19",
+      "framework": "terraform",
+      "name": "Ensure no security list allow ingress from 0.0.0.0:0 to port 22."
+    },
+    {
+      "id": "CKV_OCI_2",
+      "framework": "terraform",
+      "name": "Ensure OCI Block Storage Block Volume has backup enabled"
+    },
+    {
+      "id": "CKV_OCI_20",
+      "framework": "terraform",
+      "name": "Ensure no security list allow ingress from 0.0.0.0:0 to port 3389."
+    },
+    {
+      "id": "CKV_OCI_21",
+      "framework": "terraform",
+      "name": "Ensure security group has stateless ingress security rules"
+    },
+    {
+      "id": "CKV_OCI_22",
+      "framework": "terraform",
+      "name": "Ensure no security groups rules allow ingress from 0.0.0.0/0 to port 22"
+    },
+    {
+      "id": "CKV_OCI_23",
+      "framework": "terraform",
+      "name": "Ensure OCI Data Catalog is configured without overly permissive network access"
+    },
+    {
+      "id": "CKV_OCI_3",
+      "framework": "terraform",
+      "name": "OCI Block Storage Block Volumes are not encrypted with a Customer Managed Key (CMK)"
+    },
+    {
+      "id": "CKV_OCI_4",
+      "framework": "terraform",
+      "name": "Ensure OCI Compute Instance boot volume has in-transit data encryption enabled"
+    },
+    {
+      "id": "CKV_OCI_5",
+      "framework": "terraform",
+      "name": "Ensure OCI Compute Instance has Legacy MetaData service endpoint disabled"
+    },
+    {
+      "id": "CKV_OCI_6",
+      "framework": "terraform",
+      "name": "Ensure OCI Compute Instance has monitoring enabled"
+    },
+    {
+      "id": "CKV_OCI_7",
+      "framework": "terraform",
+      "name": "Ensure OCI Object Storage bucket can emit object events"
+    },
+    {
+      "id": "CKV_OCI_8",
+      "framework": "terraform",
+      "name": "Ensure OCI Object Storage has versioning enabled"
+    },
+    {
+      "id": "CKV_OCI_9",
+      "framework": "terraform",
+      "name": "Ensure OCI Object Storage is encrypted with Customer Managed Key"
+    },
+    {
+      "id": "CKV_OPENSTACK_1",
+      "framework": "terraform",
+      "name": "Ensure no hard coded OpenStack password, token, or application_credential_secret exists in provider"
+    },
+    {
+      "id": "CKV_OPENSTACK_2",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22 (tcp / udp)"
+    },
+    {
+      "id": "CKV_OPENSTACK_3",
+      "framework": "terraform",
+      "name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389 (tcp / udp)"
+    },
+    {
+      "id": "CKV_OPENSTACK_4",
+      "framework": "terraform",
+      "name": "Ensure that instance does not use basic credentials"
+    },
+    {
+      "id": "CKV_OPENSTACK_5",
+      "framework": "terraform",
+      "name": "Ensure firewall rule set a destination IP"
+    },
+    {
+      "id": "CKV_PAN_1",
+      "framework": "terraform",
+      "name": "Ensure no hard coded PAN-OS credentials exist in provider"
+    },
+    {
+      "id": "CKV_PAN_10",
+      "framework": "terraform",
+      "name": "Ensure logging at session end is enabled within security policies"
+    },
+    {
+      "id": "CKV_PAN_11",
+      "framework": "terraform",
+      "name": "Ensure IPsec profiles do not specify use of insecure encryption algorithms"
+    },
+    {
+      "id": "CKV_PAN_12",
+      "framework": "terraform",
+      "name": "Ensure IPsec profiles do not specify use of insecure authentication algorithms"
+    },
+    {
+      "id": "CKV_PAN_13",
+      "framework": "terraform",
+      "name": "Ensure IPsec profiles do not specify use of insecure protocols"
+    },
+    {
+      "id": "CKV_PAN_14",
+      "framework": "terraform",
+      "name": "Ensure a Zone Protection Profile is defined within Security Zones"
+    },
+    {
+      "id": "CKV_PAN_15",
+      "framework": "terraform",
+      "name": "Ensure an Include ACL is defined for a Zone when User-ID is enabled"
+    },
+    {
+      "id": "CKV_PAN_2",
+      "framework": "terraform",
+      "name": "Ensure plain-text management HTTP is not enabled for an Interface Management Profile"
+    },
+    {
+      "id": "CKV_PAN_3",
+      "framework": "terraform",
+      "name": "Ensure plain-text management Telnet is not enabled for an Interface Management Profile"
+    },
+    {
+      "id": "CKV_PAN_4",
+      "framework": "terraform",
+      "name": "Ensure DSRI is not enabled within security policies"
+    },
+    {
+      "id": "CKV_PAN_5",
+      "framework": "terraform",
+      "name": "Ensure security rules do not have 'applications' set to 'any'"
+    },
+    {
+      "id": "CKV_PAN_6",
+      "framework": "terraform",
+      "name": "Ensure security rules do not have 'services' set to 'any'"
+    },
+    {
+      "id": "CKV_PAN_7",
+      "framework": "terraform",
+      "name": "Ensure security rules do not have 'source_addresses' and 'destination_addresses' both containing values of 'any'"
+    },
+    {
+      "id": "CKV_PAN_8",
+      "framework": "terraform",
+      "name": "Ensure description is populated within security policies"
+    },
+    {
+      "id": "CKV_PAN_9",
+      "framework": "terraform",
+      "name": "Ensure a Log Forwarding Profile is selected for each security policy rule"
+    },
+    {
+      "id": "CKV_TC_1",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CBS is encrypted"
+    },
+    {
+      "id": "CKV_TC_10",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud MySQL instances intranet ports are not set to the default 3306"
+    },
+    {
+      "id": "CKV_TC_11",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CLB has a logging ID and topic"
+    },
+    {
+      "id": "CKV_TC_12",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CLBs use modern, encrypted protocols"
+    },
+    {
+      "id": "CKV_TC_13",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CVM user data does not contain sensitive information"
+    },
+    {
+      "id": "CKV_TC_14",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud VPC flow logs are enabled"
+    },
+    {
+      "id": "CKV_TC_2",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CVM instance does not allocate a public IP"
+    },
+    {
+      "id": "CKV_TC_3",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CVM monitor service is enabled"
+    },
+    {
+      "id": "CKV_TC_4",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CVM instances do not use the default security group"
+    },
+    {
+      "id": "CKV_TC_5",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud CVM instances do not use the default VPC"
+    },
+    {
+      "id": "CKV_TC_6",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud TKE clusters enable log agent"
+    },
+    {
+      "id": "CKV_TC_7",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud TKE cluster is not assigned a public IP address"
+    },
+    {
+      "id": "CKV_TC_8",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud VPC security group rules do not accept all traffic"
+    },
+    {
+      "id": "CKV_TC_9",
+      "framework": "terraform",
+      "name": "Ensure Tencent Cloud mysql instances do not enable access from public networks"
+    },
+    {
+      "id": "CKV_TF_1",
+      "framework": "terraform",
+      "name": "Ensure Terraform module sources use a commit hash"
+    },
+    {
+      "id": "CKV_TF_2",
+      "framework": "terraform",
+      "name": "Ensure Terraform module sources use a tag with a version number"
+    },
+    {
+      "id": "CKV_YC_1",
+      "framework": "terraform",
+      "name": "Ensure security group is assigned to database cluster."
+    },
+    {
+      "id": "CKV_YC_10",
+      "framework": "terraform",
+      "name": "Ensure etcd database is encrypted with KMS key."
+    },
+    {
+      "id": "CKV_YC_11",
+      "framework": "terraform",
+      "name": "Ensure security group is assigned to network interface."
+    },
+    {
+      "id": "CKV_YC_12",
+      "framework": "terraform",
+      "name": "Ensure public IP is not assigned to database cluster."
+    },
+    {
+      "id": "CKV_YC_13",
+      "framework": "terraform",
+      "name": "Ensure cloud member does not have elevated access."
+    },
+    {
+      "id": "CKV_YC_14",
+      "framework": "terraform",
+      "name": "Ensure security group is assigned to Kubernetes cluster."
+    },
+    {
+      "id": "CKV_YC_15",
+      "framework": "terraform",
+      "name": "Ensure security group is assigned to Kubernetes node group."
+    },
+    {
+      "id": "CKV_YC_16",
+      "framework": "terraform",
+      "name": "Ensure network policy is assigned to Kubernetes cluster."
+    },
+    {
+      "id": "CKV_YC_17",
+      "framework": "terraform",
+      "name": "Ensure storage bucket does not have public access permissions."
+    },
+    {
+      "id": "CKV_YC_18",
+      "framework": "terraform",
+      "name": "Ensure compute instance group does not have public IP."
+    },
+    {
+      "id": "CKV_YC_19",
+      "framework": "terraform",
+      "name": "Ensure security group does not contain allow-all rules."
+    },
+    {
+      "id": "CKV_YC_2",
+      "framework": "terraform",
+      "name": "Ensure compute instance does not have public IP."
+    },
+    {
+      "id": "CKV_YC_20",
+      "framework": "terraform",
+      "name": "Ensure security group rule is not allow-all."
+    },
+    {
+      "id": "CKV_YC_21",
+      "framework": "terraform",
+      "name": "Ensure organization member does not have elevated access."
+    },
+    {
+      "id": "CKV_YC_22",
+      "framework": "terraform",
+      "name": "Ensure compute instance group has security group assigned."
+    },
+    {
+      "id": "CKV_YC_23",
+      "framework": "terraform",
+      "name": "Ensure folder member does not have elevated access."
+    },
+    {
+      "id": "CKV_YC_24",
+      "framework": "terraform",
+      "name": "Ensure passport account is not used for assignment. Use service accounts and federated accounts where possible."
+    },
+    {
+      "id": "CKV_YC_3",
+      "framework": "terraform",
+      "name": "Ensure storage bucket is encrypted."
+    },
+    {
+      "id": "CKV_YC_4",
+      "framework": "terraform",
+      "name": "Ensure compute instance does not have serial console enabled."
+    },
+    {
+      "id": "CKV_YC_5",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes cluster does not have public IP address."
+    },
+    {
+      "id": "CKV_YC_6",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes cluster node group does not have public IP addresses."
+    },
+    {
+      "id": "CKV_YC_7",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes cluster auto-upgrade is enabled."
+    },
+    {
+      "id": "CKV_YC_8",
+      "framework": "terraform",
+      "name": "Ensure Kubernetes node group auto-upgrade is enabled."
+    },
+    {
+      "id": "CKV_YC_9",
+      "framework": "terraform",
+      "name": "Ensure KMS symmetric key is rotated."
+    }
+  ]
+}

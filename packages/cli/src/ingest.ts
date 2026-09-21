@@ -15,6 +15,7 @@ import type {
 import {
   IngestManifest as IngestManifestSchema,
   IngestSubmission as IngestSubmissionSchema,
+  SarifCrosswalk as SarifCrosswalkSchema,
   methodId,
   submissionVerdict,
 } from "@rampscan/schema";
@@ -24,16 +25,22 @@ import type { PackageIngestOptions } from "./ingest-package.js";
 import { loadPinnedProwlerFramework } from "./prowler-framework.js";
 import { prowlerSubmissions } from "./prowler-ingest.js";
 import { parseProwlerOcsf } from "./prowler-ocsf.js";
+import { looksLikeSarif, parseSarif } from "./sarif.js";
+import { sarifSubmissions } from "./sarif-ingest.js";
 
 // `rampscan ingest <path>` (SPEC §12.8, plan Q4.1): client-run signed results
 // become ledger citizens. Four input shapes, one contract:
 //
 //   a JSON FILE  one native IngestSubmission document — or, when the file is
 //                a bare ARRAY, a Prowler OCSF compliance output (P3-3,
-//                `prowler-ingest.ts`). Sniffed on CONTENT, never on the file
-//                name: a native submission is an object, and the reader then
-//                refuses any array that is not the pinned KSI framework's
-//                output (`compliance.standards[0]` is on every row)
+//                `prowler-ingest.ts`) — or, when it is an object carrying
+//                `runs[]` and a SARIF `$schema`/`version`, a SARIF 2.1.0 log
+//                from a client's own tool (N2-2, `sarif-ingest.ts`), joined
+//                through the per-tool crosswalk `--tool` names. Sniffed on
+//                CONTENT, never on the file name: a native submission is an
+//                object with our `_type`, and the reader then refuses any
+//                array that is not the pinned KSI framework's output
+//                (`compliance.standards[0]` is on every row)
 //   a DIRECTORY  an Evidence/<family>/<KSI-ID>/ tree plus the client-authored
 //                ingest-manifest.json — the adapter that meets clients where
 //                they already are (docs/RESEARCH-PARAMIFY-PILOT.md §3)
@@ -117,7 +124,23 @@ export interface IngestOptions {
   signerIdentity?: string | undefined;
   /** where the vendored Prowler framework is read from (default: the working directory) */
   repoRoot?: string | undefined;
+  /** SARIF path only: the tool slug naming the crosswalk (`recipes/crosswalks/sarif-<tool>-<version>.json`) */
+  tool?: string | undefined;
+  /** SARIF path only: the run's instant, when the log records no `invocations[].endTimeUtc` */
+  timestamp?: string | undefined;
   log?: (line: string) => void;
+}
+
+/** what the SARIF path needs beside the file — the facts the log does not state */
+export interface SarifLoadOptions {
+  exitCode?: number | undefined;
+  signerIdentity?: string | undefined;
+  cadence?: PackageIngestOptions["cadence"];
+  tool?: string | undefined;
+  /** where `recipes/crosswalks/` is read from */
+  repoRoot: string;
+  /** the run's instant, declared — read only when the log records none */
+  timestamp?: string | undefined;
 }
 
 /** what the Prowler path needs beside the file — the facts the document does not state */
@@ -289,11 +312,90 @@ async function loadProwler(
   return { submissions, skipped, notes };
 }
 
-/** parse the input into native submissions — the four shapes, one output */
+/**
+ * The SARIF path (N2-2): `--tool`, `--exit-code`, `--signer` and `--cadence`
+ * are REQUIRED, for the reason the Prowler path requires its three — the log
+ * carries no exit code, no signer, no cadence, and the crosswalk is chosen by
+ * the tool the client names rather than trusted to a driver string alone.
+ * The crosswalk file is `recipes/crosswalks/sarif-<tool>-<version>.json` at
+ * the version the log states, so a log from a version nobody has reviewed
+ * finds no crosswalk and says which ones exist.
+ */
+async function loadSarif(
+  path: string,
+  raw: unknown,
+  options: SarifLoadOptions | undefined,
+): Promise<LoadedSubmissions> {
+  const missing: string[] = [];
+  if (options?.tool === undefined) missing.push("--tool <slug> (which crosswalk under recipes/crosswalks/sarif-<slug>-<version>.json)");
+  if (options?.exitCode === undefined) missing.push("--exit-code <n> (the status the tool exited with)");
+  if (options?.signerIdentity === undefined) missing.push("--signer <identity> (who ran the tool)");
+  if (options?.cadence === undefined) missing.push("--cadence <cycle> (how often it runs)");
+  if (options === undefined || missing.length > 0) {
+    throw new Error(
+      `${path} is a SARIF log, which records no exit code, no signer and no cadence, and names no crosswalk — ` +
+        `declare them; none is guessed: ${missing.join(", ")}`,
+    );
+  }
+  const document = parseSarif(raw, path);
+  const dir = join(options.repoRoot, "recipes", "crosswalks");
+  const file = join(dir, `sarif-${options.tool}-${document.tool.version}.json`);
+  let crosswalkRaw: string;
+  try {
+    crosswalkRaw = await readFile(file, "utf8");
+  } catch {
+    const available = (await readdir(dir).catch(() => []))
+      .filter((f) => /^sarif-.+\.json$/.test(f) && !f.endsWith("-rules.json"))
+      .sort();
+    throw new Error(
+      `no crosswalk for ${options.tool} at ${document.tool.name} ${document.tool.version} — expected ${relative(options.repoRoot, file)}; ` +
+        `reviewed crosswalks: ${available.join(", ") || "(none)"}. A tool version nobody has read the rule ids of is not joined by guess`,
+    );
+  }
+  const crosswalk = SarifCrosswalkSchema.parse(JSON.parse(crosswalkRaw));
+  // The run's clock: the log's own invocation end time when it wrote one,
+  // else the client's declaration — never the ingest instant, which would
+  // make the same bytes a new bundle on every handoff and put the evidence
+  // on the appliance's clock rather than the run's.
+  let timestamp = document.endedAt;
+  if (timestamp === null) {
+    if (options.timestamp === undefined || Number.isNaN(Date.parse(options.timestamp))) {
+      throw new Error(
+        `${path} records no invocation end time (invocations[].endTimeUtc), so the run's instant must be declared: ` +
+          "--timestamp <ISO 8601>; the ingest instant is not guessed for it",
+      );
+    }
+    timestamp = new Date(options.timestamp).toISOString();
+  }
+  const { submissions, skipped, notes } = sarifSubmissions(
+    document,
+    {
+      exit_code: options.exitCode!,
+      signer_identity: options.signerIdentity!,
+      cadence: options.cadence!,
+      artifact: { name: basename(path), sha256: await sha256File(path) },
+      timestamp,
+    },
+    crosswalk,
+  );
+  return {
+    submissions,
+    skipped,
+    notes: [
+      ...notes,
+      document.endedAt === null
+        ? `sarif: the log records no invocation end time, so the run's clock is the declared --timestamp ${timestamp}`
+        : `sarif: the run's clock is the log's own invocation end time ${timestamp}`,
+    ],
+  };
+}
+
+/** parse the input into native submissions — the five shapes, one output */
 export async function loadSubmissions(
   path: string,
   packageOptions?: PackageIngestOptions,
   prowlerOptions?: ProwlerLoadOptions,
+  sarifOptions?: SarifLoadOptions,
 ): Promise<LoadedSubmissions> {
   const info = await stat(path);
   if (info.isFile() && /^\.ya?ml$/i.test(extname(path))) {
@@ -329,6 +431,7 @@ export async function loadSubmissions(
   if (info.isFile()) {
     const raw = JSON.parse(await readFile(path, "utf8")) as unknown;
     if (Array.isArray(raw)) return loadProwler(path, raw, prowlerOptions);
+    if (looksLikeSarif(raw)) return loadSarif(path, raw, sarifOptions);
     try {
       return { submissions: [IngestSubmissionSchema.parse(raw)], skipped: [] };
     } catch (cause) {
@@ -396,6 +499,14 @@ export async function ingest(options: IngestOptions): Promise<IngestOutcome> {
       cadence: options.cadence,
       repoRoot: options.repoRoot ?? process.cwd(),
       ksiIds: catalog.ksis.map((k) => k.id),
+    },
+    {
+      exitCode: options.exitCode,
+      signerIdentity: options.signerIdentity,
+      cadence: options.cadence,
+      tool: options.tool,
+      repoRoot: options.repoRoot ?? process.cwd(),
+      timestamp: options.timestamp,
     },
   );
   for (const line of notes ?? []) log(line);
