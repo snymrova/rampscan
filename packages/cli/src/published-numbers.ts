@@ -113,18 +113,36 @@ export function readmeFigures(readme: string): ReadmeFigures {
  * disagree on them honestly; the floor line, the denominator, the queue and
  * the legacy footer are derived from the catalog, the recipes and the pinned
  * dataset alone, and those are the ones a reader quotes.
+ *
+ * The north-star line (docs/PLAN-REACH.md N0-2) is the exception, gated on
+ * purpose: it IS counted over a ledger, and it is the one number this plan
+ * has an incentive to round up. Until N1-3 points this gate at the persisted
+ * ledger, the gate's empty ledger and the README's self-scan agree on it
+ * only because both read `fresh: 0` — the day a scheduled run makes it 13,
+ * this arm goes red until N1-3 lands, which is the order the plan wants.
  */
-const GATED_FRONTIER_LINES = /^ {2}(floor met on |covering all |adjudication queue \(G8\): |legacy view: --by-controls)/;
+const GATED_FRONTIER_LINES = /^ {2}(floor met on |covering all |fresh: |adjudication queue \(G8\): |legacy view: --by-controls)/;
 
 export function gatedFrontierLines(frontierOutput: string): string[] {
   const lines = frontierOutput.split("\n").filter((l) => GATED_FRONTIER_LINES.test(l));
-  if (lines.length !== 4) {
+  if (lines.length !== 5) {
     throw new PublishedNumbersError(
-      `expected \`rampscan frontier\` to print four gated summary lines (floor met, covering all, ` +
-        `adjudication queue, legacy view) and found ${lines.length} — the renderer moved; move this gate with it`,
+      `expected \`rampscan frontier\` to print five gated summary lines (floor met, covering all, ` +
+        `fresh, adjudication queue, legacy view) and found ${lines.length} — the renderer moved; move this gate with it`,
     );
   }
   return lines;
+}
+
+/** the north-star line's two figures, read back from the command's own output (N0-2) */
+export function northStarFromFrontier(frontierOutput: string): { fresh: number; total: number } {
+  const m = /^ {2}fresh: (\d+) of (\d+) — the north star/m.exec(frontierOutput);
+  if (m === null) {
+    throw new PublishedNumbersError(
+      "`rampscan frontier` did not print its north-star line in the shape the gate reads (`fresh: N of M — the north star`) — the renderer moved; move this gate with it",
+    );
+  }
+  return { fresh: Number(m[1]), total: Number(m[2]) };
 }
 
 /** the floor line's three figures, read back from the command's own output */
@@ -169,9 +187,12 @@ export function reportSelfScan(report: string): { commit: string; line: string }
 export function frontierDrift(readme: string, frontierOutput: string): string[] {
   const figures = readmeFigures(readme);
   const drift: string[] = [];
+  // a line's label is everything before its first figure — how the README's
+  // stale copy of a gated line is found beside the live one
+  const label = (l: string) => l.replace(/\d[\s\S]*$/, "");
   for (const line of gatedFrontierLines(frontierOutput)) {
     if (!figures.frontierBlock.includes(line)) {
-      const stale = figures.frontierBlock.find((l) => l.slice(0, 14) === line.slice(0, 14));
+      const stale = figures.frontierBlock.find((l) => label(l) === label(line));
       drift.push(
         `README's frontier block does not carry the line \`rampscan frontier\` prints today:\n` +
           `    now:    ${line.trim()}\n` +

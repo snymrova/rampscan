@@ -5,6 +5,7 @@ import type {
   CollectorRun,
   EvidenceClass,
   Finding,
+  KsiReach,
   LedgerStatement,
   MethodClock,
   MethodScope,
@@ -583,6 +584,13 @@ export interface MethodRegisterRow {
   pointInTimeMethods: number;
   /** the worst gap class computable so far (G8/G13 land with the gap register) */
   gap?: "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
+  /**
+   * The KSI's rung on the reach ladder (docs/PLAN-REACH.md N0-1), computed
+   * by `reachOf` from this row's cells and the pins the fold was handed.
+   * Absent when the fold was given no pins — a fold that was not told what
+   * the three pins observe cannot say what is unreachable, and does not.
+   */
+  reach?: KsiReach;
 }
 
 /**

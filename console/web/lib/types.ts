@@ -295,6 +295,16 @@ export interface MethodRegisterRecord {
    */
   point_in_time_methods: number;
   gap: "" | "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
+  /**
+   * The KSI's rung on the reach ladder (docs/PLAN-REACH.md N0-1), as the
+   * fold computed it from the three pins. Null when the fold was given no
+   * pins. `next` says what earns the rung above; null on the top rung.
+   */
+  reach?: {
+    rung: "unreachable" | "reachable" | "wired" | "run" | "fresh" | "floor" | "distinct";
+    next: string | null;
+    distinctPlanes: number;
+  } | null;
 }
 
 /**

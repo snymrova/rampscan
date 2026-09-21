@@ -317,3 +317,82 @@ export function methodOfAttestation(event: {
     },
   };
 }
+
+// The reach ladder (docs/PLAN-REACH.md N0-1, docs/RESEARCH-KSI-REACH.md §1).
+//
+// A tool on the shelf is not reach and a recipe in the catalog is not reach:
+// the only row that counts is one an assessor can pull on. So reach is a
+// LADDER per KSI, and every rung is computed from the ledger and the pins,
+// never typed. `wired` is the highest rung a recipe or adapter can confer by
+// existing (ground rule 1 of that plan); `run` and above come only from
+// signed bundles the fold reads. The north star is rung 4, `fresh`, counted
+// over the KSIs class b obliges.
+//
+// The rungs are ORDERED, and the order is the array's: a KSI on a rung has
+// earned every rung below it. `distinct` exists because the RFC-0033 draft's
+// second point says four methods from one API call are one method — the
+// ladder holds this project to what it asked FedRAMP for.
+
+export const ReachRung = z.enum([
+  /** no tool on any plane can observe it; attestation only */
+  "unreachable",
+  /** a tool exists somewhere that can observe it */
+  "reachable",
+  /** rampscan has a recipe or adapter that turns that tool's output into a method */
+  "wired",
+  /** a signed bundle for an automated method stands in the ledger */
+  "run",
+  /** the newest bundle of an automated method is inside its owed window */
+  "fresh",
+  /** the automated methods inside their window reach the class floor */
+  "floor",
+  /** the methods meeting the floor come from more than one evidence plane */
+  "distinct",
+]);
+export type ReachRung = z.infer<typeof ReachRung>;
+/** the rungs, bottom to top — the ladder's order is this array's */
+export const REACH_RUNGS: readonly ReachRung[] = ReachRung.options;
+
+/**
+ * The three pins a KSI can be observed through, at this checkout. CLOSED for
+ * the `MethodSource` reason: a fourth plane is a reviewed change that says
+ * what it observes and what wires it, never a key that appeared in a file.
+ *
+ *   pipeline  `recipes/commit/` — a catalog recipe both observes and wires
+ *   aws       upstream's `aws-evidence.json` observes; a recipe the runner
+ *             may execute under the allowlist and the bound parameters wires
+ *   prowler   the pinned framework (`docs/context/prowler/`) observes; the
+ *             ingest adapter, pinned to that same framework, wires
+ */
+export const ReachPlane = z.enum(["pipeline", "aws", "prowler"]);
+export type ReachPlane = z.infer<typeof ReachPlane>;
+
+/**
+ * What one plane says about one KSI at the pins. `observes` names the tools
+ * that could see it (recipe ids, check ids); `wired` names the subset that
+ * something of rampscan's turns into a method. Both are ids a reader can
+ * open, so the reason a rung is not earned is never a bare count.
+ */
+export const ReachPin = z.strictObject({
+  plane: ReachPlane,
+  observes: z.array(z.string()),
+  wired: z.array(z.string()),
+});
+export type ReachPin = z.infer<typeof ReachPin>;
+
+/**
+ * A KSI's place on the ladder, as the fold computes it (`reachOf`).
+ *
+ *   rung            the highest rung earned
+ *   next            what earns the rung above it, as a sentence naming the
+ *                   ids or counts that fall short — null on the top rung
+ *   distinctPlanes  distinct method `source`s among the automated methods
+ *                   inside their window; printed from N0 onward whatever the
+ *                   rung, because it is the number the RFC-0033 argument needs
+ */
+export const KsiReach = z.strictObject({
+  rung: ReachRung,
+  next: z.string().nullable(),
+  distinctPlanes: z.number().int().nonnegative(),
+});
+export type KsiReach = z.infer<typeof KsiReach>;

@@ -268,6 +268,7 @@ describe("buildKsiRegister (Q2.4)", () => {
       total: 3,
       optional: [], // this fixture's class b obliges all three (R0.2, §13.7)
       optionalEvidenced: 0,
+      reach: null, // no pins handed in — the ladder is not computed from silence (N0-2)
     });
   });
 
@@ -682,5 +683,76 @@ describe("renderKsiRegister — the §12.5 format rules", () => {
     expect(line).toContain("3mo");
     expect(line).not.toContain("ok");
     expect(line).toContain("G3 freshness");
+  });
+});
+
+// The reach ladder on the register (docs/PLAN-REACH.md N0-2): a column per
+// row and the north-star footer, both from `reachOf` — the fold's answer
+// where a scan is recorded, the derivation's (at most `wired`) where none is.
+describe("the reach column and the north-star footer (N0-2)", () => {
+  const now = new Date("2026-09-10T11:00:00.000Z");
+  const pin = (plane: "pipeline" | "aws" | "prowler", observes: string[], wired = observes) => ({
+    plane,
+    observes,
+    wired,
+  });
+  const reach = {
+    "KSI-SCR-MIT": [pin("pipeline", ["covered", "both"]), pin("aws", []), pin("prowler", [])],
+    "KSI-CMT-CHG": [pin("pipeline", ["both"]), pin("aws", []), pin("prowler", [])],
+    "KSI-CNA-CIC": [pin("pipeline", []), pin("aws", ["cic-export"], []), pin("prowler", [])],
+  };
+
+  it("with a fold the fold's rung rides through, and the north star counts rows at fresh or above", () => {
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: foldedRegisters.map((row) => ({
+        ...row,
+        reach:
+          row.ksi === "KSI-SCR-MIT"
+            ? { rung: "floor" as const, next: "one plane", distinctPlanes: 1 }
+            : { rung: "wired" as const, next: "no bundle", distinctPlanes: 0 },
+      })),
+      frontier,
+      reach,
+    });
+    expect(view.rows.find((r) => r.ksi === "KSI-SCR-MIT")!.reach!.rung).toBe("floor");
+    expect(view.summary.reach).toEqual({
+      fresh: 1,
+      byRung: { unreachable: 0, reachable: 0, wired: 2, run: 0, fresh: 0, floor: 1, distinct: 0 },
+    });
+    const text = renderKsiRegister(view, false, now);
+    expect(text).toMatch(/KSI-SCR-MIT\s+2\/1 ok\s+11h \/ 7d ok\s+2\/5\s+G3 freshness\s+floor$/m);
+    expect(text).toContain("  fresh: 1 of 3 — the north star");
+    expect(text).toContain("  reach: unreachable 0 · reachable 0 · wired 2 · run 0 · fresh 0 · floor 1 · distinct 0");
+  });
+
+  it("without a fold the ladder stops at wired, and says so per row", () => {
+    const view = buildKsiRegister({
+      catalog,
+      offeringClass: "b",
+      methods,
+      methodRegisters: [],
+      frontier,
+      reach,
+    });
+    const rungs = Object.fromEntries(view.rows.map((r) => [r.ksi, r.reach!.rung]));
+    expect(rungs).toEqual({ "KSI-SCR-MIT": "wired", "KSI-CMT-CHG": "wired", "KSI-CNA-CIC": "reachable" });
+    expect(view.rows.find((r) => r.ksi === "KSI-CNA-CIC")!.reach!.next).toContain("aws (cic-export)");
+    expect(view.summary.reach!.fresh).toBe(0);
+    const text = renderKsiRegister(view, false, now);
+    expect(text).toContain("  fresh: 0 of 3 — the north star");
+    expect(text).toMatch(/KSI-CNA-CIC\s+0\/1\s+—\s+–\/5\s+G1 coverage\s+reachable$/m);
+  });
+
+  it("a register built without pins renders exactly as before — no column, no north star, and it says why", () => {
+    const view = buildKsiRegister({ catalog, offeringClass: "b", methods, methodRegisters: [], frontier });
+    expect(view.summary.reach).toBeNull();
+    for (const row of view.rows) expect(row.reach).toBeUndefined();
+    const text = renderKsiRegister(view, false, now);
+    expect(text).not.toContain("the north star");
+    expect(text).toContain("reach: not computed");
+    expect(text).toMatch(/artifacts\s+worst gap$/m);
   });
 });

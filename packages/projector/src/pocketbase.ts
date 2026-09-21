@@ -279,6 +279,9 @@ export const PROJECTION_COLLECTIONS: CollectionSpec[] = [
       // Q3.4: the G6 numerator — a count, never null, so a plain number field
       { name: "point_in_time_methods", type: "number", required: false },
       text("gap"),
+      // N0-1: the reach ladder — json because it is a small object and
+      // absent (the fold had no pins) has to survive as absent
+      json("reach"),
     ],
     listRule: AUTHED,
     viewRule: AUTHED,
@@ -695,6 +698,7 @@ export async function writeProjectionPocketBase(
       artifacts_present: row.artifactsPresent,
       point_in_time_methods: row.pointInTimeMethods,
       gap: row.gap ?? "",
+      reach: row.reach ?? null,
     });
   }
   for (const gap of projection.gaps) {
@@ -855,6 +859,7 @@ export async function readProjectionPocketBase(pb: PocketBaseAdmin): Promise<Pro
     if (r.history_since) row.historySince = r.history_since;
     if (r.history_lapse_at) row.historyLapseAt = r.history_lapse_at;
     if (r.gap) row.gap = r.gap;
+    if (r.reach) row.reach = r.reach;
     return row;
   });
   const gaps: CadenceGap[] = gapRecords.map((r: any) => ({

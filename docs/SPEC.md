@@ -360,14 +360,16 @@ Contract rules:
 rampscan frontier — the KSI register
 class b · dataset 2026.07.14.01 · frontier overlay 0.7.5
 
-  KSI             methods   freshest        artifacts   worst gap
-  KSI-SCR-MIT      2/1 ok    11h / 7d ok     2/5         G5 artifact
-  KSI-CMT-{…}      1/1 ok     2d / 7d ok     1/5         G5 artifact
-  KSI-CNA-{…}      0/1        —              0/5         G1 coverage
+  KSI             methods   freshest        artifacts   worst gap      reach
+  KSI-SCR-MIT      2/1 ok    11h / 7d ok     2/5         G5 artifact    floor
+  KSI-CMT-{…}      1/1 ok     2d / 7d ok     1/5         G5 artifact    fresh
+  KSI-CNA-{…}      0/1        —              0/5         G1 coverage    reachable
   …                                                      ({46} rows, always)
 
   floor met on {m} of {46} KSIs · at least one automated method on {k} · no method on {u}
   covering all {46} — a row that says "nothing evidences this from a pipeline" is a row
+  fresh: {f} of {41} — the north star
+  reach: unreachable {…} · reachable {…} · wired {…} · run {…} · fresh {…} · floor {…} · distinct {…} — each row's highest rung
   adjudication queue: {q} unreviewed, sorted by leverage (--adjudications)
 
   legacy view: --by-controls   ({23} of {209} controls · {38} reachable at this pin)
@@ -377,7 +379,8 @@ Format rules, each carrying a ground rule:
 
 1. **The headline sentence** — the one the README quotes — is the `floor met on {m} of {46}` line **followed in the same breath by the covering line**. Cover ≠ automate is stated structurally, not in a footnote (ground rule 2).
 2. **`--by-controls` prints today's view unchanged**, and v2's footer names it, so the denominator change is announced on every invocation during the transition (ground rule 1). Neither view is removed until a reviewed decision does it.
-3. **Row anatomy:** methods `n/floor` (floor from owed data for the configured class) · freshest live evidence age against the method's window · artifacts `k/5` (Q3; prints `–/5` until modeled, never a fake 0 that implies measurement) · worst gap class as the row's color in the console and its final column in text.
+3. **Row anatomy:** methods `n/floor` (floor from owed data for the configured class) · freshest live evidence age against the method's window · artifacts `k/5` (Q3; prints `–/5` until modeled, never a fake 0 that implies measurement) · worst gap class as the row's color in the console and, in text, the last column before the rung · the reach rung (amended 2026-09-21, `docs/PLAN-REACH.md` N0-2): the row's place on the ladder `unreachable | reachable | wired | run | fresh | floor | distinct`, computed by the fold from the ledger and the three pins, never by the catalog. The gap says what is wrong with the row; the rung says how far the machine reaches it.
+   The **north-star line** beneath the covering line counts obliged rows at `fresh` or above — KSIs with at least one automated method inside its owed window — and is README-gated like the headline; the tally line beneath it is every row's highest rung, so the counts add up to the denominator.
 4. **The G8 queue is its own section**, sorted by the dataset's `leverage` field — the unanswered question stays a first-class output, not a residue.
 5. **`--class` overrides the configured class for reporting only** — a what-if against another class's floors; it never touches the scheduler (§12.3).
 

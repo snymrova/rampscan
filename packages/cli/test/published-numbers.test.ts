@@ -8,6 +8,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   PublishedNumbersError,
   frontierDrift,
+  northStarFromFrontier,
   readmeFigures,
   reportSelfScan,
   selfScanDrift,
@@ -81,6 +82,7 @@ let readme: string;
 let report: string;
 let live: string;
 let liveSubmission: string;
+const frontier_output = () => live;
 
 beforeAll(async () => {
   [readme, report, live, liveSubmission] = await Promise.all([
@@ -133,6 +135,20 @@ describe("the gate fails on a hand-edited figure (ground rule 7)", () => {
     expect(drift.length).toBe(2);
     expect(drift[0]).toMatch(/README: covering all 46/);
     expect(drift[1]).toMatch(/of 46 meet the floor/);
+  });
+
+  it("names a north-star count the register no longer prints (N0-2)", () => {
+    // the one number docs/PLAN-REACH.md is ranked by, and the one it has an
+    // incentive to round up — so the gate reads it back off the command
+    const live = northStarFromFrontier(frontier_output());
+    const stale = readme.replace(
+      /fresh: (\d+) of (\d+) — the north star/,
+      `fresh: ${live.fresh + 13} of ${live.total} — the north star`,
+    );
+    expect(stale).not.toEqual(readme);
+    expect(frontierDrift(stale, frontier_output())).toEqual([
+      expect.stringContaining(`README: fresh: ${live.fresh + 13} of ${live.total}`),
+    ]);
   });
 
   it("names a floor count the register no longer prints", () => {
