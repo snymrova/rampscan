@@ -145,6 +145,17 @@ Recipes live in [`recipes/commit/`](recipes/commit/) as JSON, validated by
 `recipes/commit/security-disclosure-published.json` is a good short example of
 every obligation below in one file.
 
+The `iac-*-declared.json` recipes are **generated**, not written: they are the
+output of `deriveCheckovRecipes` over
+[`recipes/crosswalks/`](recipes/crosswalks/)'s checkov crosswalk and the base
+recipe `iac-baseline-clean`. To change one, edit the crosswalk (a rule id, its
+basis, a row's prose or controls), run `pnpm exec tsx scripts/derive-recipes.ts`,
+and commit both; `packages/cli/test/checkov-crosswalk.test.ts` fails the build
+when a generated file stops equalling its derivation, when a rule id is absent
+from the pinned checkov's vendored rule list, or when the crosswalk, that list
+and `tools.json` disagree on the checkov version. Every obligation below still
+applies to the generated files — the derivation is what meets them.
+
 A recipe merges when all of this is true:
 
 - [ ] **It parses.** `PipelineRecipe` is the shape gate. Shape is the schema's job.

@@ -1,0 +1,74 @@
+{
+  "id": "iac-central-logging-declared",
+  "ksi_ids": [
+    "KSI-MLA-OSM"
+  ],
+  "control_ids": [
+    "au-9",
+    "au-11"
+  ],
+  "evidence": "The committed infrastructure definitions declare an enabled, all-region, validated and encrypted CloudTrail delivered to CloudWatch Logs, with log groups retained for at least a year, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-MLA-OSM: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_10",
+            "CKV_AWS_158",
+            "CKV_AWS_251",
+            "CKV_AWS_252",
+            "CKV_AWS_294",
+            "CKV_AWS_338",
+            "CKV_AWS_35",
+            "CKV_AWS_36",
+            "CKV_AWS_66",
+            "CKV_AWS_67"
+          ]
+        }
+      ],
+      "controls": [
+        "au-9",
+        "au-11"
+      ],
+      "description": "Zero failed checks among the 10 checkov rule(s) the crosswalk maps to KSI-MLA-OSM — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only. A trail created outside the definitions, and the SIEM itself, are not seen — this is the feed's declaration, not the system that reads it. Corroborates the cloud plane; does not replace it.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 10 of its rules filed under KSI-MLA-OSM with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 10 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed infrastructure for the central audit feed: whether an account-wide trail is defined, whether it covers every region and delivers to a central log store, whether its files are validated and encrypted, and whether log groups keep records long enough.",
+    "violation": "The central feed is missing, partial, unencrypted, unvalidated or short-lived in the definitions, so the record a security team would search is either not being written centrally or could be altered without notice. It is what the code declares, not what the account is doing today.",
+    "fix": "Define the trail with all regions, log file validation, a customer-managed key and a CloudWatch Logs destination, and set retention on the log groups. Each failed check names the resource and the missing setting."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_10",
+      "CKV_AWS_158",
+      "CKV_AWS_251",
+      "CKV_AWS_252",
+      "CKV_AWS_294",
+      "CKV_AWS_338",
+      "CKV_AWS_35",
+      "CKV_AWS_36",
+      "CKV_AWS_66",
+      "CKV_AWS_67"
+    ]
+  },
+  "anchor": "commit"
+}

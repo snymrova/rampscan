@@ -357,7 +357,7 @@ export async function check(options: CheckOptions): Promise<DryRunOutcome> {
   try {
     const inputs = new Map<string, string>();
     const runner = createJournaledRunner(
-      createLocalRunner({ collectors: gates, artifactDir: scratch, inputs, runId: "dry-run" }),
+      createLocalRunner({ collectors: gates, artifactDir: scratch, inputs, runId: "dry-run", recipes }),
       { safeRoots: [scratch] },
     );
     for (const collector of gates) {

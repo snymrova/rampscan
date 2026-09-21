@@ -20,3 +20,4 @@ export * from "./transcript.js";
 export * from "./aws-actions.js";
 export * from "./runner-registration.js";
 export * from "./prowler.js";
+export * from "./checkov-crosswalk.js";

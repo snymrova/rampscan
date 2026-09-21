@@ -192,11 +192,17 @@ describe("no recipe passes vacuously on the barren fixture (N0-T4)", () => {
       // channel is a convention a reporter finds without being told, so its
       // absence is a finding; the documents are a declaration, so their absence
       // is a silence.
+      //
+      // Since N2-1 (docs/PLAN-REACH.md) nine more rows are UNEVIDENCED here:
+      // the checkov-derived `iac-*-declared` recipes. bare-app has no IaC, so
+      // checkov skips, and a skipped collector evidences nothing — nine
+      // declared-state recipes over rules that never ran stay silent, which is
+      // the Guard their crosswalk promises (10 → 19).
       expect({
         evidenced: result.summary.evidenced,
         violated: result.summary.violated,
         unevidenced: result.summary.unevidenced,
-      }).toEqual({ evidenced: 5, violated: 5, unevidenced: 10 });
+      }).toEqual({ evidenced: 5, violated: 5, unevidenced: 19 });
     },
   );
 });

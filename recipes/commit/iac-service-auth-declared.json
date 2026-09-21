@@ -1,0 +1,64 @@
+{
+  "id": "iac-service-auth-declared",
+  "ksi_ids": [
+    "KSI-IAM-SNU"
+  ],
+  "control_ids": [
+    "ia-3"
+  ],
+  "evidence": "The committed infrastructure definitions authenticate databases through IAM, give instances a role rather than a key, and grant no policy that exposes credentials, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-IAM-SNU: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_41",
+            "CKV_AWS_107",
+            "CKV_AWS_161",
+            "CKV_AWS_162",
+            "CKV_AWS_287",
+            "CKV_AWS_359"
+          ]
+        }
+      ],
+      "controls": [
+        "ia-3"
+      ],
+      "description": "Zero failed checks among the 6 checkov rule(s) the crosswalk maps to KSI-IAM-SNU — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only, and narrow: the rules cover databases, instances and IAM policies, not every service-to-service path. Corroborates the cloud plane and the secrets checks; does not replace either.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 6 of its rules filed under KSI-IAM-SNU with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 6 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed infrastructure for how services prove who they are to each other: databases that accept IAM identities instead of passwords, instances that carry a role instead of a key, and policies that would let a service read or mint another's credentials.",
+    "violation": "A service authenticates with a shared secret where an identity-based method was available, or a policy lets one service reach into another's credentials. It is the declared arrangement; a secret rotated by hand outside the definitions is not visible here.",
+    "fix": "Enable IAM authentication on the store, attach a role to the instance, and cut the credential-exposing actions from the policy. Each failed check names the resource; a service that genuinely needs a static secret belongs in a recorded decision with its rotation stated."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_41",
+      "CKV_AWS_107",
+      "CKV_AWS_161",
+      "CKV_AWS_162",
+      "CKV_AWS_287",
+      "CKV_AWS_359"
+    ]
+  },
+  "anchor": "commit"
+}

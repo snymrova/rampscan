@@ -25,6 +25,14 @@ export interface KsiRegisterRowView {
   methods: number;
   /** the FRC-CSX-VVK numerator */
   automated: number;
+  /**
+   * Of the automated methods, how many prove DECLARED state — crosswalk-
+   * derived rows over committed definitions (N2-1). Printed beside the
+   * methods cell so an assessor sees what kind of claim stands there; the
+   * floor counts them, and the reach ladder counts rows over one artifact
+   * as one observation.
+   */
+  declared: number;
   floor: number | null;
   /** null exactly when floor is null */
   floorMet: boolean | null;
@@ -228,12 +236,17 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     const automated =
       folded?.automatedMethods ?? derived.filter((m) => m.automated).length;
     const total = folded?.methods.length ?? derived.length;
+    const declared =
+      folded !== undefined
+        ? folded.methods.filter((m) => m.automated && m.proves === "declared-state").length
+        : derived.filter((m) => m.automated && m.provenance.derived_from !== undefined).length;
     const row: KsiRegisterRowView = {
       ksi: entry.id,
       name: entry.name,
       optional: optionalIds.has(entry.id),
       methods: total,
       automated,
+      declared,
       floor,
       floorMet: floor === null ? null : automated >= floor,
       // With a fold, the projector's judgment (computed against the ledger
@@ -298,6 +311,10 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
             methods: derived.map((m) => ({
               automated: m.automated,
               source: m.source,
+              recipeId: m.provenance.recipe_id,
+              ...(m.provenance.derived_from === undefined
+                ? {}
+                : { derivedFrom: m.provenance.derived_from.recipe }),
               window: window === null ? null : { num: window.num, unit: window.unit },
               freshMet: window === null ? null : false,
             })),
@@ -435,13 +452,21 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
   // with three human-read artifacts says so, and only when there is
   // something to say: a register with none renders exactly as it did, column
   // width included.
+  // `declared` beside the count (N2-1): a method over committed definitions
+  // proves the intent half of its indicator, and an assessor reading `1/1 ok`
+  // is owed the word. Shown only where it applies; a register with none
+  // renders exactly as it did.
   const methodsCells = view.rows.map((row) => {
     const floorPart = row.floor === null ? `${row.automated}/—` : `${row.automated}/${row.floor}`;
     const extra = row.methods - row.automated;
-    return `${floorPart}${row.floorMet === true ? " ok" : ""}${extra > 0 ? ` +${extra}` : ""}`;
+    return (
+      `${floorPart}${row.floorMet === true ? " ok" : ""}${extra > 0 ? ` +${extra}` : ""}` +
+      (row.declared > 0 ? ` ${row.declared} declared` : "")
+    );
   });
   const methodsWidth = Math.max(9, ...methodsCells.map((c) => c.length));
   const nonAutomatedShown = view.rows.some((row) => row.methods > row.automated);
+  const declaredShown = view.rows.some((row) => row.declared > 0);
   // The reach column (N0-2) prints only when the rows carry a rung — a
   // register built without pins renders exactly as it did, width included.
   const reachShown = view.summary.reach !== null;
@@ -517,6 +542,15 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
       dim(
         "  +N beside a methods cell: non-automated methods the row holds (attestations, ingested " +
           "assessment evidence) — outside the FRC-CSX-VVK numerator, judged by VDR-TFR-NMV's clock",
+      ),
+    );
+  }
+  if (declaredShown) {
+    lines.push(
+      dim(
+        "  N declared beside a methods cell: automated methods that prove DECLARED state — the committed " +
+          "infrastructure definitions, read by a crosswalk (recipes/crosswalks/) — not the account's state; " +
+          "counted toward the floor, and one observation per artifact on the reach ladder",
       ),
     );
   }

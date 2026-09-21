@@ -85,6 +85,20 @@ export const PipelineProvenance = z.strictObject({
   /** the collector whose manifest declares the recipe — and the scope */
   collector: z.string().min(1),
   scope: MethodScope,
+  /**
+   * For a crosswalk-derived recipe (N2-1): the recipe whose artifact this
+   * method reads, the crosswalk, and what a pass proves. Carried so the
+   * register can print `declared` beside the method and the reach ladder can
+   * count rows sharing one artifact as one observation. Absent on every
+   * hand-written recipe's method.
+   */
+  derived_from: z
+    .strictObject({
+      recipe: z.string().min(1),
+      crosswalk: z.string().min(1),
+      proves: z.literal("declared-state"),
+    })
+    .optional(),
 });
 export type PipelineProvenance = z.infer<typeof PipelineProvenance>;
 
@@ -195,6 +209,15 @@ export function methodsOfRecipe(recipe: PipelineRecipe, scope: MethodScope): Pip
       recipe_id: recipe.id,
       collector: recipe.collection.collector,
       scope,
+      ...(recipe.derived_from === undefined
+        ? {}
+        : {
+            derived_from: {
+              recipe: recipe.derived_from.recipe,
+              crosswalk: recipe.derived_from.crosswalk,
+              proves: recipe.derived_from.proves,
+            },
+          }),
     },
   }));
 }

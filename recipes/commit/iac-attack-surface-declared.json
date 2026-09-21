@@ -1,0 +1,96 @@
+{
+  "id": "iac-attack-surface-declared",
+  "ksi_ids": [
+    "KSI-CNA-MAT"
+  ],
+  "control_ids": [
+    "sc-7.3",
+    "sc-7.4"
+  ],
+  "evidence": "The committed infrastructure definitions declare no publicly reachable data store, function or snapshot, no default public addressing, no root container user, and no injectable or over-permissioned workflow, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-CNA-MAT: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_6",
+            "CKV2_AWS_66",
+            "CKV2_DOCKER_1",
+            "CKV2_GHA_1",
+            "CKV_AWS_102",
+            "CKV_AWS_130",
+            "CKV_AWS_164",
+            "CKV_AWS_17",
+            "CKV_AWS_20",
+            "CKV_AWS_301",
+            "CKV_AWS_302",
+            "CKV_AWS_303",
+            "CKV_AWS_32",
+            "CKV_AWS_333",
+            "CKV_AWS_336",
+            "CKV_AWS_389",
+            "CKV_AWS_79",
+            "CKV_DOCKER_3",
+            "CKV_DOCKER_8",
+            "CKV_GHA_1",
+            "CKV_GHA_2"
+          ]
+        }
+      ],
+      "controls": [
+        "sc-7.3",
+        "sc-7.4"
+      ],
+      "description": "Zero failed checks among the 21 checkov rule(s) the crosswalk maps to KSI-CNA-MAT — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only. Public exposure created outside the committed definitions, and lateral-movement paths through data rather than configuration, are not seen. Corroborates the cloud plane; does not replace it.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 21 of its rules filed under KSI-CNA-MAT with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 21 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed infrastructure for anything that widens what an attacker can reach: resources exposed to the internet, subnets that hand out public addresses, containers that run as root, and workflow steps that can be injected or that hold write-all permissions.",
+    "violation": "Something in the definitions is reachable, writable or privileged beyond what its job needs, and a compromise of it has somewhere to go next. It is the declared shape of the system, not a measurement of the running one.",
+    "fix": "Make the resource private, give the container a user, scope the workflow token, or fix the interpolated step. Every failed check names the file and the setting; exposure that is intended belongs in a recorded decision, not a silenced rule."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_6",
+      "CKV2_AWS_66",
+      "CKV2_DOCKER_1",
+      "CKV2_GHA_1",
+      "CKV_AWS_102",
+      "CKV_AWS_130",
+      "CKV_AWS_164",
+      "CKV_AWS_17",
+      "CKV_AWS_20",
+      "CKV_AWS_301",
+      "CKV_AWS_302",
+      "CKV_AWS_303",
+      "CKV_AWS_32",
+      "CKV_AWS_333",
+      "CKV_AWS_336",
+      "CKV_AWS_389",
+      "CKV_AWS_79",
+      "CKV_DOCKER_3",
+      "CKV_DOCKER_8",
+      "CKV_GHA_1",
+      "CKV_GHA_2"
+    ]
+  },
+  "anchor": "commit"
+}

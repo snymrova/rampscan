@@ -210,9 +210,23 @@ export interface FoldOptions {
  */
 export interface ReachSubject {
   methods: ReadonlyArray<
-    Pick<MethodCell, "automated" | "source" | "bundleDigest" | "freshMet" | "window">
+    Pick<
+      MethodCell,
+      "automated" | "source" | "bundleDigest" | "freshMet" | "window" | "recipeId" | "derivedFrom"
+    >
   >;
   methodFloor: number | null;
+}
+
+/**
+ * The observation a cell's evidence comes from (N2-1; plan ground rule 3):
+ * crosswalk-derived rows over one artifact are one observation, and so are
+ * the methods one recipe derives for several KSIs — the RFC-0033 point that
+ * four methods from one API call are one method. Keyed by the recipe whose
+ * artifact was read, which for an ingested row is the upstream recipe.
+ */
+function observationOf(cell: ReachSubject["methods"][number]): string {
+  return `${cell.source}:${cell.derivedFrom ?? cell.recipeId ?? "?"}`;
 }
 
 /** the ids a plane observes or wires, as a reader can open them */
@@ -238,9 +252,14 @@ function idsOf(pins: readonly ReachPin[], key: "observes" | "wired"): string {
  * every rung implies the ones below it, so a floor met by a stale method
  * would be a rung earned by evidence outside its window. At class b (floor
  * 1) the two readings agree; at class c a KSI with one fresh and one stale
- * method reads `fresh`, and says which one is short. `distinct` counts
- * method `source`s among those same fresh methods, because that is the
- * plane key the register already carries (ground rule 3 of the plan); it is
+ * method reads `fresh`, and says which one is short. And it counts
+ * OBSERVATIONS, not cells (`observationOf`): two crosswalk-derived rows over
+ * one checkov result, or two methods one recipe mints, are one observation
+ * toward the floor — the plan's ground rule 3 and its §4 decision 2, that a
+ * class-c KSI whose only two methods are both `declared` over one artifact
+ * does not meet a floor of 2. G2 stays as the rules define it; this rung is
+ * ours. `distinct` counts method `source`s among those same fresh methods,
+ * because that is the plane key the register already carries; it is
  * reported on every rung and earns the top one at two.
  *
  * `next` is a sentence, never a code: the rung above is earned by something
@@ -297,11 +316,15 @@ export function reachOf(subject: ReachSubject, pins: readonly ReachPin[]): KsiRe
         "floor, so the floor is unjudged — a class with an FRC-CSX-VVK floor earns floor",
     );
   }
-  if (fresh.length < subject.methodFloor) {
+  const observations = new Set(fresh.map(observationOf)).size;
+  if (observations < subject.methodFloor) {
     return at(
       "fresh",
-      `${fresh.length} automated method(s) inside their window against a floor of ` +
-        `${subject.methodFloor} — ${subject.methodFloor - fresh.length} more earns floor`,
+      `${fresh.length} automated method(s) inside their window` +
+        (observations < fresh.length ? ` from ${observations} observation(s)` : "") +
+        ` against a floor of ${subject.methodFloor} — ${subject.methodFloor - observations} more ` +
+        (observations < fresh.length ? "observation(s), not more methods over the same artifact, " : "") +
+        "earns floor",
     );
   }
   if (distinctPlanes < 2) {
@@ -827,6 +850,12 @@ export function foldEntries(
               cell.recipeId = method.provenance.recipe_id;
               cell.collector = method.provenance.collector;
               cell.scope = method.provenance.scope;
+              // a crosswalk-derived method (N2-1) says whose artifact it reads
+              // and what a pass proves — lifted, never inferred from the id
+              if (method.provenance.derived_from !== undefined) {
+                cell.derivedFrom = method.provenance.derived_from.recipe;
+                cell.proves = method.provenance.derived_from.proves;
+              }
               const row = registerByCell.get(`${repo} ${method.provenance.recipe_id}`);
               if (row !== undefined) {
                 cell.state = row.state;

@@ -183,6 +183,10 @@ export interface MethodCellRecord {
   recipeId?: string;
   collector?: string;
   scope?: MethodScopeRecord;
+  /** crosswalk-derived only (N2-1): the recipe whose artifact this method reads */
+  derivedFrom?: string;
+  /** what a pass proves, when the recipe says: declared state, not the account's */
+  proves?: "declared-state";
   state: RegisterState;
   bundleDigest?: string;
   freshAsOf?: string;

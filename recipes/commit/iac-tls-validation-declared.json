@@ -1,0 +1,74 @@
+{
+  "id": "iac-tls-validation-declared",
+  "ksi_ids": [
+    "KSI-SVC-VCM"
+  ],
+  "control_ids": [
+    "sc-23",
+    "si-7.1"
+  ],
+  "evidence": "The committed container images disable certificate validation for no download, package manager or language runtime, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-SVC-VCM: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_DOCKER_12",
+            "CKV2_DOCKER_13",
+            "CKV2_DOCKER_14",
+            "CKV2_DOCKER_15",
+            "CKV2_DOCKER_16",
+            "CKV2_DOCKER_2",
+            "CKV2_DOCKER_3",
+            "CKV2_DOCKER_4",
+            "CKV2_DOCKER_5",
+            "CKV2_DOCKER_6"
+          ]
+        }
+      ],
+      "controls": [
+        "sc-23",
+        "si-7.1"
+      ],
+      "description": "Zero failed checks among the 10 checkov rule(s) the crosswalk maps to KSI-SVC-VCM — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only, and container images only: validation disabled at runtime, or in application code, is not seen here. Corroborates the cloud plane's session-authenticity checks; does not replace them.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 10 of its rules filed under KSI-SVC-VCM with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 10 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed container image definitions for build steps that switch off certificate checking — for curl and wget, for pip, npm, yarn and git, for the package managers, and through the environment variables the runtimes honour.",
+    "violation": "A build step will accept any server as the one it meant to reach, so whatever it downloads could have come from anywhere on the path. The image is built that way every time; it is the declared build, not a measurement of a running container.",
+    "fix": "Remove the flag or variable that disables validation and install the certificate the build actually needs. Each failed check names the file and the instruction; a private authority belongs in the image's trust store, not in a switch that trusts everyone."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_DOCKER_12",
+      "CKV2_DOCKER_13",
+      "CKV2_DOCKER_14",
+      "CKV2_DOCKER_15",
+      "CKV2_DOCKER_16",
+      "CKV2_DOCKER_2",
+      "CKV2_DOCKER_3",
+      "CKV2_DOCKER_4",
+      "CKV2_DOCKER_5",
+      "CKV2_DOCKER_6"
+    ]
+  },
+  "anchor": "commit"
+}

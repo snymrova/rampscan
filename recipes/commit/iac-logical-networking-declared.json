@@ -1,0 +1,76 @@
+{
+  "id": "iac-logical-networking-declared",
+  "ksi_ids": [
+    "KSI-CNA-ULN"
+  ],
+  "control_ids": [
+    "sc-7"
+  ],
+  "evidence": "The committed infrastructure definitions place workloads inside VPCs, attach every security group and network ACL to something, avoid platform defaults, and describe every rule, at the scanned commit",
+  "collection": {
+    "kind": "pipeline",
+    "collector": "checkov"
+  },
+  "expected_output": "the same checkov-results.json iac-baseline-clean reads (frameworks scanned, passed/failed counts, evaluated check ids, failed checks sorted), plus one observation row per failed check whose id the crosswalk checkov-3.3.11-to-2026.09.13.02 maps to KSI-CNA-ULN: check_id, check_name, framework, file, resource",
+  "assertions": [
+    {
+      "field": "check_id",
+      "op": "count_eq",
+      "value": 0,
+      "where": [
+        {
+          "field": "check_id",
+          "op": "in",
+          "value": [
+            "CKV2_AWS_1",
+            "CKV2_AWS_5",
+            "CKV2_AWS_7",
+            "CKV_AWS_117",
+            "CKV_AWS_137",
+            "CKV_AWS_148",
+            "CKV_AWS_154",
+            "CKV_AWS_23",
+            "CKV_AWS_248",
+            "CKV_AWS_306",
+            "CKV_AWS_321",
+            "CKV_AWS_323"
+          ]
+        }
+      ],
+      "controls": [
+        "sc-7"
+      ],
+      "description": "Zero failed checks among the 12 checkov rule(s) the crosswalk maps to KSI-CNA-ULN — the committed infrastructure declares the state this indicator asks for, at the scanned commit."
+    }
+  ],
+  "cadence": "daily",
+  "caveats": "Declared state only: the network as written, not as routed. Whether traffic actually flows the way the definitions intend is the cloud plane's question.",
+  "automatable": "full",
+  "notes": "Derived from iac-baseline-clean by the crosswalk recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json: the same collector, the same artifact, and 12 of its rules filed under KSI-CNA-ULN with a reviewed basis each. What a pass proves is DECLARED state — what the committed definitions say — and the register prints `declared` beside this method for that reason; it corroborates the cloud plane and never replaces it. Empty-set discipline — Guard: the collector emits this recipe's observation set only when at least one of its 12 mapped rules was evaluated in this run (present in checkov's passed or failed checks over every file of every detected framework); a tree where none of them applied gets no observation and the recipe stays unevidenced, so an empty set here is an exhaustively searched clean result over the whole of the mapped rules the run evaluated.",
+  "plain": {
+    "checks": "Reads the committed infrastructure for whether the logical network is actually used: whether functions, clusters and databases sit inside a VPC, whether the security groups and ACLs written down are attached to anything, and whether default networks and undescribed rules are avoided.",
+    "violation": "A workload sits outside the network's controls, a control exists but guards nothing, or the platform's defaults stand in for a design. The flow controls the definitions were meant to enforce are not enforcing anything for that resource.",
+    "fix": "Move the resource into the VPC, attach the orphaned group or ACL, replace the default with a defined network, or add the description the review needs. Each failed check names the resource; the change is in that definition."
+  },
+  "empty_means": "clean",
+  "derived_from": {
+    "recipe": "iac-baseline-clean",
+    "crosswalk": "checkov-3.3.11-to-2026.09.13.02",
+    "proves": "declared-state",
+    "checks": [
+      "CKV2_AWS_1",
+      "CKV2_AWS_5",
+      "CKV2_AWS_7",
+      "CKV_AWS_117",
+      "CKV_AWS_137",
+      "CKV_AWS_148",
+      "CKV_AWS_154",
+      "CKV_AWS_23",
+      "CKV_AWS_248",
+      "CKV_AWS_306",
+      "CKV_AWS_321",
+      "CKV_AWS_323"
+    ]
+  },
+  "anchor": "commit"
+}

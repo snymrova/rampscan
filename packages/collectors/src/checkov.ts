@@ -15,6 +15,70 @@ import { absentReason, resolveTool } from "./tools.js";
 
 export const CHECKOV_RESULTS_ARTIFACT = "checkov-results.json";
 
+/**
+ * The recipes the crosswalk `recipes/crosswalks/checkov-3.3.11-to-2026.09.13.02.json`
+ * derives over this collector's artifact (docs/PLAN-REACH.md N2-1), named
+ * here because a manifest is static and the catalog test wants every recipe
+ * a collector answers declared by it. `checkov-crosswalk.test.ts` holds this
+ * list equal to the crosswalk's rows, so a row added there without a line
+ * here fails the build rather than leaving a recipe nobody claims.
+ */
+export const CHECKOV_DERIVED_RECIPES = [
+  "iac-attack-surface-declared",
+  "iac-backups-declared",
+  "iac-central-logging-declared",
+  "iac-encryption-declared",
+  "iac-event-logging-declared",
+  "iac-logical-networking-declared",
+  "iac-service-auth-declared",
+  "iac-tls-validation-declared",
+  "iac-traffic-restricted-declared",
+] as const;
+
+/** a failed check as the normalized artifact and the observation rows carry it */
+export interface FailedCheck {
+  check_id: string;
+  check_name: string;
+  framework: string;
+  file: string;
+  resource: string;
+}
+
+/**
+ * The observation set of every crosswalk-derived recipe this run (N2-1),
+ * pure over what checkov evaluated and what the recipes carry.
+ *
+ * The soundness rule, and the reason this is a function with a test rather
+ * than three lines inside `collect`: a derived recipe's observation set
+ * EXISTS only when at least one of its rules was evaluated this run — present
+ * in checkov's passed or failed checks over the frameworks the tree
+ * contained. A recipe whose rules all target a framework the tree does not
+ * have (every terraform rule, on a repository with Dockerfiles only) gets no
+ * key, so the join reads it `unevidenced`; emitting `[]` for it would let
+ * `count_eq 0` pass over rules that never ran, which is the vacuous pass one
+ * level above the one `iac-baseline-clean`'s Skip already guards.
+ *
+ * When the key exists, its rows are the failed checks whose id the recipe
+ * carries — the same rows the base recipe holds, filtered — so the recipe's
+ * `where … in` narrows nothing further and the population is the count of
+ * failures among its own rules.
+ */
+export function derivedObservations(
+  evaluated: ReadonlySet<string>,
+  failed: readonly FailedCheck[],
+  recipes: ReadonlyArray<{ id: string; derived_from?: { checks: string[] } | undefined }>,
+): Record<string, ObservationRows> {
+  const out: Record<string, ObservationRows> = {};
+  for (const recipe of recipes) {
+    const checks = recipe.derived_from?.checks;
+    if (checks === undefined) continue;
+    if (!checks.some((id) => evaluated.has(id))) continue;
+    const mapped = new Set(checks);
+    out[recipe.id] = failed.filter((f) => mapped.has(f.check_id)).map((f) => ({ ...f }));
+  }
+  return out;
+}
+
 interface FrameworkMatch {
   framework: string;
   test: (path: string) => boolean;
@@ -93,7 +157,7 @@ export const checkov: Collector = {
     name: "checkov",
     toolVersion: "resolved-at-run",
     tools: ["checkov"],
-    recipes: ["iac-baseline-clean"],
+    recipes: ["iac-baseline-clean", ...CHECKOV_DERIVED_RECIPES],
     outputs: [CHECKOV_RESULTS_ARTIFACT],
     cacheScope: ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", ".github/workflows/**", "**/*.tf", "**/*.tf.json"],
     // Declared scan scope (SPEC §12.6): the scanned set is enumerated via
@@ -166,16 +230,15 @@ export const checkov: Collector = {
     };
 
     let passedCount = 0;
-    const failed: Array<{
-      check_id: string;
-      check_name: string;
-      framework: string;
-      file: string;
-      resource: string;
-    }> = [];
+    const failed: FailedCheck[] = [];
+    // every rule id checkov evaluated this run, passed or failed — the
+    // population a crosswalk-derived recipe's existence is decided against
+    const evaluated = new Set<string>();
     for (const report of reports) {
       passedCount += report.results.passed_checks?.length ?? 0;
+      for (const c of report.results.passed_checks ?? []) evaluated.add(c.check_id);
       for (const c of report.results.failed_checks ?? []) {
+        evaluated.add(c.check_id);
         failed.push({
           check_id: c.check_id,
           check_name: c.check_name ?? c.check_id,
@@ -195,6 +258,9 @@ export const checkov: Collector = {
       frameworks: iac.frameworks,
       passed_count: passedCount,
       failed_count: failed.length,
+      // the rule ids that ran, so the artifact carries the population each
+      // derived recipe's existence was judged against (N2-1)
+      evaluated_check_ids: [...evaluated].sort(),
       failed,
     };
     const resultsPath = join(ctx.artifactDir, CHECKOV_RESULTS_ARTIFACT);
@@ -238,13 +304,19 @@ export const checkov: Collector = {
       }
     }
 
+    // the crosswalk-derived recipes (N2-1): one observation set per recipe
+    // whose rules were evaluated this run, none for a recipe whose rules
+    // never applied — `derivedObservations` states the rule
+    const derived = derivedObservations(evaluated, failed, ctx.recipes ?? []);
+    const derivedAnchors = Object.fromEntries(Object.keys(derived).map((id) => [id, anchorPaths]));
+
     return {
       findings,
       artifacts: [{ name: CHECKOV_RESULTS_ARTIFACT, path: resultsPath }],
       // rows may be EMPTY: checkov ran over real IaC and rejected nothing —
       // that is an observation (count_eq 0 passes → evidenced), not an absence
-      observations: { "iac-baseline-clean": rows },
-      anchors: { "iac-baseline-clean": anchorPaths },
+      observations: { "iac-baseline-clean": rows, ...derived },
+      anchors: { "iac-baseline-clean": anchorPaths, ...derivedAnchors },
       toolVersion: version,
       exitCode,
       reproduce: `checkov -d <repo> --framework ${iac.frameworks.join(" ")}`,

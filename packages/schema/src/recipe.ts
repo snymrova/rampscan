@@ -213,6 +213,23 @@ export const PipelineRecipe = z.object({
       }),
     )
     .optional(),
+  /**
+   * Present on a recipe GENERATED from a tool crosswalk (docs/PLAN-REACH.md
+   * N2-1): the recipe it shares its artifact with, the crosswalk that filed
+   * the rules, what a pass proves, and the rule ids the collector reads to
+   * decide whether this recipe's observation set exists this run. Strict, and
+   * `proves` is a literal today, because "declared state" is the only kind
+   * of claim a crosswalk-derived row makes — a second value is a reviewed
+   * change to what the register prints beside the method.
+   */
+  derived_from: z
+    .strictObject({
+      recipe: z.string().min(1),
+      crosswalk: z.string().min(1),
+      proves: z.literal("declared-state"),
+      checks: z.array(z.string().min(1)).min(1),
+    })
+    .optional(),
   anchor: z.literal("commit"),
 });
 export type PipelineRecipe = z.infer<typeof PipelineRecipe>;
