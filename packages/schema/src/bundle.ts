@@ -323,6 +323,13 @@ export const EvidencePredicate = z.object({
           request_digest: z.string().min(1),
         })
         .optional(),
+      /**
+       * What the submitted run observed (N2-2), copied when the submission
+       * declared it: `commit` for a client's SARIF over the checkout, `cloud`
+       * for an account. Absent on every bundle before it, and absent reads
+       * cloud — the plane every one of those was about.
+       */
+      plane: z.enum(["commit", "cloud"]).optional(),
     })
     .optional(),
   ksi_ids: z.array(z.string()),

@@ -386,6 +386,15 @@ export interface MethodCell {
   derivedFrom?: string;
   /** what a pass of this method proves, when the recipe says (N2-1): declared state, not account state */
   proves?: "declared-state";
+  /**
+   * What this method's evidence observed (N2-2): the checkout, an account,
+   * or a person's statement. Derived per source and echoed here so the reach
+   * ladder counts planes: a client's SARIF (`aws-ingested` by mechanism,
+   * `commit` by plane) beside the pipeline is one plane, not two. Optional
+   * because projections written before it carry none; a reader derives the
+   * same answer from `source` (`planeOfCell`).
+   */
+  plane?: "commit" | "cloud" | "human";
   state: RegisterState;
   bundleDigest?: Digest;
   freshAsOf?: string; // ISO 8601

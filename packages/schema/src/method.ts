@@ -107,6 +107,15 @@ export const AwsIngestedProvenance = z.strictObject({
   recipe_id: z.string().min(1),
   signer_identity: z.string().min(1),
   ingest_digest: z.string().min(1),
+  /**
+   * What the submitted run observed (N2-2): `commit` for a client's SARIF
+   * over the checkout, `cloud` for an account. Absent on every method
+   * derived from a bundle minted before it, and absent reads cloud. The
+   * SOURCE stays `aws-ingested` — it names the mechanism the bytes came in
+   * by; the plane names what they are about — and renaming the source is a
+   * reviewed schema change this field deliberately does not make.
+   */
+  plane: z.enum(["commit", "cloud"]).optional(),
 });
 export type AwsIngestedProvenance = z.infer<typeof AwsIngestedProvenance>;
 
@@ -246,7 +255,12 @@ export function methodOfIngestedBundle(predicate: {
   recipe_id: string;
   ksi_ids: string[];
   ingest?:
-    | { signer_identity: string; ingest_digest: string; automated?: boolean | undefined }
+    | {
+        signer_identity: string;
+        ingest_digest: string;
+        automated?: boolean | undefined;
+        plane?: "commit" | "cloud" | undefined;
+      }
     | undefined;
 }): AwsIngestedMethod {
   if (predicate.ingest === undefined) {
@@ -274,6 +288,7 @@ export function methodOfIngestedBundle(predicate: {
       recipe_id: predicate.recipe_id,
       signer_identity: predicate.ingest.signer_identity,
       ingest_digest: predicate.ingest.ingest_digest,
+      ...(predicate.ingest.plane !== undefined ? { plane: predicate.ingest.plane } : {}),
     },
   };
 }

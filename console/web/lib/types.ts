@@ -187,6 +187,8 @@ export interface MethodCellRecord {
   derivedFrom?: string;
   /** what a pass proves, when the recipe says: declared state, not the account's */
   proves?: "declared-state";
+  /** what the evidence observed (N2-2): the checkout, an account, or a person; absent on older projections */
+  plane?: "commit" | "cloud" | "human";
   state: RegisterState;
   bundleDigest?: string;
   freshAsOf?: string;

@@ -129,6 +129,15 @@ export const IngestSubmission = z.strictObject({
   reproduce: z.string().optional(),
   /** present exactly when a client-deployed runner produced the bytes (T2-3) */
   runner: RunnerProvenance.optional(),
+  /**
+   * What the submitted run OBSERVED (docs/PLAN-REACH.md N2-2): `cloud` for an
+   * account read by a script, a runner or Prowler — the value every
+   * submission before this field had, and what absent reads as — and
+   * `commit` for a client's own SARIF over the checkout. Carried so the reach
+   * ladder counts planes rather than sources: a SARIF beside rampscan's
+   * pipeline is one plane, and only an account observation is a second.
+   */
+  plane: z.enum(["commit", "cloud"]).optional(),
 });
 export type IngestSubmission = z.infer<typeof IngestSubmission>;
 

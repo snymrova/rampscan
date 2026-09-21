@@ -72,6 +72,8 @@ export function toIngestedBundle(
         ...(submission.automated !== undefined ? { automated: submission.automated } : {}),
         // the runner's provenance, when a runner produced the bytes (T2-3)
         ...(submission.runner !== undefined ? { runner: submission.runner } : {}),
+        // what the run observed, when the submission said (N2-2)
+        ...(submission.plane !== undefined ? { plane: submission.plane } : {}),
       },
       ksi_ids: [submission.ksi],
       // the crosswalk rides the KSI in the pinned dataset (§12.2) — an

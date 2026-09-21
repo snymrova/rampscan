@@ -1,4 +1,12 @@
-export { createProjector, foldEntries, monthsBefore, reachOf, windowThreshold } from "./fold.js";
+export {
+  createProjector,
+  foldEntries,
+  monthsBefore,
+  planeOf,
+  planeOfCell,
+  reachOf,
+  windowThreshold,
+} from "./fold.js";
 export type { FoldOptions, ProjectorOptions, ReachSubject } from "./fold.js";
 export {
   CHANGE_KIND_SEVERITY,

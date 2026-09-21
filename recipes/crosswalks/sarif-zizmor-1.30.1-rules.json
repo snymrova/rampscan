@@ -1,0 +1,133 @@
+{
+  "_type": "https://rampscan.dev/tool-rule-list/v1",
+  "tool": "zizmor",
+  "version": "1.30.1",
+  "generated_by": "zizmor 1.30.1 (`uvx zizmor --version`, 2026-09-21) has no audit-listing flag; this is the audit set its documentation lists (https://docs.zizmor.sh/audits/) read the same day, each id in the `zizmor/<audit>` form the SARIF writer emits as `ruleId`; the five audits that fired on this repository's own workflows appear in fixtures/ingest-sarif/zizmor.sarif and confirm the form",
+  "generated": "2026-09-21",
+  "rule": "A crosswalk entry naming a rule id absent here fails sarif-crosswalk.test.ts. When tools.json or the crosswalk re-pins zizmor, re-read the audit list against the release notes and regenerate this file deliberately; an audit renamed upstream is drift, not a version bump.",
+  "checks": [
+    {
+      "id": "zizmor/adhoc-packages"
+    },
+    {
+      "id": "zizmor/anonymous-definition"
+    },
+    {
+      "id": "zizmor/archived-uses"
+    },
+    {
+      "id": "zizmor/artipacked"
+    },
+    {
+      "id": "zizmor/bot-conditions"
+    },
+    {
+      "id": "zizmor/cache-poisoning"
+    },
+    {
+      "id": "zizmor/concurrency-limits"
+    },
+    {
+      "id": "zizmor/dangerous-triggers"
+    },
+    {
+      "id": "zizmor/dependabot-cooldown"
+    },
+    {
+      "id": "zizmor/dependabot-execution"
+    },
+    {
+      "id": "zizmor/excessive-permissions"
+    },
+    {
+      "id": "zizmor/forbidden-uses"
+    },
+    {
+      "id": "zizmor/github-app"
+    },
+    {
+      "id": "zizmor/github-env"
+    },
+    {
+      "id": "zizmor/hardcoded-container-credentials"
+    },
+    {
+      "id": "zizmor/impostor-commit"
+    },
+    {
+      "id": "zizmor/insecure-commands"
+    },
+    {
+      "id": "zizmor/insecure-url-scheme"
+    },
+    {
+      "id": "zizmor/known-vulnerable-actions"
+    },
+    {
+      "id": "zizmor/misfeature"
+    },
+    {
+      "id": "zizmor/obfuscation"
+    },
+    {
+      "id": "zizmor/overprovisioned-secrets"
+    },
+    {
+      "id": "zizmor/ref-confusion"
+    },
+    {
+      "id": "zizmor/ref-version-mismatch"
+    },
+    {
+      "id": "zizmor/secrets-inherit"
+    },
+    {
+      "id": "zizmor/secrets-outside-env"
+    },
+    {
+      "id": "zizmor/self-hosted-runner"
+    },
+    {
+      "id": "zizmor/self-repository"
+    },
+    {
+      "id": "zizmor/stale-action-refs"
+    },
+    {
+      "id": "zizmor/superfluous-actions"
+    },
+    {
+      "id": "zizmor/template-injection"
+    },
+    {
+      "id": "zizmor/typosquat-uses"
+    },
+    {
+      "id": "zizmor/undocumented-permissions"
+    },
+    {
+      "id": "zizmor/unpinned-images"
+    },
+    {
+      "id": "zizmor/unpinned-tools"
+    },
+    {
+      "id": "zizmor/unpinned-uses"
+    },
+    {
+      "id": "zizmor/unredacted-secrets"
+    },
+    {
+      "id": "zizmor/unsound-condition"
+    },
+    {
+      "id": "zizmor/unsound-contains"
+    },
+    {
+      "id": "zizmor/unsound-ternary"
+    },
+    {
+      "id": "zizmor/use-trusted-publishing"
+    }
+  ]
+}

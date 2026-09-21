@@ -1,0 +1,217 @@
+{
+  "_type": "https://rampscan.dev/sarif-crosswalk/v1",
+  "tool": "zizmor",
+  "version": "1.30.1",
+  "to": "2026.09.13.02",
+  "reviewed": "2026-09-21",
+  "plane": "commit",
+  "reproduce": "zizmor --format sarif .github/   # zizmor 1.30.1; run over the checkout's own workflow and action definitions",
+  "rule": "A SARIF log is a client's own run over the CHECKOUT, so every row it mints observes the commit plane — the plane rampscan's pipeline already observes — and the reach ladder counts it beside the pipeline as one plane, never as the second an account observation would be (docs/PLAN-REACH.md ground rule 3). The assertion is rampscan's over the tool's rows: `count_eq 0` where `level = error`; the tool's `level` and `kind` are data, a suppressed result is counted and never waived (the Prowler mute rule), a run whose invocation did not succeed or whose declared exit code is non-zero is skipped and named, and a rule the log neither reported nor declared in `tool.driver.rules` gets no submission and is named — a zero-result rule is clean only when the tool states it ran. There is no graph behind a client's log, so reachability is UNKNOWN and every finding counts; the submission says so. One entry per rule id, filed under exactly one KSI with the reviewer's reason; a rule id the log carries that this file does not refuses the whole batch. zizmor audits GitHub Actions definitions, so its rows land on the indicators the committed workflows can speak to: attack surface and lateral movement (CNA-MAT), secret handling (SVC-ASM), supply chain (SCR-MIT, SCR-MON), and a few configuration-management and information-securing audits. Every audit the pinned version documents is filed, pedantic ones included, because a rule the log carries that the crosswalk does not refuses the batch — and refusing a client's log for an audit they enabled on purpose would be the crosswalk's failure, not theirs.",
+  "entries": [
+    {
+      "rule": "zizmor/template-injection",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a workflow step that expands untrusted context into a shell is a code-execution surface on the build system; the same claim checkov's CKV_GHA_2 makes, from a second tool"
+    },
+    {
+      "rule": "zizmor/dangerous-triggers",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "pull_request_target and workflow_run hand a fork's code a privileged token — attack surface the workflow definition opens on purpose or by accident"
+    },
+    {
+      "rule": "zizmor/github-env",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "writing untrusted data into GITHUB_ENV or GITHUB_PATH lets a later step execute it; an injection surface of the same kind as template injection"
+    },
+    {
+      "rule": "zizmor/insecure-commands",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "re-enabling deprecated workflow commands (ACTIONS_ALLOW_UNSECURE_COMMANDS) reopens a closed injection path; checkov's CKV_GHA_1 makes the same claim"
+    },
+    {
+      "rule": "zizmor/bot-conditions",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a condition that trusts a spoofable actor name lets any account take the privileged branch of the workflow"
+    },
+    {
+      "rule": "zizmor/unsound-condition",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a condition that is always true or always false guards nothing; a gate that does not gate is surface"
+    },
+    {
+      "rule": "zizmor/unsound-contains",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a containment check that matches more than intended admits inputs the author meant to exclude"
+    },
+    {
+      "rule": "zizmor/unsound-ternary",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a ternary that cannot take its false branch is a control that never controls"
+    },
+    {
+      "rule": "zizmor/misfeature",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a GitHub Actions feature the audit flags as dangerous in the shape used widens what a workflow can be made to do"
+    },
+    {
+      "rule": "zizmor/excessive-permissions",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a token holding write-all, or a job holding more than it uses, lets one compromised step move into every part of the repository; checkov's CKV2_GHA_1 files the same under minimizing lateral movement"
+    },
+    {
+      "rule": "zizmor/undocumented-permissions",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a permission granted with no reason written beside it cannot be reviewed against an intent; the indicator asks that the surface be persistently reviewed"
+    },
+    {
+      "rule": "zizmor/self-hosted-runner",
+      "ksi": "KSI-CNA-MAT",
+      "basis": "a self-hosted runner reachable by a workflow that untrusted code can trigger is a machine on the attack surface that GitHub's isolation does not cover"
+    },
+    {
+      "rule": "zizmor/github-app",
+      "ksi": "KSI-IAM-SNU",
+      "basis": "an app token minted with more permissions or a longer life than the job needs is a non-user credential secured less than it could be"
+    },
+    {
+      "rule": "zizmor/artipacked",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "a checkout that persists the git credential into the workspace, then uploads the workspace as an artifact, publishes a secret; secret management that lets it leave is not automated management"
+    },
+    {
+      "rule": "zizmor/hardcoded-container-credentials",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "a registry password written into the workflow is a secret outside any manager, rotated by no one"
+    },
+    {
+      "rule": "zizmor/secrets-inherit",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "a reusable workflow given every secret the caller holds receives secrets it was never meant to manage"
+    },
+    {
+      "rule": "zizmor/overprovisioned-secrets",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "the whole secrets context serialized into a step exposes every secret to a job that needed one"
+    },
+    {
+      "rule": "zizmor/secrets-outside-env",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "a secret used outside a deployment environment bypasses the approval and scoping an environment applies to it"
+    },
+    {
+      "rule": "zizmor/unredacted-secrets",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "a secret that reaches the log unredacted is a secret disclosed by the pipeline that was supposed to hold it"
+    },
+    {
+      "rule": "zizmor/use-trusted-publishing",
+      "ksi": "KSI-SVC-ASM",
+      "basis": "a long-lived publishing token where trusted publishing would mint a short-lived one is a secret kept when it need not exist"
+    },
+    {
+      "rule": "zizmor/unpinned-uses",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "an action pinned to a mutable tag can be replaced upstream without a change here; the ci-actions-pinned recipe makes the same supply-chain claim over the same files"
+    },
+    {
+      "rule": "zizmor/unpinned-images",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a container image without a digest is a build input that can change under an unchanged workflow"
+    },
+    {
+      "rule": "zizmor/unpinned-tools",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a tool installed at 'latest' inside a step is an unpinned dependency of the build"
+    },
+    {
+      "rule": "zizmor/adhoc-packages",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a package installed outside the locked manifest is a dependency the lockfile does not vouch for"
+    },
+    {
+      "rule": "zizmor/impostor-commit",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a commit reference that resolves outside the repository's network is an action whose bytes nobody in that project published"
+    },
+    {
+      "rule": "zizmor/ref-confusion",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a ref that could be a branch or a tag can be redirected upstream; the pin is not a pin"
+    },
+    {
+      "rule": "zizmor/ref-version-mismatch",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a hash whose version comment disagrees with what it points at is a pin whose review was of the wrong thing"
+    },
+    {
+      "rule": "zizmor/typosquat-uses",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "an action whose name is one character from a popular one is the supply-chain attack the mitigation indicator names"
+    },
+    {
+      "rule": "zizmor/forbidden-uses",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "an action outside the project's own allowlist is a supplier the project did not admit"
+    },
+    {
+      "rule": "zizmor/cache-poisoning",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "a cache written by untrusted runs and read by a release build lets the cache carry the payload into the artifact"
+    },
+    {
+      "rule": "zizmor/obfuscation",
+      "ksi": "KSI-SCR-MIT",
+      "basis": "an obfuscated action reference or expression hides which supplier is being pulled and what will run"
+    },
+    {
+      "rule": "zizmor/known-vulnerable-actions",
+      "ksi": "KSI-SCR-MON",
+      "basis": "an action with a published advisory still in use is exactly what monitoring for supply-chain vulnerabilities exists to surface"
+    },
+    {
+      "rule": "zizmor/archived-uses",
+      "ksi": "KSI-SCR-MON",
+      "basis": "an action from an archived repository receives no fixes; continued use is a monitored dependency with no maintainer to monitor"
+    },
+    {
+      "rule": "zizmor/stale-action-refs",
+      "ksi": "KSI-SCR-MON",
+      "basis": "a SHA that points at no tag is a pin nobody will notice is behind; the monitoring indicator wants the version state known"
+    },
+    {
+      "rule": "zizmor/dependabot-cooldown",
+      "ksi": "KSI-SCR-MON",
+      "basis": "dependency updates taken without a cooldown adopt a compromised release before the ecosystem has reacted; the supply-chain monitoring the indicator asks for includes a waiting period"
+    },
+    {
+      "rule": "zizmor/dependabot-execution",
+      "ksi": "KSI-SCR-MON",
+      "basis": "dependabot permitted to execute external code during updates turns the monitoring tool into an execution path"
+    },
+    {
+      "rule": "zizmor/insecure-url-scheme",
+      "ksi": "KSI-SVC-SIN",
+      "basis": "a plaintext URL in a workflow moves build inputs or outputs unencrypted; information the indicator asks to be secured in transit"
+    },
+    {
+      "rule": "zizmor/superfluous-actions",
+      "ksi": "KSI-SVC-ACM",
+      "basis": "an action that duplicates a pre-installed tool is configuration carried for no function; drift the automation indicator asks to be reviewed away"
+    },
+    {
+      "rule": "zizmor/concurrency-limits",
+      "ksi": "KSI-SVC-ACM",
+      "basis": "a workflow without concurrency limits can run two deployments of one configuration at once; managed configuration bounds its own concurrency"
+    },
+    {
+      "rule": "zizmor/self-repository",
+      "ksi": "KSI-SVC-ACM",
+      "basis": "a workspace-relative action reference behaves differently by checkout state; configuration management asks that a definition mean one thing"
+    },
+    {
+      "rule": "zizmor/anonymous-definition",
+      "ksi": "KSI-SVC-ACM",
+      "basis": "a workflow with no name cannot be reviewed by name; the smallest configuration-management defect the audit reports, pedantic by the tool's own label"
+    }
+  ]
+}

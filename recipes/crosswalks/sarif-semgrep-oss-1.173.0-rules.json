@@ -1,0 +1,19 @@
+{
+  "_type": "https://rampscan.dev/tool-rule-list/v1",
+  "tool": "Semgrep OSS",
+  "version": "1.173.0",
+  "generated_by": "the rule ids of packages/collectors/semgrep-rules.yaml, the ruleset rampscan's own semgrep collector runs at the image tools.json pins (semgrep/semgrep:1.173.0); a client reproduces the log with the command in the crosswalk",
+  "generated": "2026-09-21",
+  "rule": "A crosswalk entry naming a rule id absent here fails sarif-crosswalk.test.ts. Semgrep writes a local rule's id bare when the config is run from its own directory and prefixes it with the config path's directories otherwise (`packages.collectors.dangerous-eval`); the crosswalk names the bare form, so a log written another way is refused and named, never guessed.",
+  "checks": [
+    {
+      "id": "child-process-non-literal"
+    },
+    {
+      "id": "dangerous-eval"
+    },
+    {
+      "id": "weak-hash-algorithm"
+    }
+  ]
+}

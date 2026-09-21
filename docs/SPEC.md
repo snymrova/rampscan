@@ -411,7 +411,7 @@ The plan's phases live as GitHub milestones (`Q0 — decisions locked` … `Q5 �
 
 ### 12.8 The ingestion contract (Q4.1)
 
-The no-SaaS / no-execution boundary holds: ramprules' AWS recipes remain the client's to run, and nothing in the appliance ever executes an AWS call. What Q4.1 adds is the contract under which a client-run result becomes a ledger citizen — the `source: aws-ingested` leg of §12.2's register.
+The no-SaaS / no-execution boundary holds: ramprules' AWS recipes remain the client's to run, and nothing in the appliance ever executes an AWS call. What Q4.1 adds is the contract under which a client-run result becomes a ledger citizen — the `source: aws-ingested` leg of §12.2's register. (Amended 2026-09-21, `docs/PLAN-REACH.md` N2-2: the same leg also carries a client's own SARIF 2.1.0 log over the checkout, joined through a per-tool crosswalk in `recipes/crosswalks/sarif-<tool>-<version>.json`; the submission, the bundle's `ingest` block and the derived method then carry `plane: commit`, absent reading `cloud`, so the source names the mechanism the bytes came in by and the plane names what they observed. The reach ladder counts planes.)
 
 **The submission is the contract's unit** — one result per (upstream recipe × KSI), a self-identifying JSON document:
 

@@ -212,10 +212,37 @@ export interface ReachSubject {
   methods: ReadonlyArray<
     Pick<
       MethodCell,
-      "automated" | "source" | "bundleDigest" | "freshMet" | "window" | "recipeId" | "derivedFrom"
+      | "automated"
+      | "source"
+      | "plane"
+      | "bundleDigest"
+      | "freshMet"
+      | "window"
+      | "recipeId"
+      | "derivedFrom"
     >
   >;
   methodFloor: number | null;
+}
+
+/**
+ * What a method's evidence observed (N2-2): the checkout for a pipeline
+ * method and for a client's SARIF over it, an account for every other
+ * ingested submission (the value an undeclared one always meant), a person's
+ * statement for an attestation. The plane is what `distinct` counts.
+ */
+export function planeOf(method: ValidationMethod): NonNullable<MethodCell["plane"]> {
+  if (method.source === "pipeline") return "commit";
+  if (method.source === "attestation") return "human";
+  return method.provenance.plane ?? "cloud";
+}
+
+/** the same answer off a cell, for one folded before the field existed */
+export function planeOfCell(
+  cell: Pick<MethodCell, "source" | "plane">,
+): NonNullable<MethodCell["plane"]> {
+  if (cell.plane !== undefined) return cell.plane;
+  return cell.source === "pipeline" ? "commit" : cell.source === "attestation" ? "human" : "cloud";
 }
 
 /**
@@ -272,7 +299,7 @@ export function reachOf(subject: ReachSubject, pins: readonly ReachPin[]): KsiRe
   const automated = subject.methods.filter((m) => m.automated);
   const run = automated.filter((m) => m.bundleDigest !== undefined);
   const fresh = automated.filter((m) => m.freshMet === true);
-  const distinctPlanes = new Set(fresh.map((m) => m.source)).size;
+  const distinctPlanes = new Set(fresh.map(planeOfCell)).size;
   const at = (rung: ReachRung, next: string | null): KsiReach => ({ rung, next, distinctPlanes });
 
   if (observed.length === 0) {
@@ -328,7 +355,7 @@ export function reachOf(subject: ReachSubject, pins: readonly ReachPin[]): KsiRe
     );
   }
   if (distinctPlanes < 2) {
-    const [plane] = fresh.map((m) => m.source);
+    const [plane] = fresh.map(planeOfCell);
     return at(
       "floor",
       `the ${fresh.length} method(s) meeting the floor all come from one plane (${plane}) — ` +
@@ -842,6 +869,7 @@ export function foldEntries(
               automated: method.automated,
               clock: method.clock,
               standing: method.standing,
+              plane: planeOf(method),
               state: "unevidenced",
               window,
               freshMet: null,

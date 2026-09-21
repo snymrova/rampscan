@@ -66,3 +66,24 @@ validates against the pinned schema. P4's probe test serves it from a local
 `node:http` server to prove the one thing that reads `open`: a certification
 document that came back to an anonymous GET and validates.
 
+
+## ingest-sarif
+
+Two real SARIF 2.1.0 logs for the SARIF ingest adapter (docs/PLAN-REACH.md
+N2-2), each written by the tool named in its `tool.driver`, not by hand:
+
+- `semgrep.sarif` — Semgrep OSS 1.173.0 (the image `tools.json` pins) over
+  `fixtures/vulnerable-app`, with rampscan's own vendored ruleset run from
+  its own directory so the rule ids are bare
+  (`cd packages/collectors && semgrep --config semgrep-rules.yaml --sarif --metrics=off <checkout>`).
+  The container mount prefix was stripped from the paths. Two `dangerous-eval`
+  hits and one `weak-hash-algorithm`; `child-process-non-literal` declared and
+  silent — the round trip against the pipeline's own SAST recipe.
+- `zizmor.sarif` — zizmor 1.30.1 over this repository's `.github/`
+  (`zizmor --format sarif .github/`). Five audits fired, one at error level
+  (`excessive-permissions`); the other thirty-six documented audits are
+  neither reported nor declared, which the adapter names rather than mints.
+
+Neither tool writes `invocations[].endTimeUtc`, so an ingest of either
+declares `--timestamp`. Regenerate with the commands above when the pinned
+tool versions move, and re-read `recipes/crosswalks/sarif-*` against the diff.

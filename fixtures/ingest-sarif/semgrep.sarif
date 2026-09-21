@@ -1,0 +1,174 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolExecutionNotifications": []
+        }
+      ],
+      "results": [
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/legacy-tools.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 22,
+                  "endLine": 6,
+                  "snippet": {
+                    "text": "  return eval(script);"
+                  },
+                  "startColumn": 10,
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "eval()/new Function() executes dynamically constructed code \u2014 code injection when any input reaches it"
+          },
+          "properties": {},
+          "ruleId": "dangerous-eval"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/render.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 10,
+                  "snippet": {
+                    "text": "  return eval(\"context.\" + template); // rampscan.dangerous-eval"
+                  },
+                  "startColumn": 10,
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "eval()/new Function() executes dynamically constructed code \u2014 code injection when any input reaches it"
+          },
+          "properties": {},
+          "ruleId": "dangerous-eval"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/render.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 27,
+                  "endLine": 15,
+                  "snippet": {
+                    "text": "  return createHash(\"md5\").update(content).digest(\"hex\");"
+                  },
+                  "startColumn": 10,
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "MD5/SHA-1 are cryptographically broken \u2014 use sha256 or stronger for any security purpose"
+          },
+          "properties": {},
+          "ruleId": "weak-hash-algorithm"
+        }
+      ],
+      "tool": {
+        "driver": {
+          "name": "Semgrep OSS",
+          "rules": [
+            {
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "fullDescription": {
+                "text": "child_process exec/execSync with a non-literal command string \u2014 command injection when any input reaches it"
+              },
+              "help": {
+                "markdown": "child_process exec/execSync with a non-literal command string \u2014 command injection when any input reaches it",
+                "text": "child_process exec/execSync with a non-literal command string \u2014 command injection when any input reaches it"
+              },
+              "id": "child-process-non-literal",
+              "name": "child-process-non-literal",
+              "properties": {
+                "precision": "very-high",
+                "tags": []
+              },
+              "shortDescription": {
+                "text": "Semgrep Finding: child-process-non-literal"
+              }
+            },
+            {
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "fullDescription": {
+                "text": "eval()/new Function() executes dynamically constructed code \u2014 code injection when any input reaches it"
+              },
+              "help": {
+                "markdown": "eval()/new Function() executes dynamically constructed code \u2014 code injection when any input reaches it",
+                "text": "eval()/new Function() executes dynamically constructed code \u2014 code injection when any input reaches it"
+              },
+              "id": "dangerous-eval",
+              "name": "dangerous-eval",
+              "properties": {
+                "precision": "very-high",
+                "tags": []
+              },
+              "shortDescription": {
+                "text": "Semgrep Finding: dangerous-eval"
+              }
+            },
+            {
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "fullDescription": {
+                "text": "MD5/SHA-1 are cryptographically broken \u2014 use sha256 or stronger for any security purpose"
+              },
+              "help": {
+                "markdown": "MD5/SHA-1 are cryptographically broken \u2014 use sha256 or stronger for any security purpose",
+                "text": "MD5/SHA-1 are cryptographically broken \u2014 use sha256 or stronger for any security purpose"
+              },
+              "id": "weak-hash-algorithm",
+              "name": "weak-hash-algorithm",
+              "properties": {
+                "precision": "very-high",
+                "tags": []
+              },
+              "shortDescription": {
+                "text": "Semgrep Finding: weak-hash-algorithm"
+              }
+            }
+          ],
+          "semanticVersion": "1.173.0"
+        }
+      }
+    }
+  ],
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json"
+}
