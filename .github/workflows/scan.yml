@@ -1,0 +1,109 @@
+# The scheduled self-scan (docs/PLAN-REACH.md N1-1): rampscan scans itself on
+# a clock, so the register's evidence is inside its owed window without anyone
+# remembering. Weekly, which is the class-b VDR-TFR-MVX window and the tightest
+# cadence most of recipes/commit/ declares; `daemon-parity.test.ts` holds this
+# cron to the daemon's own arithmetic.
+#
+# What it does, and what it does not yet do:
+#   - installs the seven scan tools at the versions packages/collectors/tools.json
+#     pins (four as binaries, three through their pinned images — Docker is on
+#     the runner), so nothing here resolves "whatever is installed";
+#   - runs `rampscan scan .`, then the coverage assertion: every registered
+#     collector ran or is named as skipped, and a skip for an absent tool FAILS
+#     the job — a tool absent in CI is a blocked coverage unit, never silent;
+#   - proves the projection folds from the ledger (`rampscan rebuild`) and prints
+#     the register with the north star (`rampscan frontier`);
+#   - uploads the run's out/ and ledger as a workflow artifact.
+#   - N1-2 (the persistent ledger, signed with a repository secret) waits on the
+#     owner's key (D2) and ledger home (D3). Until then the signer mints a
+#     throwaway keypair on the runner and the artifact NAME says so: a ledger
+#     signed by a key nobody holds is a rehearsal, not evidence.
+name: scan
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+# rampscan's own recipes police this file when the repo self-scans:
+# ci-actions-pinned wants SHA pins, checkov wants least-privilege permissions
+permissions:
+  contents: read
+
+jobs:
+  self-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # gitleaks reads the whole history, and the reachability tier anchors to commits
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: install scan tools at the pinned versions (tools.json)
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            | tar -xz -C "$HOME/.local/bin" gitleaks
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+            | sh -s -- -b "$HOME/.local/bin" v1.51.0
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+            | sh -s -- -b "$HOME/.local/bin" v0.117.0
+          curl -sSfL -o "$HOME/.local/bin/osv-scanner" \
+            https://github.com/google/osv-scanner/releases/download/v2.5.0/osv-scanner_linux_amd64
+          chmod +x "$HOME/.local/bin/osv-scanner"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          # semgrep, checkov and spectral resolve through their pinned images
+          docker pull -q semgrep/semgrep:1.173.0
+          docker pull -q bridgecrew/checkov:3.3.11
+          docker pull -q stoplight/spectral:6.16.3
+
+      - name: signing key — the repository's (D2) when it is set, else a throwaway pair the artifact name admits
+        id: keys
+        env:
+          SIGNING_KEY: ${{ secrets.RAMPSCAN_SIGNING_KEY }}
+          SIGNING_PUB: ${{ secrets.RAMPSCAN_SIGNING_PUB }}
+        run: |
+          set -euo pipefail
+          if [ -n "${SIGNING_KEY:-}" ] && [ -n "${SIGNING_PUB:-}" ]; then
+            mkdir -p rampscan-keys
+            printf '%s\n' "$SIGNING_KEY" > rampscan-keys/rampscan.key
+            printf '%s\n' "$SIGNING_PUB" > rampscan-keys/rampscan.pub
+            chmod 600 rampscan-keys/rampscan.key
+            echo "signed=repository-key" >> "$GITHUB_OUTPUT"
+          else
+            echo "no RAMPSCAN_SIGNING_KEY/RAMPSCAN_SIGNING_PUB secret: the signer will mint a throwaway keypair (D2 owed)"
+            echo "signed=throwaway-key" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: rampscan scan .
+        run: pnpm rampscan scan . --out rampscan-out --ledger rampscan-ledger --keys rampscan-keys
+
+      - name: every collector ran or is named — an absent tool fails the run
+        run: pnpm exec tsx scripts/self-scan-assert.ts rampscan-out/scan-result.json --require-tools
+
+      - name: the projection folds from the ledger (projection ≡ ledger)
+        run: pnpm rampscan rebuild --ledger rampscan-ledger --db rampscan-projection.db
+
+      - name: the register, with the north star
+        run: pnpm rampscan frontier --ledger rampscan-ledger
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: self-scan-${{ steps.keys.outputs.signed }}-${{ github.sha }}
+          path: |
+            rampscan-out/
+            rampscan-ledger/
+          retention-days: 30
