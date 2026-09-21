@@ -51,6 +51,8 @@ import {
   renderArtifacts,
 } from "./artifacts-view.js";
 import { buildKsiRegister, renderKsiRegister } from "./ksi-register.js";
+import { loadPinnedProwlerFramework } from "./prowler-framework.js";
+import { buildReachPins } from "./reach-pins.js";
 import { startDaemon } from "./daemon.js";
 import { computeRepoModel, renderRepoModel, serializeRepoModel } from "./model.js";
 import { renderOwed, renderOwedKsi } from "./owed.js";
@@ -645,6 +647,25 @@ async function main(): Promise<void> {
           recipes,
           allCollectors.map((c) => c.manifest),
         );
+        // The three pins the reach ladder reads (docs/PLAN-REACH.md N0-1):
+        // the catalog above, upstream's AWS overlay classified exactly as
+        // `recipes --aws` classifies it (the runner's own function, under the
+        // allowlist, the table and this checkout's `aws` block), and the
+        // vendored Prowler framework at its pin. Read here and handed to the
+        // fold as data, so the fold never opens a file to decide a rung.
+        const reach = buildReachPins({
+          ksiIds: catalog.ksis.map((k) => k.id),
+          recipes,
+          aws: classifyAwsRecipes(
+            dataset.recipes(),
+            await loadAwsActionAllowlist(join(REPO_ROOT, DEFAULT_ALLOWLIST_PATH)),
+            await loadAwsLiteralBindings(join(REPO_ROOT, DEFAULT_BINDINGS_PATH)),
+            await loadAwsConfig("."),
+            windowEnding(new Date(), 30),
+            datasetPin,
+          ),
+          prowler: await loadPinnedProwlerFramework(REPO_ROOT),
+        });
         const projector = createProjector({
           recipes,
           methods,
@@ -653,6 +674,7 @@ async function main(): Promise<void> {
           historyFloorMonths: catalog.historyFloors[registerClass].months,
           machineWindow: catalog.windows[registerClass],
           nonMachineWindow: catalog.nonMachineWindow,
+          reach,
         });
         const projection = await projector.fold(createLocalLedger(ledgerDir));
         const view = buildKsiRegister({
@@ -661,6 +683,7 @@ async function main(): Promise<void> {
           methods,
           methodRegisters: projection.methodRegisters,
           frontier: map,
+          reach,
         });
         view.frontierOverlay = DEFAULT_OVERLAY_PINS["automation-frontier.json"] ?? "";
         if (values.json) console.log(JSON.stringify(view, null, 2));

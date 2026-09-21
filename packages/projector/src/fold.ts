@@ -25,8 +25,11 @@ import type {
   ArtifactSlot,
   Attestation,
   EvidenceBundle,
+  KsiReach,
   OffenderPointer,
   PipelineRecipe,
+  ReachPin,
+  ReachRung,
   ScanRun,
   ScopingEvent,
   ValidationMethod,
@@ -188,6 +191,128 @@ export interface FoldOptions {
    * (`KsiCatalog.nonMachineWindow`), flat across classes, in months.
    */
   nonMachineWindow?: ClockWindow | null;
+  /**
+   * What the three pins observe per KSI (docs/PLAN-REACH.md N0-1): the
+   * caller reads `recipes/commit/`, upstream's `aws-evidence.json` under the
+   * allowlist and the bound parameters, and the pinned Prowler framework, and
+   * hands the fold the result. The fold never opens a pin — it joins. When
+   * present, every method-register row carries its `reach`; a KSI the map
+   * does not name is read as observed by nothing, which is the honest reading
+   * of a pin that said nothing about it.
+   */
+  reach?: Readonly<Record<string, readonly ReachPin[]>>;
+}
+
+/**
+ * What `reachOf` reads off a row — the cells' four facts and the floor. A
+ * `MethodRegisterRow` satisfies it; so does the register's own synthesis for
+ * a checkout with no ledger, where every derived method is unevidenced.
+ */
+export interface ReachSubject {
+  methods: ReadonlyArray<
+    Pick<MethodCell, "automated" | "source" | "bundleDigest" | "freshMet" | "window">
+  >;
+  methodFloor: number | null;
+}
+
+/** the ids a plane observes or wires, as a reader can open them */
+function idsOf(pins: readonly ReachPin[], key: "observes" | "wired"): string {
+  return pins
+    .filter((p) => p[key].length > 0)
+    .map((p) => `${p.plane} (${p[key].join(", ")})`)
+    .join("; ");
+}
+
+/**
+ * The KSI's rung on the reach ladder (docs/PLAN-REACH.md N0-1;
+ * docs/RESEARCH-KSI-REACH.md §1), a pure function of the row and the pins.
+ *
+ * Rungs 0–2 read the pins: nothing of ours can climb past `wired` by
+ * existing (that plan's ground rule 1). Rungs 3–6 read what G1, G3 and G2
+ * already computed on the row, over AUTOMATED methods only — the north star
+ * is "at least one automated method inside its window", and an attestation
+ * ends G1 without climbing this ladder, which is the anti-gaming property
+ * `methodOfAttestation` states for `automated: false`.
+ *
+ * `floor` is judged over the methods that are FRESH, not over the G2 count:
+ * every rung implies the ones below it, so a floor met by a stale method
+ * would be a rung earned by evidence outside its window. At class b (floor
+ * 1) the two readings agree; at class c a KSI with one fresh and one stale
+ * method reads `fresh`, and says which one is short. `distinct` counts
+ * method `source`s among those same fresh methods, because that is the
+ * plane key the register already carries (ground rule 3 of the plan); it is
+ * reported on every rung and earns the top one at two.
+ *
+ * `next` is a sentence, never a code: the rung above is earned by something
+ * a reader can go and do, and the sentence names the ids or the count that
+ * fall short of it.
+ */
+export function reachOf(subject: ReachSubject, pins: readonly ReachPin[]): KsiReach {
+  const observed = pins.filter((p) => p.observes.length > 0);
+  const wired = pins.filter((p) => p.wired.length > 0);
+  const automated = subject.methods.filter((m) => m.automated);
+  const run = automated.filter((m) => m.bundleDigest !== undefined);
+  const fresh = automated.filter((m) => m.freshMet === true);
+  const distinctPlanes = new Set(fresh.map((m) => m.source)).size;
+  const at = (rung: ReachRung, next: string | null): KsiReach => ({ rung, next, distinctPlanes });
+
+  if (observed.length === 0) {
+    return at(
+      "unreachable",
+      "no pipeline recipe (recipes/commit/), upstream AWS recipe (aws-evidence.json) or " +
+        "Prowler check (docs/context/prowler/) observes this indicator at the three pins — " +
+        "attestation is the only path, and it does not climb this ladder",
+    );
+  }
+  if (wired.length === 0) {
+    return at(
+      "reachable",
+      `observed by ${idsOf(observed, "observes")}, and nothing of rampscan's turns that output ` +
+        "into a method — a catalog recipe, a runnable AWS recipe under the allowlist and bound " +
+        "parameters, or an ingest adapter earns wired",
+    );
+  }
+  if (run.length === 0) {
+    return at(
+      "wired",
+      `wired by ${idsOf(wired, "wired")}; no signed bundle stands in the ledger for any of ` +
+        `${automated.length} automated method(s) — a scan or an ingest earns run`,
+    );
+  }
+  if (fresh.length === 0) {
+    const unjudged = automated.every((m) => m.window === null);
+    return at(
+      "run",
+      unjudged
+        ? `${run.length} automated method(s) have run, and the class owes no machine window, so ` +
+            "freshness is unjudged — a class with a VDR-TFR-MVX window earns fresh"
+        : `${run.length} automated method(s) have run and none is inside its owed window — ` +
+            "a run inside the window earns fresh",
+    );
+  }
+  if (subject.methodFloor === null) {
+    return at(
+      "fresh",
+      `${fresh.length} automated method(s) inside their window, and the class owes no method ` +
+        "floor, so the floor is unjudged — a class with an FRC-CSX-VVK floor earns floor",
+    );
+  }
+  if (fresh.length < subject.methodFloor) {
+    return at(
+      "fresh",
+      `${fresh.length} automated method(s) inside their window against a floor of ` +
+        `${subject.methodFloor} — ${subject.methodFloor - fresh.length} more earns floor`,
+    );
+  }
+  if (distinctPlanes < 2) {
+    const [plane] = fresh.map((m) => m.source);
+    return at(
+      "floor",
+      `the ${fresh.length} method(s) meeting the floor all come from one plane (${plane}) — ` +
+        "a second plane observing a different thing earns distinct",
+    );
+  }
+  return at("distinct", null);
 }
 
 /**
@@ -1004,6 +1129,11 @@ export function foldEntries(
         else if (row.historyMet === false) row.gap = "G4";
         else if (artifactsPresent < 5) row.gap = "G5";
         else if (pointInTimeMethods > 0 && processMethods === 0) row.gap = "G6";
+        // The reach ladder (N0-1), beside the gap it is not: a gap class
+        // says what is wrong with this row, the rung says how far the
+        // machine reaches it. Only when the fold was told what the pins
+        // observe — the alternative is a rung computed from silence.
+        if (options.reach !== undefined) row.reach = reachOf(row, options.reach[ksi] ?? []);
         methodRegisters.push(row);
       }
     }
@@ -1177,6 +1307,7 @@ export function createProjector(options: ProjectorOptions = {}): Projector {
       if (options.machineWindow !== undefined) foldOptions.machineWindow = options.machineWindow;
       if (options.nonMachineWindow !== undefined)
         foldOptions.nonMachineWindow = options.nonMachineWindow;
+      if (options.reach !== undefined) foldOptions.reach = options.reach;
       return foldEntries(await ledger.list(), now().toISOString(), foldOptions);
     },
   };

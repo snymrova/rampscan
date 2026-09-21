@@ -1,7 +1,9 @@
 import type { ClockWindow, MethodRegisterRow } from "@rampscan/core";
 import type { HistoryFloor, KsiCatalog, OfferingClass, ValidationWindow } from "@rampscan/dataset";
 import { optionalKsis } from "@rampscan/dataset";
-import type { PipelineMethod } from "@rampscan/schema";
+import { reachOf } from "@rampscan/projector";
+import type { KsiReach, PipelineMethod, ReachPin, ReachRung } from "@rampscan/schema";
+import { REACH_RUNGS } from "@rampscan/schema";
 import type { FrontierMap } from "./frontier.js";
 
 // `rampscan frontier` v2 — the KSI register (SPEC §12.5, plan Q2.4). The
@@ -88,6 +90,13 @@ export interface KsiRegisterRowView {
    * never shown 42 of 41.
    */
   optional: boolean;
+  /**
+   * The row's rung on the reach ladder (docs/PLAN-REACH.md N0-1): the fold's
+   * when a scan is recorded, else computed here over the derived methods,
+   * which without a ledger can reach `wired` at most. Absent when the caller
+   * handed no pins — a rung computed from silence would be a rung typed.
+   */
+  reach?: KsiReach;
 }
 
 export interface G8QueueRow {
@@ -151,6 +160,13 @@ export interface KsiRegisterView {
      * standing on an assumption has to say so out loud.
      */
     applicabilityUnstated?: string;
+    /**
+     * The reach ladder over the obliged rows (N0-2): `fresh` is the north
+     * star — rows whose rung is `fresh` or above, i.e. at least one automated
+     * method inside its owed window — and `byRung` is every row's highest
+     * rung, tallied. Null when no pins were handed in.
+     */
+    reach: { fresh: number; byRung: Record<ReachRung, number> } | null;
   };
   /** the G8 adjudication queue: unreviewed frontier controls, by leverage */
   queue: G8QueueRow[];
@@ -167,6 +183,12 @@ export interface KsiRegisterInput {
   methodRegisters: MethodRegisterRow[];
   /** the control frontier — the G8 queue and the legacy footer read it */
   frontier: FrontierMap;
+  /**
+   * What the three pins observe per KSI (`buildReachPins`), for the rows the
+   * fold did not judge — a checkout with no ledger still has a rung, and it
+   * is at most `wired`. The folded rows carry the fold's own answer.
+   */
+  reach?: Readonly<Record<string, readonly ReachPin[]>>;
 }
 
 export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
@@ -263,6 +285,27 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
     // re-derive. The chain position is preserved: the fold's own chain only
     // reaches G6 after the same earlier arms declined.
     else if (folded?.gap === "G6") row.worstGap = "G6";
+    // The reach ladder (N0-1). With a fold, the fold's rung — it read the
+    // ledger, and this join does not re-read it. Without one, the same
+    // function over the derived methods as unevidenced cells: every window
+    // unmet, no bundle, so the ladder stops at `wired` and says why.
+    if (input.reach !== undefined) {
+      const window = input.catalog.windows[input.offeringClass];
+      row.reach =
+        folded?.reach ??
+        reachOf(
+          {
+            methods: derived.map((m) => ({
+              automated: m.automated,
+              source: m.source,
+              window: window === null ? null : { num: window.num, unit: window.unit },
+              freshMet: window === null ? null : false,
+            })),
+            methodFloor: floor,
+          },
+          input.reach[entry.id] ?? [],
+        );
+    }
     return row;
   });
 
@@ -314,6 +357,7 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       ...(input.catalog.applicability.stated
         ? {}
         : { applicabilityUnstated: input.catalog.applicability.reason }),
+      reach: input.reach === undefined ? null : reachSummary(obliged),
     },
     queue,
     legacy: {
@@ -322,6 +366,27 @@ export function buildKsiRegister(input: KsiRegisterInput): KsiRegisterView {
       reachable: input.frontier.rollup.reachable,
     },
   };
+}
+
+/**
+ * The north star and the tally (N0-2), counted from the obliged rows the way
+ * every other meter is: a row's rung is the fold's (or the derivation's),
+ * and this only adds them up. `fresh` is every row at `fresh` or above —
+ * the ladder is ordered, so "at least one automated method inside its
+ * window" is a comparison of rung indices, not a second reading of the cells.
+ */
+function reachSummary(
+  obliged: readonly KsiRegisterRowView[],
+): { fresh: number; byRung: Record<ReachRung, number> } {
+  const byRung = Object.fromEntries(REACH_RUNGS.map((r) => [r, 0])) as Record<ReachRung, number>;
+  const freshIndex = REACH_RUNGS.indexOf("fresh");
+  let fresh = 0;
+  for (const row of obliged) {
+    if (row.reach === undefined) continue;
+    byRung[row.reach.rung]++;
+    if (REACH_RUNGS.indexOf(row.reach.rung) >= freshIndex) fresh++;
+  }
+  return { fresh, byRung };
 }
 
 /** a short age: 45m, 11h, 2d — display only, never a stored number */
@@ -377,11 +442,15 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
   });
   const methodsWidth = Math.max(9, ...methodsCells.map((c) => c.length));
   const nonAutomatedShown = view.rows.some((row) => row.methods > row.automated);
+  // The reach column (N0-2) prints only when the rows carry a rung — a
+  // register built without pins renders exactly as it did, width included.
+  const reachShown = view.summary.reach !== null;
   lines.push(
     "",
     dim(
       `  ${"KSI".padEnd(16)} ${"methods".padEnd(methodsWidth)}  ${"freshest".padEnd(15)}  ` +
-        `${"artifacts".padEnd(10)}  worst gap`,
+        `${"artifacts".padEnd(10)}  ${reachShown ? "worst gap".padEnd(13) : "worst gap"}` +
+        (reachShown ? "  reach" : ""),
     ),
   );
 
@@ -414,23 +483,32 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     const artifactsCol = (
       row.artifactsPresent === null ? "–/5" : `${row.artifactsPresent}/5`
     ).padEnd(10);
-    const gapCol =
+    const gapLabel =
       row.worstGap === "G1"
-        ? red("G1 coverage")
+        ? "G1 coverage"
         : row.worstGap === "G2"
-          ? red("G2 methods")
+          ? "G2 methods"
           : row.worstGap === "G3"
-            ? red("G3 freshness")
+            ? "G3 freshness"
             : row.worstGap === "G4"
-              ? red("G4 history")
+              ? "G4 history"
               : row.worstGap === "G5"
-                ? red("G5 artifact")
+                ? "G5 artifact"
                 : row.worstGap === "G6"
-                  ? red("G6 evidence")
-                  : dim("—");
+                  ? "G6 evidence"
+                  : "—";
+    // padded before it is painted, so the escape codes never count as width
+    const gapCol =
+      row.worstGap === undefined
+        ? dim(reachShown ? gapLabel.padEnd(13) : gapLabel)
+        : red(reachShown ? gapLabel.padEnd(13) : gapLabel);
+    // the rung (N0-2), last: the gap says what is wrong with the row, the
+    // rung says how far the machine reaches it, and a reader scans for the
+    // second only after the first
+    const reachCol = row.reach === undefined ? "" : `  ${row.reach.rung}`;
     // An optional row keeps its place and is dimmed with the rules' own word:
     // it is not owed at this class, and it is not gone either (§13.7).
-    const line = `  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}`;
+    const line = `  ${row.ksi.padEnd(16)} ${methodsCol}  ${freshestCol}  ${artifactsCol}  ${gapCol}${reachCol}`;
     lines.push(row.optional ? dim(`${line}  optional at class ${view.offeringClass}`) : line);
   });
 
@@ -452,6 +530,21 @@ export function renderKsiRegister(view: KsiRegisterView, useColor: boolean, now:
     dim(
       `  covering all ${s.total} — a row that says "nothing evidences this from a pipeline" is a row`,
     ),
+    // The north star (docs/PLAN-REACH.md): KSIs with at least one automated
+    // method inside its owed window, over the rows this class obliges. Bold
+    // because it is the number the plan is ranked by, and README-gated for
+    // the same reason. The tally beneath it is every row's highest rung, so
+    // the rung counts add up to the denominator and a reader can see where
+    // the ladder stalls.
+    ...(s.reach === null
+      ? [dim("  reach: not computed — the register was built without the three pins")]
+      : [
+          bold(`  fresh: ${s.reach.fresh} of ${s.total} — the north star`),
+          dim(
+            `  reach: ${REACH_RUNGS.map((r) => `${r} ${s.reach!.byRung[r]}`).join(" · ")} — each row's highest rung; ` +
+              "wired is the most a recipe or adapter confers by existing, run and above come from the ledger",
+          ),
+        ]),
     // The denominator, said out loud (§13.7). A meter that divided by 46 at a
     // class owing 41 would overstate the provider's obligation by five rows.
     s.applicabilityUnstated !== undefined

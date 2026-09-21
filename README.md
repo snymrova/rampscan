@@ -11,7 +11,7 @@ The evidence under those rows is signed and commit-anchored. `scan` produces it 
 
 ## Status
 
-**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,502 tests across 128 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
+**`v0.1.0-beta`.** The CLI (`pnpm rampscan --help`), the twenty recipes in [`recipes/commit/`](recipes/commit/), a signed append-only ledger, a projection you can rebuild and prove, and a console. 1,527 tests across 130 files; the ones that want a scan tool or the PocketBase binary skip by name where it is absent, and CI runs without either on purpose, because it installs nothing. `tsc --build` is clean at the root and in the console, and both the suite and both typechecks are gated in CI on every pull request. The two figures in this paragraph are checked against the run by the suite's own reporter, and this document fails CI when they drift — that is ground rule 4, and [`packages/cli/test/published-numbers.test.ts`](packages/cli/test/published-numbers.test.ts) is what enforces it for every number below that comes from a command.
 
 It is a beta because of the number in the next section, not because the machinery is unfinished.
 
@@ -25,15 +25,17 @@ $ pnpm rampscan frontier
 rampscan frontier — the KSI register
 class b · dataset 2026.09.13.02 · frontier overlay 0.13.0 · evidence: .
 
-  KSI              methods    freshest         artifacts   worst gap
-  KSI-CED-RAT      0/1        —                0/5         G1 coverage
-  KSI-CMT-RVP      1/1 ok     32d / 7d         0/5         G3 freshness
-  KSI-CMT-VTD      4/1 ok     32d / 7d         0/5         G3 freshness
-  KSI-CNA-EIS      0/1        —                0/5         G1 coverage  optional at class b
+  KSI              methods    freshest         artifacts   worst gap      reach
+  KSI-CED-RAT      0/1        —                0/5         G1 coverage    unreachable
+  KSI-CMT-RVP      1/1 ok     39d / 7d         0/5         G3 freshness   run
+  KSI-CMT-VTD      4/1 ok     39d / 7d         0/5         G3 freshness   run
+  KSI-CNA-EIS      0/1        —                0/5         G1 coverage    wired  optional at class b
   …
 
   floor met on 13 of 41 KSIs · at least one automated method on 13 · no method on 28
   covering all 41 — a row that says "nothing evidences this from a pipeline" is a row
+  fresh: 0 of 41 — the north star
+  reach: unreachable 3 · reachable 4 · wired 26 · run 8 · fresh 0 · floor 0 · distinct 0 — each row's highest rung; wired is the most a recipe or adapter confers by existing, run and above come from the ledger
   5 optional at class b, outside every meter above — KSI-CNA-EIS, KSI-MLA-ALA, KSI-SVC-PRR, KSI-SVC-RUD, KSI-SVC-VCM (0 evidenced anyway)
   clocks: 0 of 41 KSIs hold every method inside its owed window — VDR-TFR-MVX (MUST)
   history: no floor at class b — FRC-CSX-MOT (SHOULD, unquantified)
@@ -101,7 +103,7 @@ Walked from a clone into an empty directory, with no `node_modules`, no ledger, 
 ```
 git clone https://github.com/snymrova/rampscan && cd rampscan
 pnpm install            # seconds; no build scripts run — see pnpm-workspace.yaml
-pnpm test               # 1,502 tests across 128 files; the ones wanting a tool or PocketBase skip by name
+pnpm test               # 1,527 tests across 130 files; the ones wanting a tool or PocketBase skip by name
 pnpm run doctor         # how each scan tool resolves on THIS machine
 pnpm rampscan scan .    # scan this repository with itself
 pnpm rampscan board     # the projection: registers, live evidence, graveyard

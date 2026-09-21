@@ -122,7 +122,8 @@ export async function writeProjectionSqlite(
         artifacts         TEXT NOT NULL,    -- JSON array of ArtifactCell (Q3.3)
         artifacts_present INTEGER NOT NULL, -- of the five owed artifacts
         point_in_time_methods INTEGER NOT NULL, -- cells whose live evidence asserts point-in-time (Q3.4)
-        gap               TEXT              -- G1 | G2 | G3 | G4 | G5 | G6 | NULL
+        gap               TEXT,             -- G1 | G2 | G3 | G4 | G5 | G6 | NULL
+        reach             TEXT              -- JSON KsiReach (N0-1); NULL when the fold had no pins
       )
     `);
     db.exec(`
@@ -269,8 +270,8 @@ export async function writeProjectionSqlite(
       `INSERT INTO method_registers
          (repo, ksi, methods, automated_methods, method_floor, floor_met, fresh_as_of,
           stale_methods, history_since, history_floor_months, history_met, history_lapse_at,
-          artifacts, artifacts_present, point_in_time_methods, gap)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          artifacts, artifacts_present, point_in_time_methods, gap, reach)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const row of projection.methodRegisters) {
       insertMethodRegister.run(
@@ -290,6 +291,7 @@ export async function writeProjectionSqlite(
         row.artifactsPresent,
         row.pointInTimeMethods,
         row.gap ?? null,
+        row.reach === undefined ? null : JSON.stringify(row.reach),
       );
     }
 
@@ -462,6 +464,7 @@ export function readProjectionSqlite(dbPath: string): Projection {
       if (r.history_since) row.historySince = r.history_since;
       if (r.history_lapse_at) row.historyLapseAt = r.history_lapse_at;
       if (r.gap) row.gap = r.gap;
+      if (r.reach) row.reach = JSON.parse(r.reach);
       return row;
     });
     const vulnerabilities: ValidationVulnerability[] = (
