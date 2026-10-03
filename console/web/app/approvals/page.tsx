@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { getPb, useAuth, useCollection } from "../../lib/pb";
 import type {
@@ -108,16 +109,16 @@ function Approvals() {
             <span className={`pill ${proposal.status === "approved" ? "notApplicable" : "dead"}`}>
               {proposal.status}
             </span>{" "}
-            <span className="mono">{proposal.ksi_id}</span>{" "}
+            <EntityLink kind="ksi" id={proposal.ksi_id} repo={proposal.repo} />{" "}
             <span className="muted">
-              {proposal.action} by {proposal.attestor_role} on {proposal.repo}
+              {proposal.action} by {proposal.attestor_role} on <RepoName repo={proposal.repo} />
             </span>
             <div className="faint" style={{ fontSize: 12.5, marginTop: 4 }}>
               “{proposal.statement}” — proposed {proposal.proposed_by}
               {proposal.decided_by && <>, decided by {proposal.decided_by}</>}
               {proposal.ledger_digest && (
                 <>
-                  {" "}· ledger <span className="mono">{proposal.ledger_digest.slice(0, 16)}…</span>
+                  {" "}· ledger <EntityLink kind="evidence" digest={proposal.ledger_digest} />
                 </>
               )}
             </div>
@@ -128,16 +129,16 @@ function Approvals() {
             <span className={`pill ${proposal.status === "approved" ? "notApplicable" : "dead"}`}>
               {proposal.status}
             </span>{" "}
-            <span className="mono">{proposal.ksi_id}</span>{" "}
+            <EntityLink kind="ksi" id={proposal.ksi_id} repo={proposal.repo} />{" "}
             <span className="muted">
-              artifact {proposal.artifact} {proposal.action} on {proposal.repo}
+              artifact {proposal.artifact} {proposal.action} on <RepoName repo={proposal.repo} />
             </span>
             <div className="faint" style={{ fontSize: 12.5, marginTop: 4 }}>
               “{proposal.justification}” — proposed {proposal.proposed_by}
               {proposal.decided_by && <>, decided by {proposal.decided_by}</>}
               {proposal.ledger_digest && (
                 <>
-                  {" "}· ledger <span className="mono">{proposal.ledger_digest.slice(0, 16)}…</span>
+                  {" "}· ledger <EntityLink kind="evidence" digest={proposal.ledger_digest} />
                 </>
               )}
             </div>
@@ -148,14 +149,14 @@ function Approvals() {
             <span className={`pill ${proposal.status === "approved" ? "notApplicable" : "dead"}`}>
               {proposal.status}
             </span>{" "}
-            <span className="mono">{proposal.recipe_id}</span>{" "}
-            <span className="muted">on {proposal.repo}</span>
+            <EntityLink kind="check" recipe={proposal.recipe_id} repo={proposal.repo} />{" "}
+            <span className="muted">on <RepoName repo={proposal.repo} /></span>
             <div className="faint" style={{ fontSize: 12.5, marginTop: 4 }}>
               “{proposal.justification}” — proposed {proposal.proposed_by}
               {proposal.decided_by && <>, decided by {proposal.decided_by}</>}
               {proposal.scoping_digest && (
                 <>
-                  {" "}· ledger <span className="mono">{proposal.scoping_digest.slice(0, 16)}…</span>
+                  {" "}· ledger <EntityLink kind="evidence" digest={proposal.scoping_digest} />
                 </>
               )}
             </div>
@@ -209,11 +210,11 @@ function AttestationProposalView({
   return (
     <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
       <div>
-        <span className="mono">{proposal.ksi_id}</span>{" "}
+        <EntityLink kind="ksi" id={proposal.ksi_id} repo={proposal.repo} />{" "}
         <span className="muted">
           {proposal.action} by {proposal.attestor_role} for
         </span>{" "}
-        <span className="mono">{proposal.repo}</span>
+        <RepoName repo={proposal.repo} className="mono" />
       </div>
       <div style={{ margin: "6px 0" }}>“{proposal.statement}”</div>
       <div className="faint" style={{ fontSize: 12.5 }}>
@@ -224,10 +225,10 @@ function AttestationProposalView({
       </div>
       {canDecide && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          <button className="btn primary" disabled={busy} onClick={() => decide("approve")}>
+          <button type="button" className="btn primary" disabled={busy} onClick={() => decide("approve")}>
             {busy ? "signing…" : "approve & sign"}
           </button>
-          <button className="btn danger" disabled={busy} onClick={() => decide("reject")}>
+          <button type="button" className="btn danger" disabled={busy} onClick={() => decide("reject")}>
             reject
           </button>
         </div>
@@ -276,9 +277,9 @@ function JudgmentProposalView({
   return (
     <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
       <div>
-        <span className="mono">{proposal.ksi_id}</span>{" "}
+        <EntityLink kind="ksi" id={proposal.ksi_id} repo={proposal.repo} />{" "}
         <span className="muted">artifact {proposal.artifact} {proposal.action} for</span>{" "}
-        <span className="mono">{proposal.repo}</span>
+        <RepoName repo={proposal.repo} className="mono" />
       </div>
       <div style={{ margin: "6px 0" }}>“{proposal.justification}”</div>
       <div className="faint" style={{ fontSize: 12.5 }}>
@@ -286,10 +287,10 @@ function JudgmentProposalView({
       </div>
       {canDecide && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          <button className="btn primary" disabled={busy} onClick={() => decide("approve")}>
+          <button type="button" className="btn primary" disabled={busy} onClick={() => decide("approve")}>
             {busy ? "signing…" : "approve & sign"}
           </button>
-          <button className="btn danger" disabled={busy} onClick={() => decide("reject")}>
+          <button type="button" className="btn danger" disabled={busy} onClick={() => decide("reject")}>
             reject
           </button>
         </div>
@@ -338,8 +339,8 @@ function ProposalView({
   return (
     <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
       <div>
-        <span className="mono">{proposal.recipe_id}</span>{" "}
-        <span className="muted">not applicable to</span> <span className="mono">{proposal.repo}</span>
+        <EntityLink kind="check" recipe={proposal.recipe_id} repo={proposal.repo} />{" "}
+        <span className="muted">not applicable to</span> <RepoName repo={proposal.repo} className="mono" />
       </div>
       <div style={{ margin: "6px 0" }}>“{proposal.justification}”</div>
       <div className="faint" style={{ fontSize: 12.5 }}>
@@ -347,10 +348,10 @@ function ProposalView({
       </div>
       {canDecide && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          <button className="btn primary" disabled={busy} onClick={() => decide("approve")}>
+          <button type="button" className="btn primary" disabled={busy} onClick={() => decide("approve")}>
             {busy ? "signing…" : "approve & sign"}
           </button>
-          <button className="btn danger" disabled={busy} onClick={() => decide("reject")}>
+          <button type="button" className="btn danger" disabled={busy} onClick={() => decide("reject")}>
             reject
           </button>
         </div>

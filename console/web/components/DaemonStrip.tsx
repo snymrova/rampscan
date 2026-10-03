@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { RepoName } from "./EntityLink";
 import { useEffect, useState } from "react";
 import { formatAge, formatDuration } from "../lib/mvx";
 import { useCollection } from "../lib/pb";
@@ -75,7 +76,7 @@ function StripRow({ row, now }: { row: DaemonStripRow; now: number }) {
         {lastScan ?? <span>no scan on record</span>}
         {divergence && <span className="strip-sep">·</span>}
         {divergence}
-        <span className="strip-repo mono faint">{row.repo}</span>
+        <RepoName repo={row.repo} className="strip-repo mono faint" />
       </div>
     );
   }
@@ -89,7 +90,7 @@ function StripRow({ row, now }: { row: DaemonStripRow; now: number }) {
         {lastScan ?? <span>no scan on record</span>}
         {divergence && <span className="strip-sep">·</span>}
         {divergence}
-        <span className="strip-repo mono faint">{row.repo}</span>
+        <RepoName repo={row.repo} className="strip-repo mono faint" />
       </div>
     );
   }
@@ -111,7 +112,7 @@ function StripRow({ row, now }: { row: DaemonStripRow; now: number }) {
       )}
       {divergence && <span className="strip-sep">·</span>}
       {divergence}
-      <span className="strip-repo mono faint">{row.repo}</span>
+      <RepoName repo={row.repo} className="strip-repo mono faint" />
     </div>
   );
 }

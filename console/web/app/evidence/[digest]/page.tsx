@@ -6,7 +6,9 @@ import { ArtifactView } from "../../../components/ArtifactView";
 import { DownloadButton } from "../../../components/DownloadButton";
 import { RequireAuth } from "../../../components/guard";
 import { PlainLanguage } from "../../../components/PlainLanguage";
+import { EntityLink } from "../../../components/EntityLink";
 import { Term } from "../../../components/Term";
+import { withScope } from "../../../lib/links";
 import { getPb } from "../../../lib/pb";
 import { describePointer } from "../../../lib/pointers";
 import {
@@ -80,6 +82,7 @@ function CallPath({ path, marks }: { path: string; marks?: Array<"exact" | "infe
   return (
     <div className="callpath mono">
       {hops.map((h, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: a call path's hops are positional and never reorder
         <span key={i}>
           {i > 0 && (
             <span
@@ -262,7 +265,7 @@ function BasisPanel({ basis }: { basis: ClaimBasisRecord }) {
               <dd className="mono faint">
                 {basis.graph.node_count} nodes · {basis.graph.edge_count} edges (
                 {basis.graph.inferred_edge_count} inferred by name) · extractor{" "}
-                {basis.graph.extractor_version} · commit {basis.graph.commit.slice(0, 12)}
+                {basis.graph.extractor_version} · commit <EntityLink kind="commit" sha={basis.graph.commit} />
               </dd>
             </>
           )}
@@ -371,10 +374,17 @@ function Evidence({ digest }: { digest: string }) {
   return (
     <>
       <p>
-        <Link href="/">← board</Link>
+        {/* back to the board in the bundle's own repo, not the first one (U0);
+            U4 replaces this with breadcrumbs built from the entity */}
+        <Link href={withScope("/", String(p["repo"] ?? "") || null)}>← board</Link>
       </p>
       <h1 className="mono" style={{ fontSize: 16 }}>
-        {isScanRun ? p["run_id"] : p["recipe_id"]}{" "}
+        {isScanRun ? (
+          <span data-entity="run">{p["run_id"]}</span>
+        ) : (
+          // one level up: the check this bundle answers, on its repo
+          <EntityLink kind="check" recipe={String(p["recipe_id"])} repo={String(p["repo"])} className="" />
+        )}{" "}
         {isEvidence && (
           <span className={`pill ${p["verdict"]}`}>
             <Term name={String(p["verdict"])}>{p["verdict"]}</Term>
@@ -389,13 +399,17 @@ function Evidence({ digest }: { digest: string }) {
         {isScanRun && <span className="pill">scan run · {p["trigger"]}</span>}{" "}
         {coverage && <span className={`pill ${coverage.state}`}>{coverage.state}</span>}
       </h1>
-      <p className="subtitle mono">{digest}</p>
+      {/* this bundle's own digest: the page IS the entity */}
+      <p className="subtitle mono" data-entity="evidence">
+        {digest}
+      </p>
       <p className="subtitle" style={{ marginTop: -14 }}>
         {/* what the bundle already carries (I3b), surfaced where an auditor
             lands — every value below is the signed predicate's own claim */}
         {isEvidence && (
           <>
-            scanned commit <span className="mono">{String(p["commit"]).slice(0, 12)}</span> ·{" "}
+            scanned commit{" "}
+            <EntityLink kind="commit" sha={String(p["commit"])} scan={p["run_id"] ? String(p["run_id"]) : undefined} /> ·{" "}
           </>
         )}
         dataset pin <span className="mono">{p["dataset_version"]}</span>
@@ -433,7 +447,11 @@ function Evidence({ digest }: { digest: string }) {
           {isEvidence && (
             <>
               <dt><Term name="anchor">commit anchor</Term></dt>
-              <dd className="mono">{p["commit"]}</dd>
+              <dd className="mono">
+                <EntityLink kind="commit" sha={String(p["commit"])} scan={p["run_id"] ? String(p["run_id"]) : undefined}>
+                  {String(p["commit"])}
+                </EntityLink>
+              </dd>
             </>
           )}
           {/* a run record maps to no KSI or control: it is about a scan, not
@@ -445,17 +463,13 @@ function Evidence({ digest }: { digest: string }) {
               <dd className="mono">
                 {/* the traversal's back edge (I3a): bundle → KSI → its register rollup */}
                 {((p["ksi_ids"] as string[]) ?? []).map((k) => (
-                  <Link key={k} href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`} style={{ marginRight: 10 }}>
-                    {k}
-                  </Link>
+                  <EntityLink key={k} kind="ksi" id={k} repo={String(p["repo"])} className="" style={{ marginRight: 10 }} />
                 ))}
               </dd>
               <dt>controls</dt>
               <dd className="mono">
                 {((p["control_ids"] as string[]) ?? []).map((c) => (
-                  <Link key={c} href={`/controls?reg=controls&id=${encodeURIComponent(c)}`} style={{ marginRight: 10 }}>
-                    {c}
-                  </Link>
+                  <EntityLink key={c} kind="control" id={c} repo={String(p["repo"])} className="" style={{ marginRight: 10 }} />
                 ))}
               </dd>
             </>
@@ -465,7 +479,9 @@ function Evidence({ digest }: { digest: string }) {
           {isEvidence && (
             <>
               <dt>run</dt>
-              <dd className="mono">{p["run_id"]}</dd>
+              <dd className="mono">
+                {p["run_id"] ? <EntityLink kind="run" scan={String(p["run_id"])} className="" /> : "—"}
+              </dd>
               <dt>tool versions</dt>
               <dd className="mono">
                 {Object.entries((p["tool_versions"] as Record<string, string>) ?? {})
@@ -519,7 +535,7 @@ function Evidence({ digest }: { digest: string }) {
                 {coverage.killing_commit && (
                   <>
                     {" "}
-                    — killed by <span className="mono">{coverage.killing_commit.slice(0, 12)}</span>
+                    — killed by <EntityLink kind="commit" sha={coverage.killing_commit} />
                   </>
                 )}
               </dd>
@@ -595,13 +611,14 @@ function Evidence({ digest }: { digest: string }) {
                 runsLoaded: runCount !== null,
                 runCount: runCount ?? 0,
               }).map((hop, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: the chain's hops are positional and never reorder
                 <li key={i} className={`chain-hop${hop.missing ? " chain-missing" : ""}`}>
                   <span className="chain-kind faint">{hop.kind}</span>
                   <span className="chain-label mono">
                     {hop.href ? <Link href={hop.href}>{hop.label}</Link> : hop.label}
                   </span>
                   {hop.digest && (
-                    <span className="mono faint" title={hop.digest}>
+                    <span className="mono faint" title={hop.digest} data-entity="digest">
                       {" "}
                       {hop.digest.slice(0, 12)}
                     </span>
@@ -623,6 +640,7 @@ function Evidence({ digest }: { digest: string }) {
             <table className="reg">
               <tbody>
                 {assertions.map((a, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: assertions are the signed predicate's own order
                   <tr key={i}>
                     <td style={{ width: 40 }} className={a.passed ? "assertion-pass" : "assertion-fail"}>
                       {a.passed ? "PASS" : "FAIL"}
@@ -649,6 +667,7 @@ function Evidence({ digest }: { digest: string }) {
                         // pointer, bounded — the count says what was cut
                         <>
                           {a.offenders.map((o, j) => (
+                            // biome-ignore lint/suspicious/noArrayIndexKey: offenders are the signed predicate's own order
                             <div key={j} className="mono" style={{ marginTop: 4 }}>
                               {describePointer(o)}
                               {/* describePointer falls back to the call path only when the
@@ -668,7 +687,7 @@ function Evidence({ digest }: { digest: string }) {
                         </>
                       ) : (
                         // pre-I2c bundle: the example row in the prose is all it carries
-                        callPathsIn(a.detail).map((p, j) => <CallPath key={j} path={p} />)
+                        callPathsIn(a.detail).map((p) => <CallPath key={p} path={p} />)
                       )}
                     </td>
                   </tr>
@@ -696,13 +715,16 @@ function Evidence({ digest }: { digest: string }) {
             </tr>
           </thead>
           <tbody>
-            {bundle.statement.subject.map((s, i) => {
+            {bundle.statement.subject.map((s) => {
               const isAnchor = anchorPaths.has(s.name);
               return (
-                <tr key={i}>
+                <tr key={`${s.name} ${s.digest["sha256"] ?? ""}`}>
                   <td className="mono">{s.name}</td>
                   <td className="faint">{isAnchor ? "anchor — drift here kills this evidence" : "artifact"}</td>
-                  <td className="mono faint">{s.digest["sha256"]}</td>
+                  {/* a subject's content hash; its bytes open inline in this row */}
+                  <td className="mono faint" data-entity="digest">
+                    {s.digest["sha256"]}
+                  </td>
                   <td>
                     {/* An anchor is the client's own source at the scanned
                         commit — this system does not serve it, and offering a
@@ -739,7 +761,10 @@ function Evidence({ digest }: { digest: string }) {
           {bundle.envelope && (
             <>
               <dt>key id</dt>
-              <dd className="mono">{bundle.envelope.signatures[0]?.keyid}</dd>
+              {/* the signer's key id: fetched with the public key below, no page of its own */}
+              <dd className="mono" data-entity="key">
+                {bundle.envelope.signatures[0]?.keyid}
+              </dd>
               <dt>signature</dt>
               <dd className="mono faint">{bundle.envelope.signatures[0]?.sig.slice(0, 64)}…</dd>
             </>

@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getPb } from "../lib/pb";
+import { useRepoScope } from "../lib/scope";
 
 // "Collect evidence" (docs/PLAN-CLOUD-RUNNER.md T4-1, T4-4): inside a KSI
 // row's drawer, the pinned AWS recipes that evidence this KSI — runnable
@@ -28,6 +30,7 @@ type Minted =
   | { kind: "manual"; reasons: string[] };
 
 export function CollectEvidence({ ksi }: { ksi: string }) {
+  const { scoped } = useRepoScope();
   const [listing, setListing] = useState<Listing | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [minted, setMinted] = useState<(Minted & { recipe_id: string }) | null>(null);
@@ -130,7 +133,11 @@ export function CollectEvidence({ ksi }: { ksi: string }) {
       {minted?.kind === "requested" && (
         <p className="muted" style={{ fontSize: 12.5 }} data-testid="collect-requested">
           requested {minted.recipe_id} — nonce <span className="mono">{minted.nonce.slice(0, 8)}…</span>, {minted.steps.length} step(s); signed into the ledger as{" "}
-          <span className="mono">{minted.digest.slice(0, 12)}…</span>. Watch it on the Runs page.
+          {/* a request event, not a bundle: no /evidence page holds it; the Runs page does */}
+          <span className="mono" data-entity="ledger" title={minted.digest}>
+            {minted.digest.slice(0, 12)}…
+          </span>
+          . Watch it on the <Link href={scoped("/runs")}>Runs page</Link>.
         </p>
       )}
       {minted?.kind === "manual" && (

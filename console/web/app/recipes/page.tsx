@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DaemonStrip } from "../../components/DaemonStrip";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { PlainLanguage } from "../../components/PlainLanguage";
 import { RunHopLink } from "../../components/RunHopLink";
@@ -12,8 +12,10 @@ import { asOfRegisterRecord, toLocalInputValue, useAsOfBoard } from "../../lib/a
 import { explainUnevidenced, newestRunOf } from "../../lib/emptystate";
 import type { EmptyStateExplanation } from "../../lib/emptystate";
 import { csvFilename, downloadText, registerCsv } from "../../lib/export";
+import { evidenceHref, repoLabel } from "../../lib/links";
 import { getPb, useAuth, useCollection } from "../../lib/pb";
 import { describePointer } from "../../lib/pointers";
+import { useRepoScope } from "../../lib/scope";
 import { controlFamily, ksiTheme } from "../../lib/types";
 import type {
   BoardDiffResponse,
@@ -98,7 +100,10 @@ function Board() {
   // returning anything but sentences.
   const runs = useCollection<ScanRunRecord>("scan_runs");
   const [state, setState] = useState<RegisterState | "all">("all");
-  const [repo, setRepo] = useState("all");
+  // the repo is the console's scope (U-R5), not a filter of this page's own
+  const { repo } = useRepoScope();
+  // ?recipe= names one cell of the scoped repo: marked, opened, in view (U0)
+  const linkedRecipe = useSearchParams().get("recipe");
   const [theme, setTheme] = useState("all");
   const [family, setFamily] = useState("all");
   // "since baseline" (I2d): null = off; "previous" or a scan instant = on
@@ -116,6 +121,7 @@ function Board() {
   // the diff is computed server-side by the SAME code the CLI runs
   // (computeBoardDiff — two as-of folds of the ledger). Refetched whenever
   // the projection moves, so the badges never describe a stale board.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: projectedAt is the refetch trigger, not an input
   useEffect(() => {
     if (!since) {
       setDiffData(null);
@@ -153,7 +159,6 @@ function Board() {
     [historical, asOfData, records],
   );
 
-  const repos = useMemo(() => [...new Set(rows.map((r) => r.repo))].sort(), [rows]);
   const themes = useMemo(
     () => [...new Set(rows.flatMap((r) => r.ksi_ids.map(ksiTheme)))].sort(),
     [rows],
@@ -171,7 +176,7 @@ function Board() {
   // exported exactly the filtered rows, disagreed with the chip above it.
   const scoped = rows.filter(
     (r) =>
-      (repo === "all" || r.repo === repo) &&
+      (repo === null || r.repo === repo) &&
       (theme === "all" || r.ksi_ids.some((k) => ksiTheme(k) === theme)) &&
       (family === "all" || r.control_ids.some((c) => controlFamily(c) === family)) &&
       (!since || !changedOnly || changeByCell.has(`${r.repo} ${r.recipe_id}`)),
@@ -193,7 +198,7 @@ function Board() {
       <div className="filters">
         <div className="tabs">
           {STATES.map((s) => (
-            <button
+            <button type="button"
               key={s.key}
               className={state === s.key ? "active" : ""}
               onClick={() => setState(s.key)}
@@ -205,12 +210,6 @@ function Board() {
             </button>
           ))}
         </div>
-        <select value={repo} onChange={(e) => setRepo(e.target.value)}>
-          <option value="all">all repos</option>
-          {repos.map((r) => (
-            <option key={r}>{r}</option>
-          ))}
-        </select>
         <select value={theme} onChange={(e) => setTheme(e.target.value)}>
           <option value="all">all KSI themes</option>
           {themes.map((t) => (
@@ -224,7 +223,7 @@ function Board() {
           ))}
         </select>
         {!historical && (
-          <button
+          <button type="button"
             className={`btn${since ? " primary" : ""}`}
             onClick={() => {
               setSince(since ? null : "previous");
@@ -247,7 +246,7 @@ function Board() {
               ))}
           </select>
         )}
-        <button
+        <button type="button"
           className={`btn${historical ? " primary" : ""}`}
           onClick={() => {
             // the two lenses on the past are exclusive: turning the as-of
@@ -285,7 +284,7 @@ function Board() {
             )}
           </>
         )}
-        <button
+        <button type="button"
           className="btn"
           title="the rows on screen, filters and as-of instant included"
           disabled={filtered.length === 0}
@@ -354,7 +353,7 @@ function Board() {
                   jargon a reader meets, and a term with no entry renders as
                   plain text rather than an empty tooltip */}
               <th><Term>recipe</Term></th>
-              <th>Repo</th>
+              {repo === null && <th>Repo</th>}
               <th><Term name="KSI">KSIs</Term></th>
               <th><Term name="control">Controls</Term></th>
               <th><Term name="MVX window">Fresh</Term></th>
@@ -368,6 +367,8 @@ function Board() {
                 row={row}
                 change={since ? changeByCell.get(`${row.repo} ${row.recipe_id}`) : undefined}
                 historical={historical}
+                showRepo={repo === null}
+                linked={linkedRecipe === row.recipe_id && repo !== null}
                 why={
                   // a historical fold is explained by the run log of TODAY,
                   // which is not the world those rows came from — same reason
@@ -385,7 +386,7 @@ function Board() {
             ))}
             {!loading && (!historical || asOfData !== null) && filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="empty">
+                <td colSpan={repo === null ? 7 : 6} className="empty">
                   {historical
                     ? "nothing in this register as of this instant — no ledger statement at or before it"
                     : `nothing in this register${records.length === 0 ? " — no projection yet" : ""}`}
@@ -431,7 +432,7 @@ function DiffSummary({
           <span className="faint">{diff.unchanged} unchanged</span>
           {removed.length > 0 && (
             <span className="faint">
-              removed: {removed.map((c) => `${c.recipeId} (${c.repo})`).join(", ")}
+              removed: {removed.map((c) => `${c.recipeId} (${repoLabel(c.repo)})`).join(", ")}
             </span>
           )}
           <label className="muted" style={{ marginLeft: "auto", cursor: "pointer" }}>
@@ -452,12 +453,18 @@ function RegisterRowView({
   row,
   change,
   historical = false,
+  showRepo = false,
+  linked = false,
   why = null,
 }: {
   row: RegisterRecord;
   change?: RegisterChange;
   /** an as-of row (I3d): a historical fold offers no actions to take today */
   historical?: boolean;
+  /** only under "all repos" does a row need to say whose it is (U-R5) */
+  showRepo?: boolean;
+  /** the cell a `?recipe=` link named: arrives marked, explained and in view */
+  linked?: boolean;
   /** why this empty row is empty (K1), or null when it needs no explaining */
   why?: EmptyStateExplanation | null;
 }) {
@@ -466,14 +473,26 @@ function RegisterRowView({
   // the plain-language paragraphs (K1) ride every row and stay COLLAPSED: the
   // board is a scanning surface, and prose on fifteen rows at once would make
   // the one row an operator came for harder to find, not easier
-  const [explaining, setExplaining] = useState(false);
-  const open = row.bundle_digest
-    ? () => router.push(`/evidence/${row.bundle_digest}`)
-    : undefined;
+  const [explaining, setExplaining] = useState(linked && row.plain !== null && row.plain !== undefined);
+  const rowRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (linked) rowRef.current?.scrollIntoView({ block: "start" });
+  }, [linked]);
+  const cols = showRepo ? 7 : 6;
+  const digest = row.bundle_digest;
+  const open = digest ? () => router.push(evidenceHref(digest)) : undefined;
 
   return (
     <>
-      <tr className={open ? "rowlink" : ""} onClick={open}>
+      <tr
+        ref={rowRef}
+        id={`recipe-${row.recipe_id}`}
+        className={`${open ? "rowlink" : ""} ${linked ? "linked" : ""}`}
+        onClick={open}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") open?.();
+        }}
+      >
         <td>
           <span className={`pill ${row.state}`}>
             <Term name={row.state}>{row.state === "notApplicable" ? "n/a" : row.state}</Term>
@@ -510,37 +529,31 @@ function RegisterRowView({
             </span>
           )}
         </td>
-        <td className="mono">{row.recipe_id}</td>
-        <td className="muted">{row.repo}</td>
+        {/* the row IS this check: its id names it rather than linking away,
+            and the row's own click goes one level down to the evidence */}
+        <td className="mono">
+          <span data-entity="check">{row.recipe_id}</span>
+        </td>
+        {showRepo && (
+          <td className="muted">
+            <RepoName repo={row.repo} />
+          </td>
+        )}
         <td className="mono faint">
           {/* recipe → KSI/control hop (I3a): each id opens its register rollup */}
           {row.ksi_ids.map((k) => (
-            <Link
-              key={k}
-              href={`/controls?reg=ksis&id=${encodeURIComponent(k)}`}
-              onClick={(e) => e.stopPropagation()}
-              style={{ marginRight: 8 }}
-            >
-              {k}
-            </Link>
+            <EntityLink key={k} kind="ksi" id={k} className="" style={{ marginRight: 8 }} />
           ))}
         </td>
         <td className="mono faint">
           {row.control_ids.map((c) => (
-            <Link
-              key={c}
-              href={`/controls?reg=controls&id=${encodeURIComponent(c)}`}
-              onClick={(e) => e.stopPropagation()}
-              style={{ marginRight: 8 }}
-            >
-              {c}
-            </Link>
+            <EntityLink key={c} kind="control" id={c} repo={row.repo} className="" style={{ marginRight: 8 }} />
           ))}
         </td>
         <td className="muted">
           {row.fresh_as_of ? `${formatAge(row.fresh_as_of)} ago` : "—"}
         </td>
-        <td onClick={(e) => e.stopPropagation()}>
+        <td onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           {/* K1: authored operator English about the check, one click away and
               beside the row's other question ("how was this produced?").
               Rendered only where the catalog carries it — a recipe that left
@@ -549,7 +562,7 @@ function RegisterRowView({
               recipe cell is a click target and an accessible name that other
               surfaces match on, and a button inside it would change both. */}
           {row.plain && (
-            <button
+            <button type="button"
               className="plainbtn"
               aria-expanded={explaining}
               title="what this check means, in plain English"
@@ -562,7 +575,7 @@ function RegisterRowView({
               for an empty row, which run failed to produce it */}
           <RunHopLink row={row} historical={historical} />
           {row.state === "unevidenced" && !historical && (
-            <button className="btn" onClick={() => setProposing((p) => !p)}>
+            <button type="button" className="btn" onClick={() => setProposing((p) => !p)}>
               propose N/A
             </button>
           )}
@@ -575,7 +588,7 @@ function RegisterRowView({
       </tr>
       {explaining && row.plain && (
         <tr className="plain-row">
-          <td colSpan={7} onClick={(e) => e.stopPropagation()}>
+          <td colSpan={cols} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <PlainLanguage plain={row.plain} recipeId={row.recipe_id} />
           </td>
         </tr>
@@ -585,13 +598,17 @@ function RegisterRowView({
           changes it — this cell is unevidenced with or without the sentence. */}
       {why && (
         <tr className="why-row">
-          <td colSpan={7} onClick={(e) => e.stopPropagation()}>
+          <td colSpan={cols} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <span className="why-reason">{why.reason}</span>{" "}
             {why.action !== "" && <span className="why-action">→ {why.action}</span>}{" "}
             <span className="why-src">
-              {why.runId
-                ? `read from the run record of ${why.runId}`
-                : "read from this projection's run records"}
+              {why.runId ? (
+                <>
+                  read from the run record of <EntityLink kind="run" scan={why.runId} className="" />
+                </>
+              ) : (
+                "read from this projection's run records"
+              )}
               {why.actionable ? "" : " · not a task — recorded so the empty row is not a mystery"}
             </span>
           </td>
@@ -599,7 +616,7 @@ function RegisterRowView({
       )}
       {proposing && (
         <tr>
-          <td colSpan={7} onClick={(e) => e.stopPropagation()}>
+          <td colSpan={cols} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <ProposeForm row={row} done={() => setProposing(false)} />
           </td>
         </tr>
@@ -607,17 +624,23 @@ function RegisterRowView({
       {row.state === "violated" && ((row.pointers?.length ?? 0) > 0 || row.introducing_commit) && (
         // the fix pointers (I2c): where the violation lives + when it arrived,
         // on the row itself — the evidence page has the full offender list
-        <tr className={open ? "rowlink" : ""} onClick={open}>
-          <td colSpan={7} className="pointer-row" style={{ fontSize: 12.5 }}>
-            {(row.pointers ?? []).map((p, i) => (
-              <span key={i} className="mono pointer">
+        <tr
+          className={open ? "rowlink" : ""}
+          onClick={open}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") open?.();
+          }}
+        >
+          <td colSpan={cols} className="pointer-row" style={{ fontSize: 12.5 }}>
+            {(row.pointers ?? []).map((p) => (
+              <span key={describePointer(p)} className="mono pointer">
                 {describePointer(p)}
               </span>
             ))}
             {row.introducing_commit && (
               <span className="faint">
                 violating since {formatAge(row.introduced_at)} ago · first seen at commit{" "}
-                <span className="mono">{row.introducing_commit.slice(0, 12)}</span>
+                <EntityLink kind="commit" sha={row.introducing_commit} />
               </span>
             )}
           </td>
@@ -625,10 +648,10 @@ function RegisterRowView({
       )}
       {row.state === "notApplicable" && row.scoping && (
         <tr>
-          <td colSpan={7} className="faint" style={{ fontSize: 12.5 }}>
+          <td colSpan={cols} className="faint" style={{ fontSize: 12.5 }}>
             scoped not-applicable · “{row.scoping.justification}” — proposed{" "}
             {row.scoping.proposedBy}, approved {row.scoping.approvedBy} ·{" "}
-            <span className="mono">{row.scoping.digest.slice(0, 16)}…</span>
+            <EntityLink kind="evidence" digest={row.scoping.digest} />
           </td>
         </tr>
       )}
@@ -668,7 +691,7 @@ function ProposeForm({ row, done }: { row: RegisterRecord; done: () => void }) {
   return (
     <div style={{ padding: "6px 0 10px" }}>
       <p className="muted" style={{ margin: "0 0 8px" }}>
-        Propose <code>{row.recipe_id}</code> as not applicable to <code>{row.repo}</code>. The
+        Propose <code>{row.recipe_id}</code> as not applicable to <RepoName repo={row.repo} className="mono" />. The
         justification is what the approver signs.
       </p>
       <textarea
@@ -678,14 +701,14 @@ function ProposeForm({ row, done }: { row: RegisterRecord; done: () => void }) {
         onChange={(e) => setJustification(e.target.value)}
       />
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-        <button
+        <button type="button"
           className="btn primary"
           disabled={busy || justification.trim().length === 0}
           onClick={submit}
         >
           file proposal
         </button>
-        <button className="btn" onClick={done}>
+        <button type="button" className="btn" onClick={done}>
           cancel
         </button>
       </div>

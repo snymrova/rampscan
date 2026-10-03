@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { DownloadButton } from "../../../components/DownloadButton";
+import { EntityLink, RepoName } from "../../../components/EntityLink";
 import { RequireAuth } from "../../../components/guard";
 import { getPb } from "../../../lib/pb";
 
@@ -127,10 +128,15 @@ function ArtifactBody({ digest }: { digest: string }) {
   return (
     <>
       <h1>
-        {predicate.ksi_id} · artifact {predicate.artifact}
+        <EntityLink kind="ksi" id={predicate.ksi_id} repo={predicate.repo} className="" /> · artifact{" "}
+        {predicate.artifact}
       </h1>
       <p className="muted">
-        {predicate.repo} · <span className="mono">{predicate.body_digest.slice(0, 16)}…</span> ·{" "}
+        <RepoName repo={predicate.repo} /> ·{" "}
+        <span className="mono" data-entity="digest" title={predicate.body_digest}>
+          {predicate.body_digest.slice(0, 16)}…
+        </span>{" "}
+        ·{" "}
         {bytes} bytes
       </p>
 
@@ -230,9 +236,7 @@ function ArtifactBody({ digest }: { digest: string }) {
           </Row>
           {predicate.supersedes && (
             <Row label="supersedes">
-              <Link href={`/artifacts/${predicate.supersedes}`} className="mono">
-                {predicate.supersedes.slice(0, 16)}…
-              </Link>
+              <EntityLink kind="artifact" digest={predicate.supersedes} />
               <div className="faint" style={{ fontSize: 11.5, marginTop: 2 }}>
                 the body these bytes revise. An append-only ledger revises by writing again — the
                 earlier statement is still in the ledger, and a judgment of it does not reach here

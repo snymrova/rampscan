@@ -1,3 +1,4 @@
+import { checkHref, runHref } from "./links";
 import type { ClaimBasisRecord, CollectorRunRecord, ScanRunRecord } from "./types";
 
 // The provenance chain (plan J5) and the gate basis (I3f) — pure derivations
@@ -168,9 +169,8 @@ export function provenanceChain(input: ChainInput): ChainHop[] {
       input.controlIds.length > 0
         ? `the check this evidence answers — mapped to ${input.controlIds.join(", ")}`
         : "the check this evidence answers",
-    ...(input.controlIds[0]
-      ? { href: `/controls?reg=controls&id=${encodeURIComponent(input.controlIds[0])}` }
-      : {}),
+    // the check itself, on this bundle's repo (U-R1) — its controls are named above
+    href: checkHref(input.recipeId, input.repo),
   });
 
   if (input.collector === "") {
@@ -185,7 +185,7 @@ export function provenanceChain(input: ChainInput): ChainHop[] {
       kind: "collector",
       label: input.collector,
       detail: "the collector that produced this evidence, as the signed predicate names it",
-      href: `/runs?scan=${encodeURIComponent(input.runId)}&collector=${encodeURIComponent(input.collector)}`,
+      href: runHref({ scan: input.runId, collector: input.collector }),
     });
   }
 
@@ -227,7 +227,7 @@ export function provenanceChain(input: ChainInput): ChainHop[] {
             detail: t.through
               ? `${t.runtime} — reached through ${t.artifact}, produced by ${t.through} in this run`
               : t.runtime,
-            href: `/runs?scan=${encodeURIComponent(input.runId)}&collector=${encodeURIComponent(t.through ?? input.collector)}`,
+            href: runHref({ scan: input.runId, collector: t.through ?? input.collector }),
           });
         }
       }

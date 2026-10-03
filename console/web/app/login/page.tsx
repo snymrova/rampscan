@@ -1,11 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { safeNext } from "../../lib/links";
 import { getPb } from "../../lib/pb";
 
 export default function LoginPage() {
   const router = useRouter();
+  // where the reader was going when the guard stopped them (U0)
+  const next = safeNext(useSearchParams().get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +20,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await getPb().collection("users").authWithPassword(email, password);
-      router.replace("/");
+      router.replace(next);
     } catch {
       setError("sign-in failed — check email and password");
     } finally {
@@ -36,6 +39,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="username"
+          // biome-ignore lint/a11y/noAutofocus: the page is this one form; the cursor belongs in its first field
           autoFocus
         />
         <label htmlFor="password">Password</label>

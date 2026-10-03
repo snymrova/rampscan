@@ -34,7 +34,11 @@ const FIXTURE_REPO = resolve("fixtures/vulnerable-app");
 const BARE_REPO = resolve("fixtures/bare-app");
 
 async function pickRepo(page: Page, repo: string = FIXTURE_REPO): Promise<void> {
-  await page.locator("select").first().selectOption(repo);
+  // the repo is the console's scope since U0: one select in the nav, carried
+  // in the URL. Wait for the URL, or the next click can land on the rows of
+  // the scope being left (both repos have a cell of every name).
+  await page.getByLabel("repo scope").selectOption(repo);
+  await expect(page).toHaveURL(new RegExp(`[?&]repo=${encodeURIComponent(repo).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(&|$)`));
 }
 
 async function signIn(page: Page, email: string = VIEWER): Promise<void> {
@@ -82,9 +86,8 @@ test("KSI board: 46 rows always, a covered KSI expands to the interrogation view
 
   // a KSI the fixture scan evidences: expand → methods with declared scope,
   // the crosswalk drawer, and the hop to signed evidence (FRR-PVA-AA-06).
-  // The evidence column reads one repo; pick the tooled fixture explicitly
-  // (the board's selects are theme first, repo second).
-  await page.locator("select").nth(1).selectOption(FIXTURE_REPO);
+  // The evidence column reads one repo; pick the tooled fixture explicitly.
+  await pickRepo(page);
   const covered = page.locator("tr.rowlink", { hasText: "KSI-SCR-MIT" }).first();
   await covered.click();
   const drawer = page.locator("tr.plain-row").first();
@@ -99,7 +102,7 @@ test("artifact plane: an authored body reads in full, and the page has no way to
 }) => {
   await signIn(page);
   await page.goto("/");
-  await page.locator("select").nth(1).selectOption(FIXTURE_REPO);
+  await pickRepo(page);
 
   // the fixture declares artifact 1 of KSI-SVC-SIN and really has the file, so
   // the authored half of the plane reaches the board on a real scan
@@ -671,8 +674,8 @@ test("board hop: every row answers “how was this produced?”, and an empty ro
   // is the landing that shape produces against the real run record: no scan
   // named, so /runs substitutes the newest recorded scan of the repo and says
   // out loud that it did.
-  const repo = (await producedRows.first().locator("td").nth(2).innerText()).trim();
-  expect(repo).toBeTruthy();
+  // the repo is the scope just picked; a row names it only under "all repos" (U-R5)
+  const repo = FIXTURE_REPO;
   await page.goto(`/runs?repo=${encodeURIComponent(repo)}&collector=${hopCollector}`);
   const notice = page.locator(".notice");
   await expect(notice).toBeVisible();
@@ -868,7 +871,8 @@ test("provenance chain: the whole causal line, both directions, and the walk a n
   await expect(gateRow).toContainText("consumes");
   await expect(gateRow).toContainText("semgrep-results.json");
   await expect(gateRow.locator(".pill")).not.toContainText(["violated", "evidenced"]);
-  await gateRow.getByRole("link", { name: "no-reachable-dangerous-code" }).click();
+  // the recipe name opens its check (U-R1); the statement itself is the digest beside it
+  await gateRow.locator("a[data-entity='evidence']").first().click();
   await expect(page).toHaveURL(evidenceUrl, { timeout: 45_000 });
 
   // ── tooling health: history, and it says it is history ──────────────────
@@ -1366,7 +1370,7 @@ test("cloud runs: Collect evidence mints a request, a stub runner polls and post
   test.setTimeout(180_000);
   await signIn(page);
   await page.goto("/");
-  await page.locator("select").nth(1).selectOption(FIXTURE_REPO);
+  await pickRepo(page);
   const row = page.locator("tr.rowlink", { hasText: "KSI-IAM-APM" }).first();
   await row.click();
   const collect = page.getByTestId("collect-evidence");
@@ -1427,7 +1431,8 @@ test("cloud runs: Collect evidence mints a request, a stub runner polls and post
   await expect(runRow).toContainText("accepted from smoke-sidecar");
   // the evidence the intake minted, under the runner's identity: the register's own detail page.
   // Read the href and navigate — the section re-renders on its poll, and a click can land mid-render
-  const href = await runRow.locator("a[href^='/evidence/']").getAttribute("href");
+  // the recipe and the outcome both open that one bundle
+  const href = await runRow.locator("a[href^='/evidence/']").first().getAttribute("href");
   expect(href).toMatch(/^\/evidence\/[0-9a-f]{64}$/);
   await page.goto(href!);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("iam-credential-report", { timeout: 30_000 });

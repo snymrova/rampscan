@@ -50,6 +50,8 @@ export interface QueueItem {
    */
   plain?: string;
   bundleDigest?: string;
+  /** the full sha `detail` names by its first 12 characters, so a renderer can link it (U-R2) */
+  commit?: string;
 }
 
 interface DivergencePayload {
@@ -166,11 +168,8 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
     // to the commit alone, honestly unadorned
     const pointer = pointerSummary(row.pointers ?? []);
     const introducedAt = row.introducing_commit || null;
-    const commitNote = introducedAt
-      ? `first seen at commit ${introducedAt.slice(0, 12)}`
-      : event?.killing_commit
-        ? `at commit ${event.killing_commit.slice(0, 12)}`
-        : `at commit ${row.commit_sha.slice(0, 12)}`;
+    const commit = introducedAt ?? (event?.killing_commit || row.commit_sha);
+    const commitNote = `${introducedAt ? "first seen at" : "at"} commit ${commit.slice(0, 12)}`;
     const item: QueueItem = {
       kind: "new-violation",
       rank: 2,
@@ -185,6 +184,7 @@ export function deriveActionQueue(input: QueueInput): QueueItem[] {
       action: "open the evidence — the assertions and artifacts name exactly what failed",
     };
     if (row.bundle_digest) item.bundleDigest = row.bundle_digest;
+    if (commit) item.commit = commit;
     // what fixing this KIND of finding looks like, authored in the catalog
     // (K1) — the row above already says which one and where
     if (row.plain) item.plain = row.plain.fix;

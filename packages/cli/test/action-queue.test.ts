@@ -40,6 +40,7 @@ interface QueueModule {
     /** the recipe's authored "fixing it" sentence (K1) */
     plain?: string;
     bundleDigest?: string;
+    commit?: string;
   }>;
 }
 
@@ -249,6 +250,9 @@ describe("deriveActionQueue: the ranked list of record", () => {
     expect(item.detail).toBe(
       "detect-child-process — src/exec.ts:42 (+1 more) — first seen at commit beefbeef1111",
     );
+    // the sentence prints the short sha; the item carries the whole one, so
+    // the console can make that sha a link without re-parsing prose (U0)
+    expect(item.commit).toBe("beefbeef1111beefbeef");
   });
 
   it("fixable skips are queued with the doctor hint; honest skips never are", () => {

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { DownloadButton } from "../../components/DownloadButton";
+import { EntityLink, RepoName } from "../../components/EntityLink";
 import { RequireAuth } from "../../components/guard";
 import { RunHopLink } from "../../components/RunHopLink";
 import {
@@ -13,6 +13,8 @@ import {
   useAsOfBoard,
 } from "../../lib/asof";
 import { csvFilename, downloadText, rollupCsv } from "../../lib/export";
+import { evidenceHref } from "../../lib/links";
+import { useRepoScope } from "../../lib/scope";
 import { useCollection } from "../../lib/pb";
 import { formatAge } from "../../lib/mvx";
 import type { MetaRecord, RegisterRecord, RegisterState, RollupRecord } from "../../lib/types";
@@ -56,7 +58,9 @@ function Registers() {
   const registers = useCollection<RegisterRecord>("registers");
   const meta = useCollection<MetaRecord>("meta");
   const [state, setState] = useState<RegisterState | "all">("all");
-  const [repo, setRepo] = useState("all");
+  // the console's repo scope (U-R5); null is "all repos"
+  const { repo } = useRepoScope();
+  const showRepo = repo === null;
   // expansion override per row; unset rows fall back to the deep-linked id
   const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
   // "as of" (I3d): null = live rollups; an ISO instant = both registers
@@ -96,17 +100,16 @@ function Registers() {
     return map;
   }, [historical, asOfData, registers.records]);
 
-  const repos = useMemo(() => [...new Set(activeRows.map((r) => r.repo))].sort(), [activeRows]);
   // Every count on this page is a count of the rows a reader can SEE: the repo
   // filter narrows the register, so it narrows the numbers over it too. With
   // one repo on the board the difference was invisible; the moment a second
   // one existed (K1's bare-app), an unscoped "Controls 42" sat above 21 rows
   // and the CSV taken from the screen disagreed with the chip above it.
-  const scoped = activeRows.filter((r) => repo === "all" || r.repo === repo);
+  const scoped = activeRows.filter((r) => repo === null || r.repo === repo);
   const filtered = scoped.filter((r) => state === "all" || r.state === state);
   const count = (s: RegisterState) => scoped.filter((r) => r.state === s).length;
   const regCount = (rows: RollupRecord[]) =>
-    rows.filter((r) => repo === "all" || r.repo === repo).length;
+    rows.filter((r) => repo === null || r.repo === repo).length;
 
   return (
     <>
@@ -121,16 +124,16 @@ function Registers() {
 
       <div className="filters">
         <div className="tabs">
-          <button className={reg === "controls" ? "active" : ""} onClick={() => setReg("controls")}>
+          <button type="button" className={reg === "controls" ? "active" : ""} onClick={() => setReg("controls")}>
             Controls<span className="count">{regCount(controlRows)}</span>
           </button>
-          <button className={reg === "ksis" ? "active" : ""} onClick={() => setReg("ksis")}>
+          <button type="button" className={reg === "ksis" ? "active" : ""} onClick={() => setReg("ksis")}>
             KSIs<span className="count">{regCount(ksiRows)}</span>
           </button>
         </div>
         <div className="tabs">
           {STATES.map((s) => (
-            <button
+            <button type="button"
               key={s.key}
               className={state === s.key ? "active" : ""}
               onClick={() => setState(s.key)}
@@ -140,15 +143,7 @@ function Registers() {
             </button>
           ))}
         </div>
-        {repos.length > 1 && (
-          <select value={repo} onChange={(e) => setRepo(e.target.value)}>
-            <option value="all">all repos</option>
-            {repos.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        )}
-        <button
+        <button type="button"
           className={`btn${historical ? " primary" : ""}`}
           onClick={() => setAsOf(historical ? null : new Date().toISOString())}
         >
@@ -180,7 +175,7 @@ function Registers() {
             )}
           </>
         )}
-        <button
+        <button type="button"
           className="btn"
           title="the rollup rows on screen, filters and as-of instant included"
           disabled={filtered.length === 0}
@@ -225,7 +220,7 @@ function Registers() {
             <tr>
               <th>State</th>
               <th>{reg === "controls" ? "Control" : "KSI"}</th>
-              <th>Repo</th>
+              {showRepo && <th>Repo</th>}
               <th>Coverage</th>
               <th>Recipes</th>
               <th>Package</th>
@@ -250,6 +245,7 @@ function Registers() {
                   registerByCell={registerByCell}
                   reg={reg}
                   historical={historical}
+                  showRepo={showRepo}
                 />
               );
             })}
@@ -277,6 +273,7 @@ function RollupRowView({
   registerByCell,
   reg,
   historical,
+  showRepo,
 }: {
   row: RollupRecord;
   linked: boolean;
@@ -285,6 +282,8 @@ function RollupRowView({
   registerByCell: Map<string, RegisterRecord>;
   reg: RegKind;
   historical: boolean;
+  /** only under "all repos" does a row say whose it is (U-R5) */
+  showRepo: boolean;
 }) {
   const recipeIds = row.recipe_ids ?? [];
   const c = row.counts;
@@ -296,8 +295,19 @@ function RollupRowView({
             {row.state === "notApplicable" ? "n/a" : row.state}
           </span>
         </td>
-        <td className="mono">{row.rollup_id}</td>
-        <td className="muted">{row.repo}</td>
+        <td className="mono">
+          {/* the row IS this control or KSI; a KSI also has its board row (L2) */}
+          {reg === "ksis" ? (
+            <EntityLink kind="ksi" id={row.rollup_id} repo={row.repo} />
+          ) : (
+            <span data-entity="control">{row.rollup_id}</span>
+          )}
+        </td>
+        {showRepo && (
+          <td className="muted">
+            <RepoName repo={row.repo} />
+          </td>
+        )}
         <td>
           <span className="muted">
             {c.evidenced} of {c.total} mapped recipe{c.total === 1 ? "" : "s"} evidenced
@@ -332,6 +342,8 @@ function RollupRowView({
             recipeId={recipeId}
             register={registerByCell.get(`${row.repo} ${recipeId}`)}
             historical={historical}
+            repo={row.repo}
+            showRepo={showRepo}
           />
         ))}
     </>
@@ -342,15 +354,19 @@ function RecipeSubRow({
   recipeId,
   register,
   historical,
+  repo,
+  showRepo,
 }: {
   recipeId: string;
   register: RegisterRecord | undefined;
   /** an as-of fold (I3d): /runs reads the live projection, so no hop from history */
   historical: boolean;
+  repo: string;
+  showRepo: boolean;
 }) {
   const router = useRouter();
   const digest = register?.bundle_digest;
-  const open = digest ? () => router.push(`/evidence/${digest}`) : undefined;
+  const open = digest ? () => router.push(evidenceHref(digest)) : undefined;
   return (
     <tr className={open ? "rowlink" : ""} onClick={open} style={{ fontSize: 12.5 }}>
       <td>
@@ -365,22 +381,20 @@ function RecipeSubRow({
         )}
       </td>
       <td className="mono" style={{ paddingLeft: 32 }}>
-        {recipeId}
+        <EntityLink kind="check" recipe={recipeId} repo={repo} />
       </td>
-      <td />
+      {showRepo && <td />}
       <td className="muted">
         {register?.fresh_as_of ? `fresh ${formatAge(register.fresh_as_of)} ago` : "—"}
       </td>
       <td className="mono faint">
         {digest ? (
-          <Link href={`/evidence/${digest}`} onClick={(e) => e.stopPropagation()}>
-            {digest.slice(0, 16)}…
-          </Link>
+          <EntityLink kind="evidence" digest={digest} className="" />
         ) : (
           "no bundle"
         )}
       </td>
-      <td onClick={(e) => e.stopPropagation()}>
+      <td onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         {/* the same hop the board carries (J3) — an unevidenced recipe under a
             control is exactly the row whose "why" the auditor asks about */}
         {register && <RunHopLink row={register} historical={historical} />}

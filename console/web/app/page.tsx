@@ -1,13 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DaemonStrip } from "../components/DaemonStrip";
 import { CollectEvidence } from "../components/CollectEvidence";
+import { EntityLink, RepoName } from "../components/EntityLink";
 import { RequireAuth } from "../components/guard";
 import { Term } from "../components/Term";
 import { formatAge } from "../lib/mvx";
 import { getPb, useAuth, useCollection } from "../lib/pb";
+import { useRepoScope } from "../lib/scope";
 import type {
   ArtifactCellRecord,
   KsiCatalogRecord,
@@ -53,12 +55,12 @@ function KsiBoard() {
   const meta = useCollection<MetaRecord>("meta");
   const metaRow = meta.records[0];
 
-  const repos = useMemo(
-    () => [...new Set(registers.records.map((r) => r.repo))].sort(),
-    [registers.records],
-  );
-  const [repoChoice, setRepoChoice] = useState<string | null>(null);
-  const repo = repoChoice ?? repos[0] ?? null;
+  // the board reads ONE repo: the console's scope (U-R5), or under "all
+  // repos" the newest-scanned one, said out loud below
+  const scope = useRepoScope();
+  const repo = scope.repo ?? scope.fallback;
+  // ?ksi= opens and scrolls to one row (U0) — until U1 gives a KSI its own page
+  const linkedKsi = useSearchParams().get("ksi");
   const [themeFilter, setThemeFilter] = useState("all");
 
   const byKsi = useMemo(
@@ -118,9 +120,14 @@ function KsiBoard() {
               covering all {summary.total} — a row with nothing to say is still a row
             </span>
             {summary.optional.length > 0 && (
-              <span className="muted" title={summary.optional.join(", ")}>
-                {summary.optional.length} optional at class {certClass}, outside every
-                meter — {summary.optional.join(", ")}
+              <span className="muted">
+                {summary.optional.length} optional at class {certClass}, outside every meter —{" "}
+                {summary.optional.map((k, i) => (
+                  <span key={k}>
+                    {i > 0 && ", "}
+                    <EntityLink kind="ksi" id={k} className="" />
+                  </span>
+                ))}
               </span>
             )}
           </>
@@ -135,14 +142,13 @@ function KsiBoard() {
             <option key={t}>{t}</option>
           ))}
         </select>
-        {repos.length > 1 && (
-          <select value={repo ?? ""} onChange={(e) => setRepoChoice(e.target.value)}>
-            {repos.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        )}
       </div>
+      {scope.repo === null && repo && (
+        <p className="muted" style={{ margin: "0 0 12px" }}>
+          The board reads one repository at a time; under all repos it shows the newest scanned,{" "}
+          <RepoName repo={repo} />.
+        </p>
+      )}
 
       {(catalog.error ?? registers.error) && (
         <p className="error">{catalog.error ?? registers.error}</p>
@@ -166,6 +172,7 @@ function KsiBoard() {
                 entry={k}
                 register={byKsi.get(k.ksi)}
                 optional={isOptional(k)}
+                linked={linkedKsi === k.ksi}
               />
             ))}
             {!catalog.loading && rows.length === 0 && (
@@ -187,14 +194,23 @@ function KsiRowView({
   entry,
   register,
   optional,
+  linked = false,
 }: {
   entry: KsiCatalogRecord;
   register: MethodRegisterRecord | undefined;
   /** this class does not oblige the indicator (R0.2, §13.7) — shown, not hidden */
   optional?: boolean;
+  /** the row a `?ksi=` link named: arrives open and in view */
+  linked?: boolean;
 }) {
   // the interrogation view is the DEFAULT detail view: one click on the row
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(linked);
+  const rowRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (!linked) return;
+    setOpen(true);
+    rowRef.current?.scrollIntoView({ block: "start" });
+  }, [linked]);
   const methods = register?.methods ?? [];
   const floor = register?.method_floor ?? null;
   const automated = register?.automated_methods ?? 0;
@@ -202,8 +218,17 @@ function KsiRowView({
 
   return (
     <>
-      <tr className="rowlink" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <td className="mono">{entry.ksi}</td>
+      <tr
+        ref={rowRef}
+        id={entry.ksi}
+        className={`rowlink ${linked ? "linked" : ""}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        {/* the row IS this KSI: its id names it, the row's click opens it */}
+        <td className="mono" data-entity="ksi">
+          {entry.ksi}
+        </td>
         <td className="muted">
           {entry.name}
           {optional === true && <span className="muted"> · optional at this class</span>}
@@ -270,7 +295,7 @@ function KsiRowView({
                 </thead>
                 <tbody>
                   {methods.map((m) => (
-                    <MethodRowView key={m.methodId} method={m} />
+                    <MethodRowView key={m.methodId} method={m} repo={register?.repo ?? ""} />
                   ))}
                 </tbody>
               </table>
@@ -316,15 +341,7 @@ function KsiRowView({
             <p className="faint" style={{ margin: "4px 0" }}>
               <Term name="control">controls crosswalk</Term>:{" "}
               {entry.controls.map((c) => (
-                <Link
-                  key={c}
-                  href={`/controls?reg=controls&id=${encodeURIComponent(c)}`}
-                  className="mono"
-                  style={{ marginRight: 8 }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {c}
-                </Link>
+                <EntityLink key={c} kind="control" id={c} repo={register?.repo} style={{ marginRight: 8 }} />
               ))}
             </p>
           </td>
@@ -426,17 +443,15 @@ function ArtifactRowView({
                 {/* the artifact's own read-only page (R1.6) — NOT /evidence,
                     which reads the projection's bundles collection and holds no
                     artifact statement */}
-                <Link href={`/artifacts/${cell.body.digest}`} className="mono">
+                <EntityLink kind="artifact" digest={cell.body.digest}>
                   {cell.body.bodyDigest.slice(0, 12)}…
-                </Link>
+                </EntityLink>
               </>
             )}
             {cell.judgment && (
               <>
                 {" "}·{" "}
-                <Link href={`/evidence/${cell.judgment.digest}`} className="mono">
-                  {cell.judgment.digest.slice(0, 12)}…
-                </Link>
+                <EntityLink kind="evidence" digest={cell.judgment.digest} />
               </>
             )}
             {/* R1.1: a judgment names the bytes it approved (§13.6), so there
@@ -534,7 +549,7 @@ function ProposeJudgmentForm({
           <option value="sufficient">sufficient</option>
           <option value="insufficient">insufficient</option>
         </select>{" "}
-        for <code>{repo}</code>. The justification is what the approver signs.
+        for <RepoName repo={repo} className="mono" />. The justification is what the approver signs.
       </p>
       <textarea
         rows={2}
@@ -561,7 +576,7 @@ function ProposeJudgmentForm({
 }
 
 /** one method, interrogable: what walked, what it claims, where the signature is */
-function MethodRowView({ method }: { method: MethodCellRecord }) {
+function MethodRowView({ method, repo }: { method: MethodCellRecord; repo: string }) {
   return (
     <tr>
       <td>
@@ -569,7 +584,16 @@ function MethodRowView({ method }: { method: MethodCellRecord }) {
           {method.state === "notApplicable" ? "n/a" : method.state}
         </span>
       </td>
-      <td className="mono">{method.methodId}</td>
+      <td className="mono">
+        {/* a pipeline method IS its recipe's cell on this repo — one level down (L3) */}
+        {method.recipeId ? (
+          <EntityLink kind="check" recipe={method.recipeId} repo={repo}>
+            {method.methodId}
+          </EntityLink>
+        ) : (
+          method.methodId
+        )}
+      </td>
       <td className="muted">
         {method.source}
         {method.automated ? "" : " · not automated"}
@@ -587,9 +611,9 @@ function MethodRowView({ method }: { method: MethodCellRecord }) {
       <td className="muted">{method.freshAsOf ? `${formatAge(method.freshAsOf)} ago` : "—"}</td>
       <td>
         {method.bundleDigest ? (
-          <Link href={`/evidence/${method.bundleDigest}`} className="mono">
+          <EntityLink kind="evidence" digest={method.bundleDigest}>
             evidence → {method.bundleDigest.slice(0, 12)}…
-          </Link>
+          </EntityLink>
         ) : (
           <span className="faint">no live evidence</span>
         )}
