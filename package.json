@@ -17,10 +17,10 @@
     "rampscan": "tsx packages/cli/src/main.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.13",
+    "@biomejs/biome": "^2.5.15",
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.1",
-    "tsx": "^4.23.13",
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0",
     "vitest": "^4.1.10"
   }
