@@ -22,7 +22,12 @@ export * from "./sbom.js";
 // recorded as an opaque import, so a gate refuses a negative over a walk that
 // reached one; a workspace package's `exports` is walked whole, every
 // condition target an entry (S4-1)
-export const GRAPH_VERSION = "0.6.0";
+// 0.7.0: a bare specifier is resolved through tsconfig/jsconfig `paths` and
+// `baseUrl`, a manifest's `imports` and its npm aliases before it is read as a
+// package; a call's callee is walked, `import x = require()` is an import,
+// `new Worker(…)` and `child_process.fork(…)` are loads, and an import of
+// code that resolves to no walked file is recorded as opaque (S5-2)
+export const GRAPH_VERSION = "0.7.0";
 
 /** tool version string for manifests/bundles: extractor + the parser it rides on */
 export function graphToolVersion(): string {

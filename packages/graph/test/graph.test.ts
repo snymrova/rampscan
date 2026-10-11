@@ -595,7 +595,7 @@ describe("graph.db provenance", () => {
   });
 
   it("tool version pins the extractor and the parser", () => {
-    expect(graphToolVersion()).toMatch(/^0\.6\.0\+ts\d/);
+    expect(graphToolVersion()).toMatch(/^0\.7\.0\+ts\d/);
   });
 });
 

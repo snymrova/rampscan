@@ -387,7 +387,8 @@ describe("S5-1 — a SAST hit in an unreached file is waived only when every cha
     const { out, row } = await gate(
       {
         "package.json": MANIFEST,
-        "tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./*"] } } }),
+        // a bundler alias the extractor does not read (it reads tsconfig `paths` since S5-2)
+        "vite.config.mjs": 'export default { resolve: { alias: { "@": "/" } } };\n',
         "src/main.js": 'const run = require("@/lib/run");\nmodule.exports = (q) => run(q);\n',
         "lib/run.js": EVAL,
       },

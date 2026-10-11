@@ -169,7 +169,7 @@ export interface ClaimScope {
   entrypoint_source: string;
   application_roots?: Array<{ dir: string; name?: string; walked: boolean }>;
   entrypoints_excluded?: Array<{ file: string; via: string; root: string; reached: boolean }>;
-  opaque_imports?: Array<{ file: string; line: number; form: "require" | "import()"; reached: boolean }>;
+  opaque_imports?: Array<{ file: string; line: number; form: "require" | "import()" | "unresolved" | "worker" | "fork"; reached: boolean }>;
 }
 
 export interface WalkWidth {
