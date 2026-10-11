@@ -2,27 +2,31 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
 import type { ClaimBasis, Finding } from "@rampscan/schema";
+import type { ChainOrigin } from "@rampscan/graph";
 import {
   GRAPH_CONFIG_FILE,
   GRAPH_DB_ARTIFACT,
   GRAPH_VERSION,
   entryRoots,
+  LoaderIndex,
   fileId,
   graphShape,
+  groundHolds,
   labelPath,
   openGraphDb,
   reachableSet,
   readGraphMeta,
   shortestPath,
 } from "@rampscan/graph";
-import { walkWidth } from "./scope.js";
+import { unprovenImportersNote, walkWidth } from "./scope.js";
 import { SEMGREP_RESULTS_ARTIFACT, SemgrepResults } from "./semgrep.js";
 import { fileSha256, makeFinding, sha256 } from "./support.js";
 
 // sast-reachability — M4's flagship move generalized from advisories to code
 // findings: semgrep-results.json × graph.db → gated SAST rows. A hit in a
 // file reachable from an entry point → violated, with the call path as the
-// artifact; a hit in a file even the loose walk cannot reach → not_affected,
+// artifact; a hit in a file even the loose walk cannot reach, and that only
+// tests load (S5-1) → not_affected,
 // with the non-path as the reason. Same approximation direction as the
 // advisory gate (over-approximate: every edge kind counts), because
 // not_affected is a claim and claims lean conservative. No graph, no entry
@@ -42,7 +46,7 @@ export const SAST_GATE_VERSION = "0.3.0";
  * against us rather than for us.
  */
 export const OVER_APPROXIMATION_STATEMENT =
-  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the file. Unknowns count against us: a file the graph never saw, a missing graph, or no detectable entry point all make the hit COUNT, never waive it. A negative claim is as wide as the application roots the walk entered: where the tree declares a package root that no entry point covers, not_affected is refused for the whole run and the reason is recorded.";
+  "not_affected only when the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach the file. Unknowns count against us: a file the graph never saw, a missing graph, or no detectable entry point all make the hit COUNT, never waive it. A negative claim is as wide as the application roots the walk entered: where the tree declares a package root that no entry point covers, not_affected is refused for the whole run and the reason is recorded. And a miss is a negative only when every chain into the file begins at a test: a file nothing in the graph loads is what dead code looks like and also what a load the extractor does not model looks like, so the hit COUNTS.";
 
 export const sastGate: Collector = {
   manifest: {
@@ -80,6 +84,8 @@ export const sastGate: Collector = {
       let roots: string[] = [];
       let reach: Set<string> | undefined;
       let hasNode: ((rel: string) => boolean) | undefined;
+      // where chains into an unreached file begin (S5-1)
+      let loaders: LoaderIndex | undefined;
       let gateNote: string | undefined;
       // the width of the walk (S1-3): set when it fell short of the tree, and
       // then every would-be not_affected reads unknown with this reason
@@ -120,6 +126,7 @@ export const sastGate: Collector = {
           reach = reachableSet(db, roots);
           const nodeStmt = db.prepare("SELECT 1 AS hit FROM nodes WHERE id = ?");
           hasNode = (rel: string) => nodeStmt.get(fileId(rel)) !== undefined;
+          loaders = new LoaderIndex(db, reach);
           refusal = walkWidth(db, basis, {
             subject: "the file",
             counts: "the hit",
@@ -136,6 +143,7 @@ export const sastGate: Collector = {
         // gate by the file the hit lives in — over-approximate walk, every edge kind
         let reachable: "true" | "false" | "unknown";
         let rowNote = gateNote;
+        let origins: ChainOrigin[] | undefined;
         if (reach === undefined || hasNode === undefined) {
           reachable = "unknown";
         } else if (!hasNode(hit.path)) {
@@ -149,7 +157,17 @@ export const sastGate: Collector = {
           reachable = "unknown";
           rowNote = refusal;
         } else {
-          reachable = "false";
+          // the walk was whole and missed the file: a negative only if every
+          // chain into it begins at a test (S5-1) — an orphan is dead code or
+          // a load the extractor does not model, and the graph cannot say which
+          const ground = loaders!.ground(hit.path);
+          origins = ground.origins;
+          if (groundHolds(ground)) {
+            reachable = "false";
+          } else {
+            reachable = "unknown";
+            rowNote = unprovenImportersNote([ground], "the file", "the hit");
+          }
         }
         const notAffected = reachable === "false";
 
@@ -178,6 +196,7 @@ export const sastGate: Collector = {
           // per-hop marking (I3f): which edge of this chain is the weak one
           ...(resolutions ? { call_path_resolutions: resolutions } : {}),
           ...(rowNote !== undefined ? { gate_note: rowNote } : {}),
+          ...(origins !== undefined ? { origins } : {}),
         });
 
         if (hit.severity === "ERROR" && !notAffected) {

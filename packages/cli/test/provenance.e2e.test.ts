@@ -105,7 +105,8 @@ beforeAll(async () => {
     join(appRoot, "package.json"),
     JSON.stringify({ name: "j5-app", version: "1.0.0", main: "src/index.js" }, null, 2),
   );
-  // index → render (reachable eval); orphan is imported by nothing
+  // index → render (reachable eval); orphan is loaded only by a test, which is
+  // the one shape a negative can rest on since S5-1
   await writeFile(
     join(appRoot, "src", "index.js"),
     'const { render } = require("./render");\nfunction handle(input) { return render(input); }\nmodule.exports = { handle };\n',
@@ -118,6 +119,8 @@ beforeAll(async () => {
     join(appRoot, "src", "orphan.js"),
     'function dead(t) {\n  return eval(t);\n}\nmodule.exports = { dead };\n',
   );
+  await mkdir(join(appRoot, "test"), { recursive: true });
+  await writeFile(join(appRoot, "test", "orphan.test.js"), 'const { dead } = require("../src/orphan");\ndead("1");\n');
   // a route surface, so the SAME scan also produces the claim whose walk errs
   // the other way — "this route reaches auth" is positive and must rest on a
   // real chain
@@ -226,9 +229,9 @@ describe("I3f — the not-affected claim shows its work", () => {
   });
 
   it("the unreachable hit is waived, and the waiver is exactly what the basis grounds", () => {
-    // src/orphan.js has the same ERROR-severity eval and is imported by
-    // nothing — it is not_affected, which is the claim the entry-point set
-    // above is the entire justification for
+    // src/orphan.js has the same ERROR-severity eval, and only a test loads
+    // it — it is not_affected, which is the claim the entry-point set above
+    // and the test that begins its one chain are the justification for
     const assertion = sastBundle.predicate.assertions[0]!;
     const offenders = assertion.offenders!.map((o) => o.file);
     expect(offenders).toContain("src/render.js");

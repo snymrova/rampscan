@@ -242,9 +242,168 @@ export function opaqueImportCoverage(db: DatabaseSync): OpaqueImportCoverage[] |
  */
 export type HopResolution = Resolution | "sbom";
 
+/**
+ * Where a chain into an unreached file can begin (S5-1). `test` is the one
+ * positive classification: a file under a test directory or named as a test,
+ * which the program never loads. `unclassified` is everything else that
+ * nothing in the graph loads — dead code, or a file the program enters by a
+ * load the extractor does not model (a path alias read as a package, a
+ * framework convention, a Worker, an importer in a language it does not
+ * parse). Those two cannot be told apart from the graph, so the second is
+ * never read as the first. `reached` is a file the walk entered at some node
+ * — a symbol it called, by an inferred edge — without its file node, so the
+ * module may be loaded and its imports with it; a chain from there is the
+ * program's own.
+ */
+export type OriginClass = "test" | "reached" | "unclassified";
+
+export interface ChainOrigin {
+  file: string;
+  class: OriginClass;
+}
+
+/**
+ * The ground under "the walk did not reach this file" (S5-1): the file, and
+ * every file a chain of loads into it begins at. `rootless` marks a file
+ * whose only loaders sit in a cycle nothing outside loads — a chain with no
+ * beginning, which proves nothing either.
+ */
+export interface UnreachedGround {
+  file: string;
+  origins: ChainOrigin[];
+  rootless?: true;
+}
+
+const TEST_DIR = /(^|\/)(__tests__|__mocks__|tests?|spec|e2e)\//;
+const TEST_NAME = /\.(test|spec)\.[cm]?[jt]sx?$/;
+
+/** a file positively classified as outside the program, by its path alone */
+export function originClass(file: string): "test" | "unclassified" {
+  return TEST_DIR.test(file) || TEST_NAME.test(file) ? "test" : "unclassified";
+}
+
+/** a ground holds only when every chain begins at a test and none is rootless */
+export function groundHolds(g: UnreachedGround): boolean {
+  return g.rootless !== true && g.origins.length > 0 && g.origins.every((o) => o.class === "test");
+}
+
+/**
+ * File-level loaders over the stored edges: for every file, the other files
+ * with an edge into one of its nodes. Built once per graph read and asked per
+ * unreached file.
+ */
+export class LoaderIndex {
+  private readonly fileOf = new Map<string, string>();
+  private readonly loaders = new Map<string, Set<string>>();
+  private readonly into = new Map<string, Set<string>>();
+  /** files the walk entered at any node — where a chain is the program's own */
+  private readonly entered = new Set<string>();
+
+  /** `reach` is the gating walk's reachable set, over node ids */
+  constructor(db: DatabaseSync, reach: ReadonlySet<string>) {
+    const nodes = db
+      .prepare("SELECT id, kind, COALESCE(path, CASE WHEN kind = 'file' THEN name END) AS file FROM nodes")
+      .all() as Array<{ id: string; kind: string; file: string | null }>;
+    for (const n of nodes) if (n.file !== null && n.kind !== "dependency") this.fileOf.set(n.id, n.file);
+    for (const id of reach) {
+      const f = this.fileOf.get(id);
+      if (f !== undefined) this.entered.add(f);
+    }
+    const edges = db.prepare("SELECT src, dst FROM edges").all() as Array<{ src: string; dst: string }>;
+    for (const e of edges) {
+      const from = this.fileOf.get(e.src);
+      if (from === undefined) continue;
+      const to = this.fileOf.get(e.dst);
+      if (to === undefined) {
+        // an edge into a node that belongs to no file: a dependency
+        const set = this.into.get(e.dst);
+        if (set) set.add(from);
+        else this.into.set(e.dst, new Set([from]));
+        continue;
+      }
+      if (to === from) continue;
+      const set = this.loaders.get(to);
+      if (set) set.add(from);
+      else this.loaders.set(to, new Set([from]));
+    }
+  }
+
+  /** the first-party files with an edge into any of these (dependency) nodes, sorted */
+  importersOf(ids: readonly string[]): string[] {
+    const out = new Set<string>();
+    for (const id of ids) for (const f of this.into.get(id) ?? []) out.add(f);
+    return [...out].sort();
+  }
+
+  /** walk back from `file` over its loaders to where every chain begins */
+  ground(file: string): UnreachedGround {
+    const seen = new Set([file]);
+    const queue = [file];
+    const origins: string[] = [];
+    const entered: string[] = [];
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      // the walk was inside this file: the chain begins in the program
+      if (this.entered.has(cur)) {
+        entered.push(cur);
+        continue;
+      }
+      const from = this.loaders.get(cur);
+      if (from === undefined || from.size === 0) {
+        origins.push(cur);
+        continue;
+      }
+      for (const f of from) {
+        if (seen.has(f)) continue;
+        seen.add(f);
+        queue.push(f);
+      }
+    }
+    // a part of the closure no origin starts: some file in it is loaded only
+    // from inside a cycle that nothing outside the closure loads
+    const fromOrigins = new Set<string>([...origins, ...entered]);
+    const forward = [...origins, ...entered];
+    const loads = new Map<string, string[]>();
+    for (const f of seen) for (const l of this.loaders.get(f) ?? []) {
+      if (!seen.has(l) || this.entered.has(f)) continue;
+      const list = loads.get(l);
+      if (list) list.push(f);
+      else loads.set(l, [f]);
+    }
+    while (forward.length > 0) {
+      const cur = forward.shift()!;
+      for (const next of loads.get(cur) ?? []) {
+        if (fromOrigins.has(next)) continue;
+        fromOrigins.add(next);
+        forward.push(next);
+      }
+    }
+    const all: ChainOrigin[] = [
+      ...entered.map((o) => ({ file: o, class: "reached" as const })),
+      ...origins.map((o) => ({ file: o, class: originClass(o) })),
+    ].sort((a, b) => a.file.localeCompare(b.file));
+    const rootless = fromOrigins.size < seen.size;
+    const holds = !rootless && all.length > 0 && all.every((o) => o.class === "test");
+    // a ground that holds names every origin (all tests, and the proof); one
+    // that fails names only the origins that fail it — the reason — because a
+    // test-heavy repository can put a hundred tests behind one helper
+    return {
+      file,
+      origins: holds ? all : all.filter((o) => o.class !== "test"),
+      ...(rootless ? { rootless: true as const } : {}),
+    };
+  }
+}
+
 export interface DepReachability {
   package: string;
   reachable: boolean;
+  /**
+   * When unreachable: every first-party file that loads the package, with
+   * where each chain into it begins (S5-1). A negative may be signed only
+   * when every one of them holds — see `groundHolds`.
+   */
+  importers?: UnreachedGround[];
   /** display path, root » … » package node; undefined when unreachable */
   path?: string;
   /** the path rests on at least one name-inferred edge */
@@ -284,10 +443,17 @@ export function dependencyReachability(
   }
 
   const out = new Map<string, DepReachability>();
+  let loaders: LoaderIndex | undefined;
   for (const [pkg, ids] of byPackage) {
     const hit = ids.some((id) => reach.has(id));
     if (!hit) {
-      out.set(pkg, { package: pkg, reachable: false });
+      loaders ??= new LoaderIndex(db, reach);
+      const index = loaders;
+      out.set(pkg, {
+        package: pkg,
+        reachable: false,
+        importers: index.importersOf(ids).map((f) => index.ground(f)),
+      });
       continue;
     }
     const path = shortestPath(db, roots, new Set(ids));

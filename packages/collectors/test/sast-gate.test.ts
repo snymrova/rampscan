@@ -24,7 +24,9 @@ import {
 // The SAST edition of the flagship pair, on the planted-fault fixture: the
 // same eval() in two files — src/render.js (required from the entry point)
 // and src/legacy-tools.js (imported by nothing). The gate must show the call
-// path for one and prove not_affected for the other. semgrep itself is not
+// path for one. The other was the gate's proven not_affected until S5-1; an
+// orphan is also what a file behind an unmodelled alias looks like, so it is
+// now unknown, counted, and the reason names the file nothing loads. semgrep itself is not
 // spawned here: the gate consumes a hand-written semgrep-results.json in the
 // producer's normalized shape, same posture as the reachability tests.
 
@@ -99,7 +101,7 @@ describe("sast-reachability gate — the flagship move, SAST edition", () => {
     );
   });
 
-  it("proves the difference: render.js reachable with a call path, legacy-tools.js not_affected", () => {
+  it("proves the difference: render.js reachable with a call path, legacy-tools.js unknown with the reason", () => {
     const rows = out.observations["no-reachable-dangerous-code"]!;
     const reachableEval = rows.find(
       (r) => r["path"] === "src/render.js" && r["check_id"] === "dangerous-eval",
@@ -108,9 +110,11 @@ describe("sast-reachability gate — the flagship move, SAST edition", () => {
     expect(reachableEval["reachable"]).toBe("true");
     expect(reachableEval["not_affected"]).toBe(false);
     expect(String(reachableEval["call_path"])).toContain("src/render.js");
-    expect(deadEval["reachable"]).toBe("false");
-    expect(deadEval["not_affected"]).toBe(true);
+    expect(deadEval["reachable"]).toBe("unknown");
+    expect(deadEval["not_affected"]).toBe(false);
     expect(deadEval["call_path"]).toBeNull();
+    expect(String(deadEval["gate_note"])).toContain("nothing in the graph loads src/legacy-tools.js");
+    expect(deadEval["origins"]).toEqual([{ file: "src/legacy-tools.js", class: "unclassified" }]);
   });
 
   it("the basis signs the width of the walk: the fixture's one root, entered (S1-3)", () => {
@@ -134,11 +138,13 @@ describe("sast-reachability gate — the flagship move, SAST edition", () => {
     expect(pointer.call_path).toContain("»");
   });
 
-  it("only the reachable ERROR becomes a finding, with the call path as trace evidence", () => {
+  it("both ERRORs become findings: the reachable one with its call path as trace, the orphan's as unknown", () => {
     const findings = out.findings.filter((f) => f.variable === "sast");
-    expect(findings).toHaveLength(1);
-    expect(findings[0]!.summary).toContain("src/render.js");
-    expect(findings[0]!.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
+    expect(findings).toHaveLength(2);
+    const reached = findings.find((f) => f.summary.includes("src/render.js"))!;
+    expect(reached.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
+    const orphan = findings.find((f) => f.summary.includes("src/legacy-tools.js"))!;
+    expect(orphan.summary).toContain("reachability unknown");
   });
 
   it("WARNING severity rides along as an observation without a finding", () => {
@@ -316,5 +322,96 @@ describe("config-plane detection helpers", () => {
   it("relativizeResultPath strips the scan-root prefix and nothing else", () => {
     expect(relativizeResultPath("/rampscan/m1/src/a.js", "/rampscan/m1")).toBe("src/a.js");
     expect(relativizeResultPath("src/a.js", "/rampscan/m1")).toBe("src/a.js");
+  });
+});
+
+describe("S5-1 — a SAST hit in an unreached file is waived only when every chain into the file begins at a test", () => {
+  // The same hole as the advisory gate's (audit §1.1): the SAST gate signed
+  // not_affected for a hit in any file the walk did not reach, and a file
+  // behind an alias the extractor reads as a package is exactly such a file.
+  async function gate(spec: Record<string, string>, hitPath: string) {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-s51-sast-"));
+    for (const [rel, content] of Object.entries(spec)) {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    }
+    const files = Object.keys(spec).filter((f) => f.endsWith(".js")).sort();
+    const roots = await detectApplicationRoots(root, new Set(files), "worktree");
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s51-sast-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "5".repeat(40),
+      entrypoints: ["src/main.js"],
+      entrypointSource: "package.json",
+      entrypointsUnresolved: [],
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: roots,
+      entrypointsDetected: [],
+      entrypointsExcluded: [],
+    });
+    const semgrepPath = join(dir, SEMGREP_RESULTS_ARTIFACT);
+    await writeFile(
+      semgrepPath,
+      JSON.stringify({
+        ...SEMGREP_REPORT,
+        results: [
+          {
+            check_id: "dangerous-eval",
+            path: hitPath,
+            start_line: 1,
+            end_line: 1,
+            severity: "ERROR",
+            message: "eval()/new Function() executes dynamically constructed code",
+          },
+        ],
+      }),
+    );
+    const out = await sastGate.collect({
+      workspace: { root, repo: "alias-app", commit: "5".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [SEMGREP_RESULTS_ARTIFACT, semgrepPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s5-1-sast",
+    });
+    return { out, row: out.observations["no-reachable-dangerous-code"]![0]! };
+  }
+
+  const MANIFEST = JSON.stringify({ name: "alias-app", main: "src/main.js" });
+  const EVAL = "module.exports = (s) => eval(s);\n";
+
+  it("a hit behind `@/lib/run` is not waived: unknown, and it counts", async () => {
+    const { out, row } = await gate(
+      {
+        "package.json": MANIFEST,
+        "tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./*"] } } }),
+        "src/main.js": 'const run = require("@/lib/run");\nmodule.exports = (q) => run(q);\n',
+        "lib/run.js": EVAL,
+      },
+      "lib/run.js",
+    );
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("lib/run.js");
+    expect(out.findings.filter((f) => f.variable === "sast")).toHaveLength(1);
+  });
+
+  it("a hit in a helper only a test loads is the earned negative", async () => {
+    const { out, row } = await gate(
+      {
+        "package.json": MANIFEST,
+        "src/main.js": "module.exports = { run() {} };\n",
+        "src/test-support.js": EVAL,
+        "test/run.test.js": 'const run = require("../src/test-support");\nrun("1");\n',
+      },
+      "src/test-support.js",
+    );
+    expect(row["not_affected"]).toBe(true);
+    expect(row["reachable"]).toBe("false");
+    expect(row["origins"]).toEqual([{ file: "test/run.test.js", class: "test" }]);
+    expect(out.findings.filter((f) => f.variable === "sast")).toHaveLength(0);
   });
 });

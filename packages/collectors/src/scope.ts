@@ -6,7 +6,12 @@ import {
   opaqueImportCoverage,
   readGraphMeta,
 } from "@rampscan/graph";
-import type { ApplicationRootCoverage, ExcludedEntrypointCoverage, OpaqueImportCoverage } from "@rampscan/graph";
+import type {
+  ApplicationRootCoverage,
+  ExcludedEntrypointCoverage,
+  OpaqueImportCoverage,
+  UnreachedGround,
+} from "@rampscan/graph";
 
 // The width of a walk (S1-3) — shared by every gate that makes a negative
 // claim over graph.db. "Not reachable from the entry points" is only a
@@ -93,6 +98,51 @@ export function opaqueImportsNote(
     `the walk from the declared entry points did not reach ${subject}, but it reached ` +
     `${reached.length === 1 ? "a file that loads" : `${reached.length} files that load`} by a specifier the extractor cannot read — ${named} — ` +
     `so the program may continue from there into any module unseen; not_affected is refused for this run and ${counts} counts`
+  );
+}
+
+/**
+ * Why not_affected was refused for one subject whose loaders the walk did not
+ * reach, but whose chains do not all begin at a test (S5-1). Nothing in the
+ * graph loads the origins named, so the program may enter there by a load the
+ * extractor does not model; "the walk did not arrive" is then a statement
+ * about the extractor, not about the code.
+ */
+export function unprovenImportersNote(
+  unproven: readonly UnreachedGround[],
+  subject = "the package",
+  counts = "the advisory",
+): string {
+  if (unproven.length === 0) {
+    return `the walk did not reach ${subject}, and no first-party file is recorded as loading it, so there is no chain to read; not_affected is refused and ${counts} counts`;
+  }
+  const shown = unproven.slice(0, 3);
+  const named =
+    shown
+      .map((g) => {
+        const open = g.origins.filter((o) => o.class === "unclassified").map((o) => o.file);
+        const entered = g.origins.filter((o) => o.class === "reached").map((o) => o.file);
+        if (!g.rootless && entered.length === 0 && open.length === 1 && open[0] === g.file) {
+          return `nothing in the graph loads ${g.file}`;
+        }
+        if (!g.rootless && open.length === 0 && entered.length === 1 && entered[0] === g.file) {
+          return `the walk called into ${g.file} without loading the file, and a module whose function runs was loaded, imports and all`;
+        }
+        const list = (files: string[]) =>
+          files.length > 3 ? `${files.slice(0, 3).join(", ")} and ${files.length - 3} more` : files.join(", ");
+        const parts = [
+          ...(entered.length > 0 ? [`${list(entered)}, which the walk entered by a call without loading the file`] : []),
+          ...(open.length > 0 ? [`${list(open)}, which nothing in the graph loads`] : []),
+          ...(g.rootless ? ["a cycle nothing outside loads"] : []),
+        ];
+        return `${g.file} is loaded from ${parts.join(" and from ")}`;
+      })
+      .join("; ") + (unproven.length > shown.length ? `; and ${unproven.length - shown.length} more files` : "");
+  const what = subject === "the package" ? "the files that load it are" : "it is";
+  return (
+    `the walk did not reach ${subject}, and nothing shows ${what} outside the program — ${named}. ` +
+    "That is what dead code looks like, and also what a load the extractor does not model looks like " +
+    `(a path alias, a framework convention, a Worker, an importer in another language), so not_affected is refused and ${counts} counts`
   );
 }
 

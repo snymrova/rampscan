@@ -155,17 +155,19 @@ describe("rampscan scan on the planted-fault fixture", () => {
     expect(verdictOf("api-spec-lint-clean")).toBe("unevidenced");
   });
 
-  it("the SAST gate proves the difference: reachable eval violates with a call path, the dead file does not", () => {
+  it("the SAST gate tells the two evals apart: one reachable with a call path, the orphan unknown — and both count (S5-1)", () => {
     const row = result.recipes.find((r) => r.recipe_id === "no-reachable-dangerous-code")!;
     expect(row.verdict).toBe("violated");
-    // exactly ONE of the two planted evals counts — the reachable one
-    expect(row.assertions[0]!.detail).toContain("got 1");
+    // both planted evals count: the reachable one, and the one nothing loads,
+    // whose deadness the graph cannot tell from a load it does not model
+    expect(row.assertions[0]!.detail).toContain("got 2");
     expect(row.assertions[0]!.detail).toContain("src/render.js");
     const sastFindings = result.findings.filter((f) => f.variable === "sast");
-    expect(sastFindings).toHaveLength(1);
-    expect(sastFindings[0]!.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
-    // the unreachable eval: NO finding — not_affected, proven by the graph
-    expect(sastFindings.some((f) => f.summary.includes("legacy-tools"))).toBe(false);
+    expect(sastFindings).toHaveLength(2);
+    const reached = sastFindings.find((f) => f.summary.includes("src/render.js"))!;
+    expect(reached.evidence.some((e) => e.kind === "trace" && e.note?.includes("»"))).toBe(true);
+    const orphan = sastFindings.find((f) => f.summary.includes("legacy-tools"))!;
+    expect(orphan.summary).toContain("reachability unknown");
   });
 
   it("the architecture contract is checked against the code, and both declared rules break (L1)", () => {

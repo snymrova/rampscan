@@ -313,9 +313,11 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     await put("apps/web/package.json", JSON.stringify({ name: "@two/web", private: true, dependencies: { minimist: "1.2.5" } }));
     await put("apps/web/src/page.js", "module.exports = { page() {} };\n");
     // minimist has a node — a first-party file imports it — and only an orphan
-    // under apps/web does, so no walk from either entry point arrives at it
+    // under apps/web does, so no walk from either entry point arrives at it;
+    // a test loads the orphan, which is what lets the miss be earned (S5-1)
     await put("apps/web/src/orphan.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
-    files = ["apps/cli/src/main.js", "apps/web/src/orphan.js", "apps/web/src/page.js"];
+    await put("apps/web/test/orphan.test.js", 'const { parse } = require("../src/orphan");\nparse([]);\n');
+    files = ["apps/cli/src/main.js", "apps/web/src/orphan.js", "apps/web/src/page.js", "apps/web/test/orphan.test.js"];
     roots = await detectApplicationRoots(root, new Set(files), "worktree");
   });
 
@@ -336,7 +338,7 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     // the tree
     expect(minimist["not_affected"]).toBe(false);
     expect(minimist["reachable"]).toBe("unknown");
-    expect(String(minimist["gate_note"])).toContain("apps/web (@two/web, 2 files)");
+    expect(String(minimist["gate_note"])).toContain("apps/web (@two/web, 3 files)");
     expect(String(minimist["gate_note"])).toContain("not_affected is refused for this run");
 
     // the advisory counts: a CRITICAL finding, not a waived one
@@ -346,7 +348,7 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     const basis = out.basis!["no-critical-reachable-advisories"]!;
     expect(basis.application_roots).toEqual([
       { dir: "apps/cli", name: "@two/cli", file_count: 1, reached_file_count: 1 },
-      { dir: "apps/web", name: "@two/web", file_count: 2, reached_file_count: 0 },
+      { dir: "apps/web", name: "@two/web", file_count: 3, reached_file_count: 0 },
     ]);
     expect(basis.degraded).toBe(minimist["gate_note"]);
 
@@ -363,6 +365,9 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
       application_roots: [
         { dir: "apps/cli", name: "@two/cli", walked: true },
         { dir: "apps/web", name: "@two/web", walked: false },
+      ],
+      importers: [
+        { file: "apps/web/src/orphan.js", origins: [{ file: "apps/web/test/orphan.test.js", class: "test" }] },
       ],
     });
   });
@@ -403,6 +408,9 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
       commit: "d".repeat(40),
       entrypoints: ["apps/cli/src/main.js", "apps/web/src/page.js"],
       entrypoint_source: "config",
+      importers: [
+        { file: "apps/web/src/orphan.js", origins: [{ file: "apps/web/test/orphan.test.js", class: "test" }] },
+      ],
     });
   });
 });
@@ -682,9 +690,11 @@ describe("S4-1 — an opaque specifier is a recorded hole in the walk, and condi
     const t = await tree({
       "package.json": JSON.stringify({ name: "loader-app", main: "src/main.js" }),
       "src/main.js": "module.exports = { run() {} };\n",
-      // neither orphan is reached: one holds the opaque call, the other the package
-      "src/orphan-loader.js": 'module.exports = (name) => require("./plugins/" + name);\n',
-      "src/plugins/parse.js": PLUGIN,
+      // neither is reached: one holds the opaque call, the other the package,
+      // and both are tests — an unreached loader does not refuse the run, and
+      // the package's only importer begins at a test (S5-1)
+      "test/orphan-loader.js": 'module.exports = (name) => require("./plugins/" + name);\n',
+      "test/plugins/parse.js": PLUGIN,
     });
     const out = await gate(t);
     const minimist = out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "minimist")!;
@@ -692,7 +702,7 @@ describe("S4-1 — an opaque specifier is a recorded hole in the walk, and condi
     expect(minimist["reachable"]).toBe("false");
     expect(minimist["gate_note"]).toBeUndefined();
     const basis = out.basis!["no-critical-reachable-advisories"]!;
-    expect(basis.opaque_imports).toEqual([{ file: "src/orphan-loader.js", line: 1, form: "require", reached: false }]);
+    expect(basis.opaque_imports).toEqual([{ file: "test/orphan-loader.js", line: 1, form: "require", reached: false }]);
     expect(basis.degraded).toBeUndefined();
     const [stmt] = await vexOf(out);
     expect(stmt!["status"]).toBe("not_affected");
@@ -760,5 +770,171 @@ describe("S4-1 — an opaque specifier is a recorded hole in the walk, and condi
       { dir: "packages/lib", name: "@mono/lib", file_count: 2, reached_file_count: 2 },
     ]);
     expect(basis.degraded).toBeUndefined();
+  });
+});
+
+describe("S5-1 — a negative needs every chain into the package's importers to start somewhere known", () => {
+  // The audit of 2026-10-03 (docs/RESEARCH-SCAN-EVIDENCE-AUDIT.md §1.1): a
+  // dependency node exists because some first-party file imports it, and the
+  // gate signed not_affected whenever the walk did not reach that file —
+  // without asking why. The commonest why is a load the extractor does not
+  // model: the `@/` alias create-next-app writes into tsconfig is read as an
+  // npm package, so the file it names is an orphan, and everything that file
+  // imports was signed unreachable. The repro below is the audit's own, with
+  // `marked@0.3.6` behind `@/lib/md`.
+  //
+  // The rule that closes the class, whatever the extractor misses next: walk
+  // back from every file that loads the package to where each chain begins.
+  // A chain may begin only at a file positively classified as outside the
+  // program — a test. A chain that begins at an orphan nothing classifies,
+  // or a cycle nothing outside loads, begins somewhere the program may start
+  // unseen, and the negative is refused for that package.
+  const OSV = {
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: [
+          {
+            package: { name: "marked", version: "0.3.6", ecosystem: "npm" },
+            vulnerabilities: [{ id: "GHSA-xxxx-marked-redos", summary: "ReDoS in marked", aliases: ["CVE-2017-1000427"] }],
+            groups: [{ ids: ["GHSA-xxxx-marked-redos", "CVE-2017-1000427"], max_severity: "9.8" }],
+          },
+        ],
+      },
+    ],
+  };
+
+  async function gate(spec: Record<string, string>): Promise<CollectOutput> {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-s51-"));
+    for (const [rel, content] of Object.entries(spec)) {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    }
+    const files = Object.keys(spec).filter((f) => f.endsWith(".js")).sort();
+    const roots = await detectApplicationRoots(root, new Set(files), "worktree");
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s51-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(root, new Set(files), undefined, roots);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "5".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: roots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(OSV));
+    return reachability.collect({
+      workspace: { root, repo: "md-app", commit: "5".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s5-1",
+    });
+  }
+
+  const marked = (out: CollectOutput) =>
+    out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "marked")!;
+
+  async function vexOf(out: CollectOutput): Promise<Array<Record<string, unknown>>> {
+    const vexPath = out.artifacts.find((a) => a.name === OPENVEX_ARTIFACT)!.path;
+    return (JSON.parse(await readFile(vexPath, "utf8")) as { statements: Array<Record<string, unknown>> }).statements;
+  }
+
+  const MANIFEST = JSON.stringify({ name: "md-app", main: "src/main.js", dependencies: { marked: "0.3.6" } });
+  const MD = 'const marked = require("marked");\nmodule.exports = { render: (s) => marked(s) };\n';
+
+  it("the audit's repro: `@/lib/md` is read as a package, lib/md.js is an orphan, and marked is NOT signed unreachable", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./*"] } } }),
+      "src/main.js": 'const { render } = require("@/lib/md");\nmodule.exports = (q) => render(q);\n',
+      "lib/md.js": MD,
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("lib/md.js");
+    expect(String(row["gate_note"])).toContain("not_affected is refused");
+    // the CRITICAL counts
+    expect(out.findings.filter((f) => f.variable === "advisories")).toHaveLength(1);
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("under_investigation");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["importers"]).toEqual([
+      { file: "lib/md.js", origins: [{ file: "lib/md.js", class: "unclassified" }] },
+    ]);
+  });
+
+  it("an import cycle nothing outside loads begins nowhere known, and refuses", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = { run() {} };\n",
+      "src/a.js": 'const b = require("./b");\nmodule.exports = { a: () => b.b() };\n',
+      "src/b.js": 'const marked = require("marked");\nconst a = require("./a");\nmodule.exports = { b: () => marked(a) };\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("src/b.js");
+  });
+
+  it("a package only tests load is the earned negative, and the statement names the importers and where they begin", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = { run() {} };\n",
+      // a helper that only a test loads: the chain begins at the test
+      "src/test-support.js": MD,
+      "test/md.test.js": 'const { render } = require("../src/test-support");\nrender("x");\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(true);
+    expect(row["reachable"]).toBe("false");
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("not_affected");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["importers"]).toEqual([
+      { file: "src/test-support.js", origins: [{ file: "test/md.test.js", class: "test" }] },
+    ]);
+  });
+
+  it("a file the walk entered by a name-inferred call, but never loaded, is the program's own chain, and refuses", async () => {
+    // main.js calls escapeHtml with no import: the extractor matches the name
+    // to lib/md.js's function, so the walk reaches that symbol and not the
+    // file — and a module whose function runs was loaded, its top-level
+    // require of marked with it, though escapeHtml never calls marked
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = (q) => escapeHtml(q);\n",
+      "lib/md.js":
+        'const marked = require("marked");\nfunction escapeHtml(s) {\n  return String(s).replace(/</g, "&lt;");\n}\n' +
+        "function render(s) {\n  return marked(s);\n}\nmodule.exports = { escapeHtml, render };\n",
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("the walk called into lib/md.js without loading the file");
+    const [stmt] = await vexOf(out);
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["importers"]).toEqual([
+      { file: "lib/md.js", origins: [{ file: "lib/md.js", class: "reached" }] },
+    ]);
+  });
+
+  it("one importer a test begins and one an orphan begins: the orphan decides, and refuses", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = { run() {} };\n",
+      "src/legacy.js": MD,
+      "test/md.test.js": 'const marked = require("marked");\nmarked("x");\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(String(row["gate_note"])).toContain("src/legacy.js");
+    expect(String(row["gate_note"])).not.toContain("test/md.test.js");
   });
 });

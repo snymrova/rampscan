@@ -203,8 +203,10 @@ describe("reachability gate — the flagship join", () => {
 
 describe("reachability gate — the one not_affected the graph can earn", () => {
   // A package that HAS a node the walk cannot arrive at: minimist is imported,
-  // but only by src/orphan.js, which nothing imports and no entry point is.
-  // This is the only shape in which the gate may sign not_affected.
+  // but only by src/orphan.js, which no entry point reaches and only a test
+  // loads. This is the only shape in which the gate may sign not_affected —
+  // since S5-1 an orphan nothing loads is not enough, because nothing tells a
+  // dead file from one the program enters by a load the extractor cannot see.
   let out: CollectOutput;
 
   beforeAll(async () => {
@@ -219,8 +221,9 @@ describe("reachability gate — the one not_affected the graph can earn", () => 
     );
     await put("src/index.js", 'const merge = require("lodash/merge");\nmodule.exports = { merge };\n');
     await put("src/orphan.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
+    await put("test/orphan.test.js", 'const { parse } = require("../src/orphan");\nparse([]);\n');
 
-    const files = ["src/index.js", "src/orphan.js"];
+    const files = ["src/index.js", "src/orphan.js", "test/orphan.test.js"];
     const graph = await extractGraph(root, files, "worktree");
     const entry = await detectEntrypoints(root, new Set(files));
     const dir = await mkdtemp(join(tmpdir(), "rampscan-reach-earned-out-"));
@@ -282,13 +285,14 @@ describe("reachability gate — the one not_affected the graph can earn", () => 
       entrypoints: ["src/index.js"],
       entrypoint_source: "package.json",
       application_roots: [{ dir: ".", name: "earned", walked: true }],
+      importers: [{ file: "src/orphan.js", origins: [{ file: "test/orphan.test.js", class: "test" }] }],
     });
   });
 
   it("the basis signs the width of the walk: one root, entered", () => {
     const basis = out.basis!["no-critical-reachable-advisories"]!;
     expect(basis.application_roots).toEqual([
-      { dir: ".", name: "earned", file_count: 2, reached_file_count: 1 },
+      { dir: ".", name: "earned", file_count: 3, reached_file_count: 1 },
     ]);
     expect(basis.degraded).toBeUndefined();
   });

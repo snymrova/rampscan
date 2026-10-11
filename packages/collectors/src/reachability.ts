@@ -8,13 +8,14 @@ import {
   GRAPH_VERSION,
   dependencyReachability,
   graphShape,
+  groundHolds,
   openGraphDb,
   readGraphMeta,
   sbomDependencyGraph,
 } from "@rampscan/graph";
-import type { DepReachability, SbomDependencyGraph } from "@rampscan/graph";
+import type { DepReachability, SbomDependencyGraph, UnreachedGround } from "@rampscan/graph";
 import { OSV_RESULTS_ARTIFACT, OsvResults, advisoryRows } from "./osv-report.js";
-import { walkWidth, type ClaimScope } from "./scope.js";
+import { unprovenImportersNote, walkWidth, type ClaimScope } from "./scope.js";
 import { fileSha256, makeFinding, sha256 } from "./support.js";
 import { SBOM_ARTIFACT } from "./syft.js";
 
@@ -33,7 +34,9 @@ import { SBOM_ARTIFACT } from "./syft.js";
 // for the run, the reason is recorded, and every statement carries the
 // entry-point set and the roots the walk entered as structured fields.
 
-export const REACHABILITY_VERSION = "0.4.0";
+// 0.5.0: a negative needs every chain into the package's importers to begin
+// at a test (S5-1); the importers and their origins travel on the statement
+export const REACHABILITY_VERSION = "0.5.0";
 export const OPENVEX_ARTIFACT = "openvex.json";
 
 /**
@@ -43,7 +46,7 @@ export const OPENVEX_ARTIFACT = "openvex.json";
  * standing version of it for the recipe as a whole.
  */
 export const OVER_APPROXIMATION_STATEMENT =
-  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it. The SBOM's declared dependsOn edges continue the walk forward from any package it reached, with those hops marked sbom; they prove presence only — the manifest graph is partial, so no absence of a chain is ever read as unreachable. A negative claim is as wide as the application roots the walk entered: where the tree declares a package root that no entry point covers, not_affected is refused for the whole run and the reason is recorded, because a claim scoped to part of a repository is not a claim about the repository.";
+  "not_affected only when the package has a node in the code graph and the OVER-approximate walk — every edge kind, from every entry point and declared route — still cannot reach it. Unknowns count against us: a package the graph never saw as a node was never walked, so its reachability is unknown and the advisory COUNTS, and a missing graph or no detectable entry point makes every advisory COUNT rather than waiving it. The SBOM's declared dependsOn edges continue the walk forward from any package it reached, with those hops marked sbom; they prove presence only — the manifest graph is partial, so no absence of a chain is ever read as unreachable. A negative claim is as wide as the application roots the walk entered: where the tree declares a package root that no entry point covers, not_affected is refused for the whole run and the reason is recorded, because a claim scoped to part of a repository is not a claim about the repository. And a miss is a negative only when every first-party file that loads the package sits on chains that begin at a test: a file nothing in the graph loads is what dead code looks like and also what a load the extractor does not model looks like, so the advisory COUNTS, and the statement names the importers and where their chains begin.";
 
 /**
  * Why an advisory against a package with no graph node is unknown rather than
@@ -60,7 +63,7 @@ interface OpenVexStatement {
   justification?: string;
   impact_statement?: string;
   action_statement?: string;
-  "rampscan:scope"?: ClaimScope;
+  "rampscan:scope"?: ClaimScope & { importers?: UnreachedGround[] };
 }
 
 /** package URL for an OSV row — npm names with scopes get percent-encoded */
@@ -195,10 +198,17 @@ export const reachability: Collector = {
       // otherwise the miss says "not from these entry points", which is
       // unknown for the repository, and the refusal is the row's note
       const missed = gated && dep !== undefined && !dep.reachable;
-      const notAffected = missed && refusal === undefined;
+      // and a miss proves nothing about a file the program may enter unseen
+      // (S5-1): every file that loads the package must sit only on chains
+      // that begin at a test, or the miss is the extractor's, not the code's
+      const importers = missed ? (dep.importers ?? []) : [];
+      const unproven = importers.filter((g) => !groundHolds(g));
+      const grounded = missed && importers.length > 0 && unproven.length === 0;
+      const notAffected = missed && grounded && refusal === undefined;
       const refused = missed && !notAffected;
       const reachable = notAffected ? "false" : gated && dep?.reachable ? "true" : "unknown";
-      const rowNote = gateNote ?? (absent ? ABSENT_NODE_NOTE : refused ? refusal : undefined);
+      const importerNote = missed && !grounded ? unprovenImportersNote(unproven) : undefined;
+      const rowNote = gateNote ?? (absent ? ABSENT_NODE_NOTE : refused ? (refusal ?? importerNote) : undefined);
       const path = dep?.reachable ? (dep.path ?? null) : null;
 
       rows.push({
@@ -221,7 +231,8 @@ export const reachability: Collector = {
       const vulnerability: OpenVexStatement["vulnerability"] = { name: adv.advisory };
       if (adv.aliases.length > 1) vulnerability.aliases = adv.aliases.filter((a) => a !== adv.advisory);
       // every statement of a gated run says how wide the walk behind it was
-      const scoped = scope !== undefined ? { "rampscan:scope": scope } : {};
+      const scoped =
+        scope !== undefined ? { "rampscan:scope": missed ? { ...scope, importers } : scope } : {};
       if (notAffected) {
         statements.push({
           vulnerability,
