@@ -762,3 +762,147 @@ describe("S4-1 — an opaque specifier is a recorded hole in the walk, and condi
     expect(basis.degraded).toBeUndefined();
   });
 });
+
+describe("S5-1 — a negative needs every chain into the package's importers to start somewhere known", () => {
+  // The audit of 2026-10-03 (docs/RESEARCH-SCAN-EVIDENCE-AUDIT.md §1.1): a
+  // dependency node exists because some first-party file imports it, and the
+  // gate signed not_affected whenever the walk did not reach that file —
+  // without asking why. The commonest why is a load the extractor does not
+  // model: the `@/` alias create-next-app writes into tsconfig is read as an
+  // npm package, so the file it names is an orphan, and everything that file
+  // imports was signed unreachable. The repro below is the audit's own, with
+  // `marked@0.3.6` behind `@/lib/md`.
+  //
+  // The rule that closes the class, whatever the extractor misses next: walk
+  // back from every file that loads the package to where each chain begins.
+  // A chain may begin only at a file positively classified as outside the
+  // program — a test. A chain that begins at an orphan nothing classifies,
+  // or a cycle nothing outside loads, begins somewhere the program may start
+  // unseen, and the negative is refused for that package.
+  const OSV = {
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: [
+          {
+            package: { name: "marked", version: "0.3.6", ecosystem: "npm" },
+            vulnerabilities: [{ id: "GHSA-xxxx-marked-redos", summary: "ReDoS in marked", aliases: ["CVE-2017-1000427"] }],
+            groups: [{ ids: ["GHSA-xxxx-marked-redos", "CVE-2017-1000427"], max_severity: "9.8" }],
+          },
+        ],
+      },
+    ],
+  };
+
+  async function gate(spec: Record<string, string>): Promise<CollectOutput> {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-s51-"));
+    for (const [rel, content] of Object.entries(spec)) {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    }
+    const files = Object.keys(spec).filter((f) => f.endsWith(".js")).sort();
+    const roots = await detectApplicationRoots(root, new Set(files), "worktree");
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s51-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(root, new Set(files), undefined, roots);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "5".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: roots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(OSV));
+    return reachability.collect({
+      workspace: { root, repo: "md-app", commit: "5".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s5-1",
+    });
+  }
+
+  const marked = (out: CollectOutput) =>
+    out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "marked")!;
+
+  async function vexOf(out: CollectOutput): Promise<Array<Record<string, unknown>>> {
+    const vexPath = out.artifacts.find((a) => a.name === OPENVEX_ARTIFACT)!.path;
+    return (JSON.parse(await readFile(vexPath, "utf8")) as { statements: Array<Record<string, unknown>> }).statements;
+  }
+
+  const MANIFEST = JSON.stringify({ name: "md-app", main: "src/main.js", dependencies: { marked: "0.3.6" } });
+  const MD = 'const marked = require("marked");\nmodule.exports = { render: (s) => marked(s) };\n';
+
+  it.fails("the audit's repro: `@/lib/md` is read as a package, lib/md.js is an orphan, and marked is NOT signed unreachable", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./*"] } } }),
+      "src/main.js": 'const { render } = require("@/lib/md");\nmodule.exports = (q) => render(q);\n',
+      "lib/md.js": MD,
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("lib/md.js");
+    expect(String(row["gate_note"])).toContain("not_affected is refused");
+    // the CRITICAL counts
+    expect(out.findings.filter((f) => f.variable === "advisories")).toHaveLength(1);
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("under_investigation");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["importers"]).toEqual([
+      { file: "lib/md.js", origins: [{ file: "lib/md.js", class: "unclassified" }] },
+    ]);
+  });
+
+  it.fails("an import cycle nothing outside loads begins nowhere known, and refuses", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = { run() {} };\n",
+      "src/a.js": 'const b = require("./b");\nmodule.exports = { a: () => b.b() };\n',
+      "src/b.js": 'const marked = require("marked");\nconst a = require("./a");\nmodule.exports = { b: () => marked(a) };\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("src/b.js");
+  });
+
+  it.fails("a package only tests load is the earned negative, and the statement names the importers and where they begin", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = { run() {} };\n",
+      // a helper that only a test loads: the chain begins at the test
+      "src/test-support.js": MD,
+      "test/md.test.js": 'const { render } = require("../src/test-support");\nrender("x");\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(true);
+    expect(row["reachable"]).toBe("false");
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("not_affected");
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["importers"]).toEqual([
+      { file: "src/test-support.js", origins: [{ file: "test/md.test.js", class: "test" }] },
+    ]);
+  });
+
+  it.fails("one importer a test begins and one an orphan begins: the orphan decides, and refuses", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = { run() {} };\n",
+      "src/legacy.js": MD,
+      "test/md.test.js": 'const marked = require("marked");\nmarked("x");\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(String(row["gate_note"])).toContain("src/legacy.js");
+    expect(String(row["gate_note"])).not.toContain("test/md.test.js");
+  });
+});
