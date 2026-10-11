@@ -1,5 +1,7 @@
+import { execFile } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import { promisify } from "node:util";
 import type { Collector, CollectOutput, ObservationRows } from "@rampscan/core";
 import type { ClaimBasis, Finding } from "@rampscan/schema";
 import {
@@ -36,7 +38,10 @@ import { SBOM_ARTIFACT } from "./syft.js";
 
 // 0.5.0: a negative needs every chain into the package's importers to begin
 // at a test (S5-1); the importers and their origins travel on the statement
-export const REACHABILITY_VERSION = "0.5.0";
+// 0.6.0: an unresolved declared entry point refuses; another ecosystem's
+// advisory is never answered by an npm node; the VEX product is the
+// application at the commit, the package its subcomponent (S5-2b)
+export const REACHABILITY_VERSION = "0.6.0";
 export const OPENVEX_ARTIFACT = "openvex.json";
 
 /**
@@ -58,12 +63,52 @@ export const ABSENT_NODE_NOTE =
 
 interface OpenVexStatement {
   vulnerability: { name: string; aliases?: string[] };
-  products: Array<{ "@id": string }>;
+  products: Array<{ "@id": string; subcomponents?: Array<{ "@id": string }> }>;
+  timestamp: string;
   status: "affected" | "not_affected" | "under_investigation";
   justification?: string;
   impact_statement?: string;
   action_statement?: string;
   "rampscan:scope"?: ClaimScope & { importers?: UnreachedGround[] };
+}
+
+/**
+ * Why an advisory from an ecosystem the code graph does not model is unknown
+ * (S5-2b). The graph's dependency nodes are npm packages named by import
+ * specifiers; a PyPI `redis` and an npm `redis` share a name and nothing
+ * else, so a node is never evidence about another ecosystem's package.
+ */
+export function otherEcosystemNote(ecosystem: string): string {
+  return `the advisory is against a ${ecosystem} package, and the code graph models npm imports only — a node of the same name is a different package — so its reachability is unknown and the advisory counts`;
+}
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * The OpenVEX product (S5-2b, audit H5): the application at the commit, not
+ * the vulnerable package. A statement whose product is `pkg:npm/tar@6.1.0`
+ * suppresses that advisory on every SBOM that contains tar, at any commit, in
+ * any application; one whose product is this application at this commit, with
+ * the package as its subcomponent, says only what the walk showed. A GitHub
+ * origin names it `pkg:github/owner/repo`; otherwise the root manifest's name,
+ * or the checkout's directory, under `pkg:generic`.
+ */
+export async function applicationPurl(root: string, commit: string): Promise<string> {
+  try {
+    const { stdout } = await execFileAsync("git", ["config", "--get", "remote.origin.url"], { cwd: root });
+    const m = /github\.com[:/]([^/\s]+)\/([^/\s]+?)(?:\.git)?\s*$/.exec(stdout);
+    if (m) return `pkg:github/${m[1]!.toLowerCase()}/${m[2]!.toLowerCase()}@${commit}`;
+  } catch {
+    // no git, or no origin — fall through to the manifest
+  }
+  let name: string | undefined;
+  try {
+    const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as { name?: unknown };
+    if (typeof manifest.name === "string" && manifest.name !== "") name = manifest.name;
+  } catch {
+    // no manifest
+  }
+  return `pkg:generic/${encodeURIComponent(name ?? basename(root))}@${commit}`;
 }
 
 /** package URL for an OSV row — npm names with scopes get percent-encoded */
@@ -181,8 +226,13 @@ export const reachability: Collector = {
     const provenance = { analyzer: "reachability", version, runId: ctx.runId };
     const findings: Finding[] = [];
 
+    const appProduct = await applicationPurl(ctx.workspace.root, ctx.workspace.commit);
+    const stamped = new Date().toISOString();
     for (const adv of advisories) {
-      const dep = deps?.get(adv.package);
+      // the graph's nodes are npm packages; another ecosystem's advisory is
+      // never answered by a node that merely shares its name (S5-2b)
+      const npm = adv.ecosystem.toLowerCase().split(":")[0] === "npm";
+      const dep = npm ? deps?.get(adv.package) : undefined;
       const gated = deps !== undefined;
       // proven unreachable = the package HAS a node in the graph and no walk
       // from any entry point or declared route arrives at it. A package with
@@ -208,7 +258,8 @@ export const reachability: Collector = {
       const refused = missed && !notAffected;
       const reachable = notAffected ? "false" : gated && dep?.reachable ? "true" : "unknown";
       const importerNote = missed && !grounded ? unprovenImportersNote(unproven) : undefined;
-      const rowNote = gateNote ?? (absent ? ABSENT_NODE_NOTE : refused ? (refusal ?? importerNote) : undefined);
+      const absentNote = npm ? ABSENT_NODE_NOTE : otherEcosystemNote(adv.ecosystem);
+      const rowNote = gateNote ?? (absent ? absentNote : refused ? (refusal ?? importerNote) : undefined);
       const path = dep?.reachable ? (dep.path ?? null) : null;
 
       rows.push({
@@ -227,7 +278,7 @@ export const reachability: Collector = {
         aliases: adv.aliases,
       });
 
-      const product = purlOf(adv.ecosystem, adv.package, adv.version);
+      const products = [{ "@id": appProduct, subcomponents: [{ "@id": purlOf(adv.ecosystem, adv.package, adv.version) }] }];
       const vulnerability: OpenVexStatement["vulnerability"] = { name: adv.advisory };
       if (adv.aliases.length > 1) vulnerability.aliases = adv.aliases.filter((a) => a !== adv.advisory);
       // every statement of a gated run says how wide the walk behind it was
@@ -236,7 +287,8 @@ export const reachability: Collector = {
       if (notAffected) {
         statements.push({
           vulnerability,
-          products: [{ "@id": product }],
+          products,
+          timestamp: stamped,
           status: "not_affected",
           justification: "vulnerable_code_not_in_execute_path",
           impact_statement:
@@ -248,7 +300,8 @@ export const reachability: Collector = {
       } else if (reachable === "true") {
         statements.push({
           vulnerability,
-          products: [{ "@id": product }],
+          products,
+          timestamp: stamped,
           status: "affected",
           action_statement:
             `upgrade ${adv.package} beyond ${adv.version}; the vulnerable package is in the execute path` +
@@ -258,7 +311,8 @@ export const reachability: Collector = {
       } else {
         statements.push({
           vulnerability,
-          products: [{ "@id": product }],
+          products,
+          timestamp: stamped,
           status: "under_investigation",
           ...(rowNote !== undefined ? { impact_statement: rowNote } : {}),
           ...scoped,

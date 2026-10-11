@@ -201,7 +201,14 @@ function openvexTable(content: Json): ArtifactTable {
     const x = obj(s);
     return [
       str(obj(x["vulnerability"])["name"]),
-      arr(x["products"]).map((p) => str(obj(p)["@id"])).join(", "),
+      // since S5-2b the product is the application at the commit and the
+      // package is its subcomponent; the package is what a reader looks for
+      arr(x["products"])
+        .flatMap((p) => {
+          const subs = arr(obj(p)["subcomponents"]).map((c) => str(obj(c)["@id"]));
+          return subs.length > 0 ? subs : [str(obj(p)["@id"])];
+        })
+        .join(", "),
       str(x["status"]),
       str(x["justification"]),
       str(x["impact_statement"]),
