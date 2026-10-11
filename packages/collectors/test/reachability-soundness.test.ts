@@ -938,3 +938,171 @@ describe("S5-1 — a negative needs every chain into the package's importers to 
     expect(String(row["gate_note"])).not.toContain("test/md.test.js");
   });
 });
+
+describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees are walked, unseen loads are recorded", () => {
+  // S5-1 made every miss below refuse rather than sign. These make the walk
+  // see the load, so the answer is the true one — reachable, with a path —
+  // and where the extractor still cannot follow a load, it records it as
+  // opaque, which refuses a negative for the run the way S4-1's do.
+  const OSV = {
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: [
+          {
+            package: { name: "marked", version: "0.3.6", ecosystem: "npm" },
+            vulnerabilities: [{ id: "GHSA-xxxx-marked-redos", summary: "ReDoS in marked", aliases: ["CVE-2017-1000427"] }],
+            groups: [{ ids: ["GHSA-xxxx-marked-redos", "CVE-2017-1000427"], max_severity: "9.8" }],
+          },
+        ],
+      },
+    ],
+  };
+
+  async function gate(spec: Record<string, string>): Promise<CollectOutput> {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-s52-"));
+    for (const [rel, content] of Object.entries(spec)) {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    }
+    const files = Object.keys(spec).filter((f) => /\.[cm]?[jt]sx?$/.test(f)).sort();
+    const roots = await detectApplicationRoots(root, new Set(files), "worktree");
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s52-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(root, new Set(files), undefined, roots);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "5".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: roots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(OSV));
+    return reachability.collect({
+      workspace: { root, repo: "md-app", commit: "5".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s5-2",
+    });
+  }
+
+  const marked = (out: CollectOutput) =>
+    out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "marked")!;
+  const MANIFEST = JSON.stringify({ name: "md-app", main: "src/main.js", dependencies: { marked: "0.3.6" } });
+  const MD = 'const marked = require("marked");\nmodule.exports = { render: (s) => marked(s) };\n';
+
+  it.fails("tsconfig `paths`: `@/lib/md` resolves to lib/md.js, and marked is reachable through it", async () => {
+    const row = marked(
+      await gate({
+        "package.json": MANIFEST,
+        "tsconfig.json": '{\n  // create-next-app writes this\n  "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["./*"] } },\n}\n',
+        "src/main.js": 'const { render } = require("@/lib/md");\nmodule.exports = (q) => render(q);\n',
+        "lib/md.js": MD,
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+    expect(String(row["path"])).toContain("lib/md.js");
+  });
+
+  it.fails("tsconfig `paths` declared in a base config the app `extends`", async () => {
+    const row = marked(
+      await gate({
+        "package.json": MANIFEST,
+        "tsconfig.base.json": JSON.stringify({ compilerOptions: { paths: { "~lib/*": ["./lib/*"] } } }),
+        "tsconfig.json": JSON.stringify({ extends: "./tsconfig.base.json" }),
+        "src/main.js": 'const { render } = require("~lib/md");\nmodule.exports = (q) => render(q);\n',
+        "lib/md.js": MD,
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+  });
+
+  it.fails("package.json `imports`: `#md` resolves through the manifest", async () => {
+    const row = marked(
+      await gate({
+        "package.json": JSON.stringify({
+          name: "md-app",
+          main: "src/main.js",
+          imports: { "#md": "./lib/md.js", "#util/*": { node: "./lib/util/*.js" } },
+          dependencies: { marked: "0.3.6" },
+        }),
+        "src/main.js": 'const { render } = require("#md");\nmodule.exports = (q) => render(q);\n',
+        "lib/md.js": MD,
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+  });
+
+  it.fails("a call's callee is walked: `require(\"marked\")(s)` loads marked", async () => {
+    const row = marked(
+      await gate({
+        "package.json": MANIFEST,
+        "src/main.js": 'module.exports = (s) => require("marked")(s);\n',
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+  });
+
+  it.fails("a call's callee is walked: `import(\"./md.js\").then(…)` loads the module", async () => {
+    const row = marked(
+      await gate({
+        "package.json": MANIFEST,
+        "src/main.js": 'module.exports = (s) => import("./md.js").then((m) => m.render(s));\n',
+        "src/md.js": MD,
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+  });
+
+  it.fails("TypeScript `import x = require(\"marked\")` is an import", async () => {
+    const row = marked(
+      await gate({
+        "package.json": JSON.stringify({ name: "md-app", main: "src/main.ts", dependencies: { marked: "0.3.6" } }),
+        "src/main.ts": 'import marked = require("marked");\nexport const render = (s: string) => marked(s);\n',
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+  });
+
+  it.fails("`new Worker(new URL(\"./w.js\", import.meta.url))` is a load of w.js", async () => {
+    const row = marked(
+      await gate({
+        "package.json": MANIFEST,
+        "src/main.js": 'const w = new Worker(new URL("./w.js", import.meta.url));\nmodule.exports = { w };\n',
+        "src/w.js": MD,
+      }),
+    );
+    expect(row["reachable"]).toBe("true");
+  });
+
+  it.fails("a reached import of code the walk cannot see (`./App.vue`) is opaque, and refuses a test-only negative", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": 'const App = require("./App.vue");\nmodule.exports = { App };\n',
+      "test/md.test.js": 'const marked = require("marked");\nmarked("x");\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("src/main.js:1 (unresolved)");
+  });
+
+  it("a reached import of an asset (`./style.css`) loads no code: the test-only negative stands", async () => {
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": 'require("./style.css");\nmodule.exports = {};\n',
+      "test/md.test.js": 'const marked = require("marked");\nmarked("x");\n',
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(true);
+  });
+});
