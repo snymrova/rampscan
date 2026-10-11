@@ -313,9 +313,11 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     await put("apps/web/package.json", JSON.stringify({ name: "@two/web", private: true, dependencies: { minimist: "1.2.5" } }));
     await put("apps/web/src/page.js", "module.exports = { page() {} };\n");
     // minimist has a node — a first-party file imports it — and only an orphan
-    // under apps/web does, so no walk from either entry point arrives at it
+    // under apps/web does, so no walk from either entry point arrives at it;
+    // a test loads the orphan, which is what lets the miss be earned (S5-1)
     await put("apps/web/src/orphan.js", 'const parse = require("minimist");\nmodule.exports = { parse };\n');
-    files = ["apps/cli/src/main.js", "apps/web/src/orphan.js", "apps/web/src/page.js"];
+    await put("apps/web/test/orphan.test.js", 'const { parse } = require("../src/orphan");\nparse([]);\n');
+    files = ["apps/cli/src/main.js", "apps/web/src/orphan.js", "apps/web/src/page.js", "apps/web/test/orphan.test.js"];
     roots = await detectApplicationRoots(root, new Set(files), "worktree");
   });
 
@@ -336,7 +338,7 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     // the tree
     expect(minimist["not_affected"]).toBe(false);
     expect(minimist["reachable"]).toBe("unknown");
-    expect(String(minimist["gate_note"])).toContain("apps/web (@two/web, 2 files)");
+    expect(String(minimist["gate_note"])).toContain("apps/web (@two/web, 3 files)");
     expect(String(minimist["gate_note"])).toContain("not_affected is refused for this run");
 
     // the advisory counts: a CRITICAL finding, not a waived one
@@ -346,7 +348,7 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
     const basis = out.basis!["no-critical-reachable-advisories"]!;
     expect(basis.application_roots).toEqual([
       { dir: "apps/cli", name: "@two/cli", file_count: 1, reached_file_count: 1 },
-      { dir: "apps/web", name: "@two/web", file_count: 2, reached_file_count: 0 },
+      { dir: "apps/web", name: "@two/web", file_count: 3, reached_file_count: 0 },
     ]);
     expect(basis.degraded).toBe(minimist["gate_note"]);
 
@@ -363,6 +365,9 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
       application_roots: [
         { dir: "apps/cli", name: "@two/cli", walked: true },
         { dir: "apps/web", name: "@two/web", walked: false },
+      ],
+      importers: [
+        { file: "apps/web/src/orphan.js", origins: [{ file: "apps/web/test/orphan.test.js", class: "test" }] },
       ],
     });
   });
@@ -403,6 +408,9 @@ describe("S1-3 — a negative claim is refused when the walk did not enter every
       commit: "d".repeat(40),
       entrypoints: ["apps/cli/src/main.js", "apps/web/src/page.js"],
       entrypoint_source: "config",
+      importers: [
+        { file: "apps/web/src/orphan.js", origins: [{ file: "apps/web/test/orphan.test.js", class: "test" }] },
+      ],
     });
   });
 });
@@ -682,9 +690,11 @@ describe("S4-1 — an opaque specifier is a recorded hole in the walk, and condi
     const t = await tree({
       "package.json": JSON.stringify({ name: "loader-app", main: "src/main.js" }),
       "src/main.js": "module.exports = { run() {} };\n",
-      // neither orphan is reached: one holds the opaque call, the other the package
-      "src/orphan-loader.js": 'module.exports = (name) => require("./plugins/" + name);\n',
-      "src/plugins/parse.js": PLUGIN,
+      // neither is reached: one holds the opaque call, the other the package,
+      // and both are tests — an unreached loader does not refuse the run, and
+      // the package's only importer begins at a test (S5-1)
+      "test/orphan-loader.js": 'module.exports = (name) => require("./plugins/" + name);\n',
+      "test/plugins/parse.js": PLUGIN,
     });
     const out = await gate(t);
     const minimist = out.observations["no-critical-reachable-advisories"]!.find((r) => r["package"] === "minimist")!;
@@ -692,7 +702,7 @@ describe("S4-1 — an opaque specifier is a recorded hole in the walk, and condi
     expect(minimist["reachable"]).toBe("false");
     expect(minimist["gate_note"]).toBeUndefined();
     const basis = out.basis!["no-critical-reachable-advisories"]!;
-    expect(basis.opaque_imports).toEqual([{ file: "src/orphan-loader.js", line: 1, form: "require", reached: false }]);
+    expect(basis.opaque_imports).toEqual([{ file: "test/orphan-loader.js", line: 1, form: "require", reached: false }]);
     expect(basis.degraded).toBeUndefined();
     const [stmt] = await vexOf(out);
     expect(stmt!["status"]).toBe("not_affected");
@@ -841,7 +851,7 @@ describe("S5-1 — a negative needs every chain into the package's importers to 
   const MANIFEST = JSON.stringify({ name: "md-app", main: "src/main.js", dependencies: { marked: "0.3.6" } });
   const MD = 'const marked = require("marked");\nmodule.exports = { render: (s) => marked(s) };\n';
 
-  it.fails("the audit's repro: `@/lib/md` is read as a package, lib/md.js is an orphan, and marked is NOT signed unreachable", async () => {
+  it("the audit's repro: `@/lib/md` is read as a package, lib/md.js is an orphan, and marked is NOT signed unreachable", async () => {
     const out = await gate({
       "package.json": MANIFEST,
       "tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./*"] } } }),
@@ -862,7 +872,7 @@ describe("S5-1 — a negative needs every chain into the package's importers to 
     ]);
   });
 
-  it.fails("an import cycle nothing outside loads begins nowhere known, and refuses", async () => {
+  it("an import cycle nothing outside loads begins nowhere known, and refuses", async () => {
     const out = await gate({
       "package.json": MANIFEST,
       "src/main.js": "module.exports = { run() {} };\n",
@@ -875,7 +885,7 @@ describe("S5-1 — a negative needs every chain into the package's importers to 
     expect(String(row["gate_note"])).toContain("src/b.js");
   });
 
-  it.fails("a package only tests load is the earned negative, and the statement names the importers and where they begin", async () => {
+  it("a package only tests load is the earned negative, and the statement names the importers and where they begin", async () => {
     const out = await gate({
       "package.json": MANIFEST,
       "src/main.js": "module.exports = { run() {} };\n",
@@ -893,7 +903,29 @@ describe("S5-1 — a negative needs every chain into the package's importers to 
     ]);
   });
 
-  it.fails("one importer a test begins and one an orphan begins: the orphan decides, and refuses", async () => {
+  it("a file the walk entered by a name-inferred call, but never loaded, is the program's own chain, and refuses", async () => {
+    // main.js calls escapeHtml with no import: the extractor matches the name
+    // to lib/md.js's function, so the walk reaches that symbol and not the
+    // file — and a module whose function runs was loaded, its top-level
+    // require of marked with it, though escapeHtml never calls marked
+    const out = await gate({
+      "package.json": MANIFEST,
+      "src/main.js": "module.exports = (q) => escapeHtml(q);\n",
+      "lib/md.js":
+        'const marked = require("marked");\nfunction escapeHtml(s) {\n  return String(s).replace(/</g, "&lt;");\n}\n' +
+        "function render(s) {\n  return marked(s);\n}\nmodule.exports = { escapeHtml, render };\n",
+    });
+    const row = marked(out);
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("the walk called into lib/md.js without loading the file");
+    const [stmt] = await vexOf(out);
+    expect((stmt!["rampscan:scope"] as Record<string, unknown>)["importers"]).toEqual([
+      { file: "lib/md.js", origins: [{ file: "lib/md.js", class: "reached" }] },
+    ]);
+  });
+
+  it("one importer a test begins and one an orphan begins: the orphan decides, and refuses", async () => {
     const out = await gate({
       "package.json": MANIFEST,
       "src/main.js": "module.exports = { run() {} };\n",

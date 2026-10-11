@@ -27,7 +27,9 @@
 //      the gate must show the call path (plus an md5 WARNING that rides
 //      along as an observation without violating)
 //   8. the same construct in src/legacy-tools.js, imported by NOTHING —
-//      the graph must prove it unreachable, the gate marks it not_affected
+//      until S5-1 the gate read that as proof of dead code and marked it
+//      not_affected; an orphan is also what a file loaded by an unmodelled
+//      alias looks like, so it is now unknown, and it COUNTS, with the reason
 //
 // And the config plane:
 //   9. an invalid OpenAPI document (openapi.yaml missing the required
