@@ -146,6 +146,23 @@ export function unprovenImportersNote(
   );
 }
 
+/**
+ * Why not_affected was refused for a run whose declared entry points include
+ * one that resolves to no file the walk saw (S5-2b). Recorded since I3f;
+ * refused on since S5-2b, because the walk never began where the program does.
+ */
+export function unresolvedEntrypointsNote(
+  unresolved: readonly string[],
+  subject = "the package",
+  counts = "the advisory",
+): string {
+  return (
+    `the walk from the declared entry points did not reach ${subject}, but ` +
+    `${unresolved.length === 1 ? "an entry point the tree declares resolves" : `${unresolved.length} entry points the tree declares resolve`} to no file the walk saw — ${unresolved.join(", ")} — ` +
+    `so the program starts somewhere no walk began; not_affected is refused for this run and ${counts} counts`
+  );
+}
+
 /** the refusal when the graph predates the record of opaque specifiers */
 export function unrecordedOpaqueImportsNote(counts = "every advisory"): string {
   return (
@@ -222,6 +239,13 @@ export function walkWidth(
     scope.entrypoints_excluded = excluded;
     const unreached = excluded.filter((e) => !e.reached);
     if (unreached.length > 0) refusal ??= excludedEntrypointsNote(unreached, wording.subject, wording.counts);
+  }
+  // and the entry points the program declares that name no file the walk saw
+  // (S5-2b): `main` pointing into `dist/`, a `bin` that is generated — the
+  // program starts there, the walk could not, and a negative over that walk
+  // is scoped to the entries it happened to resolve
+  if (meta.entrypointsUnresolved.length > 0) {
+    refusal ??= unresolvedEntrypointsNote(meta.entrypointsUnresolved, wording.subject, wording.counts);
   }
   // the third half of the width (S4-1): the loads the walk could not follow.
   // Recorded whenever the graph knows and holds any; a refusal only where the

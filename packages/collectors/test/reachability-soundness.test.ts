@@ -1171,7 +1171,7 @@ describe("S5-2b — the gate's half: unresolved entries refuse, ecosystems match
     "test/kv.test.js": 'const redis = require("redis");\nredis.createClient();\n',
   };
 
-  it.fails("a declared entry point that resolves to no file refuses the negative, and names the entry", async () => {
+  it("a declared entry point that resolves to no file refuses the negative, and names the entry", async () => {
     const out = await gate(
       {
         ...TEST_ONLY,
@@ -1186,7 +1186,7 @@ describe("S5-2b — the gate's half: unresolved entries refuse, ecosystems match
     expect(String(row["gate_note"])).toContain("dist/index.js");
   });
 
-  it.fails("an advisory from another ecosystem is not answered by an npm node of the same name", async () => {
+  it("an advisory from another ecosystem is not answered by an npm node of the same name", async () => {
     const out = await gate(
       TEST_ONLY,
       osvFor([
@@ -1213,7 +1213,7 @@ describe("S5-2b — the gate's half: unresolved entries refuse, ecosystems match
     expect(rows(out).find((r) => r["advisory"] === "GHSA-marked")!["reachable"]).toBe("true");
   });
 
-  it.fails("the VEX product is the application at the commit, the package its subcomponent, the statement timestamped", async () => {
+  it("the VEX product is the application at the commit, the package its subcomponent, the statement timestamped", async () => {
     const out = await gate(TEST_ONLY, osvFor([{ name: "redis", ecosystem: "npm", id: "GHSA-redis-npm" }]));
     const [stmt] = await vexOf(out);
     expect(stmt!["status"]).toBe("not_affected");

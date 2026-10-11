@@ -165,7 +165,7 @@ describe("reachability gate — the flagship join", () => {
     const investigating = byStatus("under_investigation");
     expect(investigating).toHaveLength(1);
     expect((investigating[0]!["vulnerability"] as { name: string }).name).toBe("GHSA-xvch-5gv4-984h");
-    expect((investigating[0]!["products"] as Array<{ "@id": string }>)[0]!["@id"]).toBe(
+    expect((investigating[0]!["products"] as Array<{ subcomponents: Array<{ "@id": string }> }>)[0]!.subcomponents[0]!["@id"]).toBe(
       "pkg:npm/minimist@1.2.5",
     );
     expect(investigating[0]!["impact_statement"]).toBe(ABSENT_NODE_NOTE);
@@ -277,7 +277,7 @@ describe("reachability gate — the one not_affected the graph can earn", () => 
     expect(notAffected).toHaveLength(1);
     expect((notAffected[0]!["vulnerability"] as { name: string }).name).toBe("GHSA-xvch-5gv4-984h");
     expect(notAffected[0]!["justification"]).toBe("vulnerable_code_not_in_execute_path");
-    expect((notAffected[0]!["products"] as Array<{ "@id": string }>)[0]!["@id"]).toBe("pkg:npm/minimist@1.2.5");
+    expect((notAffected[0]!["products"] as Array<{ subcomponents: Array<{ "@id": string }> }>)[0]!.subcomponents[0]!["@id"]).toBe("pkg:npm/minimist@1.2.5");
     expect(String(notAffected[0]!["impact_statement"])).toContain("src/index.js");
     // the scope as structured fields, not only inside the prose (S1-3)
     expect(notAffected[0]!["rampscan:scope"]).toEqual({
