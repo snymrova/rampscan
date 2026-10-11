@@ -1,4 +1,4 @@
-# rampscan — plan of action: soundness, and the first stranger (Phases S0–S4)
+# rampscan — plan of action: soundness, and the first stranger (Phases S0–S5)
 
 **Status:** **adopted** plan of record (merged as `2801f8c`, PR #123; milestones S0–S4 exist) for one deliverable — *every claim rampscan publishes is one a stranger can check, and one stranger has checked*. This document decides nothing until it is merged and its milestones exist on GitHub; that is the adoption bar the KSI pivot and the artifact plane both cleared.
 **Date:** 2026-09-13
@@ -234,6 +234,24 @@ S1 makes the extractor load-bearing for a *stronger* claim: before, a missing ed
 **Exit gate:** each S4-1 pattern has a test asserting `unknown`; the lint gate runs in CI; `console/web/lib` has tests.
 
 > **Exit gate read 2026-09-15:** S4-1's remaining patterns (opaque `require`, opaque `import()`, conditional exports) each have a soundness test — the two opaque ones assert `unknown` with the call named, the conditional one asserts the walk crosses every build target; the second-root pattern was S1-3's. The lint job is in `check.yml` on every pull request. `console/web/test` holds fifteen tests over `lib/emptystate.ts` and `lib/types.ts`, run in the gated suite. **S4 closes.**
+
+### Phase S5 — the signed negatives (reopened 2026-10-11)
+
+S1 closed on the paths it tested. The audit of 2026-10-03 (`docs/RESEARCH-SCAN-EVIDENCE-AUDIT.md`) reproduced a repeat of GHSA-7jff-6v53-r56x through paths it did not test, and seven more places where a scan signs `evidenced` or `not_affected` without the evidence. Ground rule 2 is broken again, so S1 is not closed in fact. S5 is that reopening. Each item lands failing first under `it.fails`, then the fix unwraps it. The order is the audit's §6.1, and the first item closes the class rather than any one path.
+
+- [ ] **S5-1. A negative needs every importer.** (audit §1.1, fix 1.) `not_affected` is refused unless every first-party file that imports the package was reached by the walk, and the importers are recorded in `rampscan:scope`. A dependency node exists because some file imports it; if the walk never reached that file, the honest statement is "we did not get there", which is `unknown`. This one change closes the class whatever the extractor misses — the `@/` alias, a call-target `require`, a `.vue` importer and a Worker entry each become `unknown` rather than a signed negative. The audit's `@/lib/md` → `marked` repro is the failing test.
+- [ ] **S5-2. Narrow what the extractor misses.** (audit §1.1, fix 2; §2.1f; H5.) Visit a call's callee, not only its arguments; handle `import x = require()`; resolve tsconfig `paths`/`baseUrl` and package.json `imports`; treat `createRequire`, `new Worker(new URL(…))` and non-identifier callees as opaque; refuse when `entrypoints_unresolved` is non-empty. Match advisories to nodes by ecosystem as well as name, so a PyPI `redis` advisory is not answered by an npm `redis` node. Scope the OpenVEX product to the application at the commit, with the package as a subcomponent, so a statement cannot suppress findings on an unrelated SBOM.
+- [ ] **S5-3. gitleaks proves it read the history.** (audit §1.2, §2.1d.) `--exit-code` set to a value gitleaks does not use for errors, so exit 1 is a failure; the report file must exist; `partial scan` on stderr refuses; a shallow repository refuses; the commit count gitleaks read is the population.
+- [ ] **S5-4. A scan signs the commit, not the working tree.** (audit §1.3.) `scan` refuses a dirty tree — modified tracked files, not untracked ones syft and git already exclude — and names the files. `check` is unaffected: it signs nothing. `verify` re-derives each anchor from the commit's blob and fails on a mismatch.
+- [ ] **S5-5. The scanned repository cannot silence its scanners unseen.** (audit §1.4.) Every tool runs with `cwd` outside the checkout and a vendored config: gitleaks with the pinned rule set and the repo's allow comments and ignore file disabled; semgrep with `--disable-nosem`; checkov with its skips recorded rather than dropped; grype unable to read a repo `.grype.yaml`. A suppression the provider wants honoured becomes a counted row, not an absent one.
+- [ ] **S5-6. Four vacuous passes.** (audit §2.1a, b, c, e.) SAST is `unevidenced` when the checkout has no file in the ruleset's languages, and semgrep's `errors[]` are read; a manifest syft did not catalogue makes the SBOM incomplete rather than clean; an advisory with no rating counts, and `MAL-*` is never `not_affected`; a checkov parse error, or zero checks run, is `unevidenced`.
+- [ ] **S5-7. Regenerate.** Re-run the self-scan, regenerate the README's gated figures from the command, and record what moved.
+
+**Owner call (S0-1 precedent):** whether S5-1's finding gets a second published advisory.
+
+**Exit gate:** every audit repro in §1 and §2.1a/b/c/e has a test that failed on the old code and passes; the self-scan's `openvex.json` carries no `not_affected` whose importers were not all reached; `rebuild` is byte-equal; the suite green. Per ground rule 4, the gate is read by someone other than the author — the owner.
+
+**Out of S5, in order after it:** evidence integrity (audit §2.2), the FedRAMP fit (§3: the overclaims, the floor on live methods, the `FRR-PVA-AA-06` citation, FAV's direction), and VDR proper, which is a plan of its own.
 
 ### Explicitly not in this plan
 
