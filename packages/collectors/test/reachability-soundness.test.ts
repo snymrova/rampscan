@@ -1109,3 +1109,117 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["not_affected"]).toBe(true);
   });
 });
+
+describe("S5-2b — the gate's half: unresolved entries refuse, ecosystems match, the VEX product is the application", () => {
+  async function gate(spec: Record<string, string>, osv: unknown): Promise<CollectOutput> {
+    const root = await mkdtemp(join(tmpdir(), "rampscan-s52b-"));
+    for (const [rel, content] of Object.entries(spec)) {
+      await mkdir(dirname(join(root, rel)), { recursive: true });
+      await writeFile(join(root, rel), content);
+    }
+    const files = Object.keys(spec).filter((f) => /\.[cm]?[jt]sx?$/.test(f)).sort();
+    const roots = await detectApplicationRoots(root, new Set(files), "worktree");
+    const graph = await extractGraph(root, files, "worktree");
+    const dir = await mkdtemp(join(tmpdir(), "rampscan-s52b-out-"));
+    const dbPath = join(dir, GRAPH_DB_ARTIFACT);
+    const entry = await detectEntrypoints(root, new Set(files), undefined, roots);
+    writeGraphDb(dbPath, graph, {
+      extractorVersion: graphToolVersion(),
+      commit: "5".repeat(40),
+      entrypoints: entry.files,
+      entrypointSource: entry.source,
+      entrypointsUnresolved: entry.unresolved,
+      authPatterns: DEFAULT_AUTH_PATTERNS,
+      applicationRoots: roots,
+      entrypointsDetected: entry.detected,
+      entrypointsExcluded: entry.excluded,
+    });
+    const osvPath = join(dir, OSV_RESULTS_ARTIFACT);
+    await writeFile(osvPath, JSON.stringify(osv));
+    return reachability.collect({
+      workspace: { root, repo: root, commit: "5".repeat(40) },
+      artifactDir: dir,
+      inputs: new Map([
+        [OSV_RESULTS_ARTIFACT, osvPath],
+        [GRAPH_DB_ARTIFACT, dbPath],
+      ]),
+      runId: "run-s5-2b",
+    });
+  }
+
+  const osvFor = (pkgs: Array<{ name: string; ecosystem: string; id: string }>) => ({
+    results: [
+      {
+        source: { path: "package-lock.json" },
+        packages: pkgs.map((p) => ({
+          package: { name: p.name, version: "1.0.0", ecosystem: p.ecosystem },
+          vulnerabilities: [{ id: p.id, summary: `advisory in ${p.name}` }],
+          groups: [{ ids: [p.id], max_severity: "9.8" }],
+        })),
+      },
+    ],
+  });
+  const rows = (out: CollectOutput) => out.observations["no-critical-reachable-advisories"]!;
+  async function vexOf(out: CollectOutput): Promise<Array<Record<string, unknown>>> {
+    const vexPath = out.artifacts.find((a) => a.name === OPENVEX_ARTIFACT)!.path;
+    return (JSON.parse(await readFile(vexPath, "utf8")) as { statements: Array<Record<string, unknown>> }).statements;
+  }
+  // redis is loaded only by a test: the earned negative, for npm's redis
+  const TEST_ONLY = {
+    "package.json": JSON.stringify({ name: "kv-app", main: "src/main.js" }),
+    "src/main.js": "module.exports = { run() {} };\n",
+    "test/kv.test.js": 'const redis = require("redis");\nredis.createClient();\n',
+  };
+
+  it.fails("a declared entry point that resolves to no file refuses the negative, and names the entry", async () => {
+    const out = await gate(
+      {
+        ...TEST_ONLY,
+        // main is built output the committed tree does not hold; bin is source
+        "package.json": JSON.stringify({ name: "kv-app", main: "dist/index.js", bin: { kv: "src/main.js" } }),
+      },
+      osvFor([{ name: "redis", ecosystem: "npm", id: "GHSA-redis-npm" }]),
+    );
+    const row = rows(out).find((r) => r["advisory"] === "GHSA-redis-npm")!;
+    expect(row["not_affected"]).toBe(false);
+    expect(row["reachable"]).toBe("unknown");
+    expect(String(row["gate_note"])).toContain("dist/index.js");
+  });
+
+  it.fails("an advisory from another ecosystem is not answered by an npm node of the same name", async () => {
+    const out = await gate(
+      TEST_ONLY,
+      osvFor([
+        { name: "redis", ecosystem: "npm", id: "GHSA-redis-npm" },
+        { name: "redis", ecosystem: "PyPI", id: "PYSEC-redis-py" },
+      ]),
+    );
+    const npm = rows(out).find((r) => r["advisory"] === "GHSA-redis-npm")!;
+    const py = rows(out).find((r) => r["advisory"] === "PYSEC-redis-py")!;
+    expect(npm["not_affected"]).toBe(true);
+    expect(py["not_affected"]).toBe(false);
+    expect(py["reachable"]).toBe("unknown");
+    expect(String(py["gate_note"])).toContain("PyPI");
+  });
+
+  it("an npm alias is the package it aliases: `md-lib` → marked is reachable", async () => {
+    const out = await gate(
+      {
+        "package.json": JSON.stringify({ name: "md-app", main: "src/main.js", dependencies: { "md-lib": "npm:marked@0.3.6" } }),
+        "src/main.js": 'const md = require("md-lib");\nmodule.exports = (s) => md(s);\n',
+      },
+      osvFor([{ name: "marked", ecosystem: "npm", id: "GHSA-marked" }]),
+    );
+    expect(rows(out).find((r) => r["advisory"] === "GHSA-marked")!["reachable"]).toBe("true");
+  });
+
+  it.fails("the VEX product is the application at the commit, the package its subcomponent, the statement timestamped", async () => {
+    const out = await gate(TEST_ONLY, osvFor([{ name: "redis", ecosystem: "npm", id: "GHSA-redis-npm" }]));
+    const [stmt] = await vexOf(out);
+    expect(stmt!["status"]).toBe("not_affected");
+    expect(stmt!["products"]).toEqual([
+      { "@id": `pkg:generic/kv-app@${"5".repeat(40)}`, subcomponents: [{ "@id": "pkg:npm/redis@1.0.0" }] },
+    ]);
+    expect(typeof stmt!["timestamp"]).toBe("string");
+  });
+});
