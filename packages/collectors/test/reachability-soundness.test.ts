@@ -852,9 +852,12 @@ describe("S5-1 — a negative needs every chain into the package's importers to 
   const MD = 'const marked = require("marked");\nmodule.exports = { render: (s) => marked(s) };\n';
 
   it("the audit's repro: `@/lib/md` is read as a package, lib/md.js is an orphan, and marked is NOT signed unreachable", async () => {
+    // since S5-2 the extractor resolves a tsconfig `paths` alias; this one is
+    // declared where it does not look — a bundler's own alias config — so the
+    // walk is blind exactly as it was, and the rule has to hold on its own
     const out = await gate({
       "package.json": MANIFEST,
-      "tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./*"] } } }),
+      "vite.config.mjs": 'export default { resolve: { alias: { "@": "/" } } };\n',
       "src/main.js": 'const { render } = require("@/lib/md");\nmodule.exports = (q) => render(q);\n',
       "lib/md.js": MD,
     });
@@ -1000,7 +1003,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
   const MANIFEST = JSON.stringify({ name: "md-app", main: "src/main.js", dependencies: { marked: "0.3.6" } });
   const MD = 'const marked = require("marked");\nmodule.exports = { render: (s) => marked(s) };\n';
 
-  it.fails("tsconfig `paths`: `@/lib/md` resolves to lib/md.js, and marked is reachable through it", async () => {
+  it("tsconfig `paths`: `@/lib/md` resolves to lib/md.js, and marked is reachable through it", async () => {
     const row = marked(
       await gate({
         "package.json": MANIFEST,
@@ -1013,7 +1016,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(String(row["path"])).toContain("lib/md.js");
   });
 
-  it.fails("tsconfig `paths` declared in a base config the app `extends`", async () => {
+  it("tsconfig `paths` declared in a base config the app `extends`", async () => {
     const row = marked(
       await gate({
         "package.json": MANIFEST,
@@ -1026,7 +1029,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["reachable"]).toBe("true");
   });
 
-  it.fails("package.json `imports`: `#md` resolves through the manifest", async () => {
+  it("package.json `imports`: `#md` resolves through the manifest", async () => {
     const row = marked(
       await gate({
         "package.json": JSON.stringify({
@@ -1042,7 +1045,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["reachable"]).toBe("true");
   });
 
-  it.fails("a call's callee is walked: `require(\"marked\")(s)` loads marked", async () => {
+  it("a call's callee is walked: `require(\"marked\")(s)` loads marked", async () => {
     const row = marked(
       await gate({
         "package.json": MANIFEST,
@@ -1052,7 +1055,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["reachable"]).toBe("true");
   });
 
-  it.fails("a call's callee is walked: `import(\"./md.js\").then(…)` loads the module", async () => {
+  it("a call's callee is walked: `import(\"./md.js\").then(…)` loads the module", async () => {
     const row = marked(
       await gate({
         "package.json": MANIFEST,
@@ -1063,7 +1066,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["reachable"]).toBe("true");
   });
 
-  it.fails("TypeScript `import x = require(\"marked\")` is an import", async () => {
+  it("TypeScript `import x = require(\"marked\")` is an import", async () => {
     const row = marked(
       await gate({
         "package.json": JSON.stringify({ name: "md-app", main: "src/main.ts", dependencies: { marked: "0.3.6" } }),
@@ -1073,7 +1076,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["reachable"]).toBe("true");
   });
 
-  it.fails("`new Worker(new URL(\"./w.js\", import.meta.url))` is a load of w.js", async () => {
+  it("`new Worker(new URL(\"./w.js\", import.meta.url))` is a load of w.js", async () => {
     const row = marked(
       await gate({
         "package.json": MANIFEST,
@@ -1084,7 +1087,7 @@ describe("S5-2 — the extractor's misses, narrowed: aliases resolve, callees ar
     expect(row["reachable"]).toBe("true");
   });
 
-  it.fails("a reached import of code the walk cannot see (`./App.vue`) is opaque, and refuses a test-only negative", async () => {
+  it("a reached import of code the walk cannot see (`./App.vue`) is opaque, and refuses a test-only negative", async () => {
     const out = await gate({
       "package.json": MANIFEST,
       "src/main.js": 'const App = require("./App.vue");\nmodule.exports = { App };\n',

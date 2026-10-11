@@ -71,7 +71,14 @@ export interface OpaqueImport {
   file: string;
   /** 1-based line of the call */
   line: number;
-  form: "require" | "import()";
+  /**
+   * `require` / `import()` with a specifier it cannot read (S4-1);
+   * `unresolved` an import of code by a specifier that resolves to no walked
+   * file — a `.vue` importer, a path under `dist/`, an alias that names
+   * nothing (S5-2); `worker` / `fork` a thread or process started from a
+   * path it cannot read (S5-2).
+   */
+  form: "require" | "import()" | "unresolved" | "worker" | "fork";
 }
 
 export interface ExtractedGraph {
@@ -306,7 +313,7 @@ type AliasTarget =
   | { kind: "dep"; pkg: string; member?: string }
   /** `also`: the other entry files a workspace package's manifest names (S4-1) — imported alongside `rel` */
   | { kind: "file"; rel: string; member?: string; also?: string[] }
-  | { kind: "phantom"; id: string }; // unresolved relative import
+  | { kind: "phantom"; id: string; spec: string }; // an import that resolved to no walked file
 
 interface CallSite {
   scope: string;
@@ -350,6 +357,165 @@ class GraphBuilder {
   }
 }
 
+/**
+ * What a bare specifier can mean besides an npm package (S5-2), read from the
+ * same tree the walk is over: tsconfig/jsconfig `paths` and `baseUrl`, a
+ * manifest's `imports` map (`#…`), and a manifest's npm aliases
+ * (`"lodash4": "npm:lodash@4"`). Before S5-2 every bare specifier was a
+ * package, so the `@/…` alias create-next-app writes made the file it names
+ * an orphan, and everything that file imported read as unreachable.
+ */
+export interface ModuleResolution {
+  workspace: ReadonlyMap<string, string[]>;
+  configs: PathConfig[];
+  manifests: ManifestFacts[];
+}
+
+interface PathConfig {
+  /** directory of the tsconfig/jsconfig that governs files beneath it */
+  dir: string;
+  baseUrl?: string;
+  paths: Array<{ pattern: string; targets: string[] }>;
+  /** where `paths` targets resolve from: baseUrl, else the declaring config's dir */
+  pathsBase: string;
+}
+
+interface ManifestFacts {
+  dir: string;
+  imports?: unknown;
+  /** alias → the real package name */
+  npmAliases: Map<string, string>;
+}
+
+const CONFIG_FILE = /(^|\/)[tj]sconfig\.json$/;
+
+/** the closest governing entry above `rel` — the longest directory prefix */
+function nearestDir<T extends { dir: string }>(list: readonly T[], rel: string): T | undefined {
+  let best: T | undefined;
+  let bestDepth = -1;
+  for (const item of list) {
+    if (item.dir !== "." && !rel.startsWith(`${item.dir}/`)) continue;
+    const depth = item.dir === "." ? 0 : item.dir.split("/").length;
+    if (depth > bestDepth) {
+      best = item;
+      bestDepth = depth;
+    }
+  }
+  return best;
+}
+
+/** read a tsconfig, following relative `extends`, child options over parent */
+async function readPathConfig(root: string, rel: string): Promise<PathConfig | undefined> {
+  const dir = posix.dirname(rel);
+  let baseUrl: string | undefined;
+  let paths: Record<string, unknown> | undefined;
+  let pathsFrom = dir;
+  let at: string | undefined = rel;
+  for (let depth = 0; at !== undefined && depth < 8; depth++) {
+    let text: string;
+    try {
+      text = await readFile(join(root, at), "utf8");
+    } catch {
+      break;
+    }
+    const parsed = ts.parseConfigFileTextToJson(at, text).config as
+      | { extends?: unknown; compilerOptions?: { baseUrl?: unknown; paths?: unknown } }
+      | undefined;
+    if (parsed === undefined) break;
+    const atDir = posix.dirname(at);
+    const opts = parsed.compilerOptions ?? {};
+    if (baseUrl === undefined && typeof opts.baseUrl === "string") {
+      baseUrl = posix.normalize(posix.join(atDir, opts.baseUrl));
+    }
+    if (paths === undefined && opts.paths !== null && typeof opts.paths === "object") {
+      paths = opts.paths as Record<string, unknown>;
+      pathsFrom = atDir;
+    }
+    const ext = parsed.extends;
+    at =
+      typeof ext === "string" && ext.startsWith(".")
+        ? posix.normalize(posix.join(atDir, ext.endsWith(".json") ? ext : `${ext}.json`))
+        : undefined;
+  }
+  const list = Object.entries(paths ?? {}).map(([pattern, targets]) => ({
+    pattern,
+    targets: Array.isArray(targets) ? targets.filter((t): t is string => typeof t === "string") : [],
+  }));
+  if (baseUrl === undefined && list.length === 0) return undefined;
+  return {
+    dir,
+    ...(baseUrl !== undefined ? { baseUrl } : {}),
+    paths: list,
+    pathsBase: baseUrl ?? pathsFrom,
+  };
+}
+
+/** the npm package an `npm:` alias spec names — "npm:@s/x@^1" → "@s/x" */
+function npmAliasTarget(value: string): string | undefined {
+  if (!value.startsWith("npm:")) return undefined;
+  const body = value.slice(4);
+  const at = body.lastIndexOf("@");
+  return at > 0 ? body.slice(0, at) : body;
+}
+
+export async function moduleResolution(
+  root: string,
+  fileSet: ReadonlySet<string>,
+  mode: TreeMode = "committed",
+): Promise<ModuleResolution> {
+  const workspace = await workspacePackageMap(root, fileSet, mode);
+  const configs: PathConfig[] = [];
+  for (const rel of await listPaths(root, (r) => CONFIG_FILE.test(r), mode)) {
+    const config = await readPathConfig(root, rel);
+    if (config) configs.push(config);
+  }
+  const manifests: ManifestFacts[] = [];
+  for (const rel of await listManifests(root, mode)) {
+    let parsed: { imports?: unknown; dependencies?: unknown; devDependencies?: unknown; optionalDependencies?: unknown };
+    try {
+      parsed = JSON.parse(await readFile(join(root, rel), "utf8")) as typeof parsed;
+    } catch {
+      continue;
+    }
+    const npmAliases = new Map<string, string>();
+    for (const deps of [parsed.dependencies, parsed.devDependencies, parsed.optionalDependencies]) {
+      if (deps === null || typeof deps !== "object") continue;
+      for (const [alias, value] of Object.entries(deps as Record<string, unknown>)) {
+        const real = typeof value === "string" ? npmAliasTarget(value) : undefined;
+        if (real !== undefined && real !== alias) npmAliases.set(alias, real);
+      }
+    }
+    manifests.push({ dir: posix.dirname(rel), ...(parsed.imports !== undefined ? { imports: parsed.imports } : {}), npmAliases });
+  }
+  return { workspace, configs, manifests };
+}
+
+/** "@/*" against "@/lib/md" → "lib/md"; an exact pattern → ""; no match → undefined */
+function matchPattern(pattern: string, spec: string): string | undefined {
+  const star = pattern.indexOf("*");
+  if (star < 0) return pattern === spec ? "" : undefined;
+  const pre = pattern.slice(0, star);
+  const post = pattern.slice(star + 1);
+  if (spec.length < pre.length + post.length || !spec.startsWith(pre) || !spec.endsWith(post)) return undefined;
+  return spec.slice(pre.length, spec.length - post.length);
+}
+
+/** every string leaf of an `imports` target, conditions walked whole */
+function stringLeaves(value: unknown, out: string[] = []): string[] {
+  if (typeof value === "string") out.push(value);
+  else if (Array.isArray(value)) for (const v of value) stringLeaves(v, out);
+  else if (value !== null && typeof value === "object") for (const v of Object.values(value)) stringLeaves(v, out);
+  return out;
+}
+
+const ASSET_EXT =
+  /\.(css|scss|sass|less|json|svg|png|jpe?g|gif|webp|avif|ico|bmp|woff2?|ttf|otf|eot|md|txt|html?|ya?ml|csv|graphql|gql)$/i;
+
+/** an unresolved specifier that names code, rather than an asset a bundler inlines */
+export function namesCode(spec: string): boolean {
+  return !ASSET_EXT.test(spec.split("?")[0]!);
+}
+
 /** create the dependency node(s) for an import spec and return the import target id */
 function depTarget(b: GraphBuilder, pkg: string, member?: string): string {
   const pkgId = b.node({ id: depId(pkg), kind: "dependency", name: pkg, package: pkg });
@@ -375,7 +541,7 @@ export async function extractGraph(
   // the manifest walk follows the source walk: a dry run over the worktree that
   // read package.json from HEAD would resolve workspace imports against a
   // package layout the developer may have just changed
-  const workspace = await workspacePackageMap(root, fileSet, mode);
+  const resolution = await moduleResolution(root, fileSet, mode);
   const b = new GraphBuilder();
   const infos = new Map<string, FileInfo>();
 
@@ -396,7 +562,7 @@ export async function extractGraph(
       pendingHandlers: [],
     };
     infos.set(rel, info);
-    walkSourceFile(sf, rel, info, b, fileSet, workspace);
+    walkSourceFile(sf, rel, info, b, fileSet, resolution);
   }
 
   // ---- pass 2: resolve exports, call sites, route handlers ------------------
@@ -522,23 +688,71 @@ function walkSourceFile(
   info: FileInfo,
   b: GraphBuilder,
   fileSet: ReadonlySet<string>,
-  workspace: ReadonlyMap<string, string[]> = new Map(),
+  resolution: ModuleResolution = { workspace: new Map(), configs: [], manifests: [] },
 ): void {
+  const { workspace } = resolution;
+  const config = nearestDir(resolution.configs, rel);
+  const manifest = nearestDir(resolution.manifests, rel);
+  /** resolve a path relative to a directory against the walked files */
+  const fromDir = (dir: string, target: string): string | undefined =>
+    resolveRelative(posix.join(dir, "__from__"), target.startsWith(".") || target.startsWith("/") ? target : `./${target}`, fileSet);
   const lineOf = (node: ts.Node): number =>
     sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+
+  const phantom = (spec: string, at: string): AliasTarget => {
+    const id = b.node({ id: fileId(at), kind: "file", name: spec });
+    return { kind: "phantom", id, spec };
+  };
 
   const importTarget = (spec: string): AliasTarget => {
     if (spec.startsWith(".") || spec.startsWith("/")) {
       const resolved = resolveRelative(rel, spec, fileSet);
       if (resolved) return { kind: "file", rel: resolved };
-      const id = b.node({
-        id: fileId(posix.normalize(posix.join(posix.dirname(rel), spec))),
-        kind: "file",
-        name: spec,
-      });
-      return { kind: "phantom", id };
+      return phantom(spec, posix.normalize(posix.join(posix.dirname(rel), spec)));
     }
-    const { pkg, member } = packageOf(spec);
+    // a manifest `imports` specifier is never a package (S5-2)
+    if (spec.startsWith("#")) {
+      const map = manifest?.imports;
+      if (map !== null && typeof map === "object") {
+        for (const [key, value] of Object.entries(map as Record<string, unknown>)) {
+          const sub = matchPattern(key, spec);
+          if (sub === undefined) continue;
+          for (const leaf of stringLeaves(value)) {
+            const target = leaf.replace("*", sub);
+            if (target.startsWith(".")) {
+              const hit = fromDir(manifest!.dir, target);
+              if (hit) return { kind: "file", rel: hit };
+            } else {
+              return importTarget(target);
+            }
+          }
+        }
+      }
+      return phantom(spec, spec);
+    }
+    // tsconfig `paths`, then `baseUrl` (S5-2): an alias that names a file is
+    // that file; one that matches a pattern and names nothing is unseen code,
+    // never a package — except the catch-all `*`, which TypeScript itself
+    // falls back from
+    if (config) {
+      for (const { pattern, targets } of config.paths) {
+        const sub = matchPattern(pattern, spec);
+        if (sub === undefined) continue;
+        for (const t of targets) {
+          const hit = fromDir(config.pathsBase, t.replace("*", sub));
+          if (hit) return { kind: "file", rel: hit };
+        }
+        if (pattern !== "*") return phantom(spec, spec);
+      }
+      if (config.baseUrl !== undefined) {
+        const hit = fromDir(config.baseUrl, spec);
+        if (hit) return { kind: "file", rel: hit };
+      }
+    }
+    const parsed = packageOf(spec);
+    // an npm alias is the package it aliases — advisories name the real one
+    const pkg = manifest?.npmAliases.get(parsed.pkg) ?? parsed.pkg;
+    const { member } = parsed;
     // a workspace package's source lives in THIS repo: the import edge lands
     // on its entry file, so the walk crosses the package boundary instead of
     // dead-ending on a dependency node (a subpath import maps to the same
@@ -551,7 +765,9 @@ function walkSourceFile(
     return { kind: "dep", pkg, ...(member !== undefined ? { member } : {}) };
   };
 
-  const importEdge = (target: AliasTarget): void => {
+  const importEdge = (target: AliasTarget, at?: ts.Node): void => {
+    // an import of code the walk cannot see is a load it cannot follow (S5-2)
+    if (target.kind === "phantom" && at !== undefined && namesCode(target.spec)) opaque(at, "unresolved");
     const dst =
       target.kind === "dep"
         ? depTarget(b, target.pkg, target.member)
@@ -600,6 +816,22 @@ function walkSourceFile(
     node.expression.text === "require" &&
     node.arguments.length === 1;
 
+  /** fork(…) from child_process, by its import binding or as `child_process.fork` */
+  const isForkCall = (node: ts.CallExpression): boolean => {
+    const fromChildProcess = (name: string): boolean => {
+      const a = info.aliases.get(name);
+      return a?.kind === "dep" && (a.pkg === "child_process" || a.pkg === "node:child_process");
+    };
+    const e = node.expression;
+    if (ts.isIdentifier(e)) return e.text === "fork" && fromChildProcess("fork");
+    return (
+      ts.isPropertyAccessExpression(e) &&
+      e.name.text === "fork" &&
+      ts.isIdentifier(e.expression) &&
+      fromChildProcess(e.expression.text)
+    );
+  };
+
   const requireSpec = (node: ts.Node): string | undefined => {
     if (isRequireCall(node) && ts.isStringLiteralLike((node as ts.CallExpression).arguments[0]!)) {
       return ((node as ts.CallExpression).arguments[0] as ts.StringLiteralLike).text;
@@ -609,10 +841,50 @@ function walkSourceFile(
 
   const visit = (node: ts.Node, scope: string): void => {
     // ---- imports ----
+    // TypeScript's `import x = require("y")` (S5-2)
+    if (
+      ts.isImportEqualsDeclaration(node) &&
+      ts.isExternalModuleReference(node.moduleReference) &&
+      ts.isStringLiteralLike(node.moduleReference.expression)
+    ) {
+      const root = importTarget(node.moduleReference.expression.text);
+      importEdge(root, node);
+      info.aliases.set(node.name.text, root);
+      return;
+    }
+
+    // new Worker(url | path): a thread started from a module (S5-2)
+    if (
+      ts.isNewExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      (node.expression.text === "Worker" || node.expression.text === "SharedWorker")
+    ) {
+      const arg = node.arguments?.[0];
+      let target: string | undefined;
+      if (arg && ts.isStringLiteralLike(arg)) target = arg.text;
+      else if (
+        arg &&
+        ts.isNewExpression(arg) &&
+        ts.isIdentifier(arg.expression) &&
+        arg.expression.text === "URL" &&
+        arg.arguments?.[0] &&
+        ts.isStringLiteralLike(arg.arguments[0])
+      ) {
+        target = arg.arguments[0].text;
+      }
+      const hit =
+        target !== undefined && !/^[a-z]+:/i.test(target)
+          ? resolveRelative(rel, target.startsWith(".") || target.startsWith("/") ? target : `./${target}`, fileSet)
+          : undefined;
+      if (hit) importEdge({ kind: "file", rel: hit }, node);
+      else opaque(node, "worker");
+      node.arguments?.forEach((a) => visit(a, scope));
+      return;
+    }
     if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
       const spec = node.moduleSpecifier.text;
       const root = importTarget(spec);
-      importEdge(root);
+      importEdge(root, node);
       const clause = node.importClause;
       if (clause) {
         if (clause.name) info.aliases.set(clause.name.text, root);
@@ -644,7 +916,7 @@ function walkSourceFile(
       // and "unreachable" claims about everything behind a barrel were false.
       // A lexical fact, hence `exact`, like any other import specifier.
       if (node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier)) {
-        importEdge(importTarget(node.moduleSpecifier.text));
+        importEdge(importTarget(node.moduleSpecifier.text), node);
       }
       if (node.exportClause && ts.isNamedExports(node.exportClause)) {
         for (const el of node.exportClause.elements) {
@@ -724,7 +996,7 @@ function walkSourceFile(
         }
         if (spec !== undefined) {
           const root = importTarget(spec);
-          importEdge(root);
+          importEdge(root, decl.initializer);
           if (ts.isIdentifier(decl.name)) {
             info.aliases.set(decl.name.text, root);
           } else if (ts.isObjectBindingPattern(decl.name)) {
@@ -764,7 +1036,7 @@ function walkSourceFile(
     if (ts.isCallExpression(node)) {
       const spec = requireSpec(node);
       if (spec !== undefined) {
-        importEdge(importTarget(spec));
+        importEdge(importTarget(spec), node);
         return;
       }
       if (isRequireCall(node)) {
@@ -773,8 +1045,24 @@ function walkSourceFile(
       }
       if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
         const arg = node.arguments[0];
-        if (arg && ts.isStringLiteralLike(arg)) importEdge(importTarget(arg.text));
+        if (arg && ts.isStringLiteralLike(arg)) importEdge(importTarget(arg.text), node);
         else opaque(node, "import()");
+        return;
+      }
+
+      // child_process.fork(path): a process started from a module (S5-2) —
+      // its path is relative to the working directory, so it is tried from
+      // the file and from the root, and an unreadable one is recorded
+      if (isForkCall(node)) {
+        const arg = node.arguments[0];
+        const target = arg && ts.isStringLiteralLike(arg) ? arg.text : undefined;
+        const hit =
+          target !== undefined
+            ? (resolveRelative(rel, target.startsWith(".") ? target : `./${target}`, fileSet) ?? fromDir(".", target))
+            : undefined;
+        if (hit) importEdge({ kind: "file", rel: hit }, node);
+        else opaque(node, "fork");
+        node.arguments.forEach((a) => visit(a, scope));
         return;
       }
 
@@ -806,6 +1094,9 @@ function walkSourceFile(
         return;
       }
 
+      // the callee is code too (S5-2): `require("x")(…)`, `import("./m").then(…)`,
+      // `require("./p/" + n).init()` — before this only the arguments were walked
+      if (!ts.isIdentifier(node.expression)) visit(node.expression, scope);
       if (ts.isIdentifier(node.expression)) {
         info.callSites.push({ scope, callee: { form: "ident", name: node.expression.text } });
       } else if (

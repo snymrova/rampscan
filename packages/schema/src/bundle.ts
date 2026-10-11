@@ -196,7 +196,7 @@ export const ClaimBasis = z.object({
       z.object({
         file: z.string(),
         line: z.number().int(),
-        form: z.enum(["require", "import()"]),
+        form: z.enum(["require", "import()", "unresolved", "worker", "fork"]),
         reached: z.boolean(),
       }),
     )
